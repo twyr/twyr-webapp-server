@@ -2,7 +2,7 @@
 
 module.exports = {
 	'apps': [{
-		'name': 'plntwrks-webapp',
+		'name': 'twyr-webapp',
 		'script': './index.js',
 		'exec_mode': 'cluster',
 

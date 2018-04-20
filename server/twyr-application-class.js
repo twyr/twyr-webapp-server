@@ -46,7 +46,7 @@ class TwyrApplication extends TwyrBaseModule {
 	 * @summary  Loads / Initializes / Starts-up sub-modules.
 	 */
 	async bootupServer() {
-		if(plntWrksEnv === 'development') console.log(`${this.name}::bootupServer`);
+		if(twyrEnv === 'development') console.log(`${this.name}::bootupServer`);
 
 		const allStatuses = [];
 		let bootupError = null;
@@ -98,7 +98,7 @@ class TwyrApplication extends TwyrBaseModule {
 	 * @summary  Shuts-down / Un-initializes / Un-loads sub-modules.
 	 */
 	async shutdownServer() {
-		if(plntWrksEnv === 'development') console.log(`${this.name}::shutdownServer`);
+		if(twyrEnv === 'development') console.log(`${this.name}::shutdownServer`);
 
 		const allStatuses = [];
 		let bootupError = null;

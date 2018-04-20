@@ -1,8 +1,8 @@
 {
-	"name": "webapp-server",
+	"name": "twyr-webapp-server",
 	"version": "3.0.1",
 	"description": "Twyr Web Application Server",
-	"homepage": "https://twyr.github.io",
+	"homepage": "https://twyr.github.io/twyr-webapp-server",
 	"main": "index.js",
 	"keywords": [
 		"AI",
@@ -36,29 +36,29 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/twyr/webapp-server"
+		"url": "git://github.com/twyr/twyr-webapp-server"
 	},
 	"bugs": {
-		"url": "https://github.com/twyr/webapp-server/issues",
+		"url": "https://github.com/twyr/twyr-webapp-server/issues",
 		"email": "shadyvd@hotmail.com"
 	},
 	"author": {
 		"name": "Vish Desai",
 		"email": "shadyvd@hotmail.com",
-		"url": "https://twyr.github.io"
+		"url": "https://twyr.github.io/twyr-webapp-server"
 	},
 	"maintainers": [
 		{
 			"name": "Vish Desai",
 			"email": "shadyvd@hotmail.com",
-			"url": "https://twyr.github.io"
+			"url": "https://twyr.github.io/twyr-webapp-server"
 		}
 	],
 	"contributors": [
 		{
 			"name": "Vish Desai",
 			"email": "shadyvd@hotmail.com",
-			"url": "https://twyr.github.io"
+			"url": "https://twyr.github.io/twyr-webapp-server"
 		}
 	],
 	"engines": {

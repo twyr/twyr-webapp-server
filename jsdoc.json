@@ -50,7 +50,7 @@
 			"type": "documentation",
 			"image": "./tenant_assets/www/img/logo.png",
 			"site_name": "Twyr Web Application Server",
-			"url": "https://twyr.github.io/webapp-server"
+			"url": "https://twyr.github.io/twyr-webapp-server"
 		},
 		"meta": {
 			"title": "Twyr Web Application Server",

@@ -2,7 +2,7 @@
  * @file      index.js
  * @author    Vish Desai <shadyvd@hotmail.com>
  * @version   3.0.1
- * @copyright Copyright&copy; 2014 - 2018 {@link https://twyr.github.io|Twyr}
+ * @copyright Copyright&copy; 2014 - 2018 {@link https://twyr.github.io/twyr-webapp-server|Twyr Web Application Server}
  * @license   {@link https://spdx.org/licenses/Unlicense.html|Unlicense}
  * @summary   The entry-point, and application class, for the web application server
  *
@@ -19,8 +19,8 @@ require('dotenv').config();
 /**
  * Setup global variables (ugh!) to make life simpler across the rest of the codebase
  */
-global.plntWrksEnv = (process.env.NODE_ENV || 'development').toLocaleLowerCase();
-process.title = 'plntwrks-webapp';
+global.twyrEnv = (process.env.NODE_ENV || 'development').toLocaleLowerCase();
+process.title = 'twyr-webapp';
 
 /**
  * Module dependencies, required for this module
