@@ -32,9 +32,10 @@ class TwyrBaseModule extends TwyrBaseClass {
 		super();
 		if(twyrEnv === 'development') console.log(`${this.name}::constructor`);
 
+		let actualLoader = loader;
 		if(!loader) {
 			const TwyrModuleLoader = require('./twyr-module-loader').TwyrModuleLoader;
-			loader = new TwyrModuleLoader(this);
+			actualLoader = new TwyrModuleLoader(this);
 		}
 
 		Object.defineProperties(this, {
@@ -45,9 +46,9 @@ class TwyrBaseModule extends TwyrBaseClass {
 			},
 
 			'$loader': {
-				'get': () => {
-					return loader;
-				}
+				'value': actualLoader,
+				'configurable': !loader,
+				'writable': !loader
 			},
 
 			'$locale': {
@@ -80,10 +81,10 @@ class TwyrBaseModule extends TwyrBaseClass {
 		if(twyrEnv === 'development') console.log(`${this.name}::load`);
 
 		try {
-			let config = this.$config || {};
+			let config = this.$config || { 'state': true };
 			if(configSrvc) config = await configSrvc.loadConfiguration(this);
 
-			this.$config = config;
+			this.$config = config || { 'state': true };
 			this.$enabled = (this.$config.state === true);
 
 			const subModuleStatus = await this.$loader.load(configSrvc);
@@ -149,7 +150,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 			await this._setup();
 
 			// Do the same for all of the sub-modules
-			const subModuleStatus = await this.$loader.start(dependencies);
+			const subModuleStatus = await this.$loader.start();
 
 			// Now, set the actual state, if required
 			if(!actualState) await this._changeState(actualState);
@@ -316,23 +317,25 @@ class TwyrBaseModule extends TwyrBaseClass {
 			if(this.$parent) await this.$parent._subModuleReconfigure(this);
 
 			// Step 5: Let the sub-modules know about the change in configuration
-			[this.$services, this.$middlewares, this.$components, this.$templates].forEach((subModules) => {
-				if(!subModules) return;
+			for(const subModules of [this.$services, this.$middlewares, this.$components, this.$templates]) {
+				if(!subModules) continue;
 
-				Object.keys(subModules).forEach(async (subModuleName) => {
+				const subModuleNames = Object.keys(subModules);
+				for(const subModuleName of subModuleNames) {
 					const subModule = subModules[subModuleName];
 					await subModule._parentReconfigure();
-				});
-			});
+				}
+			}
 
 			// Step 6: Now that the entire hierarchy has been informed, let the modules
 			// that depend on this one know about the state change
 			if(!this.$dependants) return null;
 
-			Object.keys(this.$dependants).forEach(async (dependantName) => {
+			const dependantNames = Object.keys(this.$dependants);
+			for(const dependantName of dependantNames) {
 				const dependant = this.$dependants[dependantName];
 				await dependant._dependencyReconfigure(this);
-			});
+			}
 
 			return null;
 		}
@@ -416,26 +419,28 @@ class TwyrBaseModule extends TwyrBaseClass {
 
 		try {
 			// Step 1: Go up the hierarcy and let the parent modules reset themselves
-			if(this.$parent) await this.$parent._subModuleChangeState(this, newState);
+			if(this.$parent) await this.$parent._subModuleStateChange(this, newState);
 
 			// Step 2: Let the sub-modules know about the change in state
-			[this.$services, this.$middlewares, this.$components, this.$templates].forEach((subModules) => {
-				if(!subModules) return;
+			for(const subModules of [this.$services, this.$middlewares, this.$components, this.$templates]) {
+				if(!subModules) continue;
 
-				Object.keys(subModules).forEach(async (subModuleName) => {
+				const subModuleNames = Object.keys(subModules);
+				for(const subModuleName of subModuleNames) {
 					const subModule = subModules[subModuleName];
 					await subModule._parentStateChange(newState);
-				});
-			});
+				}
+			}
 
 			// Step 3: Now that the entire hierarchy has changed state, let the modules
 			// that depend on this one know about the state change
 			if(!this.$dependants) return null;
 
-			Object.keys(this.$dependants).forEach(async (dependantName) => {
+			const dependantNames = Object.keys(this.$dependants);
+			for(const dependantName of dependantNames) {
 				const dependant = this.$dependants[dependantName];
 				await dependant._dependencyStateChange(this, newState);
-			});
+			}
 
 			return null;
 		}
@@ -449,7 +454,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 * @function
 	 * @instance
 	 * @memberof TwyrBaseModule
-	 * @name     _subModuleChangeState
+	 * @name     _subModuleStateChange
 	 *
 	 * @param    {TwyrBaseModule} subModule - The sub-module that changed state.
 	 * @param    {Object} newState - The next state of the sub-module.
@@ -458,8 +463,8 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 *
 	 * @summary  Lets the module know that one of its subModules changed state.
 	 */
-	async _subModuleChangeState(subModule, newState) {
-		if(twyrEnv === 'development') console.log(`${this.name}::_subModuleChangeState::${subModule.name}: ${newState}`);
+	async _subModuleStateChange(subModule, newState) {
+		if(twyrEnv === 'development') console.log(`${this.name}::_subModuleStateChange::${subModule.name}: ${newState}`);
 		return null;
 	}
 
@@ -468,7 +473,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 * @function
 	 * @instance
 	 * @memberof TwyrBaseModule
-	 * @name     _parentChangeState
+	 * @name     _parentStateChange
 	 *
 	 * @param    {Object} newState - The next state of the parent module.
 	 *
@@ -476,8 +481,8 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 *
 	 * @summary  Lets the module know that its parent changed state.
 	 */
-	async _parentChangeState(newState) {
-		if(twyrEnv === 'development') console.log(`${this.name}::_parentChangeState::${this.$parent.name}: ${newState}`);
+	async _parentStateChange(newState) {
+		if(twyrEnv === 'development') console.log(`${this.name}::_parentStateChange::${this.$parent.name}: ${newState}`);
 		await this._changeState(newState);
 
 		return null;

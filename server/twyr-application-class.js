@@ -9,7 +9,7 @@
  * Module dependencies, required for this module
  * @ignore
  */
-const TwyrBaseModule = require('./../twyr-base-module').TwyrBaseModule;
+const TwyrBaseModule = require('./twyr-base-module').TwyrBaseModule;
 
 /**
  * @class   TwyrApplication

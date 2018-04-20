@@ -149,36 +149,34 @@ class TwyrModuleLoader extends TwyrBaseClass {
 	 * @memberof TwyrModuleLoader
 	 * @name     start
 	 *
-	 * @param    {Object} dependencies - The {@link TwyrBaseService} instances that the sub-module depends on.
-	 *
 	 * @returns  {Object} - The start status of $twyrModule's sub-modules.
 	 *
 	 * @summary  Starts sub-modules.
 	 */
-	async start(dependencies) {
+	async start() {
 		try {
 			const allStatuses = [];
 			let lifecycleStatuses = null;
 
-			lifecycleStatuses = await this._startServices(dependencies);
+			lifecycleStatuses = await this._startServices();
 			if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
 				throw lifecycleStatuses.status;
 
 			allStatuses.push(lifecycleStatuses);
 
-			lifecycleStatuses = await this._startMiddlewares(dependencies);
+			lifecycleStatuses = await this._startMiddlewares();
 			if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
 				throw lifecycleStatuses.status;
 
 			allStatuses.push(lifecycleStatuses);
 
-			lifecycleStatuses = await this._startComponents(dependencies);
+			lifecycleStatuses = await this._startComponents();
 			if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
 				throw lifecycleStatuses.status;
 
 			allStatuses.push(lifecycleStatuses);
 
-			lifecycleStatuses = await this._startTemplates(dependencies);
+			lifecycleStatuses = await this._startTemplates();
 			if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
 				throw lifecycleStatuses.status;
 
@@ -565,25 +563,23 @@ class TwyrModuleLoader extends TwyrBaseClass {
 			const initOrderList = initOrder.overallOrder();
 
 			const nameStatusPairs = {};
-			initOrderList.forEach(async (serviceName) => {
-				const serviceInstance = this.$twyrModule.$services[serviceName];
-				const dependencies = this._getDependencies(serviceInstance);
-
+			for(const serviceName of initOrderList) {
 				let lifecycleStatus = null;
 				try {
-					lifecycleStatus = await this.$twyrModule.$services[serviceName].start(dependencies);
+					const moduleInstance = this.$twyrModule.$services[serviceName];
+					const dependencies = this._getDependencies(moduleInstance);
+
+					lifecycleStatus = await moduleInstance.start(dependencies);
 				}
 				catch(err) {
-					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_startServices error`, err);
+					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_startServices::${serviceName} error`, err);
 				}
+				finally {
+					nameStatusPairs[serviceName] = lifecycleStatus;
+				}
+			}
 
-				nameStatusPairs[serviceName] = lifecycleStatus;
-			});
-
-			return {
-				'type': 'services',
-				'status': nameStatusPairs
-			};
+			return { 'type': 'services', 'status': nameStatusPairs };
 		}
 		catch(err) {
 			return {
@@ -627,7 +623,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 			const uninitOrderList = uninitOrder.overallOrder().reverse();
 
 			const nameStatusPairs = {};
-			uninitOrderList.forEach(async (serviceName) => {
+			for(const serviceName of uninitOrderList) {
 				let lifecycleStatus = null;
 				try {
 					lifecycleStatus = await this.$twyrModule.$services[serviceName].stop();
@@ -635,9 +631,10 @@ class TwyrModuleLoader extends TwyrBaseClass {
 				catch(err) {
 					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_stopServices error`, err);
 				}
-
-				nameStatusPairs[serviceName] = lifecycleStatus;
-			});
+				finally {
+					nameStatusPairs[serviceName] = lifecycleStatus;
+				}
+			}
 
 			return {
 				'type': 'services',
@@ -783,18 +780,26 @@ class TwyrModuleLoader extends TwyrBaseClass {
 	 *
 	 * @summary  Start Middlewares defined as part of this {@link TwyrBaseModule}.
 	 */
-	_startMiddlewares() {
+	async _startMiddlewares() {
 		try {
-			const nameStatusPairs = {};
+			const middlewareNames = Object.keys(this.$twyrModule.$middlewares),
+				nameStatusPairs = {};
 
-			Object.keys(this.$twyrModule.$middlewares).forEach(async (middlewareName) => {
-				const middlewareInstance = this.$twyrModule.$middlewares[middlewareName];
+			for(const middlewareName of middlewareNames) {
+				let lifecycleStatus = null;
+				try {
+					const moduleInstance = this.$twyrModule.$middlewares[middlewareName];
+					const dependencies = this._getDependencies(moduleInstance);
 
-				const dependencies = this._getDependencies(middlewareInstance);
-				const startStatus = await middlewareInstance.start(dependencies);
-
-				nameStatusPairs[middlewareName] = startStatus;
-			});
+					lifecycleStatus = await moduleInstance.start(dependencies);
+				}
+				catch(err) {
+					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_doLifecycleAction (${middlewareName} / start) error`, err);
+				}
+				finally {
+					nameStatusPairs[middlewareName] = lifecycleStatus;
+				}
+			}
 
 			return {
 				'type': 'middlewares',
@@ -964,19 +969,26 @@ class TwyrModuleLoader extends TwyrBaseClass {
 	 *
 	 * @summary  Start Components defined as part of this {@link TwyrBaseModule}.
 	 */
-	_startComponents() {
+	async _startComponents() {
 		try {
 			const componentNames = Object.keys(this.$twyrModule.$components),
 				nameStatusPairs = {};
 
-			componentNames.forEach(async (componentName) => {
-				const componentInstance = this.$twyrModule.$components[componentName];
+			for(const componentName of componentNames) {
+				let lifecycleStatus = null;
+				try {
+					const moduleInstance = this.$twyrModule.$components[componentName];
+					const dependencies = this._getDependencies(moduleInstance);
 
-				const dependencies = this._getDependencies(componentInstance);
-				const startStatus = await componentInstance.start(dependencies);
-
-				nameStatusPairs[componentName] = startStatus;
-			});
+					lifecycleStatus = await moduleInstance.start(dependencies);
+				}
+				catch(err) {
+					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_doLifecycleAction (${componentName} / start) error`, err);
+				}
+				finally {
+					nameStatusPairs[componentName] = lifecycleStatus;
+				}
+			}
 
 			return {
 				'type': 'components',
@@ -1147,19 +1159,26 @@ class TwyrModuleLoader extends TwyrBaseClass {
 	 *
 	 * @summary  Start Templates defined as part of this {@link TwyrBaseModule}.
 	 */
-	_startTemplates() {
+	async _startTemplates() {
 		try {
 			const nameStatusPairs = {},
 				templateNames = Object.keys(this.$twyrModule.$templates);
 
-			templateNames.forEach(async (templateName) => {
-				const templateInstance = this.$twyrModule.$templates[templateName];
+			for(const templateName of templateNames) {
+				let lifecycleStatus = null;
+				try {
+					const moduleInstance = this.$twyrModule.$templates[templateName];
+					const dependencies = this._getDependencies(moduleInstance);
 
-				const dependencies = this._getDependencies(templateInstance);
-				const startStatus = await templateInstance.start(dependencies);
-
-				nameStatusPairs[templateName] = startStatus;
-			});
+					lifecycleStatus = await moduleInstance.start(dependencies);
+				}
+				catch(err) {
+					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_doLifecycleAction (${templateName} / start) error`, err);
+				}
+				finally {
+					nameStatusPairs[templateName] = lifecycleStatus;
+				}
+			}
 
 			return {
 				'type': 'templates',
@@ -1291,15 +1310,15 @@ class TwyrModuleLoader extends TwyrBaseClass {
 			}
 
 			for(const rootDirFolder of rootDirFolders) {
-				const subFolderFiles = await this._findFilesAsync(rootDirFolder, filename);
+				const subFolderFiles = await this._findFiles(rootDirFolder, filename);
 				if(subFolderFiles) fileList = fileList.concat(subFolderFiles);
 			}
 
 			return fileList;
 		}
 		catch(err) {
+			// console.error(new TwyrBaseError(`${this.$twyrModule.name}::loader::_findFiles error`, err).toString());
 			return [];
-			// throw new TwyrBaseError(`${this.$twyrModule.name}::loader::_findFiles error`, err);
 		}
 	}
 
@@ -1377,22 +1396,25 @@ class TwyrModuleLoader extends TwyrBaseClass {
 	 */
 	async _doLifecycleAction(moduleType, action, args) {
 		try {
-			const nameStatusPairs = {};
+			args = args || [];
+
 			const modules = this.$twyrModule['$' + moduleType]; // eslint-disable-line prefer-template
+			const moduleNames = Object.keys(modules);
 
-			Object.keys(modules).forEach(async (moduleName) => {
-				const moduleInstance = modules[moduleName];
-
+			const nameStatusPairs = {};
+			for(const moduleName of moduleNames) {
 				let lifecycleStatus = null;
 				try {
+					const moduleInstance = modules[moduleName];
 					lifecycleStatus = await moduleInstance[action](...args);
 				}
 				catch(err) {
 					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_doLifecycleAction (${moduleName} / ${action}) error`, err);
 				}
-
-				nameStatusPairs[moduleName] = lifecycleStatus;
-			});
+				finally {
+					nameStatusPairs[moduleName] = lifecycleStatus;
+				}
+			}
 
 			return nameStatusPairs;
 		}
@@ -1448,7 +1470,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 		try {
 			const filteredStatus = status.map((thisStatus) => {
 				if(thisStatus.status === null)
-					return null;
+					return true;
 
 				if(thisStatus.status instanceof Error)
 					return thisStatus;
@@ -1480,7 +1502,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 				return true;
 			});
 
-			return filteredStatus.length ? filteredStatus : null;
+			return filteredStatus.length ? filteredStatus : true;
 		}
 		catch(err) {
 			return [];
