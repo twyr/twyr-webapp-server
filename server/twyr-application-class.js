@@ -101,7 +101,7 @@ class TwyrApplication extends TwyrBaseModule {
 		if(twyrEnv === 'development') console.log(`${this.name}::shutdownServer`);
 
 		const allStatuses = [];
-		let bootupError = null;
+		let shutdownError = null;
 
 		try {
 			let lifecycleStatuses = null;
@@ -117,10 +117,10 @@ class TwyrApplication extends TwyrBaseModule {
 		}
 		catch(err) {
 			allStatuses.push(`Shutdown error: ${err.toString()}`);
-			bootupError = err;
+			shutdownError = err;
 		}
 		finally {
-			if(bootupError) throw bootupError;
+			if(shutdownError) throw shutdownError;
 
 			console.info(`Shutdown ${process.title} with status:\n${allStatuses.join('\n')}`);
 			return null;

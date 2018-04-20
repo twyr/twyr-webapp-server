@@ -40,7 +40,7 @@ const offDeath = onDeath(async () => {
 		offDeath();
 	}
 	catch(err) {
-		console.error(`Shutdown Error: ${err.message}\n${err.stack}`);
+		console.error(`Shutdown Error: ${err.toString()}`);
 	}
 });
 

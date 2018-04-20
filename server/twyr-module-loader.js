@@ -390,12 +390,12 @@ class TwyrModuleLoader extends TwyrBaseClass {
 	 */
 	async _unloadUtilities() {
 		try {
-			const utilityNames = Object.keys(this.$module.$utilities || {});
+			const utilityNames = Object.keys(this.$twyrModule.$utilities || {});
 			utilityNames.forEach((utilityName) => {
-				delete this.$module.$utilities[utilityName];
+				delete this.$twyrModule.$utilities[utilityName];
 			});
 
-			delete this.$module.$utilities;
+			delete this.$twyrModule.$utilities;
 			return {
 				'type': 'utilities',
 				'status': utilityNames.length ? utilityNames : null

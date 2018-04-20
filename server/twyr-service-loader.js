@@ -14,8 +14,8 @@ const TwyrModuleLoader = require('./twyr-module-loader').TwyrModuleLoader,
 
 class TwyrServiceLoader extends TwyrModuleLoader {
 	// #region Constructor
-	constructor(module) {
-		super(module);
+	constructor(twyrModule) {
+		super(twyrModule);
 	}
 	// #endregion
 

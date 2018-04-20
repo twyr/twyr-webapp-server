@@ -47,7 +47,6 @@ class TwyrBaseModule extends TwyrBaseClass {
 
 			'$loader': {
 				'value': actualLoader,
-				'configurable': !loader,
 				'writable': !loader
 			},
 
@@ -515,6 +514,39 @@ class TwyrBaseModule extends TwyrBaseClass {
 
 		await this._changeState(allDependenciesEnabled);
 		return null;
+	}
+	// #endregion
+
+	// #region Utility methods
+	 /**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrBaseModule
+	 * @name     _exists
+	 *
+	 * @param    {string} filepath - Path of the filesystem entity.
+	 * @param    {number} mode - Permission to be checked for.
+	 *
+	 * @returns  {boolean} True / False.
+	 *
+	 * @summary  Checks to see if the path can be accessed by this process using the mode specified.
+	 */
+	async _exists(filepath, mode) {
+		const Promise = require('bluebird'),
+			filesystem = require('fs');
+
+		return new Promise((resolve, reject) => {
+			try {
+				filesystem.access(filepath, (mode || filesystem.constants.F_OK), (exists) => {
+					resolve(!exists);
+				});
+			}
+			catch(err) {
+				const error = new TwyrBaseError(`${this.$twyrModule.name}::loader::_findFiles error`, err);
+				reject(error);
+			}
+		});
 	}
 	// #endregion
 
