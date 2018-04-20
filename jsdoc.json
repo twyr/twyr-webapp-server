@@ -1,0 +1,66 @@
+{
+	"tags": {
+		"allowUnknownTags": true
+	},
+	"source": {
+		"include": ["./", "./README.md"],
+		"exclude": [
+			"config",
+			"deploy",
+			"i18n",
+			"knex_migrations",
+			"logs",
+			"node_modules",
+			"sql",
+			"static_assets",
+			"tenant_applications",
+			"tenant_assets",
+			"test"
+		],
+		"includePattern": ".+\\.js(doc)?$",
+		"excludePattern": "(docs/)"
+	},
+	"opts": {
+		"template": "./node_modules/docdash2",
+		"destination": "./..",
+		"readme": "./README.md",
+		"package": "./package.json",
+		"encoding": "utf8",
+		"recurse": true,
+		"verbose": true
+	},
+	"plugins": [
+		"plugins/markdown",
+		"plugins/summarize"
+	],
+	"templates": {
+		"cleverLinks": true,
+		"monospaceLinks": false,
+		"referenceTitle": "Twyr Web Application Server",
+		"disableSort": false,
+		"default": {
+			"outputSourceFiles": true
+		}
+	},
+	"docdash": {
+		"static": true,
+		"sort": true,
+		"openGraph": {
+			"title": "Twyr Web Application Server",
+			"type": "documentation",
+			"image": "./tenant_assets/www/img/logo.png",
+			"site_name": "Twyr Web Application Server",
+			"url": "https://twyr.github.io/webapp-server"
+		},
+		"meta": {
+			"title": "Twyr Web Application Server",
+			"description": "Twyr Web Application Server",
+			"keyword": "twyr"
+		},
+		"search": true,
+		"collapse": true,
+		"typedefs": false,
+		"removeQuotes": "none",
+		"scripts": []
+	}
+}

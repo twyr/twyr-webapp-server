@@ -1,0 +1,51 @@
+/**
+ * @file      index.js
+ * @author    Vish Desai <shadyvd@hotmail.com>
+ * @version   3.0.1
+ * @copyright Copyright&copy; 2014 - 2018 {@link https://twyr.github.io|Twyr}
+ * @license   {@link https://spdx.org/licenses/Unlicense.html|Unlicense}
+ * @summary   The entry-point, and application class, for the web application server
+ *
+ */
+
+'use strict';
+
+/**
+ * Pre-flight stuff - to be done before the application class starts the server
+ * @ignore
+ */
+require('dotenv').config();
+
+/**
+ * Setup global variables (ugh!) to make life simpler across the rest of the codebase
+ */
+global.plntWrksEnv = (process.env.NODE_ENV || 'development').toLocaleLowerCase();
+process.title = 'plntwrks-webapp';
+
+/**
+ * Module dependencies, required for this module
+ * @ignore
+ */
+const onDeath = require('death')({ 'uncaughtException': true });
+const TwyrApplication = require('./server/twyr-application-class').TwyrApplication;
+
+/**
+ * Finally, start the server - let's get going!
+ * @ignore
+ */
+const serverInstance = new TwyrApplication();
+const offDeath = onDeath(async () => {
+	try {
+		await serverInstance.shutdownServer();
+		offDeath();
+	}
+	catch(err) {
+		console.error(`Shutdown Error: ${err.message}\n${err.stack}`);
+	}
+});
+
+serverInstance.bootupServer()
+.catch(() => {
+	process.exit(1); // eslint-disable-line no-process-exit
+});
+
