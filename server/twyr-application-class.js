@@ -64,13 +64,13 @@ class TwyrApplication extends TwyrBaseModule {
 			let lifecycleStatuses = null;
 
 			lifecycleStatuses = await this.load();
-			allStatuses.push(`Load status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, '\t') : true}`);
+			allStatuses.push(`Load status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}`);
 
 			lifecycleStatuses = await this.initialize();
-			allStatuses.push(`Initialize status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, '\t') : true}`);
+			allStatuses.push(`Initialize status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}`);
 
 			lifecycleStatuses = await this.start();
-			allStatuses.push(`Start status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, '\t') : true}`);
+			allStatuses.push(`Start status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}`);
 		}
 		catch(err) {
 			allStatuses.push(`Bootup error: ${err.toString()}`);
@@ -107,20 +107,23 @@ class TwyrApplication extends TwyrBaseModule {
 			let lifecycleStatuses = null;
 
 			lifecycleStatuses = await this.stop();
-			allStatuses.push(`Stop status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, '\t') : true}`);
+			allStatuses.push(`Stop status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}`);
 
 			lifecycleStatuses = await this.uninitialize();
-			allStatuses.push(`Uninitialize status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, '\t') : true}`);
+			allStatuses.push(`Uninitialize status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}`);
 
 			lifecycleStatuses = await this.unload();
-			allStatuses.push(`Unload status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, '\t') : true}`);
+			allStatuses.push(`Unload status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}`);
 		}
 		catch(err) {
 			allStatuses.push(`Shutdown error: ${err.toString()}`);
 			shutdownError = err;
 		}
 		finally {
-			if(shutdownError) throw shutdownError;
+			if(shutdownError) {
+				console.error(`\n\n\nShutdown ${process.title} with error:\n${shutdownError.toString()}\n\n\n`);
+				throw shutdownError;
+			}
 
 			console.info(`Shutdown ${process.title} with status:\n${allStatuses.join('\n')}`);
 			return null;

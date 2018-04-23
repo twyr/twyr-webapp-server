@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Module dependencies, required for ALL PlantWorks modules
+ * Module dependencies, required for ALL Twyr modules
  * @ignore
  */
 

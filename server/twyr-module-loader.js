@@ -545,7 +545,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 			const DepGraph = require('dependency-graph').DepGraph;
 			const initOrder = new DepGraph();
 
-			const serviceNames = Object.keys(this.$twyrModule.$services);
+			const serviceNames = Object.keys(this.$twyrModule.$services || {});
 			serviceNames.forEach((serviceName) => {
 				initOrder.addNode(serviceName);
 			});
@@ -605,7 +605,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 			const DepGraph = require('dependency-graph').DepGraph;
 			const uninitOrder = new DepGraph();
 
-			const serviceNames = Object.keys(this.$twyrModule.$services);
+			const serviceNames = Object.keys(this.$twyrModule.$services || {});
 			serviceNames.forEach((serviceName) => {
 				uninitOrder.addNode(serviceName);
 			});
@@ -782,7 +782,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 	 */
 	async _startMiddlewares() {
 		try {
-			const middlewareNames = Object.keys(this.$twyrModule.$middlewares),
+			const middlewareNames = Object.keys(this.$twyrModule.$middlewares || {}),
 				nameStatusPairs = {};
 
 			for(const middlewareName of middlewareNames) {
@@ -971,7 +971,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 	 */
 	async _startComponents() {
 		try {
-			const componentNames = Object.keys(this.$twyrModule.$components),
+			const componentNames = Object.keys(this.$twyrModule.$components || {}),
 				nameStatusPairs = {};
 
 			for(const componentName of componentNames) {
@@ -1162,7 +1162,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 	async _startTemplates() {
 		try {
 			const nameStatusPairs = {},
-				templateNames = Object.keys(this.$twyrModule.$templates);
+				templateNames = Object.keys(this.$twyrModule.$templates || {});
 
 			for(const templateName of templateNames) {
 				let lifecycleStatus = null;
@@ -1399,7 +1399,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 			args = args || [];
 
 			const modules = this.$twyrModule['$' + moduleType]; // eslint-disable-line prefer-template
-			const moduleNames = Object.keys(modules);
+			const moduleNames = Object.keys(modules || {});
 
 			const nameStatusPairs = {};
 			for(const moduleName of moduleNames) {

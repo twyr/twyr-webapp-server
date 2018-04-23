@@ -38,6 +38,7 @@
 	},
 
 	"globals": {
+		"snooze": true,
 		"twyrEnv": true
 	},
 

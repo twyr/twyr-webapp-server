@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Module dependencies, required for ALL PlantWorks modules
+ * Module dependencies, required for ALL Twyr modules
  * @ignore
  */
 
@@ -12,37 +12,98 @@
 const TwyrBaseService = require('./../../../../twyr-base-service').TwyrBaseService;
 const TwyrSrvcError = require('./../../../../twyr-service-error').TwyrServiceError;
 
+/**
+ * @class   FileConfigurationService
+ * @extends {TwyrBaseService}
+ * @classdesc The Twyr Web Application Server file-based configuration sub-service.
+ *
+ * @description
+ * Allows the rest of the codebase to CRUD their configurations from the filesystem.
+ *
+ */
 class FileConfigurationService extends TwyrBaseService {
+	// #region Constructor
 	constructor(parent) {
 		super(parent);
 		this.$cacheMap = {};
 	}
+	// #endregion
 
+	// #region setup/teardown code
+	/**
+	 * @async
+	 * @override
+	 * @function
+	 * @instance
+	 * @memberof FileConfigurationService
+	 * @name     _setup
+	 *
+	 * @returns  {boolean} Boolean true/false.
+	 *
+	 * @summary  Sets up the file watcher to watch for changes on the fly.
+	 */
 	async _setup() {
-		const chokidar = require('chokidar'),
-			path = require('path');
+		try {
+			const chokidar = require('chokidar'),
+				path = require('path');
 
-		const env = (process.env.NODE_ENV || 'development').toLowerCase(),
-			rootPath = path.dirname(require.main.filename);
+			const env = (process.env.NODE_ENV || 'development').toLowerCase(),
+				rootPath = path.dirname(require.main.filename);
 
-		this.$watcher = chokidar.watch(path.join(rootPath, 'config', env), {
-			'ignored': /[/\\]\./,
-			'ignoreInitial': true
-		});
+			this.$watcher = chokidar.watch(path.join(rootPath, 'config', env), {
+				'ignored': /[/\\]\./,
+				'ignoreInitial': true
+			});
 
-		this.$watcher
-			.on('add', this._onNewConfiguration.bind(this))
-			.on('change', this._onUpdateConfiguration.bind(this))
-			.on('unlink', this._onDeleteConfiguration.bind(this));
+			this.$watcher
+				.on('add', this._onNewConfiguration.bind(this))
+				.on('change', this._onUpdateConfiguration.bind(this))
+				.on('unlink', this._onDeleteConfiguration.bind(this));
 
-		return true;
+			return true;
+		}
+		catch(err) {
+			throw new TwyrSrvcError(`${this.name}::_setup error`, err);
+		}
 	}
 
+	/**
+	 * @async
+	 * @override
+	 * @function
+	 * @instance
+	 * @memberof FileConfigurationService
+	 * @name     _teardown
+	 *
+	 * @returns  {boolean} Boolean true/false.
+	 *
+	 * @summary  Shutdown the file watcher that watches for changes on the fly.
+	 */
 	async _teardown() {
-		this.$watcher.close();
-		return true;
+		try {
+			this.$watcher.close();
+			return true;
+		}
+		catch(err) {
+			throw new TwyrSrvcError(`${this.name}::_teardown error`, err);
+		}
 	}
+	// #endregion
 
+	// #region API
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof FileConfigurationService
+	 * @name     loadConfiguration
+	 *
+	 * @param    {TwyrBaseModule} twyrModule - Instance of the {@link TwyrBaseModule} that requires configuration.
+	 *
+	 * @returns  {Object} - The twyrModule's file-based configuration.
+	 *
+	 * @summary  Retrieves the configuration of the twyrModule requesting for it.
+	 */
 	async loadConfiguration(twyrModule) {
 		try {
 			const fs = require('fs-extra'),
@@ -69,6 +130,20 @@ class FileConfigurationService extends TwyrBaseService {
 		}
 	}
 
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof FileConfigurationService
+	 * @name     saveConfiguration
+	 *
+	 * @param    {TwyrBaseModule} twyrModule - Instance of the {@link TwyrBaseModule} that requires configuration.
+	 * @param    {Object} config - The {@link TwyrBaseModule}'s' configuration that should be persisted.
+	 *
+	 * @returns  {Object} - The twyrModule configuration.
+	 *
+	 * @summary  Saves the configuration of the twyrModule requesting for it.
+	 */
 	async saveConfiguration(twyrModule, config) {
 		try {
 			const deepEqual = require('deep-equal'),
@@ -97,57 +172,71 @@ class FileConfigurationService extends TwyrBaseService {
 		}
 	}
 
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof FileConfigurationService
+	 * @name     getModuleState
+	 *
+	 * @param    {TwyrBaseModule} twyrModule - Instance of the {@link TwyrBaseModule} that requires its state.
+	 *
+	 * @returns  {boolean} - Boolean true always, pretty much.
+	 *
+	 * @summary  Empty method, since the file-based configuration module doesn't manage the state.
+	 */
 	async getModuleState(twyrModule) {
 		return !!twyrModule;
 	}
 
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof FileConfigurationService
+	 * @name     setModuleState
+	 *
+	 * @param    {TwyrBaseModule} twyrModule - Instance of the {@link TwyrBaseModule} that requires its state.
+	 * @param    {boolean} enabled - State of the module.
+	 *
+	 * @returns  {Object} - The state of the twyrModule.
+	 *
+	 * @summary  Empty method, since the file-based configuration module doesn't manage the state.
+	 */
 	async setModuleState(twyrModule, enabled) {
 		return enabled;
 	}
 
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof FileConfigurationService
+	 * @name     getModuleId
+	 *
+	 * @returns  {null} - Nothing.
+	 *
+	 * @summary  Empty method, since the file-based configuration module doesn't manage module ids.
+	 */
 	async getModuleId() {
 		return null;
 	}
 
-	_onNewConfiguration(filePath) {
-		const path = require('path');
-
-		const rootPath = path.dirname(require.main.filename);
-		const twyrModule = path.relative(rootPath, filePath).replace(`config/${twyrEnv}/`, '').replace('.js', '');
-
-		this.$cacheMap[filePath] = require(filePath).config;
-		this.$parent.emit('new-config', this.name, twyrModule, require(filePath).config);
-	}
-
-	_onUpdateConfiguration(filePath) {
-		const deepEqual = require('deep-equal'),
-			path = require('path');
-
-		const rootPath = path.dirname(require.main.filename);
-		const twyrModule = path.relative(rootPath, filePath).replace(`config/${twyrEnv}/`, '').replace('.js', '');
-
-		delete require.cache[filePath];
-		setTimeout(() => {
-			if(deepEqual(this.$cacheMap[filePath], require(filePath).config))
-				return;
-
-			this.$cacheMap[filePath] = require(filePath).config;
-			this.$parent.emit('update-config', this.name, twyrModule, require(filePath).config);
-		}, 500);
-	}
-
-	_onDeleteConfiguration(filePath) {
-		const path = require('path');
-
-		const rootPath = path.dirname(require.main.filename);
-		const twyrModule = path.relative(rootPath, filePath).replace(`config/${twyrEnv}/`, '').replace('.js', '');
-
-		delete require.cache[filePath];
-		delete this.$cacheMap[filePath];
-
-		this.$parent.emit('delete-config', this.name, twyrModule);
-	}
-
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @private
+	 * @memberof FileConfigurationService
+	 * @name     _processConfigChange
+	 *
+	 * @param    {TwyrBaseModule} configUpdateModule - The twyrModule for which the configuration changed.
+	 * @param    {Object} config - The updated configuration.
+	 *
+	 * @returns  {null} - Nothing.
+	 *
+	 * @summary  Persists the configuration to the filesystem.
+	 */
 	async _processConfigChange(configUpdateModule, config) {
 		try {
 			const deepEqual = require('deep-equal'),
@@ -170,15 +259,129 @@ class FileConfigurationService extends TwyrBaseService {
 			await filesystem.writeFileAsync(configPath, configString);
 		}
 		catch(err) {
-			if(twyrEnv === 'development') console.error(`Save Configuration to File Error: ${err.stack}`);
+			console.error(`Process changed configuration to file error: ${err.message}\n${err.stack}`);
 		}
 	}
 
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof FileConfigurationService
+	 * @name     _processStateChange
+	 *
+	 * @returns  {null} - Nothing.
+	 *
+	 * @summary  Empty method, since the file-based configuration module doesn't manage module states.
+	 */
 	async _processStateChange() {
-		return;
+		return null;
+	}
+	// #endregion
+
+	// #region Private Methods
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof FileConfigurationService
+	 * @name     _onNewConfiguration
+	 *
+	 * @param    {string} filePath - The absolute path of the new configuration file.
+	 *
+	 * @returns  {null} - Nothing.
+	 *
+	 * @summary  Reads the new configuration, maps it to a loaded twyrModule, and tells the rest of the configuration services to process it.
+	 */
+	async _onNewConfiguration(filePath) {
+		try {
+			const path = require('path');
+
+			const rootPath = path.dirname(require.main.filename);
+			const twyrModule = path.relative(rootPath, filePath).replace(`config/${twyrEnv}/`, '').replace('.js', '');
+
+			this.$cacheMap[filePath] = require(filePath).config;
+			this.$parent.emit('new-config', this.name, twyrModule, require(filePath).config);
+		}
+		catch(err) {
+			console.error(`Process new configuration in ${filePath} error: ${err.message}\n${err.stack}`);
+		}
 	}
 
-	get basePath() { return __dirname; }
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof FileConfigurationService
+	 * @name     _onUpdateConfiguration
+	 *
+	 * @param    {string} filePath - The absolute path of the updated configuration file.
+	 *
+	 * @returns  {null} - Nothing.
+	 *
+	 * @summary  Reads the new configuration, maps it to a loaded twyrModule, and tells the rest of the configuration services to process it.
+	 */
+	async _onUpdateConfiguration(filePath) {
+		try {
+			const deepEqual = require('deep-equal'),
+				path = require('path');
+
+			const rootPath = path.dirname(require.main.filename);
+			const twyrModule = path.relative(rootPath, filePath).replace(`config/${twyrEnv}/`, '').replace('.js', '');
+
+			delete require.cache[filePath];
+			await snooze(500);
+
+			if(deepEqual(this.$cacheMap[filePath], require(filePath).config))
+				return;
+
+			this.$cacheMap[filePath] = require(filePath).config;
+			this.$parent.emit('update-config', this.name, twyrModule, require(filePath).config);
+		}
+		catch(err) {
+			console.error(`Process updated configuration in ${filePath} error: ${err.message}\n${err.stack}`);
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof FileConfigurationService
+	 * @name     _onDeleteConfiguration
+	 *
+	 * @param    {string} filePath - The absolute path of the deleted configuration file.
+	 *
+	 * @returns  {null} - Nothing.
+	 *
+	 * @summary  Removes configuration from the cache, etc., and tells the rest of the configuration services to process it.
+	 */
+	async _onDeleteConfiguration(filePath) {
+		try {
+			const path = require('path');
+
+			const rootPath = path.dirname(require.main.filename);
+			const twyrModule = path.relative(rootPath, filePath).replace(`config/${twyrEnv}/`, '').replace('.js', '');
+
+			delete require.cache[filePath];
+			delete this.$cacheMap[filePath];
+
+			this.$parent.emit('delete-config', this.name, twyrModule);
+		}
+		catch(err) {
+			console.error(`Process updated configuration in ${filePath} error: ${err.message}\n${err.stack}`);
+		}
+	}
+	// #endregion
+
+	// #region Properties
+	/**
+	 * @override
+	 */
+	get basePath() {
+		return __dirname;
+	}
+	// #endregion
 }
 
 exports.service = FileConfigurationService;

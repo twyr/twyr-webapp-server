@@ -22,6 +22,15 @@ require('dotenv').config();
 global.twyrEnv = (process.env.NODE_ENV || 'development').toLocaleLowerCase();
 process.title = 'twyr-webapp';
 
+// Utility to allow non-blocking sleep in async/await mode without the ugly setTimeout
+// appearing all over the place
+global.snooze = async (ms) => {
+	const Promise = require('bluebird');
+	return new Promise((resolve) => {
+		setTimeout(resolve, ms);
+	});
+};
+
 /**
  * Module dependencies, required for this module
  * @ignore
