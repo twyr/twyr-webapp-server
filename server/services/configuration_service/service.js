@@ -146,6 +146,8 @@ class ConfigurationService extends TwyrBaseService {
 				loadedConfigs.push(twyrModuleConfig);
 			}
 
+console.log(`Loaded Configs: ${JSON.stringify(loadedConfigs, null, '\t')}`);
+
 			let mergedConfig = {};
 			loadedConfigs.forEach((loadedConfig) => {
 				if(!loadedConfig) return;

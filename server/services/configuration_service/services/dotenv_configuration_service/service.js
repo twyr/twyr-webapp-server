@@ -127,7 +127,7 @@ class DotEnvConfigurationService extends TwyrBaseService {
 			const rootPath = path.dirname(require.main.filename);
 			const configPath = path.relative(rootPath, twyrModule.basePath).replace('server', '').replace(new RegExp(path.sep, 'g'), '_').replace('_', '');
 
-			const moduleConfig = this._deserializeConfig(configPath);
+			const moduleConfig = this._deserializeConfig(configPath, true).config;
 			return moduleConfig;
 		}
 		catch(err) {
@@ -335,47 +335,55 @@ class DotEnvConfigurationService extends TwyrBaseService {
 	 * @summary  Reads the new configuration, maps it to a loaded twyrModule, and tells the rest of the configuration services to process it.
 	 */
 	async _onUpdateConfiguration() {
-		const path = require('path'),
-			promises = require('bluebird');
-
-		const envFile = promises.promisifyAll(require('envfile'));
-
-		const rootPath = path.dirname(require.main.filename);
-		const envFilePath = path.join(rootPath, '.env');
-
 		try {
-			const envFileContents = await envFile.parseFileAsync(envFilePath);
-			const configChangedModules = [],
-				moduleTypes = ['services', 'middlewares', 'components', 'templates'];
+			const path = require('path'),
+				promises = require('bluebird');
 
+			const moduleTypes = ['services', 'middlewares', 'components', 'templates'];
+			const rootPath = path.dirname(require.main.filename);
+			const envFilePath = path.join(rootPath, '.env');
+
+			const envFile = promises.promisifyAll(require('envfile'));
+			const envFileContents = await envFile.parseFileAsync(envFilePath);
+
+			const configChangedModules = [];
 			Object.keys(envFileContents || {}).forEach((envFileKey) => {
 				if(envFileContents[envFileKey] === this.$cacheMap[envFileKey])
 					return;
 
-				const splitEnvKey = envFileKey.split('_');
+				const splitEnvKey = envFileKey.split('_').map((key) => {
+					if(moduleTypes.indexOf(key) >= 0)
+						return `${key}${path.sep}`;
 
-				let maxIndex = 0;
-				moduleTypes.forEach((moduleType) => {
-					const lastIndex = splitEnvKey.lastIndexOf(moduleType);
-					maxIndex = maxIndex > lastIndex ? maxIndex : lastIndex;
-				});
+					return key;
+				})
+				.join('_')
+				.replace(new RegExp(`${path.sep}_`, 'g'), path.sep);
 
-				const configChangedModule = splitEnvKey.slice(0, maxIndex + 2).join('_');
-				if(configChangedModules.indexOf(configChangedModule) < 0)
-					configChangedModules.push(configChangedModule);
+				if(configChangedModules.indexOf(splitEnvKey) < 0)
+					configChangedModules.push(splitEnvKey);
 			});
 
 			if(configChangedModules.length) {
 				this.$cacheMap = envFileContents;
 
 				const configs = [];
-				configChangedModules.forEach((configChangedModule) => {
-					const changedConfig = this._deserializeConfig(configChangedModule);
-					configs.push(changedConfig);
+				configChangedModules.forEach((configChangedModule, idx) => {
+					const changedConfig = this._deserializeConfig(configChangedModule.split(path.sep).join('_'), true);
+					configChangedModules[idx] = changedConfig.configPath.split('_').map((segment) => {
+						if(moduleTypes.indexOf(segment) >= 0)
+							return `${segment}${path.sep}`;
+
+						return segment;
+					})
+					.join('_')
+					.replace(new RegExp(`${path.sep}_`, 'g'), path.sep);
+
+					configs.push(changedConfig.config);
 				});
 
 				configChangedModules.forEach((configChangedModule, idx) => {
-					this.$parent.emit('update-config', this.name, configChangedModule.replace('_', path.sep), configs[idx]);
+					this.$parent.emit('update-config', this.name, configChangedModule, configs[idx]);
 				});
 			}
 		}
@@ -456,15 +464,55 @@ class DotEnvConfigurationService extends TwyrBaseService {
 	 * @name     _deserializeConfig
 	 *
 	 * @param    {string} configPath - The path of the twyrModule.
+	 * @param    {boolean} discover - Discover the module.
 	 *
 	 * @returns  {Object} - The object containing the twyrModule configuration.
 	 *
 	 * @summary  Reads the existing configuration, and return a object version of it.
 	 */
-	_deserializeConfig(configPath) {
+	_deserializeConfig(configPath, discover) {
 		try {
-			if(!this.$cacheMap[configPath])
-				return null;
+			if(discover) {
+				const inflection = require('inflection');
+				const path = require('path');
+				const moduleTypes = ['services', 'middlewares', 'components', 'templates'];
+
+				let rootModule = this.$parent;
+				while(rootModule.$parent) rootModule = rootModule.$parent;
+
+				configPath = configPath.split('_');
+				while(configPath.length) {
+					if((this.$cacheMap[configPath.join('_')] === 'TWYR_CONFIG_OBJECT') || (this.$cacheMap[configPath.join('_')] === 'TWYR_CONFIG_ARRAY')) {
+						const modulePath = configPath.map((segment) => {
+							if(moduleTypes.indexOf(segment) >= 0)
+								return `${segment}${path.sep}`;
+
+							return segment;
+						})
+						.join('_')
+						.replace(new RegExp(`${path.sep}_`, 'g'), path.sep)
+						.split(path.sep);
+
+						let currModule = rootModule;
+						while(modulePath.length) {
+							currModule = currModule[`${inflection.camelize(modulePath[0])}`] || currModule[`${modulePath[0]}`] || currModule[`$${modulePath[0]}`];
+							if(!currModule) break;
+
+							modulePath.shift();
+						}
+
+						if(currModule)
+							break;
+					}
+
+					configPath.pop();
+				}
+
+				if(!configPath.length)
+					return null;
+
+				configPath = configPath.join('_');
+			}
 
 			const moduleConfig = this.$cacheMap[configPath] === 'TWYR_CONFIG_OBJECT' ? {} : [];
 
@@ -528,7 +576,7 @@ class DotEnvConfigurationService extends TwyrBaseService {
 				if(this.$cacheMap[configKey]) moduleConfig[configKey.replace(`${configPath}_`, '')] = _guessType(this.$cacheMap[configKey]);
 			});
 
-			return moduleConfig;
+			return discover ? { 'configPath': configPath, 'config': moduleConfig } : moduleConfig;
 		}
 		catch(err) {
 			console.error(`Deserialize configuration error: ${err.message}\n${err.stack}`);
