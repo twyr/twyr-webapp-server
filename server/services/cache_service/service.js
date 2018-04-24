@@ -29,6 +29,16 @@ class CacheService extends TwyrBaseService {
 	// #endregion
 
 	// #region startup/teardown code
+	/**
+	 * @function
+	 * @instance
+	 * @memberof CacheService
+	 * @name     _setup
+	 *
+	 * @returns  {Promise} Promise that resolves / rejects based on whether the connection request went through.
+	 *
+	 * @summary  Sets up the connection to the configured Redis Server.
+	 */
 	async _setup() {
 		const Promise = require('bluebird');
 		return new Promise((resolve, reject) => {
@@ -69,6 +79,16 @@ class CacheService extends TwyrBaseService {
 		});
 	}
 
+	/**
+	 * @function
+	 * @instance
+	 * @memberof CacheService
+	 * @name     _teardown
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Quits the connection to the configured Redis Server.
+	 */
 	async _teardown() {
 		try {
 			if(!this.$cache)
@@ -97,8 +117,15 @@ class CacheService extends TwyrBaseService {
 	/**
 	 * @override
 	 */
+	get Interface() {
+		return this.$cache;
+	}
+
+	/**
+	 * @override
+	 */
 	get dependencies() {
-		return ['ConfigurationService'].concat(super.dependencies || []);
+		return ['ConfigurationService'].concat(super.dependencies);
 	}
 
 	/**

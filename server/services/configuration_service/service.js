@@ -376,6 +376,8 @@ class ConfigurationService extends TwyrBaseService {
 	 * @summary  Given a path relative to the Application Class instance, retrieves the loaded twyrModule object.
 	 */
 	_getModuleFromPath(pathFromRoot) {
+		const inflection = require('inflection');
+
 		let currentModule = this.$parent,
 			pathSegments = null;
 
@@ -384,18 +386,7 @@ class ConfigurationService extends TwyrBaseService {
 		pathSegments = pathFromRoot.split('/');
 		pathSegments.forEach((pathSegment) => {
 			if(!currentModule) return;
-
-			if(currentModule[`$${pathSegment}`]) {
-				currentModule = currentModule[`$${pathSegment}`];
-				return;
-			}
-
-			if(currentModule[pathSegment]) {
-				currentModule = currentModule[pathSegment];
-				return;
-			}
-
-			currentModule = null;
+			currentModule = currentModule[`${inflection.camelize(pathSegment)}`] || currentModule[`${pathSegment}`] || currentModule[`$${pathSegment}`];
 		});
 
 		return currentModule;
