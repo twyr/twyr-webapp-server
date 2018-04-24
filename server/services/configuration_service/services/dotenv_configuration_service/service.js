@@ -83,7 +83,7 @@ class DotEnvConfigurationService extends TwyrBaseService {
 		try {
 			this.$watcher.close();
 
-			if(!this.$config.persistExample)
+			if(!this.$parent.$config.subservices.DotEnvConfigurationService.persistExample)
 				return true;
 
 			const promises = require('bluebird');

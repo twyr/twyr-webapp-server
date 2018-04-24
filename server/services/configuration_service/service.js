@@ -52,43 +52,48 @@ class ConfigurationService extends TwyrBaseService {
 		try {
 			this.$config = {
 				'state': true,
-
-				'priorities': {
-					'FileConfigurationService': Number(process.env.services_ConfigurationService_priorities_FileConfigurationService) || 10,
-					'RedisConfigurationService': Number(process.env.services_ConfigurationService_priorities_RedisConfigurationService) || 20,
-					'DatabaseConfigurationService': Number(process.env.services_ConfigurationService_priorities_DatabaseConfigurationService) || 30,
-					'DotEnvConfigurationService': Number(process.env.services_ConfigurationService_priorities_DotEnvConfigurationService) || 40
-				},
-				'subservices': {
-					'DatabaseConfigurationService': {
-						'client': process.env.services_DatabaseService_client || 'pg',
-						'debug': process.env.services_DatabaseService_debug === 'true',
-						'connection': {
-							'host': process.env.services_DatabaseService_connection_host || '127.0.0.1',
-							'port': process.env.services_DatabaseService_connection_port || '5432',
-							'user': process.env.services_DatabaseService_connection_user || 'twyr',
-							'password': process.env.services_DatabaseService_connection_password || 'twyr',
-							'database': process.env.services_DatabaseService_connection_database || 'twyr'
-						},
-						'pool': {
-							'min': Number(process.env.services_DatabaseService_pool_min) || 2,
-							'max': Number(process.env.services_DatabaseService_pool_max) || 4
-						},
-						'migrations': {
-							'directory': process.env.services_ConfigurationService_subservices_DatabaseConfigurationService_migrations_directory || 'knex_migrations/migrations',
-							'tableName': process.env.services_ConfigurationService_subservices_DatabaseConfigurationService_migrations_tableName || 'knex_migrations'
-						},
-						'seeds': {
-							'directory': process.env.services_ConfigurationService_subservices_DatabaseConfigurationService_seeds_directory || 'knex_migrations/seeds',
-							'tableName': process.env.services_ConfigurationService_subservices_DatabaseConfigurationService_seeds_tableName || 'knex_seeds'
-						}
+				'configuration': {
+					'priorities': {
+						'FileConfigurationService': Number(process.env.services_ConfigurationService_priorities_FileConfigurationService) || 10,
+						'RedisConfigurationService': Number(process.env.services_ConfigurationService_priorities_RedisConfigurationService) || 20,
+						'DatabaseConfigurationService': Number(process.env.services_ConfigurationService_priorities_DatabaseConfigurationService) || 30,
+						'DotEnvConfigurationService': Number(process.env.services_ConfigurationService_priorities_DotEnvConfigurationService) || 40
 					},
+					'subservices': {
+						'DatabaseConfigurationService': {
+							'client': process.env.services_DatabaseService_client || 'pg',
+							'debug': process.env.services_DatabaseService_debug === 'true',
+							'connection': {
+								'host': process.env.services_DatabaseService_connection_host || '127.0.0.1',
+								'port': process.env.services_DatabaseService_connection_port || '5432',
+								'user': process.env.services_DatabaseService_connection_user || 'twyr',
+								'password': process.env.services_DatabaseService_connection_password || 'twyr',
+								'database': process.env.services_DatabaseService_connection_database || 'twyr'
+							},
+							'pool': {
+								'min': Number(process.env.services_DatabaseService_pool_min) || 2,
+								'max': Number(process.env.services_DatabaseService_pool_max) || 4
+							},
+							'migrations': {
+								'directory': process.env.services_ConfigurationService_subservices_DatabaseConfigurationService_migrations_directory || 'knex_migrations/migrations',
+								'tableName': process.env.services_ConfigurationService_subservices_DatabaseConfigurationService_migrations_tableName || 'knex_migrations'
+							},
+							'seeds': {
+								'directory': process.env.services_ConfigurationService_subservices_DatabaseConfigurationService_seeds_directory || 'knex_migrations/seeds',
+								'tableName': process.env.services_ConfigurationService_subservices_DatabaseConfigurationService_seeds_tableName || 'knex_seeds'
+							}
+						},
 
-					'RedisConfigurationService': {
-						'port': Number(process.env.services_CacheService_port) || 6379,
-						'host': process.env.services_CacheService_host || '127.0.0.1',
-						'options': {
-							'detect_buffers': process.env.services_CacheService_options_detect_buffers === 'true'
+						'DotEnvConfigurationService': {
+							'persistExample': true
+						},
+
+						'RedisConfigurationService': {
+							'port': Number(process.env.services_CacheService_port) || 6379,
+							'host': process.env.services_CacheService_host || '127.0.0.1',
+							'options': {
+								'detect_buffers': process.env.services_CacheService_options_detect_buffers === 'true'
+							}
 						}
 					}
 				}
@@ -145,8 +150,6 @@ class ConfigurationService extends TwyrBaseService {
 				const twyrModuleConfig = await this.$services[subService].loadConfiguration(twyrModule);
 				loadedConfigs.push(twyrModuleConfig);
 			}
-
-console.log(`Loaded Configs: ${JSON.stringify(loadedConfigs, null, '\t')}`);
 
 			let mergedConfig = {};
 			loadedConfigs.forEach((loadedConfig) => {

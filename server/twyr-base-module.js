@@ -83,8 +83,10 @@ class TwyrBaseModule extends TwyrBaseClass {
 			let config = this.$config || { 'state': true };
 			if(configSrvc) config = await configSrvc.loadConfiguration(this);
 
-			this.$config = config || { 'state': true };
-			this.$enabled = (this.$config.state === true);
+			config = config || this.$config || { 'state': true };
+
+			this.$config = config.configuration;
+			this.$enabled = (config.state === true);
 
 			const subModuleStatus = await this.$loader.load(configSrvc);
 			return subModuleStatus;
