@@ -1423,7 +1423,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 		}
 	}
 
-	 /**
+	/**
 	 * @async
 	 * @function
 	 * @instance

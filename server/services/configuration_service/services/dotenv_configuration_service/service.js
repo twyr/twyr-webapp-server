@@ -127,8 +127,8 @@ class DotEnvConfigurationService extends TwyrBaseService {
 			const rootPath = path.dirname(require.main.filename);
 			const configPath = path.relative(rootPath, twyrModule.basePath).replace('server', '').replace(new RegExp(path.sep, 'g'), '_').replace('_', '');
 
-			const moduleConfig = this._deserializeConfig(configPath, true).config;
-			return moduleConfig;
+			const moduleConfig = this._deserializeConfig(configPath, true);
+			return moduleConfig ? moduleConfig.config : null;
 		}
 		catch(err) {
 			throw new TwyrSrvcError(`${this.name}::loadConfiguration error`, err);
@@ -382,7 +382,15 @@ class DotEnvConfigurationService extends TwyrBaseService {
 					configs.push(changedConfig.config);
 				});
 
-				configChangedModules.forEach((configChangedModule, idx) => {
+				const uniqueConfigChangedModules = [];
+				configChangedModules
+				.filter((ccModule) => {
+					const alreadyPresent = (uniqueConfigChangedModules.indexOf(ccModule) >= 0);
+					if(!alreadyPresent) uniqueConfigChangedModules.push(ccModule);
+
+					return !alreadyPresent;
+				})
+				.forEach((configChangedModule, idx) => {
 					this.$parent.emit('update-config', this.name, configChangedModule, configs[idx]);
 				});
 			}

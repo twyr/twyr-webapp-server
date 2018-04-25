@@ -520,7 +520,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	// #endregion
 
 	// #region Utility methods
-	 /**
+	/**
 	 * @async
 	 * @function
 	 * @instance

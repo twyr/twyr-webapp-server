@@ -31,6 +31,7 @@ class TwyrApplication extends TwyrBaseModule {
 	// #region Constructor
 	constructor(parent, loader) {
 		super(parent, loader);
+		this.$uuid = require('uuid/v4')();
 	}
 	// #endregion
 

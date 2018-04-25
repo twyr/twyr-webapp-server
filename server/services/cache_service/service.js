@@ -109,7 +109,7 @@ class CacheService extends TwyrBaseService {
 
 	// #region Private Methods
 	_handleRedisError(err) {
-		console.error(new TwyrSrvcError(`${this.name}::_handleRedisError error`, err).toString());
+		this.$dependencies.LoggerService.error(new TwyrSrvcError(`${this.name}::_handleRedisError error`, err).toString());
 	}
 	// #endregion
 
@@ -125,7 +125,7 @@ class CacheService extends TwyrBaseService {
 	 * @override
 	 */
 	get dependencies() {
-		return ['ConfigurationService'].concat(super.dependencies);
+		return ['ConfigurationService', 'LoggerService'].concat(super.dependencies);
 	}
 
 	/**
