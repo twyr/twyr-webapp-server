@@ -30,7 +30,9 @@ class CacheService extends TwyrBaseService {
 
 	// #region startup/teardown code
 	/**
+	 * @async
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof CacheService
 	 * @name     _setup
@@ -80,7 +82,9 @@ class CacheService extends TwyrBaseService {
 	}
 
 	/**
+	 * @async
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof CacheService
 	 * @name     _teardown

@@ -30,7 +30,9 @@ class LoggerService extends TwyrBaseService {
 
 	// #region startup/teardown code
 	/**
+	 * @async
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof LoggerService
 	 * @name     _setup
@@ -113,7 +115,9 @@ class LoggerService extends TwyrBaseService {
 	}
 
 	/**
+	 * @async
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof LoggerService
 	 * @name     _teardown
@@ -125,14 +129,14 @@ class LoggerService extends TwyrBaseService {
 	async _teardown() {
 		try {
 			// The last log of this logger instance...
-			if(twyrEnv === 'development' && this.$winston) this.$winston.debug('\n\nGoodbye, wi-fi, goodbye...');
+			if(twyrEnv === 'development') this.$winston.debug('\n\nGoodbye, wi-fi, goodbye...');
 
 			for(const transportIdx in this.$config) {
 				if(!Object.prototype.hasOwnProperty.call(this.$config, transportIdx) && !{}.hasOwnProperty.call(this.$config, transportIdx))
 					continue;
 
 				try {
-					if(this.$winston) this.$winston.remove(transportIdx);
+					this.$winston.remove(transportIdx);
 				}
 				catch(err) {
 					if(twyrEnv === 'development') console.error(new TwyrSrvcError(`Error Removing ${transportIdx} from the Winston instance`, err).toString());

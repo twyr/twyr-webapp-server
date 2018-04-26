@@ -85,7 +85,7 @@ class ConfigurationService extends TwyrBaseService {
 						},
 
 						'DotEnvConfigurationService': {
-							'persistExample': true
+							'persistExample': false
 						},
 
 						'RedisConfigurationService': {

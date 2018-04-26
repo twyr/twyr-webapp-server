@@ -370,6 +370,9 @@ class DotEnvConfigurationService extends TwyrBaseService {
 				const configs = [];
 				configChangedModules.forEach((configChangedModule, idx) => {
 					const changedConfig = this._deserializeConfig(configChangedModule.split(path.sep).join('_'), true);
+					if(!changedConfig) return;
+					if(!changedConfig.configPath) return;
+
 					configChangedModules[idx] = changedConfig.configPath.split('_').map((segment) => {
 						if(moduleTypes.indexOf(segment) >= 0)
 							return `${segment}${path.sep}`;

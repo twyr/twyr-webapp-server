@@ -35,7 +35,6 @@ global.snooze = async (ms) => {
  * Module dependencies, required for this module
  * @ignore
  */
-const onDeath = require('death')({ 'uncaughtException': true });
 const TwyrApplication = require('./server/twyr-application-class').TwyrApplication;
 
 /**
@@ -43,13 +42,15 @@ const TwyrApplication = require('./server/twyr-application-class').TwyrApplicati
  * @ignore
  */
 const serverInstance = new TwyrApplication();
+
+const onDeath = require('death')({ 'uncaughtException': true, 'debug': (twyrEnv === 'development') });
 const offDeath = onDeath(async () => {
 	try {
-		await serverInstance.shutdownServer();
 		offDeath();
+		await serverInstance.shutdownServer();
 	}
-	catch(err) {
-		console.error(`Shutdown Error: ${err.toString()}`);
+	catch(shutdownError) {
+		console.error(`Shutdown Error: ${shutdownError.toString()}`);
 	}
 });
 

@@ -30,7 +30,9 @@ class DatabaseService extends TwyrBaseService {
 
 	// #region startup/teardown code
 	/**
+	 * @async
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof DatabaseService
 	 * @name     _setup
@@ -79,7 +81,9 @@ class DatabaseService extends TwyrBaseService {
 	}
 
 	/**
+	 * @async
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof DatabaseService
 	 * @name     _teardown

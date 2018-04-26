@@ -9,8 +9,10 @@
  * Module dependencies, required for this module
  * @ignore
  */
-const TwyrBaseClass = require('./twyr-base-class').TwyrBaseClass,
-	TwyrBaseError = require('./twyr-base-error').TwyrBaseError;
+const TwyrBaseClass = require('./twyr-base-class').TwyrBaseClass;
+const TwyrBaseError = require('./twyr-base-error').TwyrBaseError;
+
+const TwyrBaseService = require('./twyr-base-service').TwyrBaseService;
 
 /**
  * @class   TwyrModuleLoader
@@ -457,8 +459,10 @@ class TwyrModuleLoader extends TwyrBaseClass {
 					}
 
 					// Check to see valid typeof
-					// if(!(instConfigSrvc instanceof TwyrBaseService))
-					// 	throw new TwyrBaseError(`${definedService} does not contain a valid TwyrBaseService definition`);
+					// eslint-disable-next-line curly
+					if(!(instConfigSrvc instanceof TwyrBaseService)) {
+						throw new TwyrBaseError(`${definedService} does not contain a valid TwyrBaseService definition`);
+					}
 
 					configSrvcLoadStatus = await instConfigSrvc.load(null);
 					break;
@@ -478,8 +482,10 @@ class TwyrModuleLoader extends TwyrBaseClass {
 					continue;
 
 				// Check to see valid typeof
-				// if(!(serviceInstance instanceof TwyrBaseService))
-				// 	throw new TwyrBaseError(`${definedService} does not contain a valid TwyrBaseService definition`);
+				// eslint-disable-next-line curly
+				if(!(serviceInstance instanceof TwyrBaseService)) {
+					throw new TwyrBaseError(`${definedService} does not contain a valid TwyrBaseService definition`);
+				}
 
 				this.$twyrModule.$services[serviceInstance.name] = serviceInstance;
 			}

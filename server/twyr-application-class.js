@@ -65,13 +65,13 @@ class TwyrApplication extends TwyrBaseModule {
 			let lifecycleStatuses = null;
 
 			lifecycleStatuses = await this.load();
-			allStatuses.push(`Load status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}`);
+			allStatuses.push(`${process.title} load status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}\n`);
 
 			lifecycleStatuses = await this.initialize();
-			allStatuses.push(`Initialize status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}`);
+			allStatuses.push(`${process.title} initialize status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}\n`);
 
 			lifecycleStatuses = await this.start();
-			allStatuses.push(`Start status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}`);
+			allStatuses.push(`${process.title} start status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}\n`);
 		}
 		catch(err) {
 			allStatuses.push(`Bootup error: ${err.toString()}`);
@@ -79,11 +79,11 @@ class TwyrApplication extends TwyrBaseModule {
 		}
 		finally {
 			if(bootupError) {
-				console.error(`\n\n\nBootup ${process.title} with error:\n${bootupError.toString()}\n\n\n`);
+				console.error(`\n\nBootup ${process.title} with error:\n${bootupError.toString()}\n\n`);
 				throw bootupError;
 			}
 
-			console.info(`\n\nBootup ${process.title} with status:\n${allStatuses.join('\n')}\n\n`);
+			console.info(`\n\n${allStatuses.join('\n')}\n\n`);
 			return null;
 		}
 	}
@@ -108,13 +108,13 @@ class TwyrApplication extends TwyrBaseModule {
 			let lifecycleStatuses = null;
 
 			lifecycleStatuses = await this.stop();
-			allStatuses.push(`Stop status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}`);
+			allStatuses.push(`${process.title} stop status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}\n`);
 
 			lifecycleStatuses = await this.uninitialize();
-			allStatuses.push(`Uninitialize status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}`);
+			allStatuses.push(`${process.title} uninitialize status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}\n`);
 
 			lifecycleStatuses = await this.unload();
-			allStatuses.push(`Unload status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}`);
+			allStatuses.push(`${process.title} unload status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}\n`);
 		}
 		catch(err) {
 			allStatuses.push(`Shutdown error: ${err.toString()}`);
@@ -122,11 +122,11 @@ class TwyrApplication extends TwyrBaseModule {
 		}
 		finally {
 			if(shutdownError) {
-				console.error(`\n\n\nShutdown ${process.title} with error:\n${shutdownError.toString()}\n\n\n`);
+				console.error(`\n\nShutdown ${process.title} with error:\n${shutdownError.toString()}\n\n`);
 				throw shutdownError;
 			}
 
-			console.info(`Shutdown ${process.title} with status:\n${allStatuses.join('\n')}`);
+			console.info(`\n\n${allStatuses.join('\n')}\n\n`);
 			return null;
 		}
 	}
