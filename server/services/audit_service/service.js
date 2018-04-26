@@ -80,6 +80,19 @@ class AuditService extends TwyrBaseService {
 	// #endregion
 
 	// #region API
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof AuditService
+	 * @name     addRequest
+	 *
+	 * @param    {Object} requestDetails - The incoming request to which this server is responding.
+	 *
+	 * @returns  {null} Nothing.
+	 *
+	 * @summary  Stores the request and, if the response has already been logged, publishes the audit trail.
+	 */
 	async addRequest(requestDetails) {
 		try {
 			if(!this.$auditCache) {
@@ -112,6 +125,19 @@ class AuditService extends TwyrBaseService {
 		}
 	}
 
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof AuditService
+	 * @name     addResponse
+	 *
+	 * @param    {Object} responseDetails - The response this server is sending out.
+	 *
+	 * @returns  {null} Nothing.
+	 *
+	 * @summary  Stores the response and, if the request has already been logged, publishes the audit trail.
+	 */
 	async addResponse(responseDetails) {
 		try {
 			if(!this.$auditCache) {
@@ -144,6 +170,19 @@ class AuditService extends TwyrBaseService {
 		}
 	}
 
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof AuditService
+	 * @name     addResponsePayload
+	 *
+	 * @param    {Object} payloadDetails - Additional details about the request/response cycle.
+	 *
+	 * @returns  {null} Nothing.
+	 *
+	 * @summary  Stores optional details.
+	 */
 	async addResponsePayload(payloadDetails) {
 		try {
 			if(!this.$auditCache) {
@@ -176,6 +215,19 @@ class AuditService extends TwyrBaseService {
 	// #endregion
 
 	// #region Private Methods
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof AuditService
+	 * @name     _publishAudit
+	 *
+	 * @param    {Object} id - The ID assigned to the request/response cycle.
+	 *
+	 * @returns  {null} Nothing.
+	 *
+	 * @summary  Publishes the audit trail to the messaging queue, and then deletes the cached details.
+	 */
 	async _publishAudit(id) {
 		try {
 			const alreadyScheduled = this.$auditCache.get(`${id}-scheduled`);
@@ -205,6 +257,20 @@ class AuditService extends TwyrBaseService {
 		}
 	}
 
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof AuditService
+	 * @name     _processTimedoutRequests
+	 *
+	 * @param    {Object} key - The ID assigned to the request/response cycle.
+	 * @param    {Object} [value] - The audit trail information.
+	 *
+	 * @returns  {null} Nothing.
+	 *
+	 * @summary  Publishes the audit trail to the timeout error queue, and deletes the cached details.
+	 */
 	async _processTimedoutRequests(key, value) {
 		try {
 			const auditDetails = this._cleanBeforePublish(key, value);
@@ -222,6 +288,20 @@ class AuditService extends TwyrBaseService {
 		}
 	}
 
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof AuditService
+	 * @name     _cleanBeforePublish
+	 *
+	 * @param    {Object} id - The ID assigned to the request/response cycle.
+	 * @param    {Object} [value] - The audit trail information.
+	 *
+	 * @returns  {null} Nothing.
+	 *
+	 * @summary  Deletes any empty keys in the audit trail data.
+	 */
 	_cleanBeforePublish(id, value) {
 		const auditDetails = value || this.$auditCache.get(id);
 		if(!auditDetails) return null;

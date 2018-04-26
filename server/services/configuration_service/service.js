@@ -85,7 +85,7 @@ class ConfigurationService extends TwyrBaseService {
 						},
 
 						'DotEnvConfigurationService': {
-							'persistExample': false
+							'persistExample': true
 						},
 
 						'RedisConfigurationService': {
@@ -322,15 +322,20 @@ class ConfigurationService extends TwyrBaseService {
 	 * @summary  Syncs the configuration across all the configuration sources, and then tells the twyrModule to reconfigure itself.
 	 */
 	_processConfigChange(eventFirerModule, configUpdateModule, config) {
-		Object.keys(this.$services).forEach((subService) => {
-			if(subService === eventFirerModule)
-				return;
+		try {
+			Object.keys(this.$services).forEach((subService) => {
+				if(subService === eventFirerModule)
+					return;
 
-			this.$services[subService]._processConfigChange(configUpdateModule, config);
-		});
+				this.$services[subService]._processConfigChange(configUpdateModule, config);
+			});
 
-		const currentModule = this._getModuleFromPath(configUpdateModule);
-		if(currentModule) currentModule._reconfigure(config);
+			const currentModule = this._getModuleFromPath(configUpdateModule);
+			if(currentModule) currentModule._reconfigure(config);
+		}
+		catch(err) {
+			if(twyrEnv === 'development') console.error(`${this.name}::_getModuleFromPath error: ${err.message}\n${err.stack}`);
+		}
 	}
 
 	/**
@@ -350,15 +355,20 @@ class ConfigurationService extends TwyrBaseService {
 	 * @summary  Syncs the state across all the configuration sources, and then tells the twyrModule to change its own state.
 	 */
 	_processStateChange(eventFirerModule, stateUpdateModule, state) {
-		Object.keys(this.$services).forEach((subService) => {
-			if(subService === eventFirerModule)
-				return;
+		try {
+			Object.keys(this.$services).forEach((subService) => {
+				if(subService === eventFirerModule)
+					return;
 
-			this.$services[subService]._processStateChange(stateUpdateModule, state);
-		});
+				this.$services[subService]._processStateChange(stateUpdateModule, state);
+			});
 
-		const currentModule = this._getModuleFromPath(stateUpdateModule);
-		if(currentModule) currentModule._changeState(state);
+			const currentModule = this._getModuleFromPath(stateUpdateModule);
+			if(currentModule) currentModule._changeState(state);
+		}
+		catch(err) {
+			if(twyrEnv === 'development') console.error(`${this.name}::_getModuleFromPath error: ${err.message}\n${err.stack}`);
+		}
 	}
 
 	/**
@@ -376,20 +386,26 @@ class ConfigurationService extends TwyrBaseService {
 	 * @summary  Given a path relative to the Application Class instance, retrieves the loaded twyrModule object.
 	 */
 	_getModuleFromPath(pathFromRoot) {
-		const inflection = require('inflection');
+		try {
+			const inflection = require('inflection');
 
-		let currentModule = this.$parent,
-			pathSegments = null;
+			let currentModule = this.$parent,
+				pathSegments = null;
 
-		while(currentModule.$parent) currentModule = currentModule.$parent;
+			while(currentModule.$parent) currentModule = currentModule.$parent;
 
-		pathSegments = pathFromRoot.split('/');
-		pathSegments.forEach((pathSegment) => {
-			if(!currentModule) return;
-			currentModule = currentModule[`${inflection.camelize(pathSegment)}`] || currentModule[`${pathSegment}`] || currentModule[`$${pathSegment}`];
-		});
+			pathSegments = pathFromRoot.split('/');
+			pathSegments.forEach((pathSegment) => {
+				if(!currentModule) return;
+				currentModule = currentModule[`${inflection.camelize(pathSegment)}`] || currentModule[`${pathSegment}`] || currentModule[`$${pathSegment}`];
+			});
 
-		return currentModule;
+			return currentModule;
+		}
+		catch(err) {
+			if(twyrEnv === 'development') console.error(`${this.name}::_getModuleFromPath error: ${err.message}\n${err.stack}`);
+			return null;
+		}
 	}
 	// #endregion
 

@@ -114,7 +114,7 @@ class PubsubService extends TwyrBaseService {
 	 * @param    {string} strategy - The messaging server/exchange to connect to.
 	 * @param    {string} topic - The topic to publish on.
 	 * @param    {Object} data - The data to publish.
-	 * @param    {Object} options - Additional options, if any.
+	 * @param    {Object} [options] - Additional options, if any.
 	 *
 	 * @returns  {undefined} Nothing.
 	 *
