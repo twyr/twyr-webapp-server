@@ -29,8 +29,10 @@ const TwyrBaseModule = require('./twyr-base-module').TwyrBaseModule;
  */
 class TwyrApplication extends TwyrBaseModule {
 	// #region Constructor
-	constructor(parent, loader) {
+	constructor(application, parent, loader) {
 		super(parent, loader);
+
+		this.$application = application;
 		this.$uuid = require('uuid/v4')();
 	}
 	// #endregion

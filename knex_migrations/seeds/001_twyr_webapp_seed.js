@@ -4,13 +4,13 @@ exports.seed = function(knex, Promise) {
 	let rootTenantId = null,
 		rootUserId = null;
 
-	return knex.raw('SELECT id FROM modules WHERE name = ? AND parent IS NULL', ['TwyrApplication'])
+	return knex.raw('SELECT id FROM modules WHERE name = ? AND parent IS NULL', ['TwyrWebappServer'])
 	.then(function(webappId) {
 		if(webappId.rows.length)
 			return null;
 
 		return knex('modules').insert({
-			'name': 'TwyrApplication',
+			'name': 'TwyrWebappServer',
 			'type': 'server',
 			'admin_only': true,
 			'display_name': 'Twyr Web Application',

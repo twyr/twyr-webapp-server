@@ -13,15 +13,15 @@ const TwyrBaseService = require('./../../twyr-base-service').TwyrBaseService;
 const TwyrSrvcError = require('./../../twyr-service-error').TwyrServiceError;
 
 /**
- * @class   WebSocketService
+ * @class   WebsocketService
  * @extends {TwyrBaseService}
- * @classdesc The Twyr Web Application Server WebSocket Service.
+ * @classdesc The Twyr Web Application Server Websocket Service.
  *
  * @description
- * Allows the rest of the Twyr Modules to use WebSockets for realtime communication with the front-end.
+ * Allows the rest of the Twyr Modules to use Websockets for realtime communication with the front-end.
  *
  */
-class WebSocketService extends TwyrBaseService {
+class WebsocketService extends TwyrBaseService {
 	// #region Constructor
 	constructor(parent, loader) {
 		super(parent, loader);
@@ -34,7 +34,7 @@ class WebSocketService extends TwyrBaseService {
 	 * @function
 	 * @override
 	 * @instance
-	 * @memberof WebSocketService
+	 * @memberof WebsocketService
 	 * @name     _dependencyReconfigure
 	 *
 	 * @param    {TwyrBaseModule} dependency - Instance of the dependency that was reconfigured.
@@ -67,12 +67,12 @@ class WebSocketService extends TwyrBaseService {
 	 * @function
 	 * @override
 	 * @instance
-	 * @memberof WebSocketService
+	 * @memberof WebsocketService
 	 * @name     _setup
 	 *
 	 * @returns  {null} Nothing.
 	 *
-	 * @summary  Sets up the WebSocket Server.
+	 * @summary  Sets up the Websocket Server.
 	 */
 	async _setup() {
 		try {
@@ -211,12 +211,12 @@ class WebSocketService extends TwyrBaseService {
 	 * @function
 	 * @override
 	 * @instance
-	 * @memberof WebSocketService
+	 * @memberof WebsocketService
 	 * @name     _teardown
 	 *
 	 * @returns  {undefined} Nothing.
 	 *
-	 * @summary  Destroys the WebSocket Server.
+	 * @summary  Destroys the Websocket Server.
 	 */
 	async _teardown() {
 		try {
@@ -310,4 +310,4 @@ class WebSocketService extends TwyrBaseService {
 	// #endregion
 }
 
-exports.service = WebSocketService;
+exports.service = WebsocketService;

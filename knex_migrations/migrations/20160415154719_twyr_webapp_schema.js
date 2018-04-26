@@ -489,7 +489,7 @@ exports.up = function(knex, Promise) {
 					'END IF; ' +
 
 					'SELECT ' +
-						'id ' +
+						'name ' +
 					'FROM ' +
 						'fn_get_module_ancestors(NEW.id) ' +
 					'WHERE ' +
@@ -499,12 +499,12 @@ exports.up = function(knex, Promise) {
 
 					'IF OLD.configuration <> NEW.configuration ' +
 					'THEN ' +
-						'PERFORM pg_notify(CONCAT(twyr_application_name, \'-config-change\'), CAST(NEW.id AS text)); ' +
+						'PERFORM pg_notify(CONCAT(twyr_application_name, \'ConfigChange\'), CAST(NEW.id AS text)); ' +
 					'END IF; ' +
 
 					'IF OLD.enabled <> NEW.enabled ' +
 					'THEN ' +
-						'PERFORM pg_notify(CONCAT(twyr_application_name, \'-state-change\'), CAST(NEW.id AS text)); ' +
+						'PERFORM pg_notify(CONCAT(twyr_application_name, \'StateChange\'), CAST(NEW.id AS text)); ' +
 					'END IF; ' +
 
 					'RETURN NEW; ' +

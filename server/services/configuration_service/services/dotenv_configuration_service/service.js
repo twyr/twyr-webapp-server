@@ -12,6 +12,15 @@
 const TwyrBaseService = require('./../../../../twyr-base-service').TwyrBaseService;
 const TwyrSrvcError = require('./../../../../twyr-service-error').TwyrServiceError;
 
+/**
+ * @class   DotEnvConfigurationService
+ * @extends {TwyrBaseService}
+ * @classdesc The Twyr Web Application Server .env file-based configuration sub-service.
+ *
+ * @description
+ * Allows the rest of the codebase to CRUD their configurations from the .env file.
+ *
+ */
 class DotEnvConfigurationService extends TwyrBaseService {
 	// #region Constructor
 	constructor(parent) {

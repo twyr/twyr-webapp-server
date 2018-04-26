@@ -48,7 +48,7 @@ class DatabaseService extends TwyrBaseService {
 			const knex = require('knex');
 			const path = require('path');
 
-			this.$config.debug = (process.env.services_DatabaseService_debug === 'true');
+			this.$config.debug = (process.env.services_DatabaseService_debug === 'true') || (this.$config.debug === true);
 			if(this.$config.connection) { // eslint-disable-line curly
 				this.$config.connection.port = Number(process.env.services_DatabaseService_connection_port || this.$config.connection.port);
 			}

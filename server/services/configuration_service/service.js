@@ -54,10 +54,9 @@ class ConfigurationService extends TwyrBaseService {
 				'state': true,
 				'configuration': {
 					'priorities': {
-						'FileConfigurationService': Number(process.env.services_ConfigurationService_priorities_FileConfigurationService) || 10,
-						'RedisConfigurationService': Number(process.env.services_ConfigurationService_priorities_RedisConfigurationService) || 20,
-						'DatabaseConfigurationService': Number(process.env.services_ConfigurationService_priorities_DatabaseConfigurationService) || 30,
-						'DotEnvConfigurationService': Number(process.env.services_ConfigurationService_priorities_DotEnvConfigurationService) || 40
+						'FileConfigurationService': 10,
+						'DatabaseConfigurationService': 20,
+						'DotEnvConfigurationService': 30
 					},
 					'subservices': {
 						'DatabaseConfigurationService': {
