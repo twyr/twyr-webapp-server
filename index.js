@@ -18,6 +18,7 @@ require('dotenv').config();
 
 /**
  * Setup global variables (ugh!) to make life simpler across the rest of the codebase
+ * @ignore
  */
 global.twyrEnv = (process.env.NODE_ENV || 'development').toLocaleLowerCase();
 process.title = 'twyr-webapp';

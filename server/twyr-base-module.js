@@ -550,6 +550,13 @@ class TwyrBaseModule extends TwyrBaseClass {
 			}
 		});
 	}
+
+	_dummyAsync() {
+		const Promise = require('bluebird');
+		return new Promise((resolve) => {
+			resolve();
+		});
+	}
 	// #endregion
 
 	// #region Properties

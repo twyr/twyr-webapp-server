@@ -681,7 +681,7 @@ exports.up = function(knex, Promise) {
 		return Promise.all([
 			knex.schema.withSchema('public')
 			.raw(
-				'CREATE FUNCTION public.fn_get_user_permissions (IN tenantsubdomain text, IN userid uuid) ' +
+				'CREATE FUNCTION public.fn_get_user_permissions (IN tenantId uuid, IN userid uuid) ' +
 					'RETURNS TABLE (permission uuid, name text, depends_on jsonb) ' +
 					'LANGUAGE plpgsql ' +
 					'VOLATILE  ' +
@@ -717,7 +717,7 @@ exports.up = function(knex, Promise) {
 												'tenants_users C ' +
 											'WHERE ' +
 												'C.login = userid AND ' +
-												'C.tenant = (SELECT id FROM tenants WHERE sub_domain = tenantsubdomain) ' +
+												'C.tenant = tenantId ' +
 										') ' +
 								') ' +
 							'); ' +

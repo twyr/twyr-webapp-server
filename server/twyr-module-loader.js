@@ -351,6 +351,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 	 */
 	async _loadUtilities(configSrvc) { // eslint-disable-line no-unused-vars
 		const path = require('path');
+		const promises = require('bluebird');
 
 		try {
 			if(!this.$twyrModule.$utilities) this.$twyrModule.$utilities = {};
@@ -364,6 +365,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 					continue;
 
 				this.$twyrModule.$utilities[utility.name] = utility.method.bind(this.$twyrModule);
+				if(utility.isAsync) this.$twyrModule.$utilities[`${utility.name}Async`] = promises.promisify(utility.method).bind(this.$twyrModule);
 			}
 
 			return {
@@ -395,6 +397,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 			const utilityNames = Object.keys(this.$twyrModule.$utilities || {});
 			utilityNames.forEach((utilityName) => {
 				delete this.$twyrModule.$utilities[utilityName];
+				delete this.$twyrModule.$utilities[`${utilityName}Async`];
 			});
 
 			delete this.$twyrModule.$utilities;

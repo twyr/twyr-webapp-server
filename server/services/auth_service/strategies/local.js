@@ -23,31 +23,25 @@ exports.strategy = function() {
 
 	const LocalStrategy = require('passport-local').Strategy;
 	const passport = this.Interface;
-	passport.use('twyr-local', new LocalStrategy({ 'passReqToCallback': true }, (request, username, password, callback) => {
-		this._dummyAsync()
-		.then(() => {
+	passport.use('twyr-local', new LocalStrategy({ 'passReqToCallback': true }, async (request, username, password, callback) => {
+		try {
 			if(!this.$config.strategies.local.enabled) { // eslint-disable-line curly
 				throw new Error('Username / Password Authentication has been disabled');
 			}
 
-			return new User({ 'email': username }).fetch();
-		})
-		.then((userRecord) => {
+			const userRecord = await new User({ 'email': username }).fetch();
 			if(!userRecord) throw new Error('Invalid Credentials - please try again');
-			return promises.all([credential.verify(userRecord.get('password'), password), userRecord]);
-		})
-		.then((results) => {
-			const credentialMatch = results.shift(),
-				userRecord = results.shift();
 
+			const credentialMatch = await credential.verify(userRecord.get('password'));
 			if(!credentialMatch) throw new Error('Invalid Credentials - please try again');
-			if(callback) callback(null, userRecord.toJSON());
 
+			if(callback) callback(null, userRecord.toJSON());
 			return null;
-		})
-		.catch((err) => {
+		}
+		catch(err) {
 			if(callback) callback(err);
-		});
+			return null;
+		}
 	}));
 };
 

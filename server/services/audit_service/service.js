@@ -114,9 +114,9 @@ class AuditService extends TwyrBaseService {
 			}
 			else {
 				hasResponse = requestDetails;
+				this.$auditCache.put(hasResponse.twyrRequestId, hasResponse, 10000, this._processTimedoutRequests.bind(this));
 			}
 
-			this.$auditCache.put(hasResponse.twyrRequestId, hasResponse, 10000, this._processTimedoutRequests.bind(this));
 			return null;
 		}
 		catch(err) {
@@ -159,9 +159,9 @@ class AuditService extends TwyrBaseService {
 			}
 			else {
 				hasRequest = responseDetails;
+				this.$auditCache.put(hasRequest.twyrRequestId, hasRequest, 10000, this._processTimedoutRequests.bind(this));
 			}
 
-			this.$auditCache.put(hasRequest.twyrRequestId, hasRequest, 10000, this._processTimedoutRequests.bind(this));
 			return null;
 		}
 		catch(err) {
@@ -238,11 +238,11 @@ class AuditService extends TwyrBaseService {
 
 			const auditDetails = this._cleanBeforePublish(id);
 			if(auditDetails.error) {
-				this.$dependencies.LoggerService.error(`Error Servicing Request ${auditDetails.id} - ${auditDetails.url}:`, JSON.stringify(auditDetails, null, '\t'));
+				this.$dependencies.LoggerService.error(`Error Servicing Request ${auditDetails.twyrRequestId} - ${auditDetails.url}:`, JSON.stringify(auditDetails, null, '\t'));
 				await this.$dependencies.PubsubService.publish('twyr-audit', 'TWYR.AUDIT.ERROR', JSON.stringify(auditDetails));
 			}
 			else {
-				if(twyrEnv === 'development') this.$dependencies.LoggerService.debug(`Serviced Request ${auditDetails.id} - ${auditDetails.url}:`, JSON.stringify(auditDetails, null, '\t'));
+				if(twyrEnv === 'development') this.$dependencies.LoggerService.debug(`Serviced Request ${auditDetails.twyrRequestId} - ${auditDetails.url}:`, JSON.stringify(auditDetails, null, '\t'));
 				await this.$dependencies.PubsubService.publish('twyr-audit', 'TWYR.AUDIT.LOG', JSON.stringify(auditDetails));
 			}
 
@@ -276,7 +276,7 @@ class AuditService extends TwyrBaseService {
 			const auditDetails = this._cleanBeforePublish(key, value);
 			auditDetails.error = 'Timed Out';
 
-			this.$dependencies.LoggerService.error(`Timeout Servicing Request ${auditDetails.id} - ${auditDetails.url}:`, auditDetails);
+			this.$dependencies.LoggerService.error(`Timeout Servicing Request ${auditDetails.twyrRequestId} - ${auditDetails.url}:`, JSON.stringify(auditDetails, null, '\t'));
 			await this.$dependencies.PubsubService.publish('twyr-audit', 'TWYR.AUDIT.TIMEOUT', JSON.stringify(auditDetails));
 
 			this.$auditCache.del(key);
@@ -303,7 +303,8 @@ class AuditService extends TwyrBaseService {
 	 * @summary  Deletes any empty keys in the audit trail data.
 	 */
 	_cleanBeforePublish(id, value) {
-		const auditDetails = value || this.$auditCache.get(id);
+		let auditDetails = this.$auditCache.get(id);
+		if(!auditDetails && value) auditDetails = value;
 		if(!auditDetails) return null;
 
 		if(!Object.keys(auditDetails).length)

@@ -88,6 +88,7 @@ class WebsocketService extends TwyrBaseService {
 				device = require('express-device'),
 				moment = require('moment'),
 				session = require('express-session'),
+				url = require('url'),
 				uuid = require('uuid/v4');
 
 			const SessionStore = require(`connect-${this.$config.session.store.media}`)(session);
@@ -119,7 +120,8 @@ class WebsocketService extends TwyrBaseService {
 
 			const tenantSetter = (request, response, next) => {
 				const cacheSrvc = this.$dependencies.CacheService,
-					dbSrvc = this.$dependencies.DatabaseService.knex;
+					dbSrvc = this.$dependencies.DatabaseService.knex,
+					urlParts = url.parse(request.url);
 
 				if(!request.session.passport) { // eslint-disable-line curly
 					request.session.passport = {};
@@ -129,18 +131,18 @@ class WebsocketService extends TwyrBaseService {
 					request.session.passport.user = 'ffffffff-ffff-4fff-ffff-ffffffffffff';
 				}
 
-				let tenantSubDomain = request.hostname.replace(this.$config.cookieParser.domain, '');
+				let tenantSubDomain = (urlParts.hostname || `www${this.$config.cookieParser.domain}`).replace(this.$config.cookieParser.domain, '');
 				if(this.$config.subdomainMappings && this.$config.subdomainMappings[tenantSubDomain])
 					tenantSubDomain = this.$config.subdomainMappings[tenantSubDomain];
 
 				cacheSrvc.getAsync(`twyr!webapp!tenant!subdomain!${tenantSubDomain}`)
 				.then((tenant) => {
-					if(tenant) return [{ 'rows': [tenant] }, false];
+					if(tenant) return [{ 'rows': [JSON.parse(tenant)] }, false];
 					return promises.all([dbSrvc.raw('SELECT id, name, sub_domain FROM tenants WHERE sub_domain = ?', [tenantSubDomain]), true]);
 				})
 				.then((results) => {
 					const shouldCache = results[1],
-						tenant = results[0].rows[0].id;
+						tenant = results[0].rows[0];
 
 					if(!tenant) throw new Error(`Invalid sub-domain: ${tenantSubDomain}`);
 					request.tenant = tenant;
@@ -149,7 +151,7 @@ class WebsocketService extends TwyrBaseService {
 						return null;
 
 					const cacheMulti = promises.promisifyAll(cacheSrvc.multi());
-					cacheMulti.setAsync(`twyr!webapp!tenant!subdomain!${tenantSubDomain}`, tenant);
+					cacheMulti.setAsync(`twyr!webapp!tenant!subdomain!${tenantSubDomain}`, JSON.stringify(tenant));
 					cacheMulti.expireAsync(`twyr!webapp!tenant!subdomain!${tenantSubDomain}`, 43200);
 
 					return cacheMulti.execAsync();
@@ -166,6 +168,7 @@ class WebsocketService extends TwyrBaseService {
 						error = new TwyrSrvcError(`${this.name}::tenantSetter`, error);
 					}
 
+					console.error(error.toString());
 					next(error);
 				});
 			};
@@ -243,7 +246,9 @@ class WebsocketService extends TwyrBaseService {
 		if(callback) callback(!request.user);
 	}
 
-	_websocketServerInitialised(transformer, parser, options) {
+	async _websocketServerInitialised(transformer, parser, options) {
+		await snooze(1000);
+
 		const loggerSrvc = this.$dependencies.LoggerService;
 		if(twyrEnv === 'development') loggerSrvc.debug(`Websocket Server has been initialised with options`, JSON.stringify(options, undefined, '\t'));
 	}
