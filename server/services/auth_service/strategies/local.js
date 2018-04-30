@@ -4,7 +4,6 @@
  * Module dependencies, required for ALL PlantWorks modules
  * @ignore
  */
-const promises = require('bluebird');
 
 /**
  * Module dependencies, required for this module

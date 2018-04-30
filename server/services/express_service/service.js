@@ -66,13 +66,11 @@ class ExpressService extends TwyrBaseService {
 				logger = require('morgan'),
 				methodOverride = require('method-override'),
 				moment = require('moment'),
-				onFinished = require('on-finished'),
 				path = require('path'),
 				poweredBy = require('connect-powered-by'),
 				serveStatic = require('serve-static'),
 				serverDestroy = require('server-destroy'),
 				session = require('express-session'),
-				statusCodes = require('http').STATUS_CODES,
 				timeout = require('connect-timeout'),
 				uuid = require('uuid/v4');
 
@@ -124,170 +122,6 @@ class ExpressService extends TwyrBaseService {
 				}
 			});
 
-			const setupRequestResponseForAudit = async (request, response, next) => {
-				if(!this.$enabled) { // eslint-disable-line curly
-					response.status(500).redirect('/error');
-					return;
-				}
-
-				const auditService = this.$dependencies.AuditService;
-
-				request.twyrRequestId = uuid().toString();
-				const realSend = response.send.bind(response);
-
-				response.send = async function(body) {
-					if(response.finished) return null;
-
-					if(body && (typeof body === 'string')) {
-						try {
-							const parsedBody = JSON.parse(body);
-							const auditBody = { 'id': request.twyrRequestId, 'payload': parsedBody };
-
-							await auditService.addResponsePayload(auditBody);
-						}
-						catch(parseOrAuditErr) {
-							loggerSrvc.error(`${parseOrAuditErr.message}\n${parseOrAuditErr.stack}`);
-						}
-					}
-
-					try {
-						return realSend(body);
-					}
-					catch(realSendError) {
-						let error = realSendError;
-						if(!(error instanceof TwyrSrvcError))
-							error = new TwyrSrvcError(`${this.name}::setupRequestResponseForAudit::realSendError`, realSendError);
-
-						loggerSrvc.error(error.toString());
-						throw error;
-					}
-				}.bind(response);
-
-				next();
-			};
-
-			const requestResponseCycleHandler = async (request, response, next) => {
-				const auditService = this.$dependencies.AuditService,
-					logMsgMeta = { 'user': undefined, 'userId': undefined };
-
-				onFinished(request, async (err) => {
-					try {
-						logMsgMeta.twyrRequestId = request.twyrRequestId;
-						logMsgMeta.url = `${request.method} ${request.baseUrl ? request.baseUrl : ''}${request.path}`;
-						logMsgMeta.userId = request.user ? `${request.user.id}` : logMsgMeta.userId || 'ffffffff-ffff-4fff-ffff-ffffffffffff';
-						logMsgMeta.user = request.user ? `${request.user.first_name} ${request.user.last_name}` : logMsgMeta.user;
-						logMsgMeta.query = JSON.parse(JSON.stringify(request.query || {}));
-						logMsgMeta.params = JSON.parse(JSON.stringify(request.params || {}));
-						logMsgMeta.body = JSON.parse(JSON.stringify(request.body || {}));
-
-						if(err) {
-							let error = err;
-							if(!(error instanceof TwyrSrvcError)) { // eslint-disable-line curly
-								error = new TwyrSrvcError(`${this.name}::requestResponseCycleHandler::onFinished::request`, error);
-							}
-
-							logMsgMeta.error = error.toString();
-						}
-
-						await auditService.addRequest(logMsgMeta);
-					}
-					catch(auditErr) {
-						let error = auditErr;
-						if(!(error instanceof TwyrSrvcError)) { // eslint-disable-line curly
-							error = new TwyrSrvcError(`${this.name}::requestResponseCycleHandler::onFinished::request::auditErr`, auditErr);
-						}
-
-						loggerSrvc.error(error.toString());
-					}
-				});
-
-				onFinished(response, async (err) => {
-					try {
-						logMsgMeta.twyrRequestId = request.twyrRequestId;
-						logMsgMeta.url = `${request.method} ${request.baseUrl ? request.baseUrl : ''}${request.path}`;
-						logMsgMeta.userId = request.user ? `${request.user.id}` : logMsgMeta.userId || 'ffffffff-ffff-4fff-ffff-ffffffffffff';
-						logMsgMeta.user = request.user ? `${request.user.first_name} ${request.user.last_name}` : logMsgMeta.user;
-						logMsgMeta.query = JSON.parse(JSON.stringify(request.query || {}));
-						logMsgMeta.params = JSON.parse(JSON.stringify(request.params || {}));
-						logMsgMeta.body = JSON.parse(JSON.stringify(request.body || {}));
-
-						logMsgMeta.statusCode = response.statusCode.toString();
-						logMsgMeta.statusMessage = response.statusMessage ? response.statusMessage : statusCodes[response.statusCode];
-
-						if(response.statusCode >= 400) logMsgMeta.error = `${logMsgMeta.statusCode}: ${logMsgMeta.statusMessage}`;
-
-						if(err) {
-							let error = err;
-							if(!(error instanceof TwyrSrvcError)) { // eslint-disable-line curly
-								error = new TwyrSrvcError(`${this.name}::requestResponseCycleHandler::onFinished::response`, error);
-							}
-
-							logMsgMeta.error = error.toString();
-						}
-
-						await auditService.addResponse(logMsgMeta);
-					}
-					catch(auditErr) {
-						let error = auditErr;
-						if(!(error instanceof TwyrSrvcError)) { // eslint-disable-line curly
-							error = new TwyrSrvcError(`${this.name}::requestResponseCycleHandler::onFinished::response::auditErr`, auditErr);
-						}
-
-						loggerSrvc.error(error.toString());
-					}
-				});
-
-				next();
-			};
-
-			const tenantSetter = async (request, response, next) => {
-				try {
-					const cacheSrvc = this.$dependencies.CacheService,
-						dbSrvc = this.$dependencies.DatabaseService.knex;
-
-					if(!request.session.passport) { // eslint-disable-line curly
-						request.session.passport = {};
-					}
-
-					if(!request.session.passport.user) { // eslint-disable-line curly
-						request.session.passport.user = 'ffffffff-ffff-4fff-ffff-ffffffffffff';
-					}
-
-					let tenantSubDomain = request.hostname.replace(this.$config.cookieParser.domain, '');
-					if(this.$config.subdomainMappings && this.$config.subdomainMappings[tenantSubDomain])
-						tenantSubDomain = this.$config.subdomainMappings[tenantSubDomain];
-
-					let tenant = await cacheSrvc.getAsync(`twyr!webapp!tenant!${tenantSubDomain}`);
-					if(tenant) {
-						request.tenant = JSON.parse(tenant);
-						return;
-					}
-
-					tenant = await dbSrvc.raw('SELECT id, name, sub_domain FROM tenants WHERE sub_domain = ?', [tenantSubDomain]);
-					if(!tenant) throw new Error(`Invalid sub-domain: ${tenantSubDomain}`);
-
-					request.tenant = tenant.rows[0];
-
-					const cacheMulti = promises.promisifyAll(cacheSrvc.multi());
-					cacheMulti.setAsync(`twyr!webapp!tenant!${tenantSubDomain}`, JSON.stringify(request.tenant));
-					cacheMulti.expireAsync(`twyr!webapp!tenant!${tenantSubDomain}`, ((twyrEnv === 'development') ? 30 : 43200));
-
-					await cacheMulti.execAsync();
-				}
-				catch(err) {
-					let error = err;
-
-					// eslint-disable-next-line curly
-					if(error && !(error instanceof TwyrSrvcError)) {
-						error = new TwyrSrvcError(`${this.name}::tenantSetter`, error);
-					}
-
-					throw error;
-				}
-
-				next();
-			};
-
 			// Step 5: Setup Express
 			const webServer = express();
 			this.$express = webServer;
@@ -302,7 +136,7 @@ class ExpressService extends TwyrBaseService {
 			.use(logger('combined', {
 				'stream': loggerStream
 			}))
-			.use(setupRequestResponseForAudit)
+			.use(this._setupRequestResponseForAudit.bind(this))
 			.use(debounce())
 			.use(cors(corsOptions))
 			.use(favicon(path.join(__dirname, this.$config.favicon)))
@@ -341,8 +175,8 @@ class ExpressService extends TwyrBaseService {
 				response.cookie('twyr-webapp-locale', request.getLocale(), this.$config.cookieParser);
 				next();
 			})
-			.use(requestResponseCycleHandler)
-			.use(tenantSetter)
+			.use(this._requestResponseCycleHandler.bind(this))
+			.use(this._tenantSetter.bind(this))
 			.use(this.$dependencies.AuthService.initialize())
 			.use(this.$dependencies.AuthService.session());
 
@@ -372,8 +206,10 @@ class ExpressService extends TwyrBaseService {
 			// Start listening...
 			this.$server = promises.promisifyAll(server);
 			this.$server.on('listening', async () => {
-				await snooze(800);
-				if(twyrEnv === 'development') loggerSrvc.debug(`${this.$config.protocol.toUpperCase()} Server listening on: ${JSON.stringify(this.$server.address(), null, '\t')}`);
+				if(twyrEnv === 'development') {
+					await snooze(800);
+					this._printNetworkInterfaces(this.$config.port[this.$parent.name] || 9090);
+				}
 			});
 			this.$server.on('connection', this._serverConnection.bind(this));
 			this.$server.on('error', this._serverError.bind(this));
@@ -423,6 +259,251 @@ class ExpressService extends TwyrBaseService {
 	}
 	// #endregion
 
+	// #region Express Middlewares
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof ExpressService
+	 * @name     _setupRequestResponseForAudit
+	 *
+	 * @param    {Object} request - Request coming in from the outside world.
+	 * @param    {Object} response - Response going out to the outside world.
+	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Wraps the response.send function so that the entire request / response cycle leaves an audit trail.
+	 */
+	async _setupRequestResponseForAudit(request, response, next) {
+		if(!this.$enabled) { // eslint-disable-line curly
+			response.status(500).redirect('/error');
+			return;
+		}
+
+		try {
+			const uuid = require('uuid/v4');
+
+			const auditService = this.$dependencies.AuditService;
+			const loggerService = this.$dependencies.LoggerService;
+
+			request.twyrRequestId = uuid().toString();
+			const realSend = response.send.bind(response);
+
+			response.send = async function(body) {
+				if(response.finished) return null;
+
+				if(body && (typeof body === 'string')) { // eslint-disable-line curly
+					try {
+						const parsedBody = JSON.parse(body);
+						const auditBody = { 'id': request.twyrRequestId, 'payload': parsedBody };
+
+						await auditService.addResponsePayload(auditBody);
+					}
+					catch(parseOrAuditErr) {
+						loggerService.error(`${parseOrAuditErr.message}\n${parseOrAuditErr.stack}`);
+					}
+				}
+
+				try {
+					return realSend(body);
+				}
+				catch(realSendError) {
+					let error = realSendError;
+					if(!(error instanceof TwyrSrvcError))
+						error = new TwyrSrvcError(`${this.name}::setupRequestResponseForAudit::realSendError`, realSendError);
+
+					loggerService.error(error.toString());
+					throw error;
+				}
+			}.bind(response);
+
+			next();
+			return;
+		}
+		catch(err) {
+			let error = err;
+
+			// eslint-disable-next-line curly
+			if(error && !(error instanceof TwyrSrvcError)) {
+				error = new TwyrSrvcError(`${this.name}::setupRequestResponseForAudit`, error);
+			}
+
+			throw error;
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof ExpressService
+	 * @name     _requestResponseCycleHandler
+	 *
+	 * @param    {Object} request - Request coming in from the outside world.
+	 * @param    {Object} response - Response going out to the outside world.
+	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Pushes the data from the request/response cycle to the Audit Service for publication.
+	 */
+	async _requestResponseCycleHandler(request, response, next) {
+		try {
+			const onFinished = require('on-finished');
+			const statusCodes = require('http').STATUS_CODES;
+
+			const auditService = this.$dependencies.AuditService;
+			const loggerService = this.$dependencies.LoggerService;
+			const logMsgMeta = { 'user': undefined, 'userId': undefined };
+
+			onFinished(request, async (err) => {
+				try {
+					logMsgMeta.twyrRequestId = request.twyrRequestId;
+					logMsgMeta.url = `${request.method} ${request.baseUrl ? request.baseUrl : ''}${request.path}`;
+					logMsgMeta.userId = request.user ? `${request.user.id}` : logMsgMeta.userId || 'ffffffff-ffff-4fff-ffff-ffffffffffff';
+					logMsgMeta.user = request.user ? `${request.user.first_name} ${request.user.last_name}` : logMsgMeta.user;
+					logMsgMeta.query = JSON.parse(JSON.stringify(request.query || {}));
+					logMsgMeta.params = JSON.parse(JSON.stringify(request.params || {}));
+					logMsgMeta.body = JSON.parse(JSON.stringify(request.body || {}));
+
+					if(err) {
+						let error = err;
+						if(!(error instanceof TwyrSrvcError)) { // eslint-disable-line curly
+							error = new TwyrSrvcError(`${this.name}::requestResponseCycleHandler::onFinished::request`, error);
+						}
+
+						logMsgMeta.error = error.toString();
+					}
+
+					await auditService.addRequest(logMsgMeta);
+				}
+				catch(auditErr) {
+					let error = auditErr;
+					if(!(error instanceof TwyrSrvcError)) { // eslint-disable-line curly
+						error = new TwyrSrvcError(`${this.name}::requestResponseCycleHandler::onFinished::request::auditErr`, auditErr);
+					}
+
+					loggerService.error(error.toString());
+				}
+			});
+
+			onFinished(response, async (err) => {
+				try {
+					logMsgMeta.twyrRequestId = request.twyrRequestId;
+					logMsgMeta.url = `${request.method} ${request.baseUrl ? request.baseUrl : ''}${request.path}`;
+					logMsgMeta.userId = request.user ? `${request.user.id}` : logMsgMeta.userId || 'ffffffff-ffff-4fff-ffff-ffffffffffff';
+					logMsgMeta.user = request.user ? `${request.user.first_name} ${request.user.last_name}` : logMsgMeta.user;
+					logMsgMeta.query = JSON.parse(JSON.stringify(request.query || {}));
+					logMsgMeta.params = JSON.parse(JSON.stringify(request.params || {}));
+					logMsgMeta.body = JSON.parse(JSON.stringify(request.body || {}));
+
+					logMsgMeta.statusCode = response.statusCode.toString();
+					logMsgMeta.statusMessage = response.statusMessage ? response.statusMessage : statusCodes[response.statusCode];
+
+					if(response.statusCode >= 400) logMsgMeta.error = `${logMsgMeta.statusCode}: ${logMsgMeta.statusMessage}`;
+
+					if(err) {
+						let error = err;
+						if(!(error instanceof TwyrSrvcError)) { // eslint-disable-line curly
+							error = new TwyrSrvcError(`${this.name}::requestResponseCycleHandler::onFinished::response`, error);
+						}
+
+						logMsgMeta.error = error.toString();
+					}
+
+					await auditService.addResponse(logMsgMeta);
+				}
+				catch(auditErr) {
+					let error = auditErr;
+					if(!(error instanceof TwyrSrvcError)) { // eslint-disable-line curly
+						error = new TwyrSrvcError(`${this.name}::requestResponseCycleHandler::onFinished::response::auditErr`, auditErr);
+					}
+
+					loggerService.error(error.toString());
+				}
+			});
+
+			next();
+		}
+		catch(err) {
+			let error = err;
+
+			// eslint-disable-next-line curly
+			if(error && !(error instanceof TwyrSrvcError)) {
+				error = new TwyrSrvcError(`${this.name}::requestResponseCycleHandler`, error);
+			}
+
+			throw error;
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof ExpressService
+	 * @name     _tenantSetter
+	 *
+	 * @param    {Object} request - Request coming in from the outside world.
+	 * @param    {Object} response - Response going out to the outside world.
+	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Sets up the tenant context on each request so Ringpop knows which node in the cluster to route it to.
+	 */
+	async _tenantSetter(request, response, next) {
+		try {
+			const promises = require('bluebird');
+
+			const cacheSrvc = this.$dependencies.CacheService,
+				dbSrvc = this.$dependencies.DatabaseService.knex;
+
+			if(!request.session.passport) { // eslint-disable-line curly
+				request.session.passport = {};
+			}
+
+			if(!request.session.passport.user) { // eslint-disable-line curly
+				request.session.passport.user = 'ffffffff-ffff-4fff-ffff-ffffffffffff';
+			}
+
+			let tenantSubDomain = request.hostname.replace(this.$config.cookieParser.domain, '');
+			if(this.$config.subdomainMappings && this.$config.subdomainMappings[tenantSubDomain])
+				tenantSubDomain = this.$config.subdomainMappings[tenantSubDomain];
+
+			let tenant = await cacheSrvc.getAsync(`twyr!webapp!tenant!${tenantSubDomain}`);
+			if(tenant) {
+				request.tenant = JSON.parse(tenant);
+				next();
+				return;
+			}
+
+			tenant = await dbSrvc.raw('SELECT id, name, sub_domain FROM tenants WHERE sub_domain = ?', [tenantSubDomain]);
+			if(!tenant) throw new Error(`Invalid sub-domain: ${tenantSubDomain}`);
+
+			request.tenant = tenant.rows[0];
+
+			const cacheMulti = promises.promisifyAll(cacheSrvc.multi());
+			cacheMulti.setAsync(`twyr!webapp!tenant!${tenantSubDomain}`, JSON.stringify(request.tenant));
+			cacheMulti.expireAsync(`twyr!webapp!tenant!${tenantSubDomain}`, ((twyrEnv === 'development') ? 30 : 43200));
+
+			await cacheMulti.execAsync();
+			next();
+		}
+		catch(err) {
+			let error = err;
+
+			// eslint-disable-next-line curly
+			if(error && !(error instanceof TwyrSrvcError)) {
+				error = new TwyrSrvcError(`${this.name}::tenantSetter`, error);
+			}
+
+			throw error;
+		}
+	}
+	// #endregion
+
 	// #region Private Methods
 	_serverConnection(socket) {
 		socket.setTimeout(this.$config.connectionTimeout * 1000);
@@ -437,6 +518,31 @@ class ExpressService extends TwyrBaseService {
 		}
 
 		this.$dependencies.LoggerService.error(`${this.name}::_serverError\n\n${error.toString()}`);
+	}
+
+	_printNetworkInterfaces(serverPort) {
+		const forPrint = [],
+			networkInterfaces = require('os').networkInterfaces();
+
+		Object.keys(networkInterfaces).forEach((networkInterfaceName) => {
+			const networkInterfaceAddresses = networkInterfaces[networkInterfaceName];
+
+			for(const address of networkInterfaceAddresses)
+				forPrint.push({
+					'Interface': networkInterfaceName,
+					'Protocol': address.family,
+					'Address': address.address,
+					'Port': serverPort
+				});
+		});
+
+		if(forPrint.length) {
+			const printf = require('node-print');
+
+			console.log(`\n\n${process.title} Listening On:`);
+			printf.printTable(forPrint);
+			console.log('\n\n');
+		}
 	}
 	// #endregion
 
