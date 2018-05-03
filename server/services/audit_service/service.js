@@ -108,7 +108,33 @@ class AuditService extends TwyrBaseService {
 			let hasResponse = this.$auditCache.get(requestDetails.twyrRequestId);
 			if(hasResponse) {
 				const deepmerge = require('deepmerge');
-				hasResponse = deepmerge(hasResponse, requestDetails);
+				const emptyTarget = value => Array.isArray(value) ? [] : {};
+				const clone = (value, options) => deepmerge(emptyTarget(value), value, options);
+
+				const oldArrayMerge = (target, source, options) => {
+					const destination = target.slice();
+
+					source.forEach(function(e, i) {
+						if(typeof destination[i] === 'undefined') {
+							const cloneRequested = options.clone !== false;
+							const shouldClone = cloneRequested && options.isMergeableObject(e);
+
+							destination[i] = shouldClone ? clone(e, options) : e;
+						}
+						else if(options.isMergeableObject(e)) {
+							destination[i] = deepmerge(target[i], e, options);
+						}
+						else if(target.indexOf(e) === -1) {
+							destination.push(e);
+						}
+					});
+
+					return destination;
+				};
+
+				hasResponse = deepmerge(hasResponse, requestDetails, {
+					'arrayMerge': oldArrayMerge
+				});
 
 				await this._publishAudit(hasResponse.twyrRequestId);
 			}
@@ -153,7 +179,33 @@ class AuditService extends TwyrBaseService {
 			let hasRequest = this.$auditCache.get(responseDetails.twyrRequestId);
 			if(hasRequest) {
 				const deepmerge = require('deepmerge');
-				hasRequest = deepmerge(hasRequest, responseDetails);
+				const emptyTarget = value => Array.isArray(value) ? [] : {};
+				const clone = (value, options) => deepmerge(emptyTarget(value), value, options);
+
+				const oldArrayMerge = (target, source, options) => {
+					const destination = target.slice();
+
+					source.forEach(function(e, i) {
+						if(typeof destination[i] === 'undefined') {
+							const cloneRequested = options.clone !== false;
+							const shouldClone = cloneRequested && options.isMergeableObject(e);
+
+							destination[i] = shouldClone ? clone(e, options) : e;
+						}
+						else if(options.isMergeableObject(e)) {
+							destination[i] = deepmerge(target[i], e, options);
+						}
+						else if(target.indexOf(e) === -1) {
+							destination.push(e);
+						}
+					});
+
+					return destination;
+				};
+
+				hasRequest = deepmerge(hasRequest, responseDetails, {
+					'arrayMerge': oldArrayMerge
+				});
 
 				await this._publishAudit(hasRequest.twyrRequestId);
 			}
@@ -198,7 +250,33 @@ class AuditService extends TwyrBaseService {
 			let hasPayload = this.$auditCache.get(payloadDetails.twyrRequestId);
 			if(hasPayload) {
 				const deepmerge = require('deepmerge');
-				hasPayload = deepmerge(hasPayload, payloadDetails);
+				const emptyTarget = value => Array.isArray(value) ? [] : {};
+				const clone = (value, options) => deepmerge(emptyTarget(value), value, options);
+
+				const oldArrayMerge = (target, source, options) => {
+					const destination = target.slice();
+
+					source.forEach(function(e, i) {
+						if(typeof destination[i] === 'undefined') {
+							const cloneRequested = options.clone !== false;
+							const shouldClone = cloneRequested && options.isMergeableObject(e);
+
+							destination[i] = shouldClone ? clone(e, options) : e;
+						}
+						else if(options.isMergeableObject(e)) {
+							destination[i] = deepmerge(target[i], e, options);
+						}
+						else if(target.indexOf(e) === -1) {
+							destination.push(e);
+						}
+					});
+
+					return destination;
+				};
+
+				hasPayload = deepmerge(hasPayload, payloadDetails, {
+					'arrayMerge': oldArrayMerge
+				});
 			}
 			else {
 				hasPayload = payloadDetails;

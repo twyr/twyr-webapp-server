@@ -246,11 +246,12 @@ class WebsocketService extends TwyrBaseService {
 		if(callback) callback(!request.user);
 	}
 
-	async _websocketServerInitialised(transformer, parser, options) {
-		await snooze(1000);
+	async _websocketServerInitialised(/* transformer, parser, options */) { // eslint-disable-line
+		if(twyrEnv !== 'development')
+			return;
 
-		const loggerSrvc = this.$dependencies.LoggerService;
-		if(twyrEnv === 'development') loggerSrvc.debug(`Websocket Server has been initialised with options`, JSON.stringify(options, undefined, '\t'));
+		await snooze(1000);
+		this.$dependencies.LoggerService.debug(`Websocket Server has been initialised\n`);
 	}
 
 	_websocketServerLog() {

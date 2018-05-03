@@ -293,25 +293,23 @@ class TwyrBaseModule extends TwyrBaseClass {
 	async _reconfigure(newConfig) {
 		if(twyrEnv === 'development') console.log(`${this.name}::_reconfigure`);
 
-		const deepEqual = require('deep-equal'),
-			deepMerge = require('deepmerge');
-
 		try {
 			// Step 1: If the config has not changed, do nothing
+			const deepEqual = require('deep-equal');
 			if(deepEqual(newConfig, this.$config))
 				return null;
 
 			// Step 2: If the module is currently disabled, store the config
 			// and return
 			if(!this.$enabled) {
-				this.$config = deepMerge(this.$config, JSON.parse(JSON.stringify(newConfig)) || {});
+				this.$config = JSON.parse(JSON.stringify(newConfig || {}));
 				return null;
 			}
 
 			// Step 3: Config has changed, and the module is active
 			// So recycle the module - teardown, copy config, and setup
 			await this._teardown();
-			this.$config = deepMerge(this.$config, JSON.parse(JSON.stringify(newConfig)) || {});
+			this.$config = JSON.parse(JSON.stringify(newConfig || {}));
 			await this._setup();
 
 			// Step 4: Go up the hierarchy and let the parent modules react

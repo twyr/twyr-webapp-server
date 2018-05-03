@@ -59,4 +59,3 @@ serverInstance.bootupServer()
 .catch(() => {
 	process.exit(1); // eslint-disable-line no-process-exit
 });
-

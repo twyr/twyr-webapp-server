@@ -97,6 +97,9 @@ class LoggerService extends TwyrBaseService {
 				}]
 			});
 
+			// Add trace === silly
+			this.$winston.trace = this.$winston.silly;
+
 			// Console log any errors emitted by Winston itself
 			this.$winston.on('error', (err) => {
 				console.error(`Winston Logger Error:\n${err.stack}`);
@@ -131,16 +134,11 @@ class LoggerService extends TwyrBaseService {
 			// The last log of this logger instance...
 			if(twyrEnv === 'development') this.$winston.debug('\n\nGoodbye, wi-fi, goodbye...');
 
-			for(const transportIdx in this.$config) {
-				if(!Object.prototype.hasOwnProperty.call(this.$config, transportIdx) && !{}.hasOwnProperty.call(this.$config, transportIdx))
-					continue;
-
-				try {
-					this.$winston.remove(transportIdx);
-				}
-				catch(err) {
-					if(twyrEnv === 'development') console.error(new TwyrSrvcError(`Error Removing ${transportIdx} from the Winston instance`, err).toString());
-				}
+			try {
+				this.$winston.clear();
+			}
+			catch(err) {
+				if(twyrEnv === 'development') console.error(new TwyrSrvcError(`Error Removing ${transportIdx} from the Winston instance`, err).toString());
 			}
 
 			delete this.$winston;

@@ -48,13 +48,12 @@ class DotEnvConfigurationService extends TwyrBaseService {
 				path = require('path'),
 				promises = require('bluebird');
 
-			const filesystem = promises.promisifyAll(require('fs'));
+			const filesystem = promises.promisifyAll(require('fs-extra'));
 
 			const rootPath = path.dirname(require.main.filename);
 			const envFilePath = path.join(rootPath, '.env');
 
-			const doesExist = await this._exists(envFilePath, filesystem.R_OK);
-			if(!doesExist) return null;
+			await filesystem.ensureFileAsync(envFilePath);
 
 			const envFile = promises.promisifyAll(require('envfile'));
 			this.$cacheMap = await envFile.parseFileAsync(envFilePath);
@@ -449,7 +448,7 @@ class DotEnvConfigurationService extends TwyrBaseService {
 			if(Array.isArray(configObject)) {
 				configEnvString += `${prepender}=TWYR_CONFIG_ARRAY\n`;
 				configObject.forEach((configObjectElement, idx) => {
-					const serializedconfigObjectElement = this._serializeConfig(`${prepender}#${idx}`, configObjectElement);
+					const serializedconfigObjectElement = this._serializeConfig(`${prepender}@${idx}`, configObjectElement);
 					if(!serializedconfigObjectElement) return;
 
 					configEnvString += `${serializedconfigObjectElement}\n`;
@@ -573,8 +572,8 @@ class DotEnvConfigurationService extends TwyrBaseService {
 					return;
 				}
 
-				if(configKey.indexOf('#') >= 0) {
-					const parentArrayKey = configKey.substring(0, configKey.indexOf('#')).replace(`${configPath}_`, '');
+				if(configKey.indexOf('@') >= 0) {
+					const parentArrayKey = configKey.substring(0, configKey.indexOf('@')).replace(`${configPath}_`, '');
 
 					if(this.$cacheMap[configKey] === 'TWYR_CONFIG_OBJECT') {
 						const deserializedArrayElementConfig = this._deserializeConfig(configKey);

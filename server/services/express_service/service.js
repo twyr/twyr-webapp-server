@@ -125,6 +125,7 @@ class ExpressService extends TwyrBaseService {
 			// Step 5: Setup Express
 			const webServer = express();
 			this.$express = webServer;
+			this.$express.on('error', this._serverError.bind(this));
 
 			webServer.set('view engine', this.$config.templateEngine);
 			webServer.engine(this.$config.templateEngine, engines[this.$config.templateEngine]);
@@ -136,13 +137,16 @@ class ExpressService extends TwyrBaseService {
 			.use(logger('combined', {
 				'stream': loggerStream
 			}))
-			.use(this._setupRequestResponseForAudit.bind(this))
+			.use(this._tenantSetter.bind(this))
+			.use(this._handleOrProxytoCluster.bind(this))
+			.use(compress())
 			.use(debounce())
 			.use(cors(corsOptions))
-			.use(favicon(path.join(__dirname, this.$config.favicon)))
+			.use(_cookieParser)
+			.use(_session)
 			.use(acceptOverride())
 			.use(methodOverride())
-			.use(compress())
+			.use(favicon(path.join(__dirname, this.$config.favicon)))
 			.use(poweredBy(this.$config.poweredBy))
 			.use(timeout(this.$config.requestTimeout * 1000))
 			.use(serveStatic(path.join(this.basePath, this.$config.static.path || 'static'), {
@@ -150,8 +154,6 @@ class ExpressService extends TwyrBaseService {
 				'maxAge': this.$config.static.maxAge || 300
 			}))
 			.use(flash())
-			.use(_cookieParser)
-			.use(_session)
 			.use(bodyParser.raw({
 				'limit': this.$config.maxRequestSize
 			}))
@@ -175,8 +177,8 @@ class ExpressService extends TwyrBaseService {
 				response.cookie('twyr-webapp-locale', request.getLocale(), this.$config.cookieParser);
 				next();
 			})
+			.use(this._setupRequestResponseForAudit.bind(this))
 			.use(this._requestResponseCycleHandler.bind(this))
-			.use(this._tenantSetter.bind(this))
 			.use(this.$dependencies.AuthService.initialize())
 			.use(this.$dependencies.AuthService.session());
 
@@ -203,18 +205,25 @@ class ExpressService extends TwyrBaseService {
 			// Add utility to force-stop server
 			serverDestroy(server);
 
-			// Start listening...
+			// Step 7: Setup the server to listen to requests forwarded via Ringpop
+			this.$dependencies.RingpopService.on('request', (() => {
+				return (request, response) => {
+					return this.$express.handle(request, response, () => {
+						console.info(JSON.stringify(arguments, null, '\t'));
+						if(!response.finished) response.end();
+					});
+				};
+			})());
+
+			// Finally, Start listening...
 			this.$server = promises.promisifyAll(server);
-			this.$server.on('listening', async () => {
-				if(twyrEnv === 'development') {
-					await snooze(800);
-					this._printNetworkInterfaces(this.$config.port[this.$parent.name] || 9090);
-				}
-			});
 			this.$server.on('connection', this._serverConnection.bind(this));
 			this.$server.on('error', this._serverError.bind(this));
 
+			this.$parent.on('server-online', this._printNetworkInterfaces.bind(this, this.$config.port[this.$parent.name] || 9090));
 			await this.$server.listenAsync(this.$config.port[this.$parent.name] || 9090);
+
+			console.info(`Server Addresses: ${JSON.stringify(this.$express.address)}`)
 			return null;
 		}
 		catch(err) {
@@ -236,6 +245,8 @@ class ExpressService extends TwyrBaseService {
 	 */
 	async _teardown() {
 		try {
+			this.$dependencies.RingpopService.removeAllListeners('request');
+
 			if(!this.$server)
 				return null;
 
@@ -265,6 +276,91 @@ class ExpressService extends TwyrBaseService {
 	 * @function
 	 * @instance
 	 * @memberof ExpressService
+	 * @name     _tenantSetter
+	 *
+	 * @param    {Object} request - Request coming in from the outside world.
+	 * @param    {Object} response - Response going out to the outside world.
+	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Sets up the tenant context on each request so Ringpop knows which node in the cluster to route it to.
+	 */
+	async _tenantSetter(request, response, next) {
+		try {
+			const promises = require('bluebird');
+
+			const cacheSrvc = this.$dependencies.CacheService,
+				dbSrvc = this.$dependencies.DatabaseService.knex;
+
+			let tenantSubDomain = request.hostname.replace(this.$config.cookieParser.domain, '');
+			if(this.$config.subdomainMappings && this.$config.subdomainMappings[tenantSubDomain])
+				tenantSubDomain = this.$config.subdomainMappings[tenantSubDomain];
+
+			let tenant = await cacheSrvc.getAsync(`twyr!webapp!tenant!${tenantSubDomain}`);
+			if(tenant) {
+				request.tenant = JSON.parse(tenant);
+				next();
+				return;
+			}
+
+			tenant = await dbSrvc.raw('SELECT id, name, sub_domain FROM tenants WHERE sub_domain = ?', [tenantSubDomain]);
+			if(!tenant) throw new Error(`Invalid sub-domain: ${tenantSubDomain}`);
+
+			request.tenant = tenant.rows[0];
+
+			const cacheMulti = cacheSrvc.multi();
+			cacheMulti.setAsync(`twyr!webapp!tenant!${tenantSubDomain}`, JSON.stringify(request.tenant));
+			cacheMulti.expireAsync(`twyr!webapp!tenant!${tenantSubDomain}`, ((twyrEnv === 'development') ? 30 : 43200));
+
+			await cacheMulti.execAsync();
+			next();
+		}
+		catch(err) {
+			let error = err;
+
+			// eslint-disable-next-line curly
+			if(error && !(error instanceof TwyrSrvcError)) {
+				error = new TwyrSrvcError(`${this.name}::tenantSetter`, error);
+				console.error(error.toString());
+			}
+
+			throw error;
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof ExpressService
+	 * @name     _handleOrProxytoCluster
+	 *
+	 * @param    {Object} request - Request coming in from the outside world.
+	 * @param    {Object} response - Response going out to the outside world.
+	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Call Ringpop to decide whether to handle the request, or to forward it someplace else.
+	 */
+	async _handleOrProxytoCluster(request, response, next) {
+		const key = request.tenant.id;
+		const ringpop = this.$dependencies.RingpopService;
+
+		if(ringpop.handleOrProxy(key, request, response, {
+			'skipLookupOnRetry': false
+		})) {
+			next();
+			return;
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof ExpressService
 	 * @name     _setupRequestResponseForAudit
 	 *
 	 * @param    {Object} request - Request coming in from the outside world.
@@ -288,6 +384,14 @@ class ExpressService extends TwyrBaseService {
 			const loggerService = this.$dependencies.LoggerService;
 
 			request.twyrRequestId = uuid().toString();
+			if(!request.session.passport) { // eslint-disable-line curly
+				request.session.passport = {};
+			}
+
+			if(!request.session.passport.user) { // eslint-disable-line curly
+				request.session.passport.user = 'ffffffff-ffff-4fff-ffff-ffffffffffff';
+			}
+
 			const realSend = response.send.bind(response);
 
 			response.send = async function(body) {
@@ -301,7 +405,7 @@ class ExpressService extends TwyrBaseService {
 						await auditService.addResponsePayload(auditBody);
 					}
 					catch(parseOrAuditErr) {
-						loggerService.error(`${parseOrAuditErr.message}\n${parseOrAuditErr.stack}`);
+						loggerService.silly(`${parseOrAuditErr.message}\n${parseOrAuditErr.stack}`);
 					}
 				}
 
@@ -437,71 +541,6 @@ class ExpressService extends TwyrBaseService {
 			throw error;
 		}
 	}
-
-	/**
-	 * @async
-	 * @function
-	 * @instance
-	 * @memberof ExpressService
-	 * @name     _tenantSetter
-	 *
-	 * @param    {Object} request - Request coming in from the outside world.
-	 * @param    {Object} response - Response going out to the outside world.
-	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
-	 *
-	 * @returns  {undefined} Nothing.
-	 *
-	 * @summary  Sets up the tenant context on each request so Ringpop knows which node in the cluster to route it to.
-	 */
-	async _tenantSetter(request, response, next) {
-		try {
-			const promises = require('bluebird');
-
-			const cacheSrvc = this.$dependencies.CacheService,
-				dbSrvc = this.$dependencies.DatabaseService.knex;
-
-			if(!request.session.passport) { // eslint-disable-line curly
-				request.session.passport = {};
-			}
-
-			if(!request.session.passport.user) { // eslint-disable-line curly
-				request.session.passport.user = 'ffffffff-ffff-4fff-ffff-ffffffffffff';
-			}
-
-			let tenantSubDomain = request.hostname.replace(this.$config.cookieParser.domain, '');
-			if(this.$config.subdomainMappings && this.$config.subdomainMappings[tenantSubDomain])
-				tenantSubDomain = this.$config.subdomainMappings[tenantSubDomain];
-
-			let tenant = await cacheSrvc.getAsync(`twyr!webapp!tenant!${tenantSubDomain}`);
-			if(tenant) {
-				request.tenant = JSON.parse(tenant);
-				next();
-				return;
-			}
-
-			tenant = await dbSrvc.raw('SELECT id, name, sub_domain FROM tenants WHERE sub_domain = ?', [tenantSubDomain]);
-			if(!tenant) throw new Error(`Invalid sub-domain: ${tenantSubDomain}`);
-
-			request.tenant = tenant.rows[0];
-
-			const cacheMulti = promises.promisifyAll(cacheSrvc.multi());
-			cacheMulti.setAsync(`twyr!webapp!tenant!${tenantSubDomain}`, JSON.stringify(request.tenant));
-			cacheMulti.expireAsync(`twyr!webapp!tenant!${tenantSubDomain}`, ((twyrEnv === 'development') ? 30 : 43200));
-
-			await cacheMulti.execAsync();
-			next();
-		}
-		catch(err) {
-			let error = err;
-
-			// eslint-disable-next-line curly
-			if(error && !(error instanceof TwyrSrvcError)) {
-				error = new TwyrSrvcError(`${this.name}::tenantSetter`, error);
-			}
-
-			throw error;
-		}
-	}
 	// #endregion
 
 	// #region Private Methods
@@ -520,7 +559,10 @@ class ExpressService extends TwyrBaseService {
 		this.$dependencies.LoggerService.error(`${this.name}::_serverError\n\n${error.toString()}`);
 	}
 
-	_printNetworkInterfaces(serverPort) {
+	async _printNetworkInterfaces(serverPort) {
+		if(twyrEnv !== 'development') return;
+		await snooze(500);
+
 		const forPrint = [],
 			networkInterfaces = require('os').networkInterfaces();
 
@@ -541,7 +583,6 @@ class ExpressService extends TwyrBaseService {
 
 			console.log(`\n\n${process.title} Listening On:`);
 			printf.printTable(forPrint);
-			console.log('\n\n');
 		}
 	}
 	// #endregion
@@ -568,7 +609,8 @@ class ExpressService extends TwyrBaseService {
 			'ConfigurationService',
 			'DatabaseService',
 			'LocalizationService',
-			'LoggerService'
+			'LoggerService',
+			'RingpopService'
 		].concat(super.dependencies);
 	}
 

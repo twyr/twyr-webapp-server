@@ -10,6 +10,7 @@
  * @ignore
  */
 const TwyrBaseModule = require('./twyr-base-module').TwyrBaseModule;
+const TwyrBaseError = require('./twyr-base-error').TwyrBaseError;
 
 /**
  * @class   TwyrApplication
@@ -66,14 +67,22 @@ class TwyrApplication extends TwyrBaseModule {
 
 			let lifecycleStatuses = null;
 
+			this.emit('server-loading');
 			lifecycleStatuses = await this.load();
 			allStatuses.push(`${process.title} load status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}\n`);
+			this.emit('server-loaded');
 
+			this.emit('server-initializing');
 			lifecycleStatuses = await this.initialize();
 			allStatuses.push(`${process.title} initialize status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}\n`);
+			this.emit('server-initialized');
 
+			this.emit('server-starting');
 			lifecycleStatuses = await this.start();
 			allStatuses.push(`${process.title} start status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}\n`);
+			this.emit('server-started');
+
+			this.emit('server-online');
 		}
 		catch(err) {
 			allStatuses.push(`Bootup error: ${err.toString()}`);
@@ -107,16 +116,23 @@ class TwyrApplication extends TwyrBaseModule {
 		let shutdownError = null;
 
 		try {
+			this.emit('server-offline');
 			let lifecycleStatuses = null;
 
+			this.emit('server-stopping');
 			lifecycleStatuses = await this.stop();
 			allStatuses.push(`${process.title} stop status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}\n`);
+			this.emit('server-stopped');
 
+			this.emit('server-uninitializing');
 			lifecycleStatuses = await this.uninitialize();
 			allStatuses.push(`${process.title} uninitialize status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}\n`);
+			this.emit('server-uninitialized');
 
+			this.emit('server-unloading');
 			lifecycleStatuses = await this.unload();
 			allStatuses.push(`${process.title} unload status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}\n`);
+			this.emit('server-unloaded');
 		}
 		catch(err) {
 			allStatuses.push(`Shutdown error: ${err.toString()}`);
@@ -130,6 +146,59 @@ class TwyrApplication extends TwyrBaseModule {
 
 			console.info(`\n\n${allStatuses.join('\n')}\n\n`);
 			return null;
+		}
+	}
+	// #endregion
+
+	// #region Lifecycle hooks
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrApplication
+	 * @name     start
+	 *
+	 * @param    {Object} dependencies - Interfaces to {@link TwyrBaseService} instances that this module depends on.
+	 *
+	 * @returns  {Object} - The aggregated status returned by sub-modules (if any) once they complete their startup sequences.
+	 *
+	 * @summary  Starts sub-modules, if any.
+	 *
+	 * @description
+	 * Call the loader (typically, {@link TwyrModuleLoader#start}) to start sub-modules, if any.
+	 */
+	async start(dependencies) {
+		if(twyrEnv === 'development') console.log(`${this.name}::start`);
+
+		try {
+			const subModuleStatus = await super.start(dependencies);
+			const expressRouter = this.$services.ExpressService.Interface.Router;
+
+			expressRouter.use(async (request, response, next) => {
+				response.status(200).send(`${this.name}::${request.originalUrl}`);
+			});
+
+			expressRouter.use(async (error, request, response, next) => {
+				if(!(error instanceof TwyrBaseError)) {
+					error = new TwyrBaseError(`${this.name}::express::error`, error);
+				}
+
+				if(response.finished)
+					return;
+
+				if(response.headersSent) {
+					next(error);
+					return;
+				}
+
+				response.status(422).send(error.toString());
+				return;
+			});
+
+			return subModuleStatus;
+		}
+		catch(err) {
+			throw new TwyrBaseError(`${this.name}::start error`, err);
 		}
 	}
 	// #endregion

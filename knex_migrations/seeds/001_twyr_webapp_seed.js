@@ -151,6 +151,21 @@ exports.seed = function(knex, Promise) {
 							'parent': configSrvcId[0],
 							'type': 'service',
 							'admin_only': true,
+							'name': 'DatabaseConfigurationService',
+							'display_name': 'PostgreSQL Configuration Service',
+							'description': 'The Twyr Web Application PostgreSQL Configuration Service',
+							'metadata': {
+								'author': 'Twyr',
+								'version': '3.0.1',
+								'website': 'https://twyr.com',
+								'demo': 'https://twyr.com',
+								'documentation': 'https://twyr.com'
+							}
+						}),
+						knex('modules').insert({
+							'parent': configSrvcId[0],
+							'type': 'service',
+							'admin_only': true,
 							'name': 'DotEnvConfigurationService',
 							'display_name': '.env Configuration Service',
 							'description': 'The Twyr Web Application .env Configuration Service',
@@ -261,6 +276,21 @@ exports.seed = function(knex, Promise) {
 					'name': 'PubsubService',
 					'display_name': 'Publish/Subscribe Service',
 					'description': 'The Twyr Web Application Publish/Subscribe Service - based on Ascoltatori',
+					'metadata': {
+						'author': 'Twyr',
+						'version': '3.0.1',
+						'website': 'https://twyr.com',
+						'demo': 'https://twyr.com',
+						'documentation': 'https://twyr.com'
+					}
+				}),
+				knex('modules').insert({
+					'parent': parentId[0],
+					'type': 'service',
+					'admin_only': true,
+					'name': 'RingpopService',
+					'display_name': 'Cluster Service',
+					'description': 'The Twyr Web Application Cluster Service - based on Ringpop by Uber',
 					'metadata': {
 						'author': 'Twyr',
 						'version': '3.0.1',

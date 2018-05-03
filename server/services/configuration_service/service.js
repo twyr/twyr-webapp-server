@@ -142,6 +142,29 @@ class ConfigurationService extends TwyrBaseService {
 	 */
 	async loadConfiguration(twyrModule) {
 		const deepmerge = require('deepmerge');
+		const emptyTarget = value => Array.isArray(value) ? [] : {};
+		const clone = (value, options) => deepmerge(emptyTarget(value), value, options);
+
+		const oldArrayMerge = (target, source, options) => {
+			const destination = target.slice();
+
+			source.forEach(function(e, i) {
+				if(typeof destination[i] === 'undefined') {
+					const cloneRequested = options.clone !== false;
+					const shouldClone = cloneRequested && options.isMergeableObject(e);
+
+					destination[i] = shouldClone ? clone(e, options) : e;
+				}
+				else if(options.isMergeableObject(e)) {
+					destination[i] = deepmerge(target[i], e, options);
+				}
+				else if(target.indexOf(e) === -1) {
+					destination.push(e);
+				}
+			});
+
+			return destination;
+		};
 
 		try {
 			const loadedConfigs = [];
@@ -153,7 +176,9 @@ class ConfigurationService extends TwyrBaseService {
 			let mergedConfig = {};
 			loadedConfigs.forEach((loadedConfig) => {
 				if(!loadedConfig) return;
-				mergedConfig = deepmerge(mergedConfig, loadedConfig);
+				mergedConfig = deepmerge(mergedConfig, loadedConfig, {
+					'arrayMerge': oldArrayMerge
+				});
 			});
 
 			await this.saveConfiguration(twyrModule, mergedConfig);
