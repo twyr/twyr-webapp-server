@@ -125,7 +125,6 @@ class ExpressService extends TwyrBaseService {
 			// Step 5: Setup Express
 			const webServer = express();
 			this.$express = webServer;
-			this.$express.on('error', this._serverError.bind(this));
 
 			webServer.set('view engine', this.$config.templateEngine);
 			webServer.engine(this.$config.templateEngine, engines[this.$config.templateEngine]);
@@ -137,6 +136,10 @@ class ExpressService extends TwyrBaseService {
 			.use(logger('combined', {
 				'stream': loggerStream
 			}))
+			.use((request, response, next) => {
+				request.twyrRequestId = request.twyrRequestId || uuid().toString();
+				next();
+			})
 			.use(this._tenantSetter.bind(this))
 			.use(this._handleOrProxytoCluster.bind(this))
 			.use(compress())
@@ -205,15 +208,8 @@ class ExpressService extends TwyrBaseService {
 			// Add utility to force-stop server
 			serverDestroy(server);
 
-			// Step 7: Setup the server to listen to requests forwarded via Ringpop
-			this.$dependencies.RingpopService.on('request', (() => {
-				return (request, response) => {
-					return this.$express.handle(request, response, () => {
-						console.info(JSON.stringify(arguments, null, '\t'));
-						if(!response.finished) response.end();
-					});
-				};
-			})());
+			// Step 7: Setup the server to listen to requests forwarded via Ringpop, just in case
+			this.$dependencies.RingpopService.on('request', this._processRequestFromAnotherNode());
 
 			// Finally, Start listening...
 			this.$server = promises.promisifyAll(server);
@@ -223,7 +219,6 @@ class ExpressService extends TwyrBaseService {
 			this.$parent.on('server-online', this._printNetworkInterfaces.bind(this, this.$config.port[this.$parent.name] || 9090));
 			await this.$server.listenAsync(this.$config.port[this.$parent.name] || 9090);
 
-			console.info(`Server Addresses: ${JSON.stringify(this.$express.address)}`)
 			return null;
 		}
 		catch(err) {
@@ -246,6 +241,8 @@ class ExpressService extends TwyrBaseService {
 	async _teardown() {
 		try {
 			this.$dependencies.RingpopService.removeAllListeners('request');
+			this.$dependencies.RingpopService.removeAllListeners('ringServerAdded');
+			this.$dependencies.RingpopService.removeAllListeners('ringServerRemoved');
 
 			if(!this.$server)
 				return null;
@@ -288,8 +285,6 @@ class ExpressService extends TwyrBaseService {
 	 */
 	async _tenantSetter(request, response, next) {
 		try {
-			const promises = require('bluebird');
-
 			const cacheSrvc = this.$dependencies.CacheService,
 				dbSrvc = this.$dependencies.DatabaseService.knex;
 
@@ -348,12 +343,28 @@ class ExpressService extends TwyrBaseService {
 		const key = request.tenant.id;
 		const ringpop = this.$dependencies.RingpopService;
 
-		if(ringpop.handleOrProxy(key, request, response, {
-			'skipLookupOnRetry': false
-		})) {
+		if(ringpop.handleOrProxy(key, request, response)) {
+			console.log(`Handling request ${request.twyrRequestId} here: ${ringpop.lookup(key)}`);
+
 			next();
 			return;
 		}
+
+		const dest = ringpop.lookup(key).replace(':9190', ':9100');
+		console.log(`Forwarding request ${request.twyrRequestId} to: ${dest}`);
+
+		const proxy = require('express-http-proxy')(dest, {
+			'limit': '100mb',
+			'memoizeHost': false,
+
+			'preserveHostHdr': true,
+			'proxyErrorHandler': function(err, res, done) {
+				done(err);
+			}
+		});
+
+		proxy(request, response, next);
+		return;
 	}
 
 	/**
@@ -378,12 +389,9 @@ class ExpressService extends TwyrBaseService {
 		}
 
 		try {
-			const uuid = require('uuid/v4');
-
 			const auditService = this.$dependencies.AuditService;
 			const loggerService = this.$dependencies.LoggerService;
 
-			request.twyrRequestId = uuid().toString();
 			if(!request.session.passport) { // eslint-disable-line curly
 				request.session.passport = {};
 			}
@@ -467,6 +475,8 @@ class ExpressService extends TwyrBaseService {
 					logMsgMeta.url = `${request.method} ${request.baseUrl ? request.baseUrl : ''}${request.path}`;
 					logMsgMeta.userId = request.user ? `${request.user.id}` : logMsgMeta.userId || 'ffffffff-ffff-4fff-ffff-ffffffffffff';
 					logMsgMeta.user = request.user ? `${request.user.first_name} ${request.user.last_name}` : logMsgMeta.user;
+					logMsgMeta.tenantId = request.tenant ? `${request.tenant.id}` : '00000000-0000-4000-0000-000000000000';
+					logMsgMeta.tenant = request.tenant ? `${request.tenant.name}` : 'Unknown';
 					logMsgMeta.query = JSON.parse(JSON.stringify(request.query || {}));
 					logMsgMeta.params = JSON.parse(JSON.stringify(request.params || {}));
 					logMsgMeta.body = JSON.parse(JSON.stringify(request.body || {}));
@@ -498,6 +508,8 @@ class ExpressService extends TwyrBaseService {
 					logMsgMeta.url = `${request.method} ${request.baseUrl ? request.baseUrl : ''}${request.path}`;
 					logMsgMeta.userId = request.user ? `${request.user.id}` : logMsgMeta.userId || 'ffffffff-ffff-4fff-ffff-ffffffffffff';
 					logMsgMeta.user = request.user ? `${request.user.first_name} ${request.user.last_name}` : logMsgMeta.user;
+					logMsgMeta.tenantId = request.tenant ? `${request.tenant.id}` : '00000000-0000-4000-0000-000000000000';
+					logMsgMeta.tenant = request.tenant ? `${request.tenant.name}` : 'Unknown';
 					logMsgMeta.query = JSON.parse(JSON.stringify(request.query || {}));
 					logMsgMeta.params = JSON.parse(JSON.stringify(request.params || {}));
 					logMsgMeta.body = JSON.parse(JSON.stringify(request.body || {}));
@@ -540,6 +552,23 @@ class ExpressService extends TwyrBaseService {
 
 			throw error;
 		}
+	}
+
+	/**
+	 * @function
+	 * @instance
+	 * @memberof ExpressService
+	 * @name     _processRequestFromAnotherNode
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Returns a function that can handle the request coming in from another Ringpop node.
+	 */
+	_processRequestFromAnotherNode() {
+		return (request, response, head) => {
+			this.$dependencies.LoggerService.info(`Received ringpop request: ${JSON.stringify(head, null, '\t')}`);
+			response.end();
+		};
 	}
 	// #endregion
 

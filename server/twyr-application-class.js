@@ -174,8 +174,10 @@ class TwyrApplication extends TwyrBaseModule {
 			const subModuleStatus = await super.start(dependencies);
 			const expressRouter = this.$services.ExpressService.Interface.Router;
 
-			expressRouter.use(async (request, response, next) => {
-				response.status(200).send(`${this.name}::${request.originalUrl}`);
+			expressRouter.use(async (request, response) => {
+				const respString = `${this.name}::${request.originalUrl}`;
+				console.log(`Sending response: ${respString}`);
+				response.status(200).send(respString);
 			});
 
 			expressRouter.use(async (error, request, response, next) => {
@@ -186,12 +188,12 @@ class TwyrApplication extends TwyrBaseModule {
 				if(response.finished)
 					return;
 
-				if(response.headersSent) {
-					next(error);
+				if(request.xhr) {
+					response.status(403).send(error.toString());
 					return;
 				}
 
-				response.status(422).send(error.toString());
+				next(error);
 				return;
 			});
 

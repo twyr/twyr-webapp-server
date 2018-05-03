@@ -44,7 +44,7 @@ const TwyrApplication = require('./server/twyr-application-class').TwyrApplicati
  */
 const serverInstance = new TwyrApplication('TwyrWebappServer');
 
-const onDeath = require('death')({ 'uncaughtException': true, 'debug': (twyrEnv === 'development') });
+const onDeath = require('death')({ 'uncaughtException': false, 'debug': (twyrEnv === 'development') });
 const offDeath = onDeath(async () => {
 	try {
 		offDeath();

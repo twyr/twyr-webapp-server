@@ -87,6 +87,7 @@
 		"express": "*",
 		"express-async-errors": "*",
 		"express-device": "*",
+		"express-http-proxy": "*",
 		"express-session": "*",
 		"fs-extra": "^6.0.0",
 		"html-entities": "*",

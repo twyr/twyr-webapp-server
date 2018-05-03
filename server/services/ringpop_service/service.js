@@ -44,8 +44,8 @@ class RingpopService extends TwyrBaseService {
 	async _setup() {
 		try {
 			const Promise = require('bluebird');
-			const Ringpop = require('ringpop');
 			const TChannel = require('tchannel');
+			const Ringpop = require('ringpop');
 
 			if((twyrEnv !== 'development') && !this.$config.host) {
 				const networkInterfaceList = require('os').networkInterfaces();
@@ -88,13 +88,15 @@ class RingpopService extends TwyrBaseService {
 						'trace': (twyrEnv === 'development')
 					});
 
+					const subChannel = tchannel.makeSubChannel({
+						'serviceName': 'ringpop',
+						'trace': (twyrEnv === 'development')
+					});
+
 					const ringpop = new Ringpop({
 						'app': this.$parent.$application,
 						'hostPort': `${this.$config.host}:${this.$config.port}`,
-						'channel': tchannel.makeSubChannel({
-							'serviceName': 'ringpop',
-							'trace': (twyrEnv === 'development')
-						}),
+						'channel': subChannel,
 
                         'joinSize': 1,
 						'joinTimeout': 100,
@@ -102,23 +104,25 @@ class RingpopService extends TwyrBaseService {
                         'logger': this.$dependencies.LoggerService
 					});
 
+					ringpop.appChannel = tchannel.makeSubChannel({
+						'serviceName': process.title
+					});
+
 					ringpop.setupChannel();
-					ringpop.channel.topChannel.listen(this.$config.port, this.$config.host, () => {
+					tchannel.listen(this.$config.port, this.$config.host, () => {
 						ringpop.bootstrap({
 							'joinParallelismFactor': 2,
 							'hosts': this.$config.bootstrapNodes
 						}, (err) => {
 							if(err) {
-								console.error(`${JSON.stringify(err, null, '\t')}`);
-
-								err = new TwyrSrvcError(`${this.name}::_startup::ringpop bootstrap error`, err);
-								this.$dependencies.LoggerService.error(err.toString());
-
+								this.onRingpopError(err);
 								reject(err);
+
 								return;
 							}
 
 							this.$ringpop = ringpop;
+							this.$ringpop.on('error', this.onRingpopError.bind(this));
 							this.$parent.on('server-online', this._printInformation.bind(this));
 
 							resolve();
@@ -171,6 +175,11 @@ class RingpopService extends TwyrBaseService {
 
 		await snooze(600);
 		this.$dependencies.LoggerService.debug(`Ringpop cluster initialized at ${this.$ringpop.whoami()}`);
+	}
+
+	onRingpopError(error) {
+		if(!(error instanceof TwyrSrvcError)) error = new TwyrSrvcError(`${this.name}::_startup::ringpop bootstrap error`, error);
+		this.$dependencies.LoggerService.error(`${this.name}::error: ${error.toString()}`);
 	}
 	// #endregion
 

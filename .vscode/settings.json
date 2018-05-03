@@ -1,0 +1,9 @@
+{
+	"editor.insertSpaces": false,
+	"editor.autoIndent": true,
+
+	"files.trimTrailingWhitespace": true,
+
+	"git.enableSmartCommit": true,
+	"git.confirmSync": false
+}
