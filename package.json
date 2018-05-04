@@ -50,7 +50,7 @@
 		"active-handles": "*",
 		"amqplib": "*",
 		"ascoltatori": "*",
-		"aws-sdk": "^2.231.1",
+		"aws-sdk": "^2.232.1",
 		"bluebird": "*",
 		"body-parser": "*",
 		"bookshelf": "*",
