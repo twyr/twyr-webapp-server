@@ -138,7 +138,7 @@ class LoggerService extends TwyrBaseService {
 				this.$winston.clear();
 			}
 			catch(err) {
-				if(twyrEnv === 'development') console.error(new TwyrSrvcError(`Error Removing ${transportIdx} from the Winston instance`, err).toString());
+				if(twyrEnv === 'development') console.error(new TwyrSrvcError(`Error clearing the Winston instance`, err).toString());
 			}
 
 			delete this.$winston;

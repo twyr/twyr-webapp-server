@@ -595,7 +595,7 @@ class ExpressService extends TwyrBaseService {
 	 * @summary  Returns a function that can handle the request coming in from another Ringpop node.
 	 */
 	_processRequestFromAnotherNode() {
-		return (request, response /*, head */) => {
+		return (request, response) => {
 			response.end();
 		};
 	}

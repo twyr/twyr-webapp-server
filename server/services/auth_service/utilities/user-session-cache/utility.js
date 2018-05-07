@@ -152,7 +152,7 @@ const getTenantUserEmberComponentsByModule = async function(tenantId, userId) {
 		const tenantUserEmberComponents = (await databaseSrvc.knex.raw(`SELECT A.name AS component_name, B.id AS component_widget_id, B.ember_component, B.ember_template FROM modules A INNER JOIN (SELECT X.id, X.module, X.ember_component, Y.ember_template FROM component_widgets X INNER JOIN component_widget_templates Y ON (Y.component_widget = X.id)) B ON (B.module = A.id) WHERE B.id IN (SELECT component_widget FROM component_widgets_permissions WHERE component_permission IN ('${userPermissions.join('\', \'')}'))`)).rows;
 		const componentList = {};
 
-		if(tenantUserEmberComponents.length) {
+		if(tenantUserEmberComponents.length) { // eslint-disable-line curly
 			tenantUserEmberComponents.forEach((userEmberComponent) => {
 				if(!componentList[userEmberComponent.component_name])
 					componentList[userEmberComponent.component_name] = [];
