@@ -137,15 +137,19 @@ class ExpressService extends TwyrBaseService {
 				'stream': loggerStream
 			}))
 			.use(debounce())
-			.use(cors(corsOptions))
-			.use(timeout(this.$config.requestTimeout * 1000))
 			.use(compress())
+			.use(cors(corsOptions))
+			.use(_cookieParser)
+			.use(_session)
 			.use((request, response, next) => {
 				request.twyrRequestId = request.headers['twyrrequestid'] || uuid().toString();
 				next();
 			})
 			.use(this._tenantSetter.bind(this))
+			.use(this._setupRequestResponseForAudit.bind(this))
+			.use(this._requestResponseCycleHandler.bind(this))
 			.use(this._handleOrProxytoCluster.bind(this))
+			.use(timeout(this.$config.requestTimeout * 1000))
 			.use(acceptOverride())
 			.use(methodOverride())
 			.use(poweredBy(this.$config.poweredBy))
@@ -155,8 +159,6 @@ class ExpressService extends TwyrBaseService {
 				'maxAge': this.$config.static.maxAge || 300
 			}))
 			.use(flash())
-			.use(_cookieParser)
-			.use(_session)
 			.use(bodyParser.raw({
 				'limit': this.$config.maxRequestSize
 			}))
@@ -180,8 +182,6 @@ class ExpressService extends TwyrBaseService {
 				response.cookie('twyr-webapp-locale', request.getLocale(), this.$config.cookieParser);
 				next();
 			})
-			.use(this._setupRequestResponseForAudit.bind(this))
-			.use(this._requestResponseCycleHandler.bind(this))
 			.use(this.$dependencies.AuthService.initialize())
 			.use(this.$dependencies.AuthService.session());
 
@@ -351,30 +351,42 @@ class ExpressService extends TwyrBaseService {
 	 * @summary  Call Ringpop to decide whether to handle the request, or to forward it someplace else.
 	 */
 	async _handleOrProxytoCluster(request, response, next) {
-		if(request.headers['twyrrequestid']) {
-			next();
-			return;
+		try {
+			if(request.headers['twyrrequestid']) {
+				next();
+				return;
+			}
+
+			const ringpop = this.$dependencies.RingpopService;
+			if(ringpop.lookup(request.tenant.id) === ringpop.whoami()) {
+				next();
+				return;
+			}
+
+			const uuid = require('uuid/v4');
+			request.headers['twyrrequestid'] = request.twyrRequestId || uuid().toString();
+			request.headers['tenant'] = JSON.stringify(request.tenant);
+
+			const hostPort = [];
+			hostPort.push(ringpop.lookup(request.tenant.id).split(':').shift());
+			hostPort.push((twyrEnv === 'development') ? 9101 : null);
+
+			const dest = `${this.$config.protocol}://${hostPort.filter((val) => { return !!val; }).join(':')}${request.path}`;
+			const proxy = require('express-http-proxy');
+
+			proxy(dest)(request, response, next);
 		}
+		catch(err) {
+			let error = err;
 
-		const ringpop = this.$dependencies.RingpopService;
+			// eslint-disable-next-line curly
+			if(error && !(error instanceof TwyrSrvcError)) {
+				error = new TwyrSrvcError(`${this.name}::tenantSetter`, error);
+				console.error(error.toString());
+			}
 
-		if(ringpop.lookup(request.tenant.id) === ringpop.whoami()) {
-			next();
-			return;
+			throw error;
 		}
-
-		const uuid = require('uuid/v4');
-		request.headers['twyrrequestid'] = request.twyrRequestId || uuid().toString();
-		request.headers['tenant'] = JSON.stringify(request.tenant);
-
-		const hostPort = [];
-		hostPort.push(ringpop.lookup(request.tenant.id).split(':').shift());
-		hostPort.push((twyrEnv === 'development') ? 9100 : null);
-
-		const proxy = require('request');
-		const dest = `${this.$config.protocol}://${hostPort.filter((val) => { return !!val; }).join(':')}${request.path}`;
-
-		request.pipe(proxy[request.method.toLowerCase()](dest)).pipe(response);
 	}
 
 	/**
