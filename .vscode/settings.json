@@ -5,5 +5,7 @@
 	"files.trimTrailingWhitespace": true,
 
 	"git.enableSmartCommit": true,
-	"git.confirmSync": false
+	"git.confirmSync": false,
+
+    "npm.enableScriptExplorer": true
 }

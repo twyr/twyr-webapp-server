@@ -136,27 +136,27 @@ class ExpressService extends TwyrBaseService {
 			.use(logger('combined', {
 				'stream': loggerStream
 			}))
+			.use(debounce())
+			.use(cors(corsOptions))
+			.use(timeout(this.$config.requestTimeout * 1000))
+			.use(compress())
 			.use((request, response, next) => {
-				request.twyrRequestId = request.twyrRequestId || uuid().toString();
+				request.twyrRequestId = request.headers['twyrrequestid'] || uuid().toString();
 				next();
 			})
 			.use(this._tenantSetter.bind(this))
 			.use(this._handleOrProxytoCluster.bind(this))
-			.use(compress())
-			.use(debounce())
-			.use(cors(corsOptions))
-			.use(_cookieParser)
-			.use(_session)
 			.use(acceptOverride())
 			.use(methodOverride())
-			.use(favicon(path.join(__dirname, this.$config.favicon)))
 			.use(poweredBy(this.$config.poweredBy))
-			.use(timeout(this.$config.requestTimeout * 1000))
+			.use(favicon(path.join(__dirname, this.$config.favicon)))
 			.use(serveStatic(path.join(this.basePath, this.$config.static.path || 'static'), {
 				'index': this.$config.static.index || 'index.html',
 				'maxAge': this.$config.static.maxAge || 300
 			}))
 			.use(flash())
+			.use(_cookieParser)
+			.use(_session)
 			.use(bodyParser.raw({
 				'limit': this.$config.maxRequestSize
 			}))
@@ -288,27 +288,38 @@ class ExpressService extends TwyrBaseService {
 			const cacheSrvc = this.$dependencies.CacheService,
 				dbSrvc = this.$dependencies.DatabaseService.knex;
 
-			let tenantSubDomain = request.hostname.replace(this.$config.cookieParser.domain, '');
-			if(this.$config.subdomainMappings && this.$config.subdomainMappings[tenantSubDomain])
-				tenantSubDomain = this.$config.subdomainMappings[tenantSubDomain];
-
-			let tenant = await cacheSrvc.getAsync(`twyr!webapp!tenant!${tenantSubDomain}`);
-			if(tenant) {
-				request.tenant = JSON.parse(tenant);
-				next();
-				return;
+			let tenant = null;
+			if(request.headers['tenant']) { // eslint-disable-line curly
+				tenant = JSON.parse(request.headers['tenant']);
 			}
 
-			tenant = await dbSrvc.raw('SELECT id, name, sub_domain FROM tenants WHERE sub_domain = ?', [tenantSubDomain]);
-			if(!tenant) throw new Error(`Invalid sub-domain: ${tenantSubDomain}`);
+			if(!tenant) {
+				let tenantSubDomain = request.hostname.replace(this.$config.cookieParser.domain, '');
+				if(this.$config.subdomainMappings && this.$config.subdomainMappings[tenantSubDomain])
+					tenantSubDomain = this.$config.subdomainMappings[tenantSubDomain];
 
-			request.tenant = tenant.rows[0];
+				tenant = await cacheSrvc.getAsync(`twyr!webapp!tenant!${tenantSubDomain}`);
+				if(tenant) tenant = JSON.parse(tenant);
+			}
 
-			const cacheMulti = cacheSrvc.multi();
-			cacheMulti.setAsync(`twyr!webapp!tenant!${tenantSubDomain}`, JSON.stringify(request.tenant));
-			cacheMulti.expireAsync(`twyr!webapp!tenant!${tenantSubDomain}`, ((twyrEnv === 'development') ? 30 : 43200));
+			if(!tenant) {
+				let tenantSubDomain = request.hostname.replace(this.$config.cookieParser.domain, '');
+				if(this.$config.subdomainMappings && this.$config.subdomainMappings[tenantSubDomain])
+					tenantSubDomain = this.$config.subdomainMappings[tenantSubDomain];
 
-			await cacheMulti.execAsync();
+				tenant = await dbSrvc.raw('SELECT id, name, sub_domain FROM tenants WHERE sub_domain = ?', [tenantSubDomain]);
+				if(!tenant) throw new Error(`Invalid sub-domain: ${tenantSubDomain}`);
+
+				tenant = tenant.rows[0];
+
+				const cacheMulti = cacheSrvc.multi();
+				cacheMulti.setAsync(`twyr!webapp!tenant!${tenantSubDomain}`, JSON.stringify(tenant));
+				cacheMulti.expireAsync(`twyr!webapp!tenant!${tenantSubDomain}`, ((twyrEnv === 'development') ? 30 : 43200));
+
+				await cacheMulti.execAsync();
+			}
+
+			request.tenant = tenant;
 			next();
 		}
 		catch(err) {
@@ -340,31 +351,30 @@ class ExpressService extends TwyrBaseService {
 	 * @summary  Call Ringpop to decide whether to handle the request, or to forward it someplace else.
 	 */
 	async _handleOrProxytoCluster(request, response, next) {
-		const key = request.tenant.id;
-		const ringpop = this.$dependencies.RingpopService;
-
-		if(ringpop.handleOrProxy(key, request, response)) {
-			console.log(`Handling request ${request.twyrRequestId} here: ${ringpop.lookup(key)}`);
-
+		if(request.headers['twyrrequestid']) {
 			next();
 			return;
 		}
 
-		const dest = ringpop.lookup(key).replace(':9190', ':9100');
-		console.log(`Forwarding request ${request.twyrRequestId} to: ${dest}`);
+		const ringpop = this.$dependencies.RingpopService;
 
-		const proxy = require('express-http-proxy')(dest, {
-			'limit': '100mb',
-			'memoizeHost': false,
+		if(ringpop.lookup(request.tenant.id) === ringpop.whoami()) {
+			next();
+			return;
+		}
 
-			'preserveHostHdr': true,
-			'proxyErrorHandler': function(err, res, done) {
-				done(err);
-			}
-		});
+		const uuid = require('uuid/v4');
+		request.headers['twyrrequestid'] = request.twyrRequestId || uuid().toString();
+		request.headers['tenant'] = JSON.stringify(request.tenant);
 
-		proxy(request, response, next);
-		return;
+		const hostPort = [];
+		hostPort.push(ringpop.lookup(request.tenant.id).split(':').shift());
+		hostPort.push((twyrEnv === 'development') ? 9100 : null);
+
+		const proxy = require('request');
+		const dest = `${this.$config.protocol}://${hostPort.filter((val) => { return !!val; }).join(':')}${request.path}`;
+
+		request.pipe(proxy[request.method.toLowerCase()](dest)).pipe(response);
 	}
 
 	/**
@@ -403,14 +413,12 @@ class ExpressService extends TwyrBaseService {
 			const realSend = response.send.bind(response);
 
 			response.send = async function(body) {
-				if(response.finished) return null;
+				if(response.finished) return;
 
+				const auditBody = { 'twyrRequestId': request.twyrRequestId, 'payload': body };
 				if(body && (typeof body === 'string')) { // eslint-disable-line curly
 					try {
-						const parsedBody = JSON.parse(body);
-						const auditBody = { 'id': request.twyrRequestId, 'payload': parsedBody };
-
-						await auditService.addResponsePayload(auditBody);
+						auditBody.payload = JSON.parse(auditBody.payload);
 					}
 					catch(parseOrAuditErr) {
 						loggerService.silly(`${parseOrAuditErr.message}\n${parseOrAuditErr.stack}`);
@@ -418,7 +426,18 @@ class ExpressService extends TwyrBaseService {
 				}
 
 				try {
-					return realSend(body);
+					await auditService.addResponsePayload(auditBody);
+				}
+				catch(auditError) {
+					let error = auditError;
+					if(!(error instanceof TwyrSrvcError))
+						error = new TwyrSrvcError(`${this.name}::setupRequestResponseForAudit::auditService.addResponsePayload error`, auditError);
+
+					loggerService.error(error.toString());
+				}
+
+				try {
+					realSend(body);
 				}
 				catch(realSendError) {
 					let error = realSendError;
@@ -426,7 +445,6 @@ class ExpressService extends TwyrBaseService {
 						error = new TwyrSrvcError(`${this.name}::setupRequestResponseForAudit::realSendError`, realSendError);
 
 					loggerService.error(error.toString());
-					throw error;
 				}
 			}.bind(response);
 
@@ -565,8 +583,7 @@ class ExpressService extends TwyrBaseService {
 	 * @summary  Returns a function that can handle the request coming in from another Ringpop node.
 	 */
 	_processRequestFromAnotherNode() {
-		return (request, response, head) => {
-			this.$dependencies.LoggerService.info(`Received ringpop request: ${JSON.stringify(head, null, '\t')}`);
+		return (request, response /*, head */) => {
 			response.end();
 		};
 	}

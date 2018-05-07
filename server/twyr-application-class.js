@@ -168,28 +168,21 @@ class TwyrApplication extends TwyrBaseModule {
 	 * Call the loader (typically, {@link TwyrModuleLoader#start}) to start sub-modules, if any.
 	 */
 	async start(dependencies) {
-		if(twyrEnv === 'development') console.log(`${this.name}::start`);
-
 		try {
 			const subModuleStatus = await super.start(dependencies);
 			const expressRouter = this.$services.ExpressService.Interface.Router;
 
 			expressRouter.use(async (request, response) => {
-				const respString = `${this.name}::${request.originalUrl}`;
-				console.log(`Sending response: ${respString}`);
-				response.status(200).send(respString);
+				const respString = { 'message': `${this.name}::${request.originalUrl}` };
+				response.status(200).json(respString);
 			});
 
 			expressRouter.use(async (error, request, response, next) => {
-				if(!(error instanceof TwyrBaseError)) {
-					error = new TwyrBaseError(`${this.name}::express::error`, error);
-				}
-
 				if(response.finished)
 					return;
 
 				if(request.xhr) {
-					response.status(403).send(error.toString());
+					response.status(403).send(error.message);
 					return;
 				}
 

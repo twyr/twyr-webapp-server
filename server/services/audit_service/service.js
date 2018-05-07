@@ -43,7 +43,11 @@ class AuditService extends TwyrBaseService {
 	 */
 	async _setup() {
 		try {
-			this.$auditCache = require('memory-cache');
+			const memoryCache = require('memory-cache');
+
+			this.$auditCache = new memoryCache.Cache();
+			this.$auditCache.debug = (twyrEnv === 'development');
+
 			return null;
 		}
 		catch(err) {
@@ -100,7 +104,7 @@ class AuditService extends TwyrBaseService {
 				throw requestDetailsError;
 			}
 
-			if(!(requestDetails.twyrRequestId && requestDetails.userId)) {
+			if(!(requestDetails.twyrRequestId && requestDetails.userId && requestDetails.tenantId)) {
 				const requestDetailsError = new Error('Incorrectly formed request details');
 				throw requestDetailsError;
 			}
@@ -136,13 +140,15 @@ class AuditService extends TwyrBaseService {
 					'arrayMerge': oldArrayMerge
 				});
 
+				this.$auditCache.put(hasResponse.twyrRequestId, hasResponse, 100000, this._processTimedoutRequests.bind(this));
 				await this._publishAudit(hasResponse.twyrRequestId);
 			}
 			else {
 				hasResponse = requestDetails;
-				this.$auditCache.put(hasResponse.twyrRequestId, hasResponse, 10000, this._processTimedoutRequests.bind(this));
+				this.$auditCache.put(hasResponse.twyrRequestId, hasResponse, 100000, this._processTimedoutRequests.bind(this));
 			}
 
+			// console.log(`addRequest\nHas Response: ${JSON.stringify(this.$auditCache.get(hasResponse.twyrRequestId), null, '\t')}`);
 			return null;
 		}
 		catch(err) {
@@ -171,7 +177,7 @@ class AuditService extends TwyrBaseService {
 				throw requestDetailsError;
 			}
 
-			if(!(responseDetails.twyrRequestId && responseDetails.userId)) {
+			if(!(responseDetails.twyrRequestId && responseDetails.userId && responseDetails.tenantId)) {
 				const responseDetailsError = new Error('Incorrectly formed response details');
 				throw responseDetailsError;
 			}
@@ -207,13 +213,15 @@ class AuditService extends TwyrBaseService {
 					'arrayMerge': oldArrayMerge
 				});
 
+				this.$auditCache.put(hasRequest.twyrRequestId, hasRequest, 100000, this._processTimedoutRequests.bind(this));
 				await this._publishAudit(hasRequest.twyrRequestId);
 			}
 			else {
 				hasRequest = responseDetails;
-				this.$auditCache.put(hasRequest.twyrRequestId, hasRequest, 10000, this._processTimedoutRequests.bind(this));
+				this.$auditCache.put(hasRequest.twyrRequestId, hasRequest, 100000, this._processTimedoutRequests.bind(this));
 			}
 
+			// console.log(`addResponse\nHas Request: ${JSON.stringify(this.$auditCache.get(hasRequest.twyrRequestId), null, '\t')}`);
 			return null;
 		}
 		catch(err) {
@@ -282,7 +290,9 @@ class AuditService extends TwyrBaseService {
 				hasPayload = payloadDetails;
 			}
 
-			this.$auditCache.put(payloadDetails.twyrRequestId, hasPayload, 10000, this._processTimedoutRequests.bind(this));
+			this.$auditCache.put(payloadDetails.twyrRequestId, hasPayload, 100000, this._processTimedoutRequests.bind(this));
+			// console.log(`addResponsePayload\nPayLoad Details: ${JSON.stringify(payloadDetails, null, '\t')}\nHas Payload: ${JSON.stringify(this.$auditCache.get(payloadDetails.twyrRequestId), null, '\t')}`);
+
 			return null;
 		}
 		catch(err) {
@@ -307,14 +317,17 @@ class AuditService extends TwyrBaseService {
 	 * @summary  Publishes the audit trail to the messaging queue, and then deletes the cached details.
 	 */
 	async _publishAudit(id) {
-		try {
-			const alreadyScheduled = this.$auditCache.get(`${id}-scheduled`);
-			if(alreadyScheduled) return;
+		const alreadyScheduled = this.$auditCache.get(`${id}-scheduled`);
+		if(alreadyScheduled) return;
 
+		try {
 			this.$auditCache.put(`${id}-scheduled`, true);
 			await snooze(500);
 
-			const auditDetails = this._cleanBeforePublish(id);
+			const auditDetails = this.$auditCache.get(id);
+			this._cleanBeforePublish(auditDetails);
+			if(!auditDetails) return;
+
 			if(auditDetails.error) {
 				this.$dependencies.LoggerService.error(`Error Servicing Request ${auditDetails.twyrRequestId} - ${auditDetails.url}:`, JSON.stringify(auditDetails, null, '\t'));
 				await this.$dependencies.PubsubService.publish('twyr-audit', 'TWYR.AUDIT.ERROR', JSON.stringify(auditDetails));
@@ -323,15 +336,17 @@ class AuditService extends TwyrBaseService {
 				if(twyrEnv === 'development') this.$dependencies.LoggerService.debug(`Serviced Request ${auditDetails.twyrRequestId} - ${auditDetails.url}:`, JSON.stringify(auditDetails, null, '\t'));
 				await this.$dependencies.PubsubService.publish('twyr-audit', 'TWYR.AUDIT.LOG', JSON.stringify(auditDetails));
 			}
-
-			return;
 		}
 		catch(err) {
 			throw new TwyrSrvcError(`${this.name}::_publishAudit error`, err);
 		}
-		finally {
+
+		try {
 			this.$auditCache.del(`${id}-scheduled`);
 			this.$auditCache.del(id);
+		}
+		catch(err) {
+			throw new TwyrSrvcError(`${this.name}::_publishAudit error`, err);
 		}
 	}
 
@@ -373,15 +388,14 @@ class AuditService extends TwyrBaseService {
 	 * @memberof AuditService
 	 * @name     _cleanBeforePublish
 	 *
-	 * @param    {Object} id - The ID assigned to the request/response cycle.
+	 * @param    {Object} auditDetails - The data for the request/response cycle.
 	 * @param    {Object} [value] - The audit trail information.
 	 *
 	 * @returns  {null} Nothing.
 	 *
 	 * @summary  Deletes any empty keys in the audit trail data.
 	 */
-	_cleanBeforePublish(id, value) {
-		let auditDetails = this.$auditCache.get(id);
+	_cleanBeforePublish(auditDetails, value) {
 		if(!auditDetails && value) auditDetails = value;
 		if(!auditDetails) return null;
 

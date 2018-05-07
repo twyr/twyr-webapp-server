@@ -36,11 +36,11 @@ class TwyrBaseError extends Error {
 	}
 
 	toString() {
-		const errstr = cleanStack(this.stack, { 'pretty': true });
+		const errstr = this.$innerError ? cleanStack(this.stack, { 'pretty': true }) : this.stack;
 		if(!this.$innerError) return `\n\n========>>\n\nRoot Cause::${errstr}`;
 
 		if(!(this.$innerError instanceof TwyrBaseError))
-			return `${errstr}\n\n========>>\n\nRoot Cause::${this.$innerError.stack}`;
+			return `${errstr}\n\n========>>\n\nRoot Cause::${this.$innerError.stack}\n\n`;
 
 		return `${errstr}\n${this.$innerError.toString()}`;
 	}
