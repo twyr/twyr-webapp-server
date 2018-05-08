@@ -113,10 +113,9 @@ class FileConfigurationService extends TwyrBaseService {
 			const filesystem = promises.promisifyAll(fs);
 			const rootPath = path.dirname(require.main.filename);
 
-			const configPath = path.join(rootPath, 'config', `${path.relative(rootPath, twyrModule.basePath).replace('server', twyrEnv)}.js`);
+			const configPath = path.join(rootPath, `config/${twyrEnv}`, `${path.relative(rootPath, twyrModule.basePath)}.js`);
 
 			await filesystem.ensureDirAsync(path.dirname(configPath));
-
 			const doesExist = await this._exists(configPath, filesystem.R_OK);
 
 			let config = {};
@@ -154,7 +153,7 @@ class FileConfigurationService extends TwyrBaseService {
 			const filesystem = promises.promisifyAll(fs);
 			const rootPath = path.dirname(require.main.filename);
 
-			const configPath = path.join(rootPath, 'config', `${path.relative(rootPath, twyrModule.basePath).replace('server', twyrEnv)}.js`),
+			const configPath = path.join(rootPath, `config/${twyrEnv}`, `${path.relative(rootPath, twyrModule.basePath)}.js`),
 				configString = `exports.config = ${JSON.stringify(config, undefined, '\t')};\n`;
 
 			if(deepEqual(this.$cacheMap[configPath], config))
@@ -247,7 +246,7 @@ class FileConfigurationService extends TwyrBaseService {
 			const filesystem = promises.promisifyAll(fs);
 			const rootPath = path.dirname(require.main.filename);
 
-			const configPath = path.join(rootPath, 'config', twyrEnv, `${configUpdateModule}.js`),
+			const configPath = path.join(rootPath, `config/${twyrEnv}`, `${configUpdateModule}.js`),
 				configString = `exports.config = ${JSON.stringify(config, undefined, '\t')};`;
 
 			if(deepEqual(this.$cacheMap[configPath], config))

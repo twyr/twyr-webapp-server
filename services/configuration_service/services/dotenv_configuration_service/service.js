@@ -133,7 +133,7 @@ class DotEnvConfigurationService extends TwyrBaseService {
 			const path = require('path');
 
 			const rootPath = path.dirname(require.main.filename);
-			const configPath = path.relative(rootPath, twyrModule.basePath).replace('server', '').replace(new RegExp(path.sep, 'g'), '_').replace('_', '');
+			const configPath = path.relative(rootPath, twyrModule.basePath).replace('server', '').replace(new RegExp(path.sep, 'g'), '_');
 
 			const moduleConfig = this._deserializeConfig(configPath, true);
 			return moduleConfig ? moduleConfig.config : null;
@@ -163,7 +163,7 @@ class DotEnvConfigurationService extends TwyrBaseService {
 				promises = require('bluebird');
 
 			const rootPath = path.dirname(require.main.filename);
-			const configPath = path.relative(rootPath, twyrModule.basePath).replace('server', '').replace(new RegExp(path.sep, 'g'), '_').replace('_', '');
+			const configPath = path.relative(rootPath, twyrModule.basePath).replace('server', '').replace(new RegExp(path.sep, 'g'), '_');
 
 			const moduleConfigKeys = Object.keys(this.$cacheMap).filter((key) => {
 				return key.indexOf(configPath) === 0;
