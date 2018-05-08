@@ -49,6 +49,7 @@
 	"dependencies": {
 		"active-handles": "*",
 		"amqplib": "*",
+		"app-module-path": "*",
 		"ascoltatori": "*",
 		"aws-sdk": "^2.234.1",
 		"bluebird": "*",
