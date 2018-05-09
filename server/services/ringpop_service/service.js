@@ -192,11 +192,11 @@ class RingpopService extends TwyrBaseService {
 			'from': 'root@twyr.io',
 			'to': 'shadyvd@hotmail.com',
 			'subject': 'Twyr Web Application Server Ring Changed',
-			'text': `Added Servers: ${JSON.stringify(event.added, null, '\t')}\n\nRemoved Servers: ${JSON.stringify(event.removed, null, '\t')}`
+			'text': `Added Servers: ${JSON.stringify((event.added || []), null, '\t')}\n\nRemoved Servers: ${JSON.stringify((event.removed || []), null, '\t')}`
 		};
 
 		const mailInfo = await mailerService.sendMailAsync(mailOptions);
-		loggerService.debug(`Ring Server List Changed Email Sent: ${JSON.stringify(mailInfo, null, '\t')}`);
+		loggerService.info(`Ring Changed:\nAdded Servers: ${JSON.stringify((event.added || []), null, '\t')}\n\nRemoved Servers: ${JSON.stringify((event.removed || []), null, '\t')}\nEmail Sent: ${JSON.stringify(mailInfo, null, '\t')}`);
 	}
 
 	async onRingpopError(error) {
@@ -218,7 +218,7 @@ class RingpopService extends TwyrBaseService {
 		};
 
 		const mailInfo = await mailerService.sendMailAsync(mailOptions);
-		loggerService.error(`Ring Server List Changed Email Sent: ${JSON.stringify(mailInfo, null, '\t')}`);
+		loggerService.error(`Ringpop Error: ${error.toString()}\nEmail Sent: ${JSON.stringify(mailInfo, null, '\t')}`);
 	}
 	// #endregion
 

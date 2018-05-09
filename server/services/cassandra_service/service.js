@@ -121,7 +121,7 @@ class CassandraService extends TwyrBaseService {
 		};
 
 		const mailInfo = await mailerService.sendMailAsync(mailOptions);
-		loggerService.debug(`Cassandra Error Email Sent: ${JSON.stringify(mailInfo, null, '\t')}`);
+		loggerService.error(`Cassandra Error: ${JSON.stringify(arguments, null, '\t')}\nEmail Details: ${JSON.stringify(mailInfo, null, '\t')}`);
 	}
 
 	async _onCassandraHostDown(host) {
@@ -140,7 +140,7 @@ class CassandraService extends TwyrBaseService {
 		};
 
 		const mailInfo = await mailerService.sendMailAsync(mailOptions);
-		loggerService.debug(`Cassandra Host Down Email Sent: ${JSON.stringify(mailInfo, null, '\t')}`);
+		loggerService.warn(`Cassandra Host Down:\nDataCenter: ${host.datacenter}\nRack: ${host.rack}\nAddress:${host.address}\nEmail Sent: ${JSON.stringify(mailInfo, null, '\t')}`);
 	}
 
 	async _onCassandraHostRemoved(host) {
@@ -159,7 +159,7 @@ class CassandraService extends TwyrBaseService {
 		};
 
 		const mailInfo = await mailerService.sendMailAsync(mailOptions);
-		loggerService.debug(`Cassandra Host Removed Email Sent: ${JSON.stringify(mailInfo, null, '\t')}`);
+		loggerService.warn(`Cassandra Host Removed: \nDataCenter: ${host.datacenter}\nRack: ${host.rack}\nAddress:${host.address}\nEmail Sent: ${JSON.stringify(mailInfo, null, '\t')}`);
 	}
 	// #endregion
 
