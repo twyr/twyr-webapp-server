@@ -3,7 +3,7 @@
 module.exports = {
 	'development': {
 		'client': 'pg',
-		'debug': true,
+		'debug': false,
 
 		'connection': {
 			'database': 'twyr',

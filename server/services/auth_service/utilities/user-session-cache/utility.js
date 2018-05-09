@@ -134,56 +134,6 @@ const getTenantUserPermissions = async function(tenantId, userId) {
 	}
 };
 
-const getTenantUserEmberComponentsByModule = async function(tenantId, userId) {
-	const cacheSrvc = this.$dependencies.CacheService,
-		databaseSrvc = this.$dependencies.DatabaseService,
-		loggerSrvc = this.$dependencies.LoggerService;
-
-	try {
-		let cachedTenantUserEmberComponents = await cacheSrvc.getAsync(`twyr!webapp!user!${userId}!${tenantId}!ember!components`);
-		if(cachedTenantUserEmberComponents) {
-			cachedTenantUserEmberComponents = JSON.parse(cachedTenantUserEmberComponents);
-			return cachedTenantUserEmberComponents;
-		}
-
-		const getPermissions = getTenantUserPermissions.bind(this);
-		const userPermissions = await getPermissions(tenantId, userId);
-
-		const tenantUserEmberComponents = (await databaseSrvc.knex.raw(`SELECT A.name AS component_name, B.id AS component_widget_id, B.ember_component, B.ember_template FROM modules A INNER JOIN (SELECT X.id, X.module, X.ember_component, Y.ember_template FROM component_widgets X INNER JOIN component_widget_templates Y ON (Y.component_widget = X.id)) B ON (B.module = A.id) WHERE B.id IN (SELECT component_widget FROM component_widgets_permissions WHERE component_permission IN ('${userPermissions.join('\', \'')}'))`)).rows;
-		const componentList = {};
-
-		if(tenantUserEmberComponents.length) { // eslint-disable-line curly
-			tenantUserEmberComponents.forEach((userEmberComponent) => {
-				if(!componentList[userEmberComponent.component_name])
-					componentList[userEmberComponent.component_name] = [];
-
-				const relevantRecord = componentList[userEmberComponent.component_name].filter((componentWidget) => {
-					return componentWidget.component_widget_id === userEmberComponent.component_widget_id;
-				})[0];
-
-				if(relevantRecord) {
-					if(relevantRecord.ember_templates.indexOf(userEmberComponent.ember_template) < 0)
-						relevantRecord.ember_templates.push(userEmberComponent.ember_template);
-				}
-				else {
-					componentList[userEmberComponent.component_name].push({
-						'component_widget_id': userEmberComponent.component_widget_id,
-						'ember_component': userEmberComponent.ember_component,
-						'ember_templates': [userEmberComponent.ember_template]
-					});
-				}
-			});
-		}
-
-		await cacheSrvc.setAsync(`twyr!webapp!user!${userId}!${tenantId}!ember!components`, JSON.stringify(componentList));
-		return componentList;
-	}
-	catch(err) {
-		loggerSrvc.error(`userSessionCache::getTenantUserEmberComponentsByModule Error:\nUser Id: ${userId}\nTenant Id: ${tenantId}\nError: `, err);
-		throw (err);
-	}
-};
-
 /*
 const getTenantUserDefaultApplication = function(tenant, userId, callback) {
 	const cacheSrvc = this.$dependencies.CacheService,
@@ -238,16 +188,13 @@ exports.utility = {
 			if(!userId) throw (new Error('No user id found in the request!'));
 
 			// const getTenantUserDefaultApplicationAsync = promises.promisify(getTenantUserDefaultApplication.bind(this));
-			const getEmberComponentsByModule = getTenantUserEmberComponentsByModule.bind(this);
 			const getPermissions = getTenantUserPermissions.bind(this);
 			const getDetails = getUserDetails.bind(this);
 
 			const deserializedUser = await getDetails(tenantId, userId);
 			const tenantUserPermissions = await getPermissions(tenantId, userId);
-			const tenantUserModules = getEmberComponentsByModule(tenantId, userId);
 
 			deserializedUser.permissionList = tenantUserPermissions;
-			deserializedUser.modules = tenantUserModules;
 			deserializedUser['default_application'] = null;
 
 			if(twyrEnv === 'development') {
