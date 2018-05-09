@@ -122,10 +122,12 @@ class RingpopService extends TwyrBaseService {
 							}
 
 							this.$ringpop = ringpop;
+							this.$ringpop.on('ringChanged', this.onRingChanged.bind(this));
 							this.$ringpop.on('error', this.onRingpopError.bind(this));
-							this.$parent.on('server-online', this._printInformation.bind(this));
 
+							this.$parent.on('server-online', this._printInformation.bind(this));
 							resolve();
+
 							return;
 						});
 					});
@@ -168,7 +170,7 @@ class RingpopService extends TwyrBaseService {
 	}
 	// #endregion
 
-	// #region Private API
+	// #region Private Methods
 	async _printInformation() {
 		if(twyrEnv !== 'development')
 			return;
@@ -177,9 +179,46 @@ class RingpopService extends TwyrBaseService {
 		this.$dependencies.LoggerService.debug(`Ringpop cluster initialized at ${this.$ringpop.whoami()}`);
 	}
 
-	onRingpopError(error) {
+	async onRingChanged(event) {
+		const ringpop = this.$ringpop;
+		const leader = ringpop.lookup('LEADER');
+		if(leader !== ringpop.whoami())
+			return;
+
+		const loggerService = this.$dependencies.LoggerService;
+		const mailerService = this.$dependencies.MailerService;
+
+		const mailOptions = {
+			'from': 'root@twyr.io',
+			'to': 'shadyvd@hotmail.com',
+			'subject': 'Twyr Web Application Server Ring Changed',
+			'text': `Added Servers: ${JSON.stringify(event.added, null, '\t')}\n\nRemoved Servers: ${JSON.stringify(event.removed, null, '\t')}`
+		};
+
+		const mailInfo = await mailerService.sendMailAsync(mailOptions);
+		loggerService.debug(`Ring Server List Changed Email Sent: ${JSON.stringify(mailInfo, null, '\t')}`);
+	}
+
+	async onRingpopError(error) {
 		if(!(error instanceof TwyrSrvcError)) error = new TwyrSrvcError(`${this.name}::_startup::ringpop bootstrap error`, error);
-		this.$dependencies.LoggerService.error(`${this.name}::error: ${error.toString()}`);
+
+		const ringpop = this.$ringpop;
+		const leader = ringpop.lookup('LEADER');
+		if(leader !== ringpop.whoami())
+			return;
+
+		const loggerService = this.$dependencies.LoggerService;
+		const mailerService = this.$dependencies.MailerService;
+
+		const mailOptions = {
+			'from': 'root@twyr.io',
+			'to': 'shadyvd@hotmail.com',
+			'subject': 'Twyr Web Application Server Ringpop Error',
+			'text': `Ringpop Error:\n${error.toString()}`
+		};
+
+		const mailInfo = await mailerService.sendMailAsync(mailOptions);
+		loggerService.error(`Ring Server List Changed Email Sent: ${JSON.stringify(mailInfo, null, '\t')}`);
 	}
 	// #endregion
 
@@ -195,7 +234,7 @@ class RingpopService extends TwyrBaseService {
 	 * @override
 	 */
 	get dependencies() {
-		return ['ConfigurationService', 'LoggerService'].concat(super.dependencies);
+		return ['ConfigurationService', 'LoggerService', 'MailerService'].concat(super.dependencies);
 	}
 
 	/**

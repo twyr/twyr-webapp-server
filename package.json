@@ -57,6 +57,7 @@
 		"bookshelf": "*",
 		"bookshelf-jsonapi-params": "^1.1.1",
 		"busboy": "*",
+		"cassandra-driver": "*",
 		"cheerio": "*",
 		"chokidar": "*",
 		"clean-stack": "*",

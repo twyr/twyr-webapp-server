@@ -43,11 +43,26 @@ class MailerService extends TwyrBaseService {
 	 */
 	async _setup() {
 		try {
-			const mailer = require('nodemailer');
 			const promises = require('bluebird');
-			const transport = require('nodemailer-smtp-transport');
+			const mailer = promises.promisifyAll(require('nodemailer'));
 
-			this.$smtpMailer = promises.promisifyAll(mailer.createTransport(transport(this.$config)));
+			const account = (this.$config.test) ? await mailer.createTestAccountAsync() : null;
+			const transporter = promises.promisifyAll(mailer.createTransport({
+				'debug': (twyrEnv === 'development'),
+				'logger': (twyrEnv === 'development') ? this.$dependencies.LoggerService : null,
+
+				'host': this.$config.host,
+				'port': this.$config.port,
+				'secure': this.$config.secure,
+				'auth': {
+					'user': account.user,
+					'pass': account.pass
+				}
+			}));
+
+			this.$smtpTransporter = transporter;
+			await this.$smtpTransporter.verifyAsync();
+
 			return null;
 		}
 		catch(err) {
@@ -69,9 +84,9 @@ class MailerService extends TwyrBaseService {
 	 */
 	async _teardown() {
 		try {
-			if(this.$smtpMailer) {
-				this.$smtpMailer.close();
-				delete this.$smtpMailer;
+			if(this.$smtpTransporter) {
+				this.$smtpTransporter.close();
+				delete this.$smtpTransporter;
 			}
 
 			return null;
@@ -87,7 +102,7 @@ class MailerService extends TwyrBaseService {
 	 * @override
 	 */
 	get Interface() {
-		return this.$smtpMailer;
+		return this.$smtpTransporter;
 	}
 
 	/**

@@ -18,6 +18,12 @@ require('app-module-path').addPath(`${__dirname}/framework`);
 require('dotenv').config();
 
 /**
+ * The name of the server - this is the name that is searched for in the database [modules.module_type = 'server' AND modules.name = ?]
+ * @ignore
+ */
+const SERVER_NAME = process.env.SERVER_NAME || 'TwyrWebappServer';
+
+/**
  * Setup global variables (ugh!) to make life simpler across the rest of the codebase
  * @ignore
  */
@@ -37,13 +43,13 @@ global.snooze = async (ms) => {
  * Module dependencies, required for this module
  * @ignore
  */
-const TwyrApplication = require('./twyr-application-class').TwyrApplication;
+const TwyrApplication = require('./server/twyr-application-class').TwyrApplication;
 
 /**
  * Finally, start the server - let's get going!
  * @ignore
  */
-const serverInstance = new TwyrApplication('TwyrWebappServer');
+const serverInstance = new TwyrApplication(SERVER_NAME);
 
 const onDeath = require('death')({ 'uncaughtException': false, 'debug': (twyrEnv === 'development') });
 const offDeath = onDeath(async () => {

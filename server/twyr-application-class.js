@@ -170,6 +170,8 @@ class TwyrApplication extends TwyrBaseModule {
 	async start(dependencies) {
 		try {
 			const subModuleStatus = await super.start(dependencies);
+
+			// Setup common routes - to be enhanced
 			const expressRouter = this.$services.ExpressService.Interface.Router;
 
 			expressRouter.use(async (request, response) => {
