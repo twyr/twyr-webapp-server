@@ -47,10 +47,8 @@ class FileConfigurationService extends TwyrBaseService {
 			const chokidar = require('chokidar'),
 				path = require('path');
 
-			const env = (process.env.NODE_ENV || 'development').toLowerCase(),
-				rootPath = path.dirname(require.main.filename);
-
-			this.$watcher = chokidar.watch(path.join(rootPath, 'config', env), {
+			const rootPath = path.dirname(require.main.filename);
+			this.$watcher = chokidar.watch(path.join(rootPath, `config${path.sep}${twyrEnv}`), {
 				'ignored': /[/\\]\./,
 				'ignoreInitial': true
 			});
@@ -106,22 +104,25 @@ class FileConfigurationService extends TwyrBaseService {
 	 */
 	async loadConfiguration(twyrModule) {
 		try {
+			let config = null;
+
+			const twyrModulePath = this.$parent._getPathForModule(twyrModule);
+			if(this.$cacheMap[twyrModulePath]) return this.$cacheMap[twyrModulePath];
+
 			const fs = require('fs-extra'),
 				path = require('path'),
 				promises = require('bluebird');
 
 			const filesystem = promises.promisifyAll(fs);
 			const rootPath = path.dirname(require.main.filename);
-
-			const configPath = path.join(rootPath, `config/${twyrEnv}`, `${path.relative(rootPath, twyrModule.basePath)}.js`);
+			const configPath = path.join(rootPath, `config${path.sep}${twyrEnv}`, `${twyrModulePath}.js`);
 
 			await filesystem.ensureDirAsync(path.dirname(configPath));
-			const doesExist = await this._exists(configPath, filesystem.R_OK);
 
-			let config = {};
+			const doesExist = await this._exists(configPath, filesystem.R_OK);
 			if(doesExist) config = require(configPath).config;
 
-			this.$cacheMap[configPath] = config;
+			this.$cacheMap[twyrModulePath] = config;
 			return config;
 		}
 		catch(err) {
@@ -150,18 +151,19 @@ class FileConfigurationService extends TwyrBaseService {
 				path = require('path'),
 				promises = require('bluebird');
 
-			const filesystem = promises.promisifyAll(fs);
-			const rootPath = path.dirname(require.main.filename);
-
-			const configPath = path.join(rootPath, `config/${twyrEnv}`, `${path.relative(rootPath, twyrModule.basePath)}.js`),
-				configString = `exports.config = ${JSON.stringify(config, undefined, '\t')};\n`;
-
-			if(deepEqual(this.$cacheMap[configPath], config))
+			const twyrModulePath = this.$parent._getPathForModule(twyrModule);
+			if(deepEqual(this.$cacheMap[twyrModulePath], config))
 				return config;
 
+			this.$cacheMap[twyrModulePath] = config;
+
+			const rootPath = path.dirname(require.main.filename);
+			const configPath = path.join(rootPath, `config${path.sep}${twyrEnv}`, `${twyrModulePath}.js`);
+
+			const filesystem = promises.promisifyAll(fs);
 			await filesystem.ensureDirAsync(path.dirname(configPath));
 
-			this.$cacheMap[configPath] = config;
+			const configString = `exports.config = ${JSON.stringify(config, undefined, '\t')};\n`;
 			await filesystem.writeFileAsync(configPath, configString);
 
 			return config;
@@ -243,19 +245,19 @@ class FileConfigurationService extends TwyrBaseService {
 				path = require('path'),
 				promises = require('bluebird');
 
-			const filesystem = promises.promisifyAll(fs);
-			const rootPath = path.dirname(require.main.filename);
-
-			const configPath = path.join(rootPath, `config/${twyrEnv}`, `${configUpdateModule}.js`),
-				configString = `exports.config = ${JSON.stringify(config, undefined, '\t')};`;
-
-			if(deepEqual(this.$cacheMap[configPath], config))
+			if(deepEqual(this.$cacheMap[configUpdateModule], config))
 				return;
 
+			const rootPath = path.dirname(require.main.filename);
+			const configPath = path.join(rootPath, configUpdateModule);
+
+			this.$cacheMap[configUpdateModule] = config;
+
+			const filesystem = promises.promisifyAll(fs);
 			await filesystem.ensureDirAsync(path.dirname(configPath));
 
-			this.$cacheMap[configPath] = config;
-			await filesystem.writeFileAsync(configPath, configString);
+			const configString = `exports.config = ${JSON.stringify(config, undefined, '\t')};`;
+			await filesystem.writeFileAsync(`${configPath}.js`, configString);
 		}
 		catch(err) {
 			console.error(`Process changed configuration to file error: ${err.message}\n${err.stack}`);
@@ -297,10 +299,10 @@ class FileConfigurationService extends TwyrBaseService {
 			const path = require('path');
 
 			const rootPath = path.dirname(require.main.filename);
-			const twyrModule = path.relative(rootPath, filePath).replace(`config/${twyrEnv}/`, '').replace('.js', '');
+			const twyrModulePath = path.relative(rootPath, filePath).replace(`config${path.sep}${twyrEnv}${path.sep}`, '').replace('.js', '');
 
-			this.$cacheMap[filePath] = require(filePath).config;
-			this.$parent.emit('new-config', this.name, twyrModule, require(filePath).config);
+			this.$cacheMap[twyrModulePath] = require(filePath).config;
+			this.$parent.emit('new-config', this.name, twyrModulePath, this.$cacheMap[twyrModulePath]);
 		}
 		catch(err) {
 			console.error(`Process new configuration in ${filePath} error: ${err.message}\n${err.stack}`);
@@ -326,16 +328,16 @@ class FileConfigurationService extends TwyrBaseService {
 				path = require('path');
 
 			const rootPath = path.dirname(require.main.filename);
-			const twyrModule = path.relative(rootPath, filePath).replace(`config/${twyrEnv}/`, '').replace('.js', '');
+			const twyrModulePath = path.relative(rootPath, filePath).replace(`config${path.sep}${twyrEnv}${path.sep}`, '').replace('.js', '');
 
 			delete require.cache[filePath];
 			await snooze(500);
 
-			if(deepEqual(this.$cacheMap[filePath], require(filePath).config))
+			if(deepEqual(this.$cacheMap[twyrModulePath], require(filePath).config))
 				return;
 
-			this.$cacheMap[filePath] = require(filePath).config;
-			this.$parent.emit('update-config', this.name, twyrModule, require(filePath).config);
+			this.$cacheMap[twyrModulePath] = require(filePath).config;
+			this.$parent.emit('update-config', this.name, twyrModulePath, require(filePath).config);
 		}
 		catch(err) {
 			console.error(`Process updated configuration in ${filePath} error: ${err.message}\n${err.stack}`);
@@ -360,15 +362,15 @@ class FileConfigurationService extends TwyrBaseService {
 			const path = require('path');
 
 			const rootPath = path.dirname(require.main.filename);
-			const twyrModule = path.relative(rootPath, filePath).replace(`config/${twyrEnv}/`, '').replace('.js', '');
+			const twyrModulePath = path.relative(rootPath, filePath).replace(`config${path.sep}${twyrEnv}${path.sep}`, '').replace('.js', '');
 
 			delete require.cache[filePath];
-			delete this.$cacheMap[filePath];
+			delete this.$cacheMap[twyrModulePath];
 
-			this.$parent.emit('delete-config', this.name, twyrModule);
+			this.$parent.emit('delete-config', this.name, twyrModulePath);
 		}
 		catch(err) {
-			console.error(`Process updated configuration in ${filePath} error: ${err.message}\n${err.stack}`);
+			console.error(`Process deleted configuration in ${filePath} error: ${err.message}\n${err.stack}`);
 		}
 	}
 	// #endregion

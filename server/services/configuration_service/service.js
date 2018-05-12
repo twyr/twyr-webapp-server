@@ -246,7 +246,7 @@ class ConfigurationService extends TwyrBaseService {
 
 			let moduleState = true;
 			moduleStates.forEach((state) => {
-				moduleState = moduleState && state;
+				moduleState = moduleState && !!state;
 			});
 
 			return moduleState;
@@ -282,8 +282,9 @@ class ConfigurationService extends TwyrBaseService {
 
 			let moduleState = true;
 			moduleStates.forEach((state) => {
-				moduleState = moduleState && state;
+				moduleState = moduleState && !!state;
 			});
+
 			return moduleState;
 		}
 		catch(err) {
@@ -311,12 +312,11 @@ class ConfigurationService extends TwyrBaseService {
 			const moduleIds = [];
 			for(const subServiceName of subServiceNames) {
 				const twyrModuleId = await this.$services[subServiceName].getModuleId(twyrModule);
-				moduleIds.push(twyrModuleId);
+				if(twyrModuleId) moduleIds.push(twyrModuleId);
 			}
 
 			let moduleId = null;
 			moduleIds.forEach((twyrModuleId) => {
-				if(!twyrModuleId) return;
 				moduleId = twyrModuleId;
 			});
 
@@ -412,22 +412,79 @@ class ConfigurationService extends TwyrBaseService {
 	_getModuleFromPath(pathFromRoot) {
 		try {
 			const inflection = require('inflection');
+			const path = require('path');
 
 			let currentModule = this.$parent,
 				pathSegments = null;
 
 			while(currentModule.$parent) currentModule = currentModule.$parent;
 
-			pathSegments = pathFromRoot.split('/');
-			pathSegments.forEach((pathSegment) => {
-				if(!currentModule) return;
+			pathSegments = pathFromRoot.split(path.sep);
+			while(pathSegments.length) {
+				let pathSegment = pathSegments.shift();
+				if((pathSegment === 'server') || !currentModule)
+					continue;
+
 				currentModule = currentModule[`${inflection.camelize(pathSegment)}`] || currentModule[`${pathSegment}`] || currentModule[`$${pathSegment}`];
-			});
+				if(currentModule) continue;
+
+				while(pathSegments.length && !currentModule) {
+					pathSegment = `${pathSegment}_${pathSegments.shift()}`;
+					currentModule = currentModule[`${inflection.camelize(pathSegment)}`] || currentModule[`${pathSegment}`] || currentModule[`$${pathSegment}`];
+				}
+			}
 
 			return currentModule;
 		}
 		catch(err) {
 			if(twyrEnv === 'development') console.error(`${this.name}::_getModuleFromPath error: ${err.message}\n${err.stack}`);
+			return null;
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @private
+	 * @memberof ConfigurationService
+	 * @name     _getModuleFromPath
+	 *
+	 * @param    {TwyrBaseModule} twyrModule - The module for which to generate the path.
+	 *
+	 * @returns  {string} - The path of the module, relative to the Application Class.
+	 *
+	 * @summary  Given a loaded twyrModule object, return the path relative to the Application Class instance.
+	 */
+	_getPathForModule(twyrModule) {
+		try {
+			const inflection = require('inflection');
+			const path = require('path');
+
+			let currentModule = twyrModule;
+
+			const pathSegments = [];
+			pathSegments.push(inflection.underscore(currentModule.name));
+
+			while(currentModule.$parent) {
+				const parentModule = currentModule.$parent;
+				// eslint-disable-next-line no-loop-func
+				['server', 'services', 'middlewares', 'components', 'templates'].forEach((twyrModuleType) => {
+					if(Object.keys(parentModule[`$${twyrModuleType}`] || {}).indexOf(currentModule.name) < 0)
+						return;
+
+					pathSegments.unshift(twyrModuleType);
+				});
+
+				currentModule = parentModule;
+				if(currentModule && currentModule.$parent) pathSegments.unshift(inflection.underscore(currentModule.name));
+			}
+
+			pathSegments.unshift('server');
+			return pathSegments.join(path.sep);
+		}
+		catch(err) {
+			if(twyrEnv === 'development') console.error(`${this.name}::_getPathForModule error: ${err.message}\n${err.stack}`);
 			return null;
 		}
 	}

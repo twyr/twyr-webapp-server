@@ -166,7 +166,8 @@ class DatabaseConfigurationService extends TwyrBaseService {
 			if(!this.$database)
 				return {};
 
-			const cachedModule = this._getCachedModule(twyrModule);
+			const twyrModulePath = this.$parent._getPathForModule(twyrModule);
+			const cachedModule = this._getCachedModule(twyrModulePath);
 			if(cachedModule) {
 				twyrModule.displayName = cachedModule.displayName;
 				return cachedModule.configuration;
@@ -198,7 +199,8 @@ class DatabaseConfigurationService extends TwyrBaseService {
 			if(!this.$database)
 				return {};
 
-			const cachedModule = this._getCachedModule(twyrModule);
+			const twyrModulePath = this.$parent._getPathForModule(twyrModule);
+			const cachedModule = this._getCachedModule(twyrModulePath);
 			if(!cachedModule) return {};
 
 			const deepEqual = require('deep-equal');
@@ -230,7 +232,8 @@ class DatabaseConfigurationService extends TwyrBaseService {
 	 */
 	async getModuleState(twyrModule) {
 		try {
-			const cachedModule = this._getCachedModule(twyrModule);
+			const twyrModulePath = this.$parent._getPathForModule(twyrModule);
+			const cachedModule = this._getCachedModule(twyrModulePath);
 			return cachedModule ? cachedModule.enabled : true;
 		}
 		catch(err) {
@@ -254,7 +257,8 @@ class DatabaseConfigurationService extends TwyrBaseService {
 	 */
 	async setModuleState(twyrModule, enabled) {
 		try {
-			const cachedModule = this._getCachedModule(twyrModule);
+			const twyrModulePath = this.$parent._getPathForModule(twyrModule);
+			const cachedModule = this._getCachedModule(twyrModulePath);
 			if(!cachedModule) return enabled;
 
 			if(cachedModule.enabled === enabled)
@@ -285,7 +289,9 @@ class DatabaseConfigurationService extends TwyrBaseService {
 	 */
 	async getModuleId(twyrModule) {
 		try {
-			const cachedModule = this._getCachedModule(twyrModule);
+			const twyrModulePath = this.$parent._getPathForModule(twyrModule);
+			const cachedModule = this._getCachedModule(twyrModulePath);
+
 			return cachedModule ? cachedModule.id : null;
 		}
 		catch(err) {
@@ -310,27 +316,10 @@ class DatabaseConfigurationService extends TwyrBaseService {
 	 */
 	async _processConfigChange(configUpdateModule, config) {
 		try {
-			let rootModule = this.$parent;
-			while(rootModule.$parent) rootModule = rootModule.$parent;
+			const cachedModule = this._getCachedModule(configUpdateModule);
+			if(!cachedModule) return;
 
 			const deepEqual = require('deep-equal');
-			const inflection = require('inflection');
-			const path = require('path');
-
-			const pathSegments = path.join(rootModule.$application, configUpdateModule).split(path.sep);
-
-			// Iterate down the cached config objects
-			let cachedModule = this.$cachedConfigTree[pathSegments.shift()];
-			pathSegments.forEach((segment) => {
-				if(!cachedModule)
-					return;
-
-				cachedModule = cachedModule[`${inflection.camelize(segment)}`] || cachedModule[segment] || cachedModule[`$${segment}`];
-			});
-
-			if(!cachedModule)
-				return;
-
 			if(deepEqual(cachedModule.configuration, config))
 				return;
 
@@ -360,25 +349,8 @@ class DatabaseConfigurationService extends TwyrBaseService {
 	 */
 	async _processStateChange(configUpdateModule, state) {
 		try {
-			let currentModule = this.$parent;
-			while(currentModule.$parent) currentModule = currentModule.$parent;
-
-			const inflection = require('inflection');
-			const path = require('path');
-
-			const pathSegments = path.join(currentModule.$application, configUpdateModule).split(path.sep);
-
-			// Iterate down the cached config objects
-			let cachedModule = this.$cachedConfigTree[pathSegments.shift()];
-			pathSegments.forEach((segment) => {
-				if(!cachedModule)
-					return;
-
-				cachedModule = cachedModule[`${inflection.camelize(segment)}`] || cachedModule[segment] || cachedModule[`$${segment}`];
-			});
-
-			if(!cachedModule)
-				return;
+			const cachedModule = this._getCachedModule(configUpdateModule);
+			if(!cachedModule) return;
 
 			if(cachedModule.enabled === state)
 				return;
@@ -400,14 +372,19 @@ class DatabaseConfigurationService extends TwyrBaseService {
 			let serverModule = this.$parent;
 			while(serverModule.$parent) serverModule = serverModule.$parent;
 
-			let moduleConfigs = [];
 			const serverId = await this.$database.queryAsync('SELECT id FROM modules WHERE name = $1 AND parent IS NULL', [serverModule.$application]);
+			let moduleConfigs = null;
+
 			if(serverId.rows.length) {
 				moduleConfigs = await this.$database.queryAsync('SELECT A.*, B.display_name, B.configuration, B.enabled FROM fn_get_module_descendants($1) A INNER JOIN modules B ON (A.id = B.id)', [serverId.rows[0].id]);
 				moduleConfigs = moduleConfigs.rows;
 			}
 
-			this.$cachedConfigTree = this._reorgConfigsToTree(moduleConfigs, null);
+			this.$cachedMap = {};
+
+			const configTree = this._reorderConfigsToTree(moduleConfigs, null);
+			this._convertTreeToPaths(this.$cachedMap, '', configTree);
+
 			return null;
 		}
 		catch(err) {
@@ -416,37 +393,71 @@ class DatabaseConfigurationService extends TwyrBaseService {
 		}
 	}
 
-	_getCachedModule(twyrModule) {
-		try {
-			const pathSegments = [];
-			let currentModule = twyrModule;
+	_reorderConfigsToTree(moduleConfigs, parent) {
+		const inflection = require('inflection');
 
-			do {
-				pathSegments.unshift(currentModule.$application || currentModule.name);
+		const filteredConfigs = moduleConfigs.filter((moduleConfig) => {
+			return (moduleConfig.parent === parent);
+		});
 
-				if(currentModule.$parent) {
-					let moduleType = '';
-					['services', 'middlewares', 'components', 'templates'].forEach((type) => { // eslint-disable-line no-loop-func
-						if(!currentModule.$parent[`$${type}`]) return;
+		const tree = {};
+		filteredConfigs.forEach((filteredConfig) => {
+			const relevantConfig = {
+				'id': filteredConfig.id,
+				'name': filteredConfig.name,
+				'displayName': filteredConfig.display_name,
+				'configuration': filteredConfig.configuration,
+				'enabled': filteredConfig.enabled
+			};
 
-						if(Object.keys(currentModule.$parent[`$${type}`]).indexOf(currentModule.name) >= 0)
-							moduleType = type;
-					});
-
-					pathSegments.unshift(moduleType);
-				}
-
-				currentModule = currentModule.$parent;
-			} while(currentModule);
-
-			// Iterate down the cached config objects
-			let cachedModule = this.$cachedConfigTree[pathSegments.shift()];
-			pathSegments.forEach((segment) => {
-				if(!cachedModule) return;
-				cachedModule = cachedModule[segment];
+			const subModuleConfigs = this._reorderConfigsToTree(moduleConfigs, relevantConfig.id);
+			Object.keys(subModuleConfigs).forEach((moduleType) => {
+				relevantConfig[moduleType] = subModuleConfigs[moduleType];
 			});
 
-			return cachedModule;
+			if(filteredConfig.type === 'server') {
+				tree.server = relevantConfig;
+			}
+			else {
+				if(!tree[`${filteredConfig.type}s`]) tree[`${filteredConfig.type}s`] = {};
+				tree[`${filteredConfig.type}s`][inflection.underscore(filteredConfig.name)] = relevantConfig;
+			}
+
+		});
+
+		return tree;
+	}
+
+	_convertTreeToPaths(cachedMap, prefix, configTree) {
+		const path = require('path');
+		const twyrModuleTypes = ['services', 'middlewares', 'components', 'templates'];
+
+		Object.keys(configTree).forEach((key) => {
+			const currentPrefix = path.join(prefix, key);
+			if(currentPrefix.startsWith('/')) currentPrefix.substring(1);
+
+			if(cachedMap[currentPrefix])
+				return;
+
+			if((twyrModuleTypes.indexOf(key) < 0) && !configTree[key]['configuration'])
+				return;
+
+			if(configTree[key]['configuration'])
+				cachedMap[currentPrefix] = {
+					'id': configTree[key]['id'],
+					'name': configTree[key]['name'],
+					'displayName': configTree[key]['display_name'],
+					'configuration': configTree[key]['configuration'],
+					'enabled': configTree[key]['enabled']
+				};
+
+			this._convertTreeToPaths(cachedMap, currentPrefix, configTree[key]);
+		});
+	}
+
+	_getCachedModule(twyrModulePath) {
+		try {
+			return this.$cachedMap[twyrModulePath];
 		}
 		catch(err) {
 			console.error(`Get cached module error: ${err.message}\n${err.stack}`);
@@ -454,57 +465,8 @@ class DatabaseConfigurationService extends TwyrBaseService {
 		}
 	}
 
-	_reorgConfigsToTree(configArray, parentId) {
-		const reOrgedTree = {};
-
-		if(!this.$cachedMap) this.$cachedMap = {};
-
-		// eslint-disable-next-line curly
-		if(parentId) {
-			['services', 'middlewares', 'components', 'templates'].forEach((moduleType) => {
-				reOrgedTree[moduleType] = {};
-			});
-		}
-
-		configArray.forEach((config) => {
-			if(config.parent !== parentId)
-				return;
-
-			const configObj = {};
-			configObj.id = config.id;
-			configObj.name = config.name;
-			configObj.displayName = config.display_name;
-			configObj.enabled = config.enabled;
-			configObj.configuration = config.configuration;
-
-			const configSubObj = this._reorgConfigsToTree(configArray, config.id);
-			['services', 'middlewares', 'components', 'templates'].forEach((moduleType) => {
-				configObj[moduleType] = configSubObj[moduleType];
-			});
-
-			if(parentId === null) {
-				reOrgedTree[config.name] = configObj;
-			}
-			else {
-				const inflection = require('inflection');
-				reOrgedTree[inflection.pluralize(config.type)][config.name] = configObj;
-			}
-
-			this.$cachedMap[configObj.id] = configObj;
-		});
-
-		return reOrgedTree;
-	}
-
-	_getModulePath(module, callback) {
-		if(callback) callback(null, '');
-	}
-
 	_databaseNotification(data) {
 		console.log(`${this.name}::_databaseNotification: ${JSON.stringify(data, null, '\t')}`);
-
-		if(!this.$cachedMap[data.payload])
-			return null;
 
 		let rootModule = this.$parent;
 		while(rootModule.$parent) rootModule = rootModule.$parent;
@@ -524,32 +486,25 @@ class DatabaseConfigurationService extends TwyrBaseService {
 
 	async _databaseConfigurationChange(moduleId) {
 		try {
-			const deepEqual = require('deep-equal'),
-				inflection = require('inflection');
+			const deepEqual = require('deep-equal');
+
+			let twyrModulePath = null;
+			Object.keys(this.$cachedMap).forEach((cachedKey) => {
+				if(this.$cachedMap[cachedKey].id === moduleId)
+					twyrModulePath = cachedKey;
+			});
+
+			if(!twyrModulePath) return null;
 
 			const result = await this.$database.queryAsync('SELECT configuration FROM modules WHERE id = $1', [moduleId]);
 			if(!result.rows.length) return null;
 
-			if(deepEqual(this.$cachedMap[moduleId].configuration, result.rows[0].configuration))
+			if(deepEqual(this.$cachedMap[twyrModulePath].configuration, result.rows[0].configuration))
 				return null;
 
-			this.$cachedMap[moduleId].configuration = result.rows[0].configuration;
+			this.$cachedMap[twyrModulePath].configuration = result.rows[0].configuration;
+			this.$parent.emit('update-config', this.name, twyrModulePath, this.$cachedMap[twyrModulePath].configuration);
 
-			let ancestors = await this.$database.queryAsync('SELECT name, type FROM fn_get_module_ancestors($1) ORDER BY level DESC', [moduleId]);
-			if(!ancestors) return null;
-
-			ancestors = ancestors.rows;
-			ancestors.shift();
-			if(!ancestors.length)
-				return null;
-
-			const twyrModule = [];
-			ancestors.forEach((pathSegment) => {
-				twyrModule.push(inflection.pluralize(pathSegment.type));
-				twyrModule.push(inflection.underscore(pathSegment.name));
-			});
-
-			this.$parent.emit('update-config', this.name, twyrModule.join('/'), this.$cachedMap[moduleId].configuration);
 			return null;
 		}
 		catch(err) {
@@ -560,31 +515,23 @@ class DatabaseConfigurationService extends TwyrBaseService {
 
 	async _databaseStateChange(moduleId) {
 		try {
+			let twyrModulePath = null;
+			Object.keys(this.$cachedMap).forEach((cachedKey) => {
+				if(this.$cachedMap[cachedKey].id === moduleId)
+					twyrModulePath = cachedKey;
+			});
+
+			if(!twyrModulePath) return null;
+
 			const result = await this.$database.queryAsync('SELECT enabled FROM modules WHERE id = $1', [moduleId]);
 			if(!result.rows.length) return null;
 
-			if(this.$cachedMap[moduleId].enabled === result.rows[0].enabled)
+			if(this.$cachedMap[twyrModulePath].enabled === result.rows[0].enabled)
 				return null;
 
-			this.$cachedMap[moduleId].enabled = result.rows[0].enabled;
+			this.$cachedMap[twyrModulePath].enabled = result.rows[0].enabled;
 
-			let ancestors = await this.$database.queryAsync('SELECT name, type FROM fn_get_module_ancestors($1) ORDER BY level DESC', [moduleId]);
-			if(!ancestors) return null;
-
-			ancestors = ancestors.rows;
-			ancestors.shift();
-			if(!ancestors.length)
-				return null;
-
-			const inflection = require('inflection');
-			const twyrModule = [];
-
-			ancestors.forEach((pathSegment) => {
-				twyrModule.push(inflection.pluralize(pathSegment.type));
-				twyrModule.push(inflection.underscore(pathSegment.name));
-			});
-
-			this.$parent.emit('update-state', this.name, twyrModule.join('/'), this.$cachedMap[moduleId].enabled);
+			this.$parent.emit('update-state', this.name, twyrModulePath, this.$cachedMap[twyrModulePath].enabled);
 			return null;
 		}
 		catch(err) {

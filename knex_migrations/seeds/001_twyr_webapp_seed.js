@@ -87,7 +87,7 @@ exports.seed = async function(knex) {
 		'parent': parentId[0],
 		'type': 'service',
 		'admin_only': true,
-		'name': 'AWSService',
+		'name': 'AwsService',
 		'display_name': 'AWS Service',
 		'description': 'The Twyr Web Application base AWS Service - AWS feature-specific services (S3, for eg.) use this as a dependency for managing connections',
 		'metadata': {

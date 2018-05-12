@@ -195,14 +195,25 @@ class ExpressService extends TwyrBaseService {
 			if((this.$config.protocol || 'http') === 'http') {
 				server = protocol.createServer(webServer);
 			}
-			else {
-				const secureKey = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols.key) ? this.$config.secureProtocols.key : path.join(__dirname, this.$config.secureProtocols.key));
-				const secureCert = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols.cert) ? this.$config.secureProtocols.cert : path.join(__dirname, this.$config.secureProtocols.cert));
 
-				this.$config.secureProtocols.key = secureKey;
-				this.$config.secureProtocols.cert = secureCert;
+			if(((this.$config.protocol || 'http') === 'https') || (this.$config.protocol || 'http') === 'spdy') {
+				const secureKey = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].key) ? this.$config.secureProtocols[this.$config.protocol].key : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].key));
+				const secureCert = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].cert) ? this.$config.secureProtocols[this.$config.protocol].cert : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].cert));
 
-				server = protocol.createServer(this.$config.secureProtocols, webServer);
+				this.$config.secureProtocols[this.$config.protocol].key = secureKey;
+				this.$config.secureProtocols[this.$config.protocol].cert = secureCert;
+
+				server = protocol.createServer(this.$config.secureProtocols[this.$config.protocol], webServer);
+			}
+
+			if((this.$config.protocol || 'http') === 'http2') {
+				const secureKey = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].key) ? this.$config.secureProtocols[this.$config.protocol].key : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].key));
+				const secureCert = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].cert) ? this.$config.secureProtocols[this.$config.protocol].cert : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].cert));
+
+				this.$config.secureProtocols[this.$config.protocol].key = secureKey;
+				this.$config.secureProtocols[this.$config.protocol].cert = secureCert;
+
+				server = protocol.createSecureServer(this.$config.secureProtocols[this.$config.protocol], webServer);
 			}
 
 			// Add utility to force-stop server

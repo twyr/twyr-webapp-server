@@ -13,7 +13,7 @@ const TwyrBaseService = require('twyr-base-service').TwyrBaseService;
 const TwyrSrvcError = require('twyr-service-error').TwyrServiceError;
 
 /**
- * @class   AWSService
+ * @class   AwsService
  * @extends {TwyrBaseService}
  * @classdesc The Twyr Web Application Server AWS Service.
  *
@@ -21,7 +21,7 @@ const TwyrSrvcError = require('twyr-service-error').TwyrServiceError;
  * Allows the rest of the Twyr Modules to use AWS SDK API.
  *
  */
-class AWSService extends TwyrBaseService {
+class AwsService extends TwyrBaseService {
 	// #region Constructor
 	constructor(parent, loader) {
 		super(parent, loader);
@@ -34,7 +34,7 @@ class AWSService extends TwyrBaseService {
 	 * @function
 	 * @override
 	 * @instance
-	 * @memberof AWSService
+	 * @memberof AwsService
 	 * @name     _setup
 	 *
 	 * @returns  {null} Nothing.
@@ -57,7 +57,7 @@ class AWSService extends TwyrBaseService {
 	 * @function
 	 * @override
 	 * @instance
-	 * @memberof AWSService
+	 * @memberof AwsService
 	 * @name     _teardown
 	 *
 	 * @returns  {undefined} Nothing.
@@ -99,4 +99,4 @@ class AWSService extends TwyrBaseService {
 	// #endregion
 }
 
-exports.service = AWSService;
+exports.service = AwsService;
