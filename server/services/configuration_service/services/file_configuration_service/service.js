@@ -249,7 +249,7 @@ class FileConfigurationService extends TwyrBaseService {
 				return;
 
 			const rootPath = path.dirname(require.main.filename);
-			const configPath = path.join(rootPath, configUpdateModule);
+			const configPath = path.join(rootPath, `config${path.sep}${twyrEnv}`, configUpdateModule);
 
 			this.$cacheMap[configUpdateModule] = config;
 
