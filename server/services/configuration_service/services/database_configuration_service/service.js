@@ -74,6 +74,29 @@ class DatabaseConfigurationService extends TwyrBaseService {
 			if(thisConfig.pool) {
 				thisConfig.pool.min = Number(process.env.services_DatabaseService_pool_min || thisConfig.pool.min);
 				thisConfig.pool.max = Number(process.env.services_DatabaseService_pool_max || thisConfig.pool.max);
+
+				thisConfig.pool['afterCreate'] = function(rawConnection, done) {
+					const pgError = require('pg-error');
+
+					rawConnection.parseE = pgError.parse;
+					rawConnection.parseN = pgError.parse;
+
+					rawConnection.on('PgError', function(err) {
+						switch (err.severity) {
+							case 'ERROR':
+							case 'FATAL':
+							case 'PANIC':
+								this.emit('error', err);
+								break;
+
+							default:
+								this.emit('notice', err);
+								break;
+						}
+					});
+
+					done();
+				};
 			}
 
 			thisConfig.migrations.directory = path.isAbsolute(thisConfig.migrations.directory) ? thisConfig.migrations.directory : path.join(rootPath, thisConfig.migrations.directory);

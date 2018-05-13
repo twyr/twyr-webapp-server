@@ -425,12 +425,20 @@ class ConfigurationService extends TwyrBaseService {
 				if((pathSegment === 'server') || !currentModule)
 					continue;
 
-				currentModule = currentModule[`${inflection.camelize(pathSegment)}`] || currentModule[`${pathSegment}`] || currentModule[`$${pathSegment}`];
-				if(currentModule) continue;
+				let nextModule = currentModule[`${inflection.camelize(pathSegment)}`] || currentModule[`$${pathSegment}`] || currentModule[`${pathSegment}`];
+				if(nextModule) {
+					currentModule = nextModule;
+					continue;
+				}
 
-				while(pathSegments.length && !currentModule) {
+				while(pathSegments.length) {
 					pathSegment = `${pathSegment}_${pathSegments.shift()}`;
-					currentModule = currentModule[`${inflection.camelize(pathSegment)}`] || currentModule[`${pathSegment}`] || currentModule[`$${pathSegment}`];
+					nextModule = currentModule[`${inflection.camelize(pathSegment)}`] || currentModule[`$${pathSegment}`] || currentModule[`${pathSegment}`];
+
+					if(nextModule) {
+						currentModule = nextModule;
+						break;
+					}
 				}
 			}
 

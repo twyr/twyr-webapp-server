@@ -647,12 +647,7 @@ class ExpressService extends TwyrBaseService {
 				});
 		});
 
-		if(forPrint.length) {
-			const printf = require('node-print');
-
-			console.log(`\n\n${process.title} Listening On:`);
-			printf.printTable(forPrint);
-		}
+		console.table(forPrint);
 	}
 	// #endregion
 

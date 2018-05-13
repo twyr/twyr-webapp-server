@@ -47,6 +47,7 @@ class DatabaseService extends TwyrBaseService {
 			const jsonApiParams = require('bookshelf-jsonapi-params');
 			const knex = require('knex');
 			const path = require('path');
+			const promises = require('bluebird');
 
 			this.$config.debug = (process.env.services_DatabaseService_debug === 'true') || (this.$config.debug === true);
 			if(this.$config.connection) { // eslint-disable-line curly
@@ -56,6 +57,58 @@ class DatabaseService extends TwyrBaseService {
 			if(this.$config.pool) {
 				this.$config.pool.min = Number(process.env.services_DatabaseService_pool_min || this.$config.pool.min);
 				this.$config.pool.max = Number(process.env.services_DatabaseService_pool_max || this.$config.pool.max);
+
+				const self = this; // eslint-disable-line consistent-this
+				this.$config.pool['afterCreate'] = async function(rawConnection, done) {
+					try {
+						const pgError = require('pg-error');
+
+						rawConnection.parseE = pgError.parse;
+						rawConnection.parseN = pgError.parse;
+
+						rawConnection.on('PgError', function(err) {
+							switch (err.severity) {
+								case 'ERROR':
+								case 'FATAL':
+								case 'PANIC':
+									this.emit('error', err);
+									break;
+
+								default:
+									this.emit('notice', err);
+									break;
+							}
+						});
+
+						rawConnection.query(`SELECT nspname FROM pg_catalog.pg_namespace`, async function (err, schemas) {
+							if(err) {
+								done(err);
+								return;
+							}
+
+							schemas = schemas.rows.map((schema) => {
+								return schema.nspname;
+							})
+							.filter((schemaName) => {
+								return ((schemaName !== 'information_schema') && (!schemaName.startsWith('pg_')));
+							});
+
+							const pgInfo = promises.promisify(require('pg-info'));
+							const dbInfo = await pgInfo({
+								'client': rawConnection,
+								'schemas': schemas
+							});
+
+							// TODO: Create bookshelf models automatically from here...
+							self.$dependencies.LoggerService.debug(`PG Info Output: ${JSON.stringify(dbInfo, null, '\t')}`);
+
+							done();
+						});
+					}
+					catch(err) {
+						done(err);
+					}
+				};
 			}
 
 			if(this.$config.migrations) thisConfig.migrations.directory = path.isAbsolute(thisConfig.migrations.directory) ? thisConfig.migrations.directory : path.join(rootPath, thisConfig.migrations.directory); // eslint-disable-line no-undef

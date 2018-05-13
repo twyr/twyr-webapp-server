@@ -171,6 +171,14 @@ class TwyrApplication extends TwyrBaseModule {
 		try {
 			const subModuleStatus = await super.start(dependencies);
 
+			// Sanity check - to be deprecated...
+			setTimeout(async () => {
+				const dbSrvc = this.$services.DatabaseService.Interface;
+				const modules = await dbSrvc.knex.raw(`SELECT id, name FROM modules`);
+
+				console.table(modules.rows);
+			}, 2500);
+
 			// Setup common routes - to be enhanced
 			const expressRouter = this.$services.ExpressService.Interface.Router;
 
