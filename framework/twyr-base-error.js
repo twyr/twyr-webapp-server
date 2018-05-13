@@ -11,6 +11,7 @@
  * @ignore
  */
 const cleanStack = require('clean-stack');
+const PgError = require('pg-error');
 
 /**
  * @class TwyrBaseError
@@ -38,6 +39,9 @@ class TwyrBaseError extends Error {
 	toString() {
 		const errstr = this.$innerError ? cleanStack(this.stack, { 'pretty': true }) : this.stack;
 		if(!this.$innerError) return `\n\n========>>\n\nRoot Cause::${errstr}`;
+
+		if(this.$innerError instanceof PgError)
+			return `${errstr}\n\n========>>\n\nRoot Cause::${this.$innerError.message}\n${this.$innerError.D}\n\n`;
 
 		if(!(this.$innerError instanceof TwyrBaseError))
 			return `${errstr}\n\n========>>\n\nRoot Cause::${this.$innerError.stack}\n\n`;
