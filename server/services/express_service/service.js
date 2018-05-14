@@ -192,9 +192,8 @@ class ExpressService extends TwyrBaseService {
 			const protocol = require(this.$config.protocol || 'http');
 
 			let server = undefined;
-			if((this.$config.protocol || 'http') === 'http') {
+			if((this.$config.protocol || 'http') === 'http')
 				server = protocol.createServer(webServer);
-			}
 
 			if(((this.$config.protocol || 'http') === 'https') || (this.$config.protocol || 'http') === 'spdy') {
 				const secureKey = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].key) ? this.$config.secureProtocols[this.$config.protocol].key : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].key));
