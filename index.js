@@ -50,12 +50,18 @@ const TwyrApplication = require('./server/twyr-application-class').TwyrApplicati
  * @ignore
  */
 const serverInstance = new TwyrApplication(SERVER_NAME);
+let shuttingDown = false;
 
 const onDeath = require('death')({ 'uncaughtException': false, 'debug': (twyrEnv === 'development') });
 const offDeath = onDeath(async () => {
 	try {
-		offDeath();
+		if(shuttingDown) return;
+		shuttingDown = true;
+
 		await serverInstance.shutdownServer();
+		offDeath();
+
+		process.exit(0); // eslint-disable-line no-process-exit
 	}
 	catch(shutdownError) {
 		console.error(`Shutdown Error: ${shutdownError.toString()}`);

@@ -58,7 +58,6 @@ class DatabaseService extends TwyrBaseService {
 				this.$config.pool.min = Number(process.env.services_DatabaseService_pool_min || this.$config.pool.min);
 				this.$config.pool.max = Number(process.env.services_DatabaseService_pool_max || this.$config.pool.max);
 
-				const self = this; // eslint-disable-line consistent-this
 				this.$config.pool['afterCreate'] = async function(rawConnection, done) {
 					try {
 						const pgError = require('pg-error');
@@ -80,30 +79,27 @@ class DatabaseService extends TwyrBaseService {
 							}
 						});
 
-						rawConnection.query(`SELECT nspname FROM pg_catalog.pg_namespace`, async function (err, schemas) {
-							if(err) {
-								done(err);
-								return;
-							}
+						promises.promisifyAll(rawConnection);
+						done();
 
-							schemas = schemas.rows.map((schema) => {
-								return schema.nspname;
-							})
-							.filter((schemaName) => {
-								return ((schemaName !== 'information_schema') && (!schemaName.startsWith('pg_')));
-							});
+						// let dbSchemas = await rawConnection.queryAsync(`SELECT nspname FROM pg_catalog.pg_namespace`);
+						// dbSchemas = dbSchemas.rows.map((schema) => {
+						// 	return schema.nspname;
+						// })
+						// .filter((schemaName) => {
+						// 	return ((schemaName !== 'information_schema') && (!schemaName.startsWith('pg_')));
+						// });
 
-							const pgInfo = promises.promisify(require('pg-info'));
-							const dbInfo = await pgInfo({
-								'client': rawConnection,
-								'schemas': schemas
-							});
+						// const pgInfo = promises.promisify(require('pg-info'));
+						// const dbInfo = await pgInfo({
+						// 	'client': rawConnection,
+						// 	'schemas': dbSchemas
+						// });
 
-							// TODO: Create bookshelf models automatically from here...
-							self.$dependencies.LoggerService.debug(`PG Info Output: ${JSON.stringify(dbInfo, null, '\t')}`);
+						// TODO: Create bookshelf models automatically from here...
+						// self.$dependencies.LoggerService.debug(`PG Info Output: ${JSON.stringify(dbInfo, null, '\t')}`);
 
-							done();
-						});
+						// console.log(`DB Schemas: ${JSON.stringify(dbSchemas)}`);
 					}
 					catch(err) {
 						done(err);

@@ -579,12 +579,10 @@ class TwyrModuleLoader extends TwyrBaseClass {
 					const dependencies = this._getDependencies(moduleInstance);
 
 					lifecycleStatus = await moduleInstance.start(dependencies);
+					nameStatusPairs[serviceName] = lifecycleStatus;
 				}
 				catch(err) {
 					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_startServices::${serviceName} error`, err);
-				}
-				finally {
-					nameStatusPairs[serviceName] = lifecycleStatus;
 				}
 			}
 
@@ -1358,10 +1356,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 					}
 
 					currentDependency = currentModule.$services[thisDependency];
-					if(!currentDependency)
-						currentModule = currentModule.$parent;
-					else
-						break;
+					if(!currentDependency) currentModule = currentModule.$parent;
 				}
 
 				if(!currentDependency) throw new Error(`${moduleInstance.name}::dependency::${thisDependency} not found!`);

@@ -113,66 +113,6 @@ class WebsocketService extends TwyrBaseService {
 				}
 			});
 
-			const setupRequestResponseForAudit = (request, response, next) => {
-				request.twyrRequestId = uuid().toString();
-				next();
-			};
-
-			const tenantSetter = (request, response, next) => {
-				const cacheSrvc = this.$dependencies.CacheService,
-					dbSrvc = this.$dependencies.DatabaseService.knex,
-					urlParts = url.parse(request.url);
-
-				if(!request.session.passport) { // eslint-disable-line curly
-					request.session.passport = {};
-				}
-
-				if(!request.session.passport.user) { // eslint-disable-line curly
-					request.session.passport.user = 'ffffffff-ffff-4fff-ffff-ffffffffffff';
-				}
-
-				let tenantSubDomain = (urlParts.hostname || `www${this.$config.cookieParser.domain}`).replace(this.$config.cookieParser.domain, '');
-				if(this.$config.subdomainMappings && this.$config.subdomainMappings[tenantSubDomain])
-					tenantSubDomain = this.$config.subdomainMappings[tenantSubDomain];
-
-				cacheSrvc.getAsync(`twyr!webapp!tenant!subdomain!${tenantSubDomain}`)
-				.then((tenant) => {
-					if(tenant) return [{ 'rows': [JSON.parse(tenant)] }, false];
-					return promises.all([dbSrvc.raw('SELECT id, name, sub_domain FROM tenants WHERE sub_domain = ?', [tenantSubDomain]), true]);
-				})
-				.then((results) => {
-					const shouldCache = results[1],
-						tenant = results[0].rows[0];
-
-					if(!tenant) throw new Error(`Invalid sub-domain: ${tenantSubDomain}`);
-					request.tenant = tenant;
-
-					if(!shouldCache)
-						return null;
-
-					const cacheMulti = promises.promisifyAll(cacheSrvc.multi());
-					cacheMulti.setAsync(`twyr!webapp!tenant!subdomain!${tenantSubDomain}`, JSON.stringify(tenant));
-					cacheMulti.expireAsync(`twyr!webapp!tenant!subdomain!${tenantSubDomain}`, 43200);
-
-					return cacheMulti.execAsync();
-				})
-				.then(() => {
-					next();
-					return null;
-				})
-				.catch((err) => {
-					let error = err;
-
-					// eslint-disable-next-line curly
-					if(error && !(error instanceof TwyrSrvcError)) {
-						error = new TwyrSrvcError(`${this.name}::tenantSetter`, error);
-					}
-
-					console.error(error.toString());
-					next(error);
-				});
-			};
-
 			// Step 1: Setup the realtime streaming server
 			const thisConfig = JSON.parse(JSON.stringify(this.$config.primus));
 			this.$websocketServer = new PrimusServer(this.$dependencies.ExpressService.Server, thisConfig);
@@ -181,10 +121,10 @@ class WebsocketService extends TwyrBaseService {
 			this.$websocketServer.use('cookieParser', _cookieParser, undefined, 0);
 			this.$websocketServer.use('session', _session, undefined, 1);
 			this.$websocketServer.use('device', device.capture(), undefined, 2);
-			this.$websocketServer.use('auditStuff', setupRequestResponseForAudit, 3);
-			this.$websocketServer.use('tenantSetter', tenantSetter, undefined, 4);
-			this.$websocketServer.use('passportInit', this.$dependencies.AuthService.initialize(), undefined, 5);
-			this.$websocketServer.use('passportSession', this.$dependencies.AuthService.session(), undefined, 6);
+			// this.$websocketServer.use('auditStuff', setupRequestResponseForAudit, 3);
+			// this.$websocketServer.use('tenantSetter', tenantSetter, undefined, 4);
+			this.$websocketServer.use('passportInit', this.$dependencies.AuthService.initialize(), undefined, 3);
+			this.$websocketServer.use('passportSession', this.$dependencies.AuthService.session(), undefined, 4);
 
 			// Step 3: Authorization hook
 			this.$websocketServer.authorize(this._authorizeWebsocketConnection.bind(this));

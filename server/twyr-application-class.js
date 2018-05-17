@@ -174,7 +174,7 @@ class TwyrApplication extends TwyrBaseModule {
 			// Sanity check - to be deprecated...
 			setTimeout(async () => {
 				const dbSrvc = this.$services.DatabaseService.Interface;
-				const modules = await dbSrvc.knex.raw(`SELECT id, name FROM modules`);
+				const modules = await dbSrvc.knex.raw(`SELECT id, type, name FROM modules`);
 
 				console.table(modules.rows);
 			}, 2500);

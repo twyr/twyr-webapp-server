@@ -47,9 +47,10 @@ class RingpopService extends TwyrBaseService {
 			const TChannel = require('tchannel');
 			const Ringpop = require('ringpop');
 
-			if((twyrEnv !== 'development') && !this.$config.host) {
+			if(!this.$config.host) {
 				const networkInterfaceList = require('os').networkInterfaces();
 				let hosts = null;
+
 				Object.keys(networkInterfaceList).forEach((networkInterface) => {
 					const interfaceAddresses = networkInterfaceList[networkInterface].filter((address) => {
 						if(address.internal)
@@ -112,7 +113,7 @@ class RingpopService extends TwyrBaseService {
 					tchannel.listen(this.$config.port, this.$config.host, () => {
 						ringpop.bootstrap({
 							'joinParallelismFactor': 2,
-							'hosts': this.$config.bootstrapNodes
+							'hosts': (this.$config.bootstrapNodes && this.$config.bootstrapNodes.length) ? this.$config.bootstrapNodes : [`${this.$config.host}:${this.$config.port}`]
 						}, (err) => {
 							if(err) {
 								this.onRingpopError(err);

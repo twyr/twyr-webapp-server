@@ -80,6 +80,7 @@ class LoggerService extends TwyrBaseService {
 							delete meta[key];
 							return;
 						}
+
 						const dangerousKeys = Object.keys(meta[key]).filter((metaKeyKey) => {
 							return (metaKeyKey.toLowerCase().indexOf('password') >= 0) || (metaKeyKey.toLowerCase().indexOf('image') >= 0) || (metaKeyKey.toLowerCase().indexOf('random') >= 0) || (metaKeyKey === '_');
 						});
@@ -92,7 +93,9 @@ class LoggerService extends TwyrBaseService {
 							delete meta[key];
 					});
 
-					if(!Object.keys(meta).length) return '\n';
+					if(!Object.keys(meta).length)
+						return '\n';
+
 					return `${JSON.stringify(meta, undefined, '\t')}\n\n`;
 				}]
 			});

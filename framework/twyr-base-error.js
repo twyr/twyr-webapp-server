@@ -10,9 +10,6 @@
  * Module dependencies, required for this module
  * @ignore
  */
-const cleanStack = require('clean-stack');
-const PgError = require('pg-error');
-
 /**
  * @class TwyrBaseError
  * @extends {Error}
@@ -37,6 +34,9 @@ class TwyrBaseError extends Error {
 	}
 
 	toString() {
+		const cleanStack = require('clean-stack');
+		const PgError = require('pg-error');
+
 		const errstr = this.$innerError ? cleanStack(this.stack, { 'pretty': true }) : this.stack;
 		if(!this.$innerError) return `\n\n========>>\n\nRoot Cause::${errstr}`;
 

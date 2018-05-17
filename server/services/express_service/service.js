@@ -143,6 +143,8 @@ class ExpressService extends TwyrBaseService {
 			.use(_session)
 			.use((request, response, next) => {
 				request.twyrRequestId = request.headers['twyrrequestid'] || uuid().toString();
+				request.headers['twyrrequestid'] = request.twyrRequestId;
+
 				next();
 			})
 			.use(this._tenantSetter.bind(this))
@@ -298,27 +300,25 @@ class ExpressService extends TwyrBaseService {
 			const cacheSrvc = this.$dependencies.CacheService,
 				dbSrvc = this.$dependencies.DatabaseService.knex;
 
+			let tenantSubDomain = request.hostname.replace(this.$config.cookieParser.domain, '');
+			if(this.$config.subdomainMappings && this.$config.subdomainMappings[tenantSubDomain])
+				tenantSubDomain = this.$config.subdomainMappings[tenantSubDomain];
+
 			let tenant = null;
 			if(request.headers['tenant']) { // eslint-disable-line curly
 				tenant = JSON.parse(request.headers['tenant']);
 			}
 
 			if(!tenant) {
-				let tenantSubDomain = request.hostname.replace(this.$config.cookieParser.domain, '');
-				if(this.$config.subdomainMappings && this.$config.subdomainMappings[tenantSubDomain])
-					tenantSubDomain = this.$config.subdomainMappings[tenantSubDomain];
-
 				tenant = await cacheSrvc.getAsync(`twyr!webapp!tenant!${tenantSubDomain}`);
 				if(tenant) tenant = JSON.parse(tenant);
 			}
 
 			if(!tenant) {
-				let tenantSubDomain = request.hostname.replace(this.$config.cookieParser.domain, '');
-				if(this.$config.subdomainMappings && this.$config.subdomainMappings[tenantSubDomain])
-					tenantSubDomain = this.$config.subdomainMappings[tenantSubDomain];
-
 				tenant = await dbSrvc.raw('SELECT id, name, sub_domain FROM tenants WHERE sub_domain = ?', [tenantSubDomain]);
 				if(!tenant) throw new Error(`Invalid sub-domain: ${tenantSubDomain}`);
+				if(!tenant.rows) throw new Error(`Invalid sub-domain: ${tenantSubDomain}`);
+				if(!tenant.rows.length) throw new Error(`Invalid sub-domain: ${tenantSubDomain}`);
 
 				tenant = tenant.rows[0];
 
@@ -330,6 +330,8 @@ class ExpressService extends TwyrBaseService {
 			}
 
 			request.tenant = tenant;
+			request.headers['tenant'] = JSON.stringify(tenant);
+
 			next();
 		}
 		catch(err) {
@@ -338,61 +340,6 @@ class ExpressService extends TwyrBaseService {
 			// eslint-disable-next-line curly
 			if(error && !(error instanceof TwyrSrvcError)) {
 				error = new TwyrSrvcError(`${this.name}::tenantSetter`, error);
-				console.error(error.toString());
-			}
-
-			throw error;
-		}
-	}
-
-	/**
-	 * @async
-	 * @function
-	 * @instance
-	 * @memberof ExpressService
-	 * @name     _handleOrProxytoCluster
-	 *
-	 * @param    {Object} request - Request coming in from the outside world.
-	 * @param    {Object} response - Response going out to the outside world.
-	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
-	 *
-	 * @returns  {undefined} Nothing.
-	 *
-	 * @summary  Call Ringpop to decide whether to handle the request, or to forward it someplace else.
-	 */
-	async _handleOrProxytoCluster(request, response, next) {
-		try {
-			if(request.headers['twyrrequestid']) {
-				next();
-				return;
-			}
-
-			const ringpop = this.$dependencies.RingpopService;
-			if(ringpop.lookup(request.tenant.id) === ringpop.whoami()) {
-				next();
-				return;
-			}
-
-			const uuid = require('uuid/v4');
-			request.headers['twyrrequestid'] = request.twyrRequestId || uuid().toString();
-			request.headers['tenant'] = JSON.stringify(request.tenant);
-
-			const hostPort = [];
-			hostPort.push(ringpop.lookup(request.tenant.id).split(':').shift());
-			hostPort.push((twyrEnv === 'development') ? 9101 : null);
-
-			const dest = `${this.$config.protocol}://${hostPort.filter((val) => { return !!val; }).join(':')}${request.path}`;
-			const proxy = require('express-http-proxy');
-
-			proxy(dest)(request, response, next);
-		}
-		catch(err) {
-			let error = err;
-
-			// eslint-disable-next-line curly
-			if(error && !(error instanceof TwyrSrvcError)) {
-				error = new TwyrSrvcError(`${this.name}::tenantSetter`, error);
-				console.error(error.toString());
 			}
 
 			throw error;
@@ -515,7 +462,7 @@ class ExpressService extends TwyrBaseService {
 					logMsgMeta.url = `${request.method} ${request.baseUrl ? request.baseUrl : ''}${request.path}`;
 					logMsgMeta.userId = request.user ? `${request.user.id}` : logMsgMeta.userId || 'ffffffff-ffff-4fff-ffff-ffffffffffff';
 					logMsgMeta.user = request.user ? `${request.user.first_name} ${request.user.last_name}` : logMsgMeta.user;
-					logMsgMeta.tenantId = request.tenant ? `${request.tenant.id}` : '00000000-0000-4000-0000-000000000000';
+					logMsgMeta.tenantId = request.tenant ? `${request.tenant.id}` : 'Unknown';
 					logMsgMeta.tenant = request.tenant ? `${request.tenant.name}` : 'Unknown';
 					logMsgMeta.query = JSON.parse(JSON.stringify(request.query || {}));
 					logMsgMeta.params = JSON.parse(JSON.stringify(request.params || {}));
@@ -548,7 +495,7 @@ class ExpressService extends TwyrBaseService {
 					logMsgMeta.url = `${request.method} ${request.baseUrl ? request.baseUrl : ''}${request.path}`;
 					logMsgMeta.userId = request.user ? `${request.user.id}` : logMsgMeta.userId || 'ffffffff-ffff-4fff-ffff-ffffffffffff';
 					logMsgMeta.user = request.user ? `${request.user.first_name} ${request.user.last_name}` : logMsgMeta.user;
-					logMsgMeta.tenantId = request.tenant ? `${request.tenant.id}` : '00000000-0000-4000-0000-000000000000';
+					logMsgMeta.tenantId = request.tenant ? `${request.tenant.id}` : 'Unknown';
 					logMsgMeta.tenant = request.tenant ? `${request.tenant.name}` : 'Unknown';
 					logMsgMeta.query = JSON.parse(JSON.stringify(request.query || {}));
 					logMsgMeta.params = JSON.parse(JSON.stringify(request.params || {}));
@@ -588,6 +535,56 @@ class ExpressService extends TwyrBaseService {
 			// eslint-disable-next-line curly
 			if(error && !(error instanceof TwyrSrvcError)) {
 				error = new TwyrSrvcError(`${this.name}::requestResponseCycleHandler`, error);
+			}
+
+			throw error;
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof ExpressService
+	 * @name     _handleOrProxytoCluster
+	 *
+	 * @param    {Object} request - Request coming in from the outside world.
+	 * @param    {Object} response - Response going out to the outside world.
+	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Call Ringpop to decide whether to handle the request, or to forward it someplace else.
+	 */
+	async _handleOrProxytoCluster(request, response, next) {
+		try {
+			if(request.headers['twyrrequestid']) {
+				next();
+				return;
+			}
+
+			const ringpop = this.$dependencies.RingpopService;
+			if(ringpop.lookup(request.tenant.id) === ringpop.whoami()) {
+				next();
+				return;
+			}
+
+			const hostPort = [];
+			hostPort.push(ringpop.lookup(request.tenant.id).split(':').shift());
+			hostPort.push((twyrEnv === 'development') ? 9101 : null);
+
+			const dest = `${this.$config.protocol}://${hostPort.filter((val) => { return !!val; }).join(':')}${request.path}`;
+			const proxy = require('express-http-proxy');
+
+			proxy(dest)(request, response, next);
+		}
+		catch(err) {
+			let error = err;
+
+			// eslint-disable-next-line curly
+			if(error && !(error instanceof TwyrSrvcError)) {
+				error = new TwyrSrvcError(`${this.name}::tenantSetter`, error);
+				console.error(error.toString());
 			}
 
 			throw error;
@@ -647,6 +644,7 @@ class ExpressService extends TwyrBaseService {
 		});
 
 		console.table(forPrint);
+		// console.log(`Listening on: ${JSON.stringify(this.$server.address(), null, '\t')}`);
 	}
 	// #endregion
 
