@@ -86,22 +86,6 @@ exports.up = async function(knex) {
 		});
 	}
 
-	exists = await knex.schema.withSchema('public').hasTable('component_widgets');
-	if(!exists) {
-		await knex.schema.withSchema('public').createTable('component_widgets', function(modWidgetsTbl) {
-			modWidgetsTbl.uuid('id').notNullable().primary().defaultTo(knex.raw('uuid_generate_v4()'));
-			modWidgetsTbl.uuid('module').notNullable().references('id').inTable('modules').onDelete('CASCADE').onUpdate('CASCADE');
-			modWidgetsTbl.text('ember_component').notNullable();
-			modWidgetsTbl.boolean('notification_area_only').notNullable().defaultTo(false);
-			modWidgetsTbl.text('display_name').notNullable();
-			modWidgetsTbl.text('description');
-			modWidgetsTbl.jsonb('metadata').notNullable().defaultTo('{}');
-			modWidgetsTbl.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
-			modWidgetsTbl.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
-			modWidgetsTbl.unique(['ember_component']);
-		});
-	}
-
 	exists = await knex.schema.withSchema('public').hasTable('tenants_modules');
 	if(!exists) {
 		await knex.schema.withSchema('public').createTable('tenants_modules', function(tenantModuleTbl) {
@@ -177,24 +161,6 @@ exports.up = async function(knex) {
 	}
 
 	// Step 5: Setup third-level tables
-	exists = await knex.schema.withSchema('public').hasTable('component_widget_templates');
-	if(!exists) {
-		await knex.schema.withSchema('public').createTable('component_widget_templates', function(modWidgetTmplTbl) {
-			modWidgetTmplTbl.uuid('id').notNullable().primary().defaultTo(knex.raw('uuid_generate_v4()'));
-			modWidgetTmplTbl.uuid('component_widget').notNullable().references('id').inTable('component_widgets').onDelete('CASCADE').onUpdate('CASCADE');
-			modWidgetTmplTbl.text('ember_template').notNullable();
-			modWidgetTmplTbl.text('display_name').notNullable();
-			modWidgetTmplTbl.text('description');
-			modWidgetTmplTbl.jsonb('metadata').notNullable().defaultTo('{}');
-			modWidgetTmplTbl.boolean('is_default').notNullable().defaultTo(false);
-			modWidgetTmplTbl.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
-			modWidgetTmplTbl.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
-
-			modWidgetTmplTbl.unique(['ember_template']);
-			modWidgetTmplTbl.unique(['component_widget', 'is_default']);
-		});
-	}
-
 	exists = await knex.schema.withSchema('public').hasTable('tenants_users_groups');
 	if(!exists) {
 		await knex.schema.withSchema('public').createTable('tenants_users_groups', function(tenantUserGroupTbl) {
@@ -1307,60 +1273,6 @@ exports.up = async function(knex) {
 				'tenant = NEW.tenant AND ' +
 				'tenant_group IN (SELECT id FROM fn_get_group_descendants(NEW.tenant_group) WHERE level >= 2) AND ' +
 				'tenant_user = NEW.tenant_user; ' +
-
-			'RETURN NEW; ' +
-		'END; ' +
-		'$$;'
-	);
-
-	// Step 14: Setup user-defined functions on Module Widgets table
-	await knex.schema.withSchema('public').raw(
-		'CREATE OR REPLACE FUNCTION public.fn_check_component_widget_upsert_is_valid () ' +
-			'RETURNS trigger ' +
-			'LANGUAGE plpgsql ' +
-			'VOLATILE  ' +
-			'CALLED ON NULL INPUT ' +
-			'SECURITY INVOKER ' +
-			'COST 1 ' +
-			'AS $$ ' +
-
-		'DECLARE ' +
-			'is_component			INTEGER; ' +
-			'is_permission_ok		INTEGER; ' +
-		'BEGIN ' +
-			'is_component := 0; ' +
-			'SELECT ' +
-				'count(id) ' +
-			'FROM ' +
-				'modules ' +
-			'WHERE ' +
-				'id = NEW.module AND ' +
-				'(type = \'component\' OR type = \'server\') ' +
-			'INTO ' +
-				'is_component; ' +
-
-			'IF is_component <= 0 ' +
-			'THEN ' +
-				'RAISE SQLSTATE \'2F003\' USING MESSAGE = \'Widgets can be assigned only to Servers and Components\'; ' +
-				'RETURN NULL; ' +
-			'END IF; ' +
-
-			'is_permission_ok := 0; ' +
-			'SELECT ' +
-				'count(id) ' +
-			'FROM ' +
-				'component_permissions ' +
-			'WHERE ' +
-				'module IN (SELECT id FROM fn_get_module_ancestors(NEW.module)) AND ' +
-				'id = NEW.permission ' +
-			'INTO ' +
-				'is_permission_ok; ' +
-
-			'IF is_permission_ok <= 0 ' +
-			'THEN ' +
-				'RAISE SQLSTATE \'2F003\' USING MESSAGE = \'Widgets must use Permissions defined by the Component or one of its parents\'; ' +
-				'RETURN NULL; ' +
-			'END IF; ' +
 
 			'RETURN NEW; ' +
 		'END; ' +
