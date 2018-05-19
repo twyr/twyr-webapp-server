@@ -43,6 +43,8 @@ class LocalizationService extends TwyrBaseService {
 	 */
 	async _setup() {
 		try {
+			await super._setup();
+
 			const i18n = require('i18n'),
 				path = require('path');
 
@@ -80,6 +82,8 @@ class LocalizationService extends TwyrBaseService {
 	async _teardown() {
 		try {
 			if(this.$i18n) delete this.$i18n;
+
+			await super._teardown();
 			return null;
 		}
 		catch(err) {

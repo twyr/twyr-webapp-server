@@ -43,6 +43,8 @@ class ApiService extends TwyrBaseService {
 	 */
 	async _setup() {
 		try {
+			await super._setup();
+
 			const customMatch = function(pattern, data) {
 				const items = this.find(pattern, true) || [];
 				items.push(data);
@@ -85,6 +87,8 @@ class ApiService extends TwyrBaseService {
 	async _teardown() {
 		try {
 			if(this.$patrun) delete this.$patrun;
+
+			await super._teardown();
 			return null;
 		}
 		catch(err) {

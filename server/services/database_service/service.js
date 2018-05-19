@@ -43,6 +43,8 @@ class DatabaseService extends TwyrBaseService {
 	 */
 	async _setup() {
 		try {
+			await super._setup();
+
 			const bookshelf = require('bookshelf');
 			const jsonApiParams = require('bookshelf-jsonapi-params');
 			const knex = require('knex');
@@ -149,6 +151,7 @@ class DatabaseService extends TwyrBaseService {
 			await this.$database.knex.destroy();
 			delete this.$database;
 
+			await super._teardown();
 			return null;
 		}
 		catch(err) {

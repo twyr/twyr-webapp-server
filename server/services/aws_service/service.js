@@ -43,6 +43,8 @@ class AwsService extends TwyrBaseService {
 	 */
 	async _setup() {
 		try {
+			await super._setup();
+
 			this.$AWS = require('aws-sdk');
 			this.$AWS.config.update(this.$config);
 			return null;
@@ -67,6 +69,8 @@ class AwsService extends TwyrBaseService {
 	async _teardown() {
 		try {
 			if(this.$AWS) delete this.$AWS;
+
+			await super._teardown();
 			return null;
 		}
 		catch(err) {

@@ -43,6 +43,8 @@ class RingpopService extends TwyrBaseService {
 	 */
 	async _setup() {
 		try {
+			await super._setup();
+
 			const Promise = require('bluebird');
 			const TChannel = require('tchannel');
 			const Ringpop = require('ringpop');
@@ -163,6 +165,7 @@ class RingpopService extends TwyrBaseService {
 			this.$ringpop.destroy();
 			delete this.$ringpop;
 
+			await super._teardown();
 			return null;
 		}
 		catch(err) {

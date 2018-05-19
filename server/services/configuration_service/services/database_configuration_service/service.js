@@ -44,11 +44,13 @@ class DatabaseConfigurationService extends TwyrBaseService {
 	 */
 	async _setup() {
 		try {
+			await super._setup();
+
 			if(!this.$parent.$config.subservices)
-				return false;
+				return null;
 
 			if(!this.$parent.$config.subservices[this.name])
-				return false;
+				return null;
 
 			const knex = require('knex');
 			const path = require('path');
@@ -129,7 +131,7 @@ class DatabaseConfigurationService extends TwyrBaseService {
 			await this.$database.queryAsync(`LISTEN "${rootModule.$application}StateChange"`);
 
 			await this._reloadAllConfig();
-			return true;
+			return null;
 		}
 		catch(err) {
 			throw new TwyrSrvcError(`${this.name}::_setup error`, err);
@@ -151,7 +153,7 @@ class DatabaseConfigurationService extends TwyrBaseService {
 	async _teardown() {
 		try {
 			if(!this.$database)
-				return;
+				return null;
 
 			let rootModule = this.$parent;
 			while(rootModule.$parent) rootModule = rootModule.$parent;
@@ -162,7 +164,8 @@ class DatabaseConfigurationService extends TwyrBaseService {
 			this.$database.end();
 			delete this.$database;
 
-			return;
+			await super._teardown();
+			return null;
 		}
 		catch(err) {
 			throw new TwyrSrvcError(`${this.name}::_teardown error`, err);

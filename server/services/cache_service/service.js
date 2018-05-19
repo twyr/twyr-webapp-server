@@ -43,6 +43,8 @@ class CacheService extends TwyrBaseService {
 	 */
 	async _setup() {
 		const Promise = require('bluebird');
+
+		await super._setup();
 		return new Promise((resolve, reject) => {
 			try {
 				this.$config.options['retry_strategy'] = (options) => {
@@ -66,8 +68,16 @@ class CacheService extends TwyrBaseService {
 				redis.Multi.prototype = promises.promisifyAll(redis.Multi.prototype);
 
 				this.$cache = redis.createClient(this.$config.port, this.$config.host, this.$config.options);
-				this.$cache.on('connect', (status) => {
+				this.$cache.once('connect', async (status) => {
 					this.$cache.on('error', this._handleRedisError.bind(this));
+
+					if(twyrEnv === 'development') {
+						this.$monitorClient = this.$cache.duplicate();
+
+						this.$monitorClient.on('monitor', this._logRedisCommands.bind(this));
+						await this.$monitorClient.monitorAsync();
+					}
+
 					if(resolve) resolve(status);
 				});
 
@@ -95,14 +105,20 @@ class CacheService extends TwyrBaseService {
 	 */
 	async _teardown() {
 		try {
-			if(!this.$cache)
-				return null;
+			if(twyrEnv === 'development' && this.$monitorClient) {
+				await this.$monitorClient.quitAsync();
+				this.$monitorClient.end(true);
 
+				delete this.$monitorClient;
+			}
+
+			if(!this.$cache) return null;
 			await this.$cache.quitAsync();
 
 			this.$cache.end(true);
 			delete this.$cache;
 
+			await super._teardown();
 			return null;
 		}
 		catch(err) {
@@ -112,6 +128,10 @@ class CacheService extends TwyrBaseService {
 	// #endregion
 
 	// #region Private Methods
+	_logRedisCommands(time, redisArgs, /* rawReply */) { // eslint-disable-line no-inline-comments
+		this.$dependencies.LoggerService.debug(`\nRedis Command: ${JSON.stringify(redisArgs)}`);
+	}
+
 	_handleRedisError(err) {
 		this.$dependencies.LoggerService.error(new TwyrSrvcError(`${this.name}::_handleRedisError error`, err).toString());
 	}

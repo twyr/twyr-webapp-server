@@ -43,6 +43,8 @@ class CassandraService extends TwyrBaseService {
 	 */
 	async _setup() {
 		try {
+			await super._setup();
+
 			const Cassandra = require('cassandra-driver');
 			const promises = require('bluebird');
 
@@ -87,8 +89,9 @@ class CassandraService extends TwyrBaseService {
 
 			await this.$Cassandra.shutdown();
 			this.$Cassandra = null;
-
 			delete this.$Cassandra;
+
+			await super._teardown();
 			return null;
 		}
 		catch(err) {

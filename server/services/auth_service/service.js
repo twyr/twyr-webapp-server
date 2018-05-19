@@ -43,6 +43,8 @@ class AuthService extends TwyrBaseService {
 	 */
 	async _setup() {
 		try {
+			await super._setup();
+
 			const fs = require('fs');
 			const path = require('path');
 			const promises = require('bluebird');
@@ -80,6 +82,8 @@ class AuthService extends TwyrBaseService {
 	async _teardown() {
 		try {
 			if(this.$passport) delete this.$passport;
+
+			await super._teardown();
 			return null;
 		}
 		catch(err) {

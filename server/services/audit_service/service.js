@@ -43,6 +43,8 @@ class AuditService extends TwyrBaseService {
 	 */
 	async _setup() {
 		try {
+			await super._setup();
+
 			const memoryCache = require('memory-cache');
 
 			this.$auditCache = new memoryCache.Cache();
@@ -75,6 +77,7 @@ class AuditService extends TwyrBaseService {
 			this.$auditCache.clear();
 			delete this.$auditCache;
 
+			await super._teardown();
 			return null;
 		}
 		catch(err) {

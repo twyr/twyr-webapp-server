@@ -43,6 +43,8 @@ class MailerService extends TwyrBaseService {
 	 */
 	async _setup() {
 		try {
+			await super._setup();
+
 			const promises = require('bluebird');
 			const mailer = promises.promisifyAll(require('nodemailer'));
 
@@ -89,6 +91,7 @@ class MailerService extends TwyrBaseService {
 				delete this.$smtpTransporter;
 			}
 
+			await super._teardown();
 			return null;
 		}
 		catch(err) {

@@ -44,6 +44,8 @@ class FileConfigurationService extends TwyrBaseService {
 	 */
 	async _setup() {
 		try {
+			await super._setup();
+
 			const chokidar = require('chokidar'),
 				path = require('path');
 
@@ -58,7 +60,7 @@ class FileConfigurationService extends TwyrBaseService {
 				.on('change', this._onUpdateConfiguration.bind(this))
 				.on('unlink', this._onDeleteConfiguration.bind(this));
 
-			return true;
+			return null;
 		}
 		catch(err) {
 			throw new TwyrSrvcError(`${this.name}::_setup error`, err);
@@ -80,7 +82,9 @@ class FileConfigurationService extends TwyrBaseService {
 	async _teardown() {
 		try {
 			this.$watcher.close();
-			return true;
+
+			await super._teardown();
+			return null;
 		}
 		catch(err) {
 			throw new TwyrSrvcError(`${this.name}::_teardown error`, err);

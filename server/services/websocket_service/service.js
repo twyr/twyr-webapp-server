@@ -79,7 +79,7 @@ class WebsocketService extends TwyrBaseService {
 			if(this.$websocketServer)
 				return null;
 
-			const promises = require('bluebird');
+			await super._setup();
 
 			const PrimusRooms = require('primus-rooms'),
 				PrimusServer = require('primus');
@@ -88,7 +88,6 @@ class WebsocketService extends TwyrBaseService {
 				device = require('express-device'),
 				moment = require('moment'),
 				session = require('express-session'),
-				url = require('url'),
 				uuid = require('uuid/v4');
 
 			const SessionStore = require(`connect-${this.$config.session.store.media}`)(session);
@@ -121,8 +120,6 @@ class WebsocketService extends TwyrBaseService {
 			this.$websocketServer.use('cookieParser', _cookieParser, undefined, 0);
 			this.$websocketServer.use('session', _session, undefined, 1);
 			this.$websocketServer.use('device', device.capture(), undefined, 2);
-			// this.$websocketServer.use('auditStuff', setupRequestResponseForAudit, 3);
-			// this.$websocketServer.use('tenantSetter', tenantSetter, undefined, 4);
 			this.$websocketServer.use('passportInit', this.$dependencies.AuthService.initialize(), undefined, 3);
 			this.$websocketServer.use('passportSession', this.$dependencies.AuthService.session(), undefined, 4);
 
@@ -173,6 +170,8 @@ class WebsocketService extends TwyrBaseService {
 			});
 
 			delete this.$websocketServer;
+
+			await super._teardown();
 			return null;
 		}
 		catch(err) {
@@ -186,12 +185,12 @@ class WebsocketService extends TwyrBaseService {
 		if(callback) callback(!request.user);
 	}
 
-	async _websocketServerInitialised(/* transformer, parser, options */) { // eslint-disable-line
+	async _websocketServerInitialised(transformer, parser, options) { // eslint-disable-line
 		if(twyrEnv !== 'development')
 			return;
 
 		await snooze(1000);
-		this.$dependencies.LoggerService.debug(`Websocket Server has been initialised\n`);
+		this.$dependencies.LoggerService.debug(`Websocket Server has been initialised with options: ${JSON.stringify(options, null, '\t')}`);
 	}
 
 	_websocketServerLog() {

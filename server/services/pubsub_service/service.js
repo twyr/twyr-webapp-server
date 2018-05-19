@@ -43,6 +43,8 @@ class PubsubService extends TwyrBaseService {
 	 */
 	async _setup() {
 		try {
+			await super._setup();
+
 			this.$listeners = {};
 
 			const promises = require('bluebird');
@@ -95,6 +97,7 @@ class PubsubService extends TwyrBaseService {
 			this.$listeners = null;
 			delete this.$listeners;
 
+			await super._teardown();
 			return null;
 		}
 		catch(err) {

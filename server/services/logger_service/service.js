@@ -43,6 +43,8 @@ class LoggerService extends TwyrBaseService {
 	 */
 	async _setup() {
 		try {
+			await super._setup();
+
 			const path = require('path');
 			const winston = require('winston');
 
@@ -145,6 +147,8 @@ class LoggerService extends TwyrBaseService {
 			}
 
 			delete this.$winston;
+
+			await super._teardown();
 			return null;
 		}
 		catch(err) {

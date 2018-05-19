@@ -46,6 +46,8 @@ class ExpressService extends TwyrBaseService {
 			if(this.$server)
 				return null;
 
+			await super._setup();
+
 			// Step 1: Require the Web Server
 			const express = require('express');
 			require('express-async-errors');
@@ -271,6 +273,7 @@ class ExpressService extends TwyrBaseService {
 			delete this.$express;
 			delete this.$server;
 
+			await super._teardown();
 			return null;
 		}
 		catch(err) {
@@ -342,6 +345,7 @@ class ExpressService extends TwyrBaseService {
 				error = new TwyrSrvcError(`${this.name}::tenantSetter`, error);
 			}
 
+			console.error(`${err.message}\n${err.stack}`);
 			throw error;
 		}
 	}
