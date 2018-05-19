@@ -65,10 +65,12 @@ const offDeath = onDeath(async () => {
 	}
 	catch(shutdownError) {
 		console.error(`Shutdown Error: ${shutdownError.toString()}`);
+		process.exit(1); // eslint-disable-line no-process-exit
 	}
 });
 
 serverInstance.bootupServer()
-.catch(() => {
+.catch((bootupError) => {
+	console.error(`Bootup Error: ${bootupError.toString()}`);
 	process.exit(1); // eslint-disable-line no-process-exit
 });
