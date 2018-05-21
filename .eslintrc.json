@@ -78,7 +78,7 @@
 
 		"accessor-pairs": 0,
 		"block-scoped-var": 1,
-		"complexity": 0,
+		"complexity": ["warn", 25],
 		"consistent-return": 1,
 		"curly": ["warn", "multi", "consistent"],
 		"default-case": 1,
