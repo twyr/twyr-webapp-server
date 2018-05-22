@@ -51,7 +51,7 @@
 		"amqplib": "*",
 		"app-module-path": "*",
 		"ascoltatori": "*",
-		"aws-sdk": "^2.243.1",
+		"aws-sdk": "^2.244.1",
 		"bluebird": "*",
 		"body-parser": "^1.18.3",
 		"bookshelf": "*",
@@ -130,7 +130,7 @@
 		"uglifycss": "*",
 		"uuid": "*",
 		"winston": "^2.4.2",
-		"ws": "*"
+		"ws": "^5.2.0"
 	},
 	"devDependencies": {
 		"chai": "*",
