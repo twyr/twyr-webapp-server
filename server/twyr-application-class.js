@@ -83,6 +83,7 @@ class TwyrApplication extends TwyrBaseModule {
 			this.emit('server-started');
 
 			this.emit('server-online');
+			console.info(`\n\n${allStatuses.join('\n')}\n\n`);
 		}
 		catch(err) {
 			allStatuses.push(`Bootup error: ${err.toString()}`);
@@ -94,7 +95,6 @@ class TwyrApplication extends TwyrBaseModule {
 				throw bootupError;
 			}
 
-			console.info(`\n\n${allStatuses.join('\n')}\n\n`);
 			return null;
 		}
 	}

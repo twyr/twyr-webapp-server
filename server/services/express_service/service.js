@@ -62,10 +62,11 @@ class ExpressService extends TwyrBaseService {
 				debounce = require('connect-debounce'),
 				device = require('express-device'),
 				engines = require('consolidate'),
+				expressLogger = require('express-winston'),
 				favicon = require('serve-favicon'),
 				flash = require('connect-flash'),
 				fs = require('fs-extra'),
-				logger = require('morgan'),
+				helmet = require('helmet'),
 				methodOverride = require('method-override'),
 				moment = require('moment'),
 				path = require('path'),
@@ -80,14 +81,7 @@ class ExpressService extends TwyrBaseService {
 			const SessionStore = require(`connect-${this.$config.session.store.media}`)(session);
 			const loggerSrvc = this.$dependencies.LoggerService;
 
-			// Step 2: Setup Winston for Express Logging
-			const loggerStream = {
-				'write': (message) => {
-					loggerSrvc.silly(message);
-				}
-			};
-
-			// Step 3: Setup CORS configuration
+			// Step 2: Setup CORS configuration
 			const corsOptions = {
 				'origin': (origin, corsCallback) => {
 					if(!this.$config.corsAllowedDomains) {
@@ -102,7 +96,7 @@ class ExpressService extends TwyrBaseService {
 				'credentials': true
 			};
 
-			// Step 4: Setup Session Store, etc.
+			// Step 3: Setup Session Store, etc.
 			const _sessionStore = new SessionStore({
 				'client': this.$dependencies.CacheService,
 				'prefix': this.$config.session.store.prefix,
@@ -124,7 +118,7 @@ class ExpressService extends TwyrBaseService {
 				}
 			});
 
-			// Step 5: Setup Express
+			// Step 4: Setup Express
 			const webServer = express();
 			this.$express = webServer;
 
@@ -135,20 +129,30 @@ class ExpressService extends TwyrBaseService {
 				webServer.set('trust proxy', 1);
 
 			webServer
-			.use(logger('combined', {
-				'stream': loggerStream
+			.use((request, response, next) => {
+				request.twyrRequestId = request.headers['X-Request-Id'] || uuid().toString();
+				request.headers['X-Request-Id'] = request.twyrRequestId;
+
+				next();
+			})
+			.use(expressLogger.logger({
+				'winstonInstance': loggerSrvc,
+				'level': this.$config.requestLogLevel || 'silly',
+				'colorize': true,
+				'meta': true
+			}))
+			// TODO: Enable proper Content-Security-Policy once we're done with figuring out where we get stuff from
+			// And add a CSP report uri, as well
+			.use(helmet({
+				'hidePoweredBy': false,
+				'hpkp': (twyrEnv !== 'development' && twyrEnv !== 'test'),
+				'hsts': (twyrEnv !== 'development' && twyrEnv !== 'test')
 			}))
 			.use(debounce())
 			.use(compress())
 			.use(cors(corsOptions))
 			.use(_cookieParser)
 			.use(_session)
-			.use((request, response, next) => {
-				request.twyrRequestId = request.headers['twyrrequestid'] || uuid().toString();
-				request.headers['twyrrequestid'] = request.twyrRequestId;
-
-				next();
-			})
 			.use(this._tenantSetter.bind(this))
 			.use(this._setupRequestResponseForAudit.bind(this))
 			.use(this._requestResponseCycleHandler.bind(this))
@@ -192,14 +196,15 @@ class ExpressService extends TwyrBaseService {
 			// Convenience....
 			device.enableDeviceHelpers(webServer);
 
-			// Step 6: Create the Server
+			// Step 5: Create the Server
+			this.$config.protocol = this.$config.protocol || 'http';
 			const protocol = require(this.$config.protocol || 'http');
 
 			let server = undefined;
-			if((this.$config.protocol || 'http') === 'http')
+			if(this.$config.protocol === 'http')
 				server = protocol.createServer(webServer);
 
-			if(((this.$config.protocol || 'http') === 'https') || (this.$config.protocol || 'http') === 'spdy') {
+			if((this.$config.protocol === 'https') || this.$config.protocol === 'spdy') {
 				const secureKey = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].key) ? this.$config.secureProtocols[this.$config.protocol].key : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].key));
 				const secureCert = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].cert) ? this.$config.secureProtocols[this.$config.protocol].cert : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].cert));
 
@@ -209,7 +214,7 @@ class ExpressService extends TwyrBaseService {
 				server = protocol.createServer(this.$config.secureProtocols[this.$config.protocol], webServer);
 			}
 
-			if((this.$config.protocol || 'http') === 'http2') {
+			if(this.$config.protocol === 'http2') {
 				const secureKey = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].key) ? this.$config.secureProtocols[this.$config.protocol].key : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].key));
 				const secureCert = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].cert) ? this.$config.secureProtocols[this.$config.protocol].cert : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].cert));
 
@@ -222,10 +227,12 @@ class ExpressService extends TwyrBaseService {
 			// Add utility to force-stop server
 			serverDestroy(server);
 
-			// Step 7: Setup the server to listen to requests forwarded via Ringpop, just in case
+			// Step 6: Setup the server to listen to requests forwarded via Ringpop, just in case
 			this.$dependencies.RingpopService.on('request', this._processRequestFromAnotherNode());
 
 			// Finally, Start listening...
+			console.log(`${this.name}::Adding Event Handlers`);
+
 			this.$server = promises.promisifyAll(server);
 			this.$server.on('connection', this._serverConnection.bind(this));
 			this.$server.on('error', this._serverError.bind(this));

@@ -51,7 +51,7 @@ class MailerService extends TwyrBaseService {
 			const account = (this.$config.test) ? await mailer.createTestAccountAsync() : null;
 			const transporter = promises.promisifyAll(mailer.createTransport({
 				'debug': (twyrEnv === 'development'),
-				'logger': (twyrEnv === 'development') ? this.$dependencies.LoggerService : null,
+				'logger': this.$dependencies.LoggerService,
 
 				'host': this.$config.host,
 				'port': this.$config.port,
