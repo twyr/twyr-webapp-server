@@ -128,7 +128,7 @@ class CacheService extends TwyrBaseService {
 	// #endregion
 
 	// #region Private Methods
-	_logRedisCommands(time, redisArgs, /* rawReply */) { // eslint-disable-line no-inline-comments
+	_logRedisCommands(time, redisArgs) {
 		this.$dependencies.LoggerService.log(this.$config.monitorLogLevel || 'silly', `\nRedis Command: ${JSON.stringify(redisArgs)}`);
 	}
 

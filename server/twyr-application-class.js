@@ -84,6 +84,10 @@ class TwyrApplication extends TwyrBaseModule {
 
 			this.emit('server-online');
 			console.info(`\n\n${allStatuses.join('\n')}\n\n`);
+
+			// TODO: Remove TEST STUFF!
+			await this._setupExpressRoutes();
+			await this._doDBSanityCheck();
 		}
 		catch(err) {
 			allStatuses.push(`Bootup error: ${err.toString()}`);
@@ -150,61 +154,75 @@ class TwyrApplication extends TwyrBaseModule {
 	}
 	// #endregion
 
-	// #region Lifecycle hooks
+	// #region Configuration Change Handlers
 	/**
 	 * @async
 	 * @function
 	 * @instance
 	 * @memberof TwyrApplication
-	 * @name     start
+	 * @name     _subModuleReconfigure
 	 *
-	 * @param    {Object} dependencies - Interfaces to {@link TwyrBaseService} instances that this module depends on.
+	 * @param    {TwyrBaseModule} subModule - The submodule that was reconfigured.
 	 *
-	 * @returns  {Object} - The aggregated status returned by sub-modules (if any) once they complete their startup sequences.
+	 * @returns  {null} - Nothing.
 	 *
-	 * @summary  Starts sub-modules, if any.
+	 * @summary  Ignores everything except the reconfiguration of DatabaseService / ExpressService. In that case, re-does its checks
 	 *
 	 * @description
 	 * Call the loader (typically, {@link TwyrModuleLoader#start}) to start sub-modules, if any.
 	 */
-	async start(dependencies) {
+	async _subModuleReconfigure(subModule) {
 		try {
-			const subModuleStatus = await super.start(dependencies);
+			// Setup common routes - to be enhanced
+			if(subModule.name === 'ExpressService') {
+				this.emit('server-offline');
+				await this._setupExpressRoutes();
+				this.emit('server-online');
+			}
 
 			// Sanity check - to be deprecated...
-			setTimeout(async () => {
-				const dbSrvc = this.$services.DatabaseService.Interface;
-				const modules = await dbSrvc.knex.raw(`SELECT id, type, name FROM modules`);
-
-				console.table(modules.rows);
-			}, 2500);
-
-			// Setup common routes - to be enhanced
-			const expressRouter = this.$services.ExpressService.Interface.Router;
-
-			expressRouter.use(async (request, response) => {
-				const respString = { 'message': `${this.name}::${request.originalUrl}` };
-				response.status(200).json(respString);
-			});
-
-			expressRouter.use(async (error, request, response, next) => {
-				if(response.finished)
-					return;
-
-				if(request.xhr) {
-					response.status(403).send(error.message);
-					return;
-				}
-
-				next(error);
-				return;
-			});
-
-			return subModuleStatus;
+			if(subModule.name === 'DatabaseService')
+				await this._doDBSanityCheck();
 		}
 		catch(err) {
 			throw new TwyrBaseError(`${this.name}::start error`, err);
 		}
+	}
+	// #endregion
+
+	// #region Private Methods
+	async _setupExpressRoutes() {
+		const expressRouter = this.$services.ExpressService.Interface.Router;
+
+		expressRouter.use(async (request, response) => {
+			const respString = { 'message': `${this.name}::${request.originalUrl}` };
+			response.status(200).json(respString);
+		});
+
+		expressRouter.use(async (error, request, response, next) => {
+			if(response.finished)
+				return;
+
+			if(request.xhr) {
+				response.status(403).send(error.message);
+				return;
+			}
+
+			next(error);
+			return;
+		});
+
+		return;
+	}
+
+	async _doDBSanityCheck() {
+		await snooze(2500);
+
+		const dbSrvc = this.$services.DatabaseService.Interface;
+		const modules = await dbSrvc.knex.raw(`SELECT id, type, name FROM modules`);
+
+		console.table(modules.rows);
+		return;
 	}
 	// #endregion
 

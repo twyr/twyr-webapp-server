@@ -88,6 +88,7 @@
 		"express": "*",
 		"express-async-errors": "*",
 		"express-device": "*",
+		"express-http-context": "*",
 		"express-http-proxy": "*",
 		"express-session": "*",
 		"express-winston": "*",

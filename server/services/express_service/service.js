@@ -52,8 +52,6 @@ class ExpressService extends TwyrBaseService {
 			const express = require('express');
 			require('express-async-errors');
 
-			const promises = require('bluebird');
-
 			const acceptOverride = require('connect-acceptoverride'),
 				bodyParser = require('body-parser'),
 				compress = require('compression'),
@@ -63,10 +61,10 @@ class ExpressService extends TwyrBaseService {
 				device = require('express-device'),
 				engines = require('consolidate'),
 				expressLogger = require('express-winston'),
-				favicon = require('serve-favicon'),
 				flash = require('connect-flash'),
 				fs = require('fs-extra'),
 				helmet = require('helmet'),
+				httpContext = require('express-http-context'),
 				methodOverride = require('method-override'),
 				moment = require('moment'),
 				path = require('path'),
@@ -76,10 +74,6 @@ class ExpressService extends TwyrBaseService {
 				session = require('express-session'),
 				timeout = require('connect-timeout'),
 				uuid = require('uuid/v4');
-
-			const filesystem = promises.promisifyAll(fs);
-			const SessionStore = require(`connect-${this.$config.session.store.media}`)(session);
-			const loggerSrvc = this.$dependencies.LoggerService;
 
 			// Step 2: Setup CORS configuration
 			const corsOptions = {
@@ -97,6 +91,7 @@ class ExpressService extends TwyrBaseService {
 			};
 
 			// Step 3: Setup Session Store, etc.
+			const SessionStore = require(`connect-${this.$config.session.store.media}`)(session);
 			const _sessionStore = new SessionStore({
 				'client': this.$dependencies.CacheService,
 				'prefix': this.$config.session.store.prefix,
@@ -114,7 +109,7 @@ class ExpressService extends TwyrBaseService {
 				'resave': false,
 
 				'genid': () => {
-					return uuid().toString().replace(/-/g, '');
+					return uuid().toString();
 				}
 			});
 
@@ -129,44 +124,58 @@ class ExpressService extends TwyrBaseService {
 				webServer.set('trust proxy', 1);
 
 			webServer
-			.use((request, response, next) => {
+			.use(async (request, response, next) => {
 				request.twyrRequestId = request.headers['X-Request-Id'] || uuid().toString();
 				request.headers['X-Request-Id'] = request.twyrRequestId;
+				response.set('X-Request-Id', request.twyrRequestId);
 
 				next();
 			})
+			.use(debounce())
+			.use(cors(corsOptions))
 			.use(expressLogger.logger({
-				'winstonInstance': loggerSrvc,
+				'winstonInstance': this.$dependencies.LoggerService,
 				'level': this.$config.requestLogLevel || 'silly',
 				'colorize': true,
 				'meta': true
 			}))
 			// TODO: Enable proper Content-Security-Policy once we're done with figuring out where we get stuff from
 			// And add a CSP report uri, as well
+			.use(poweredBy(this.$config.poweredBy))
 			.use(helmet({
 				'hidePoweredBy': false,
 				'hpkp': (twyrEnv !== 'development' && twyrEnv !== 'test'),
 				'hsts': (twyrEnv !== 'development' && twyrEnv !== 'test')
 			}))
-			.use(debounce())
+			.use(acceptOverride())
+			.use(methodOverride())
+			.use(flash())
 			.use(compress())
-			.use(cors(corsOptions))
 			.use(_cookieParser)
 			.use(_session)
+			.use(device.capture())
+			.use(this.$dependencies.LocalizationService.init)
+			.use(async (request, response, next) => {
+				response.cookie('twyr-webapp-locale', request.getLocale(), this.$config.cookieParser);
+				next();
+			})
 			.use(this._tenantSetter.bind(this))
 			.use(this._setupRequestResponseForAudit.bind(this))
 			.use(this._requestResponseCycleHandler.bind(this))
 			.use(this._handleOrProxytoCluster.bind(this))
-			.use(timeout(this.$config.requestTimeout * 1000))
-			.use(acceptOverride())
-			.use(methodOverride())
-			.use(poweredBy(this.$config.poweredBy))
-			.use(favicon(path.join(__dirname, this.$config.favicon)))
-			.use(serveStatic(path.join(this.basePath, this.$config.static.path || 'static'), {
+			.use(httpContext.middleware)
+			.use(async (request, response, next) => {
+				httpContext.set('twyrRequestId', request.twyrRequestId);
+				httpContext.set('user', request.user);
+				httpContext.set('tenant', request.tenant);
+
+				next();
+			})
+			.use(this._serveTenantStaticAssets.bind(this))
+			.use(serveStatic(path.join(path.dirname(require.main.filename), 'static_assets'), {
 				'index': this.$config.static.index || 'index.html',
 				'maxAge': this.$config.static.maxAge || 300
 			}))
-			.use(flash())
 			.use(bodyParser.raw({
 				'limit': this.$config.maxRequestSize
 			}))
@@ -184,14 +193,9 @@ class ExpressService extends TwyrBaseService {
 			.use(bodyParser.text({
 				'limit': this.$config.maxRequestSize
 			}))
-			.use(device.capture())
-			.use(this.$dependencies.LocalizationService.init)
-			.use((request, response, next) => {
-				response.cookie('twyr-webapp-locale', request.getLocale(), this.$config.cookieParser);
-				next();
-			})
 			.use(this.$dependencies.AuthService.initialize())
-			.use(this.$dependencies.AuthService.session());
+			.use(this.$dependencies.AuthService.session())
+			.use(timeout(this.$config.requestTimeout * 1000));
 
 			// Convenience....
 			device.enableDeviceHelpers(webServer);
@@ -199,6 +203,9 @@ class ExpressService extends TwyrBaseService {
 			// Step 5: Create the Server
 			this.$config.protocol = this.$config.protocol || 'http';
 			const protocol = require(this.$config.protocol || 'http');
+
+			const promises = require('bluebird');
+			const filesystem = promises.promisifyAll(fs);
 
 			let server = undefined;
 			if(this.$config.protocol === 'http')
@@ -214,15 +221,16 @@ class ExpressService extends TwyrBaseService {
 				server = protocol.createServer(this.$config.secureProtocols[this.$config.protocol], webServer);
 			}
 
-			if(this.$config.protocol === 'http2') {
-				const secureKey = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].key) ? this.$config.secureProtocols[this.$config.protocol].key : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].key));
-				const secureCert = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].cert) ? this.$config.secureProtocols[this.$config.protocol].cert : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].cert));
+			// TODO: Enable whenever Express starts supporting the HTTP2 style "context" [instead of the HTTP/1.1 request / response]
+			// if(this.$config.protocol === 'http2') {
+			// 	const secureKey = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].key) ? this.$config.secureProtocols[this.$config.protocol].key : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].key));
+			// 	const secureCert = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].cert) ? this.$config.secureProtocols[this.$config.protocol].cert : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].cert));
 
-				this.$config.secureProtocols[this.$config.protocol].key = secureKey;
-				this.$config.secureProtocols[this.$config.protocol].cert = secureCert;
+			// 	this.$config.secureProtocols[this.$config.protocol].key = secureKey;
+			// 	this.$config.secureProtocols[this.$config.protocol].cert = secureCert;
 
-				server = protocol.createSecureServer(this.$config.secureProtocols[this.$config.protocol], webServer);
-			}
+			// 	server = protocol.createSecureServer(this.$config.secureProtocols[this.$config.protocol], webServer);
+			// }
 
 			// Add utility to force-stop server
 			serverDestroy(server);
@@ -237,8 +245,8 @@ class ExpressService extends TwyrBaseService {
 			this.$server.on('connection', this._serverConnection.bind(this));
 			this.$server.on('error', this._serverError.bind(this));
 
-			this.$parent.on('server-online', this._printNetworkInterfaces.bind(this, this.$config.port[this.$parent.name] || 9090));
-			await this.$server.listenAsync(this.$config.port[this.$parent.name] || 9090);
+			this.$parent.on('server-online', this._printNetworkInterfaces.bind(this, this.$config.port[this.$parent.$application] || 9090));
+			await this.$server.listenAsync(this.$config.port[this.$parent.$application] || 9090);
 
 			return null;
 		}
@@ -569,10 +577,10 @@ class ExpressService extends TwyrBaseService {
 	 */
 	async _handleOrProxytoCluster(request, response, next) {
 		try {
-			if(request.headers['twyrrequestid']) {
-				next();
-				return;
-			}
+			// if(request.headers['X-Request-Id']) {
+			// 	next();
+			// 	return;
+			// }
 
 			const ringpop = this.$dependencies.RingpopService;
 			if(ringpop.lookup(request.tenant.id) === ringpop.whoami()) {
@@ -602,6 +610,42 @@ class ExpressService extends TwyrBaseService {
 		}
 	}
 
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof ExpressService
+	 * @name     _serveStaticAssets
+	 *
+	 * @param    {Object} request - Request coming in from the outside world.
+	 * @param    {Object} response - Response going out to the outside world.
+	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Serve up the favicon and other static assets from the current tenants folder.
+	 */
+	async _serveTenantStaticAssets(request, response, next) {
+		const path = require('path');
+		const serveStatic = require('serve-static');
+
+		try {
+			const tenantStaticAssetPath = path.join(path.dirname(require.main.filename), 'static_assets', request.tenant['sub_domain']);
+			serveStatic(tenantStaticAssetPath, {
+				'index': this.$config.static.index || 'index.html',
+				'maxAge': this.$config.static.maxAge || 300
+			})(request, response, next);
+
+			return;
+		}
+		catch(err) {
+			next(err);
+		}
+	}
+
+	// #endregion
+
+	// #region Miscellaneous
 	/**
 	 * @function
 	 * @instance

@@ -1,6 +1,3 @@
-# File based configuration files
-config
-
 # Logs
 logs/*.log
 npm-debug.log*
