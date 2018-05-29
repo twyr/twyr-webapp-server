@@ -88,6 +88,7 @@ class TwyrApplication extends TwyrBaseModule {
 			// TODO: Remove TEST STUFF!
 			await this._setupExpressRoutes();
 			await this._doDBSanityCheck();
+			await this._doStorageSanityCheck();
 		}
 		catch(err) {
 			allStatuses.push(`Bootup error: ${err.toString()}`);
@@ -183,6 +184,9 @@ class TwyrApplication extends TwyrBaseModule {
 			// Sanity check - to be deprecated...
 			if(subModule.name === 'DatabaseService')
 				await this._doDBSanityCheck();
+
+			if(subModule.name === 'StorageService')
+				await this._doStorageSanityCheck();
 		}
 		catch(err) {
 			throw new TwyrBaseError(`${this.name}::start error`, err);
@@ -223,6 +227,15 @@ class TwyrApplication extends TwyrBaseModule {
 
 		console.table(modules.rows);
 		return;
+	}
+
+	async _doStorageSanityCheck() {
+		await snooze(2500);
+
+		const storageSrvc = this.$services.StorageService.Interface;
+		const fileContents = await storageSrvc.readFileAsync('.gitkeep');
+
+		console.log(`.gitkeep::contents: ${fileContents}`);
 	}
 	// #endregion
 

@@ -25,6 +25,7 @@ class ExpressService extends TwyrBaseService {
 	// #region Constructor
 	constructor(parent, loader) {
 		super(parent, loader);
+		this.$proxies = {};
 	}
 	// #endregion
 
@@ -590,12 +591,16 @@ class ExpressService extends TwyrBaseService {
 
 			const hostPort = [];
 			hostPort.push(ringpop.lookup(request.tenant.id).split(':').shift());
-			hostPort.push((twyrEnv === 'development') ? 9101 : null);
+			hostPort.push(this.$config.port[this.$parent.$application] || 9090);
 
 			const dest = `${this.$config.protocol}://${hostPort.filter((val) => { return !!val; }).join(':')}${request.path}`;
-			const proxy = require('express-http-proxy');
 
-			proxy(dest)(request, response, next);
+			if(!this.$proxies[dest]) {
+				const proxy = require('express-http-proxy');
+				this.$proxies[dest] = proxy(dest);
+			}
+
+			this.$proxies[dest](request, response, next);
 		}
 		catch(err) {
 			let error = err;

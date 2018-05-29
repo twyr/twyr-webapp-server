@@ -122,6 +122,8 @@
 		"primus-rooms": "*",
 		"redis": "*",
 		"ringpop": "*",
+		"sandboxed-fs": "*",
+		"s3fs": "*",
 		"serve-favicon": "*",
 		"server-destroy": "*",
 		"spdy": "*",

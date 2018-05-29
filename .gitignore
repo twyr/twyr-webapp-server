@@ -1,3 +1,6 @@
+# Presonal configs
+config
+
 # Logs
 logs/*.log
 npm-debug.log*
