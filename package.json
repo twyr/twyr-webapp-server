@@ -76,7 +76,7 @@
 		"credential-plus-pbkdf2": "*",
 		"death": "*",
 		"deep-equal": "*",
-		"deepmerge": "*",
+		"deepmerge": "^2.1.1",
 		"dependency-graph": "*",
 		"dotenv": "*",
 		"easy-zip2": "*",
