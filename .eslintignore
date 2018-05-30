@@ -1,5 +1,5 @@
-**/ember/
 config/
+example.config/
 knex_migrations/
 logs/
 node_modules/
