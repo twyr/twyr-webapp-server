@@ -45,7 +45,7 @@ class AuthService extends TwyrBaseService {
 		try {
 			await super._setup();
 
-			const fs = require('fs');
+			const fs = require('fs-extra');
 			const path = require('path');
 			const promises = require('bluebird');
 

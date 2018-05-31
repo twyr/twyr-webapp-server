@@ -1290,7 +1290,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 	 */
 	async _findFiles(rootDir, filename) {
 		try {
-			const fs = require('fs'),
+			const fs = require('fs-extra'),
 				path = require('path'),
 				promises = require('bluebird');
 
@@ -1443,7 +1443,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 	 */
 	async _exists(filepath, mode) {
 		const Promise = require('bluebird'),
-			filesystem = require('fs');
+			filesystem = require('fs-extra');
 
 		return new Promise((resolve, reject) => {
 			try {

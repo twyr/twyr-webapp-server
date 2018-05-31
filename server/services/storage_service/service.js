@@ -46,7 +46,7 @@ class StorageService extends TwyrBaseService {
 			await super._setup();
 
 			if(this.$config.mode === 'fs')
-				this.$Storage = require('fs');
+				this.$Storage = require('fs-extra');
 
 			if(this.$config.mode === 's3')
 				this.$Storage = this.$dependencies.AwsService.S3(); // eslint-disable-line new-cap

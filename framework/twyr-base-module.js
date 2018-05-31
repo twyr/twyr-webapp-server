@@ -534,7 +534,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 */
 	async _exists(filepath, mode) {
 		const Promise = require('bluebird'),
-			filesystem = require('fs');
+			filesystem = require('fs-extra');
 
 		return new Promise((resolve, reject) => {
 			try {
