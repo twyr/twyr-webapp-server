@@ -5,8 +5,10 @@
 	"source": {
 		"include": ["./", "./README.md"],
 		"exclude": [
-			"config",
+			".circleci",
+			"cql",
 			"deploy",
+			"example.config",
 			"i18n",
 			"knex_migrations",
 			"logs",
