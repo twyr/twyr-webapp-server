@@ -24,7 +24,7 @@
 	},
 	"opts": {
 		"template": "./node_modules/docdash2",
-		"destination": "./..",
+		"destination": "./jsdoc_default",
 		"readme": "./README.md",
 		"package": "./package.json",
 		"encoding": "utf8",

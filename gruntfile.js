@@ -30,7 +30,7 @@ module.exports = function (grunt) {
 				'command': 'npm run-script docs'
 			},
 			'rename_docs': {
-				'command': 'mv ./<%= pkg.version %> ./docs'
+				'command': 'mv ./jsdoc_default/twyr-webapp-server/<%= pkg.version %> ./docs'
 			}
 		},
 
