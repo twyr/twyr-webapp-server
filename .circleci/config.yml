@@ -50,13 +50,13 @@ jobs:
       - run: npm run build
 
       # store build results
-      - store_test_results:
-          path: buildresults
+      - store_artifacts:
+          path: ./buildresults
           destination: buildresults
 
       # store generated docs
       - store_artifacts:
-          path: docs
+          path: ./docs
           destination: docs
 
 
