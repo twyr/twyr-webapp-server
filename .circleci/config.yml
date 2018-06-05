@@ -51,12 +51,12 @@ jobs:
 
       # store build results
       - store_test_results:
-          path: /buildresults
+          path: buildresults
           destination: buildresults
 
       # store generated docs
       - store_artifacts:
-          path: /docs
+          path: docs
           destination: docs
 
 
