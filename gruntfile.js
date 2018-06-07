@@ -31,6 +31,9 @@ module.exports = function (grunt) {
 			},
 			'rename_docs': {
 				'command': 'mv ./jsdoc_default/twyr-webapp-server/<%= pkg.version %> ./docs'
+			},
+			'organize_build_results': {
+				'command': 'mkdir ./buildresults/mocha && mkdir ./buildresults/eslint && mkdir ./buildresults/istanbul && mv ./buildresults/lint.xml ./buildresults/eslint/results.xml && mv ./buildresults/tests.xml ./buildresults/mocha/results.xml'
 			}
 		},
 
@@ -125,5 +128,5 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-mocha-istanbul');
 	grunt.loadNpmTasks('grunt-xmlstoke');
 
-	grunt.registerTask('default', ['exec:clean', 'env', 'eslint', 'xmlstoke:deleteESLintBugs', 'xmlstoke:deleteEmptyTestcases', 'xmlstoke:deleteEmptyTestsuites', 'xmlstoke:prettify', 'mochaTest', 'mocha_istanbul:coverage', 'exec:docs', 'exec:rename_docs', 'clean', 'jsbeautifier']);
+	grunt.registerTask('default', ['exec:clean', 'env', 'eslint', 'xmlstoke:deleteESLintBugs', 'xmlstoke:deleteEmptyTestcases', 'xmlstoke:deleteEmptyTestsuites', 'xmlstoke:prettify', 'mochaTest', 'mocha_istanbul:coverage', 'exec:docs', 'exec:rename_docs', 'clean', 'jsbeautifier', 'exec:organize_build_results']);
 };
