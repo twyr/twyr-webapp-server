@@ -50,7 +50,7 @@ jobs:
       - run: npm run build
 
       # store build results
-      - store_artifacts:
+      - store_test_results:
           path: ./buildresults
           destination: buildresults
 
