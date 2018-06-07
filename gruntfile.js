@@ -30,10 +30,10 @@ module.exports = function (grunt) {
 				'command': 'npm run-script docs'
 			},
 			'rename_docs': {
-				'command': 'mv ./jsdoc_default/twyr-webapp-server/<%= pkg.version %> ./docs'
+				'command': 'mv ./jsdoc_default/twyr-webapp-server/<%= pkg.version %> ./docs && rm -r ./jsdoc_default'
 			},
 			'organize_build_results': {
-				'command': 'mkdir ./buildresults/mocha && mkdir ./buildresults/eslint && mkdir ./buildresults/istanbul && mv ./buildresults/lint.xml ./buildresults/eslint/results.xml && mv ./buildresults/tests.xml ./buildresults/mocha/results.xml'
+				'command': 'mkdir ./buildresults/mocha && mkdir ./buildresults/eslint && mkdir ./buildresults/istanbul && mv ./buildresults/lint.xml ./buildresults/eslint/results.xml && mv ./buildresults/tests.xml ./buildresults/mocha/results.xml && mv ./buildresults/cobertura-coverage.xml ./buildresults/istanbul/results.xml'
 			}
 		},
 

@@ -49,9 +49,14 @@ jobs:
       # run build - clean, test, coverage, and docs
       - run: npm run build
 
-      # store build results
+      # store test results
       - store_test_results:
           path: ./buildresults
+
+      # store build results
+      - store_artifacts:
+          path: ./buildresults
+          destination: buildresults
 
       # store generated docs
       - store_artifacts:
