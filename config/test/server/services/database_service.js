@@ -8,8 +8,8 @@ exports.config = {
 	"connection": {
 		"host": "127.0.0.1",
 		"port": 5432,
-		"user": "root",
-		"database": "circletest",
-		"password": ""
+		"user": "twyr",
+		"database": "twyr",
+		"password": "twyr"
 	}
 };

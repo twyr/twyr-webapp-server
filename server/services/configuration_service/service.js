@@ -55,8 +55,7 @@ class ConfigurationService extends TwyrBaseService {
 				'configuration': {
 					'priorities': {
 						'FileConfigurationService': 10,
-						'DatabaseConfigurationService': 20,
-						'DotEnvConfigurationService': 30
+						'DatabaseConfigurationService': 20
 					},
 					'subservices': {
 						'DatabaseConfigurationService': {
@@ -80,18 +79,6 @@ class ConfigurationService extends TwyrBaseService {
 							'seeds': {
 								'directory': process.env.services_ConfigurationService_subservices_DatabaseConfigurationService_seeds_directory || 'knex_migrations/seeds',
 								'tableName': process.env.services_ConfigurationService_subservices_DatabaseConfigurationService_seeds_tableName || 'knex_seeds'
-							}
-						},
-
-						'DotEnvConfigurationService': {
-							'persistExample': true
-						},
-
-						'RedisConfigurationService': {
-							'port': Number(process.env.services_CacheService_port) || 6379,
-							'host': process.env.services_CacheService_host || '127.0.0.1',
-							'options': {
-								'detect_buffers': process.env.services_CacheService_options_detect_buffers === 'true'
 							}
 						}
 					}
