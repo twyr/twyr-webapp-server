@@ -76,6 +76,8 @@ class ExpressService extends TwyrBaseService {
 				timeout = require('connect-timeout'),
 				uuid = require('uuid/v4');
 
+			const overloadProtection = require('overload-protection')('express');
+
 			// Step 2: Setup CORS configuration
 			const corsOptions = {
 				'origin': (origin, corsCallback) => {
@@ -125,6 +127,7 @@ class ExpressService extends TwyrBaseService {
 				webServer.set('trust proxy', 1);
 
 			webServer
+			.use(overloadProtection)
 			.use(async (request, response, next) => {
 				request.twyrRequestId = request.headers['x-request-id'] || uuid().toString();
 				request.headers['x-request-id'] = request.twyrRequestId;

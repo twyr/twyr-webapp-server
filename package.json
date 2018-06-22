@@ -110,6 +110,7 @@
 		"nodemailer-smtp-transport": "*",
 		"on-finished": "*",
 		"os-locale": "*",
+		"overload-protection": "*",
 		"passport": "*",
 		"passport-local": "*",
 		"patrun": "^1.0.0",
