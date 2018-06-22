@@ -20,7 +20,7 @@ jobs:
           POSTGRES_USER: twyr
           POSTGRES_PASSWORD: twyr
       - image: circleci/redis:latest
-      - image: strapdata/elassandra:latest
+      - image: strapdata/docker-elassandra:latest
 
     working_directory: ~/repo
 
