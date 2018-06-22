@@ -35,7 +35,7 @@ jobs:
           - v1-dependencies-
 
       # Start Elassandra
-      - run: service start cassandra
+      # - run: service start cassandra
 
       # Install new dependencies
       - run: npm i
