@@ -82,12 +82,13 @@ class TwyrApplication extends TwyrBaseModule {
 			allStatuses.push(`${process.title} start status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}\n`);
 			this.emit('server-started');
 
-			this.emit('server-online');
-
 			// TODO: Remove TEST STUFF!
 			await this._setupExpressRoutes();
 			await this._doDBSanityCheck();
 			await this._doStorageSanityCheck();
+
+			if(twyrEnv === 'development' || twyrEnv === 'test') console.info(`\n\n${allStatuses.join('\n')}\n\n`);
+			this.emit('server-online');
 		}
 		catch(err) {
 			allStatuses.push(`Bootup error: ${err.toString()}`);
@@ -99,7 +100,6 @@ class TwyrApplication extends TwyrBaseModule {
 				throw bootupError;
 			}
 
-			if(twyrEnv === 'development' || twyrEnv === 'test') console.info(`\n\n${allStatuses.join('\n')}\n\n`);
 			return null;
 		}
 	}
@@ -223,12 +223,10 @@ class TwyrApplication extends TwyrBaseModule {
 		if(twyrEnv !== 'development' && twyrEnv !== 'test')
 			return;
 
-		await snooze(2500);
-
 		const dbSrvc = this.$services.DatabaseService.Interface;
 		const modules = await dbSrvc.knex.raw(`SELECT id, type, name FROM modules`);
 
-		console.table(modules.rows);
+		// console.table(modules.rows);
 		return;
 	}
 
@@ -236,12 +234,10 @@ class TwyrApplication extends TwyrBaseModule {
 		if(twyrEnv !== 'development' && twyrEnv !== 'test')
 			return;
 
-		await snooze(2500);
-
 		const storageSrvc = this.$services.StorageService.Interface;
 		const fileContents = await storageSrvc.readFileAsync('.gitkeep');
 
-		console.log(`.gitkeep::contents: ${fileContents}`);
+		// console.log(`.gitkeep::contents: ${fileContents}`);
 	}
 	// #endregion
 

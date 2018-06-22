@@ -677,10 +677,11 @@ class ExpressService extends TwyrBaseService {
 	}
 
 	async _listenAndPrintNetworkInterfaces() {
-		await this.$server.listenAsync(this.$config.port[this.$parent.$application] || 9090);
-		if(twyrEnv !== 'development' && twyrEnv !== 'test') return;
-
 		await snooze(500);
+		await this.$server.listenAsync(this.$config.port[this.$parent.$application] || 9090);
+
+		if(twyrEnv !== 'development' && twyrEnv !== 'test')
+			return;
 
 		const forPrint = [],
 			networkInterfaces = require('os').networkInterfaces();
