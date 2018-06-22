@@ -12,7 +12,6 @@ jobs:
     docker:
       # specify the version you desire here
       - image: circleci/node:10
-      # - image: circleci/openjdk:8u171-jdk-node-browsers
 
       # documented at https://circleci.com/docs/2.0/circleci-images/
       - image: circleci/postgres:latest
@@ -34,6 +33,9 @@ jobs:
           - v1-dependencies-{{ checksum "package.json" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
+
+      # Start Elassandra
+      - run: sudo systemctl start cassandra
 
       # Install new dependencies
       - run: npm i
