@@ -50,7 +50,7 @@ class TwyrApplication extends TwyrBaseModule {
 	 * @summary  Loads / Initializes / Starts-up sub-modules.
 	 */
 	async bootupServer() {
-		if(twyrEnv === 'development') console.log(`${this.name}::bootupServer`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::bootupServer`);
 
 		const allStatuses = [];
 		let bootupError = null;
@@ -83,7 +83,6 @@ class TwyrApplication extends TwyrBaseModule {
 			this.emit('server-started');
 
 			this.emit('server-online');
-			console.info(`\n\n${allStatuses.join('\n')}\n\n`);
 
 			// TODO: Remove TEST STUFF!
 			await this._setupExpressRoutes();
@@ -100,6 +99,7 @@ class TwyrApplication extends TwyrBaseModule {
 				throw bootupError;
 			}
 
+			if(twyrEnv === 'development' || twyrEnv === 'test') console.info(`\n\n${allStatuses.join('\n')}\n\n`);
 			return null;
 		}
 	}
@@ -115,7 +115,7 @@ class TwyrApplication extends TwyrBaseModule {
 	 * @summary  Shuts-down / Un-initializes / Un-loads sub-modules.
 	 */
 	async shutdownServer() {
-		if(twyrEnv === 'development') console.log(`${this.name}::shutdownServer`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::shutdownServer`);
 
 		const allStatuses = [];
 		let shutdownError = null;
@@ -149,7 +149,7 @@ class TwyrApplication extends TwyrBaseModule {
 				throw shutdownError;
 			}
 
-			console.info(`\n\n${allStatuses.join('\n')}\n\n`);
+			if(twyrEnv === 'development' || twyrEnv === 'test') console.info(`\n\n${allStatuses.join('\n')}\n\n`);
 			return null;
 		}
 	}
@@ -220,6 +220,9 @@ class TwyrApplication extends TwyrBaseModule {
 	}
 
 	async _doDBSanityCheck() {
+		if(twyrEnv !== 'development' && twyrEnv !== 'test')
+			return;
+
 		await snooze(2500);
 
 		const dbSrvc = this.$services.DatabaseService.Interface;
@@ -230,6 +233,9 @@ class TwyrApplication extends TwyrBaseModule {
 	}
 
 	async _doStorageSanityCheck() {
+		if(twyrEnv !== 'development' && twyrEnv !== 'test')
+			return;
+
 		await snooze(2500);
 
 		const storageSrvc = this.$services.StorageService.Interface;

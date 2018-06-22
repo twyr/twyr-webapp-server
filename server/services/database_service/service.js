@@ -83,25 +83,6 @@ class DatabaseService extends TwyrBaseService {
 
 						promises.promisifyAll(rawConnection);
 						done();
-
-						// let dbSchemas = await rawConnection.queryAsync(`SELECT nspname FROM pg_catalog.pg_namespace`);
-						// dbSchemas = dbSchemas.rows.map((schema) => {
-						// 	return schema.nspname;
-						// })
-						// .filter((schemaName) => {
-						// 	return ((schemaName !== 'information_schema') && (!schemaName.startsWith('pg_')));
-						// });
-
-						// const pgInfo = promises.promisify(require('pg-info'));
-						// const dbInfo = await pgInfo({
-						// 	'client': rawConnection,
-						// 	'schemas': dbSchemas
-						// });
-
-						// TODO: Create bookshelf models automatically from here...
-						// self.$dependencies.LoggerService.debug(`PG Info Output: ${JSON.stringify(dbInfo, null, '\t')}`);
-
-						// console.log(`DB Schemas: ${JSON.stringify(dbSchemas)}`);
 					}
 					catch(err) {
 						done(err);

@@ -358,7 +358,7 @@ class ConfigurationService extends TwyrBaseService {
 			if(currentModule) currentModule._reconfigure(config);
 		}
 		catch(err) {
-			if(twyrEnv === 'development') console.error(`${this.name}::_getModuleFromPath error: ${err.message}\n${err.stack}`);
+			console.error(`${this.name}::_processConfigChange error: ${err.message}\n${err.stack}`);
 		}
 	}
 
@@ -391,7 +391,7 @@ class ConfigurationService extends TwyrBaseService {
 			if(currentModule) currentModule._changeState(state);
 		}
 		catch(err) {
-			if(twyrEnv === 'development') console.error(`${this.name}::_getModuleFromPath error: ${err.message}\n${err.stack}`);
+			console.error(`${this.name}::_processStateChange error: ${err.message}\n${err.stack}`);
 		}
 	}
 
@@ -445,7 +445,7 @@ class ConfigurationService extends TwyrBaseService {
 			return currentModule;
 		}
 		catch(err) {
-			if(twyrEnv === 'development') console.error(`${this.name}::_getModuleFromPath error: ${err.message}\n${err.stack}`);
+			console.error(`${this.name}::_getModuleFromPath error: ${err.message}\n${err.stack}`);
 			return null;
 		}
 	}
@@ -492,7 +492,7 @@ class ConfigurationService extends TwyrBaseService {
 			return pathSegments.join(path.sep);
 		}
 		catch(err) {
-			if(twyrEnv === 'development') console.error(`${this.name}::_getPathForModule error: ${err.message}\n${err.stack}`);
+			console.error(`${this.name}::_getPathForModule error: ${err.message}\n${err.stack}`);
 			return null;
 		}
 	}

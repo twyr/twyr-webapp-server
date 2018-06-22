@@ -114,7 +114,7 @@ class LoggerService extends TwyrBaseService {
 			this.$winston.exitOnError = false;
 
 			// The first log of this logger instance...
-			if(twyrEnv === 'development') this.$winston.debug('\n\nTicking away the packets that make up a dull day...');
+			if(twyrEnv === 'development' || twyrEnv === 'test') this.$winston.debug('\n\nTicking away the packets that make up a dull day...');
 			return null;
 		}
 		catch(err) {
@@ -137,13 +137,13 @@ class LoggerService extends TwyrBaseService {
 	async _teardown() {
 		try {
 			// The last log of this logger instance...
-			if(twyrEnv === 'development') this.$winston.debug('\n\nGoodbye, wi-fi, goodbye...');
+			if(twyrEnv === 'development' || twyrEnv === 'test') this.$winston.debug('\n\nGoodbye, wi-fi, goodbye...');
 
 			try {
 				this.$winston.clear();
 			}
 			catch(err) {
-				if(twyrEnv === 'development') console.error(new TwyrSrvcError(`Error clearing the Winston instance`, err).toString());
+				console.error(new TwyrSrvcError(`Error clearing the Winston instance`, err).toString());
 			}
 
 			delete this.$winston;
