@@ -35,7 +35,7 @@ jobs:
           - v1-dependencies-
 
       # Start Elassandra
-      - run: systemctl start cassandra
+      - run: systemctl status cassandra
 
       # Install new dependencies
       - run: npm i
