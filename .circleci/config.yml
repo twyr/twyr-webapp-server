@@ -20,7 +20,7 @@ jobs:
           POSTGRES_USER: twyr
           POSTGRES_PASSWORD: twyr
       - image: circleci/redis:latest
-      - image: strapdata/docker-elassandra:latest
+      - image: strapdata/elassandra:latest
 
     working_directory: ~/repo
 
@@ -35,7 +35,7 @@ jobs:
           - v1-dependencies-
 
       # Start Elassandra
-      - run: sudo systemctl start cassandra
+      - run: systemctl start cassandra
 
       # Install new dependencies
       - run: npm i
