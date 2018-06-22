@@ -226,8 +226,7 @@ class TwyrApplication extends TwyrBaseModule {
 		const dbSrvc = this.$services.DatabaseService.Interface;
 		const modules = await dbSrvc.knex.raw(`SELECT id, type, name FROM modules`);
 
-		// console.table(modules.rows);
-		return;
+		console.table(modules.rows);
 	}
 
 	async _doStorageSanityCheck() {
@@ -237,7 +236,7 @@ class TwyrApplication extends TwyrBaseModule {
 		const storageSrvc = this.$services.StorageService.Interface;
 		const fileContents = await storageSrvc.readFileAsync('.gitkeep');
 
-		// console.log(`.gitkeep::contents: ${fileContents}`);
+		console.log(`.gitkeep::contents: ${fileContents}`);
 	}
 	// #endregion
 

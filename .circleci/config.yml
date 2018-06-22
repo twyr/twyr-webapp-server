@@ -50,7 +50,7 @@ jobs:
 
           key: v1-dependencies-{{ checksum "package.json" }}
 
-      # run build - clean, test, coverage, and docs
+      # run build - clean, test, coverage, performance, and docs
       - run: npm run build
 
       # store test results
