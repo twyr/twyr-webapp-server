@@ -1,5 +1,6 @@
 # Presonal configs
-config
+config/development
+config/production
 
 # Logs
 logs/*.log

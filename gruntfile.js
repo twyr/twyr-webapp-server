@@ -29,11 +29,14 @@ module.exports = function (grunt) {
 			'docs': {
 				'command': 'npm run-script docs'
 			},
+			'doctor': {
+				'command': 'npm run-script clinic-doctor && npm run-script clinic-flame'
+			},
 			'rename_docs': {
 				'command': 'mv ./jsdoc_default/twyr-webapp-server/<%= pkg.version %> ./docs && rm -r ./jsdoc_default'
 			},
 			'organize_build_results': {
-				'command': 'mkdir ./buildresults/mocha && mkdir ./buildresults/eslint && mkdir ./buildresults/istanbul && mv ./buildresults/lint.xml ./buildresults/eslint/results.xml && mv ./buildresults/tests.xml ./buildresults/mocha/results.xml && mv ./buildresults/cobertura-coverage.xml ./buildresults/istanbul/results.xml'
+				'command': 'mkdir ./buildresults/mocha && mkdir ./buildresults/eslint && mkdir ./buildresults/istanbul && mkdir ./buildresults/performance && mv ./*.clinic-* ./buildresults/performance && mv ./buildresults/lint.xml ./buildresults/eslint/results.xml && mv ./buildresults/tests.xml ./buildresults/mocha/results.xml && mv ./buildresults/cobertura-coverage.xml ./buildresults/istanbul/results.xml'
 			}
 		},
 
@@ -128,5 +131,5 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-mocha-istanbul');
 	grunt.loadNpmTasks('grunt-xmlstoke');
 
-	grunt.registerTask('default', ['exec:clean', 'env', 'eslint', 'xmlstoke:deleteESLintBugs', 'xmlstoke:deleteEmptyTestcases', 'xmlstoke:deleteEmptyTestsuites', 'xmlstoke:prettify', 'mochaTest', 'mocha_istanbul:coverage', 'exec:docs', 'exec:rename_docs', 'clean', 'jsbeautifier', 'exec:organize_build_results']);
+	grunt.registerTask('default', ['exec:clean', 'env', 'eslint', 'xmlstoke:deleteESLintBugs', 'xmlstoke:deleteEmptyTestcases', 'xmlstoke:deleteEmptyTestsuites', 'xmlstoke:prettify', 'mochaTest', 'mocha_istanbul:coverage', 'exec:docs', 'exec:rename_docs', 'exec:doctor', 'clean', 'jsbeautifier', 'exec:organize_build_results']);
 };

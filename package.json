@@ -139,7 +139,9 @@
 		"ws": "^5.2.0"
 	},
 	"devDependencies": {
+		"autocannon": "*",
 		"chai": "*",
+		"clinic": "*",
 		"docdash2": "*",
 		"eslint": "^4.19.1",
 		"eslint-junit": "*",
@@ -168,7 +170,9 @@
 		"docs": "./node_modules/.bin/jsdoc --verbose --configure ./jsdoc.json",
 		"lint": "./node_modules/.bin/eslint .",
 		"start": "rm -f ./logs/*.log && touch ./logs/init.log && BLUEBIRD_DEBUG=1 DEBUG=* node index.js",
-		"test": "NODE_ENV=test ./node_modules/.bin/mocha --forbid-only \"test/**/*.js\""
+		"test": "NODE_ENV=test ./node_modules/.bin/mocha --forbid-only \"test/**/*.js\"",
+		"clinic-doctor": "NODE_ENV=test ./node_modules/.bin/clinic doctor --collect-only --on-port=\"./node_modules/.bin/autocannon -c100 localhost:9100/\" -- node index.js",
+		"clinic-flame": "NODE_ENV=test ./node_modules/.bin/clinic flame --collect-only --on-port=\"./node_modules/.bin/autocannon -c100 localhost:9100/\" -- node index.js"
 	},
 	"license": "MITNFA",
 	"readmeFilename": "README.md"
