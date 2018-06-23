@@ -76,6 +76,8 @@ class ExpressService extends TwyrBaseService {
 				timeout = require('connect-timeout'),
 				uuid = require('uuid/v4');
 
+			const overloadProtection = require('overload-protection')('express');
+
 			// Step 2: Setup CORS configuration
 			const corsOptions = {
 				'origin': (origin, corsCallback) => {
@@ -125,11 +127,12 @@ class ExpressService extends TwyrBaseService {
 				webServer.set('trust proxy', 1);
 
 			webServer
+			.use(overloadProtection)
 			.use(async (request, response, next) => {
-				request.twyrRequestId = request.headers['X-Request-Id'] || uuid().toString();
-				request.headers['X-Request-Id'] = request.twyrRequestId;
-				response.set('X-Request-Id', request.twyrRequestId);
+				request.twyrRequestId = request.headers['x-request-id'] || uuid().toString();
+				request.headers['x-request-id'] = request.twyrRequestId;
 
+				response.set('x-request-id', request.twyrRequestId);
 				next();
 			})
 			.use(debounce())
@@ -209,8 +212,9 @@ class ExpressService extends TwyrBaseService {
 			const filesystem = promises.promisifyAll(fs);
 
 			let server = undefined;
-			if(this.$config.protocol === 'http')
+			if(this.$config.protocol === 'http') { // eslint-disable-line curly
 				server = protocol.createServer(webServer);
+			}
 
 			if((this.$config.protocol === 'https') || this.$config.protocol === 'spdy') {
 				const secureKey = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].key) ? this.$config.secureProtocols[this.$config.protocol].key : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].key));
@@ -240,15 +244,11 @@ class ExpressService extends TwyrBaseService {
 			this.$dependencies.RingpopService.on('request', this._processRequestFromAnotherNode());
 
 			// Finally, Start listening...
-			console.log(`${this.name}::Adding Event Handlers`);
-
 			this.$server = promises.promisifyAll(server);
 			this.$server.on('connection', this._serverConnection.bind(this));
 			this.$server.on('error', this._serverError.bind(this));
 
-			this.$parent.on('server-online', this._printNetworkInterfaces.bind(this, this.$config.port[this.$parent.$application] || 9090));
-			await this.$server.listenAsync(this.$config.port[this.$parent.$application] || 9090);
-
+			this.$parent.on('server-online', this._listenAndPrintNetworkInterfaces.bind(this));
 			return null;
 		}
 		catch(err) {
@@ -578,11 +578,6 @@ class ExpressService extends TwyrBaseService {
 	 */
 	async _handleOrProxytoCluster(request, response, next) {
 		try {
-			// if(request.headers['X-Request-Id']) {
-			// 	next();
-			// 	return;
-			// }
-
 			const ringpop = this.$dependencies.RingpopService;
 			if(ringpop.lookup(request.tenant.id) === ringpop.whoami()) {
 				next();
@@ -684,9 +679,12 @@ class ExpressService extends TwyrBaseService {
 		this.$dependencies.LoggerService.error(`${this.name}::_serverError\n\n${error.toString()}`);
 	}
 
-	async _printNetworkInterfaces(serverPort) {
-		if(twyrEnv !== 'development') return;
+	async _listenAndPrintNetworkInterfaces() {
 		await snooze(500);
+		await this.$server.listenAsync(this.$config.port[this.$parent.$application] || 9090);
+
+		if(twyrEnv !== 'development' && twyrEnv !== 'test')
+			return;
 
 		const forPrint = [],
 			networkInterfaces = require('os').networkInterfaces();
@@ -699,12 +697,11 @@ class ExpressService extends TwyrBaseService {
 					'Interface': networkInterfaceName,
 					'Protocol': address.family,
 					'Address': address.address,
-					'Port': serverPort
+					'Port': this.$config.port[this.$parent.$application] || 9090
 				});
 		});
 
 		console.table(forPrint);
-		// console.log(`Listening on: ${JSON.stringify(this.$server.address(), null, '\t')}`);
 	}
 	// #endregion
 

@@ -492,7 +492,7 @@ class DatabaseConfigurationService extends TwyrBaseService {
 	}
 
 	_databaseNotification(data) {
-		console.log(`${this.name}::_databaseNotification: ${JSON.stringify(data, null, '\t')}`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::_databaseNotification: ${JSON.stringify(data, null, '\t')}`);
 
 		let rootModule = this.$parent;
 		while(rootModule.$parent) rootModule = rootModule.$parent;
@@ -567,11 +567,11 @@ class DatabaseConfigurationService extends TwyrBaseService {
 	}
 
 	_databaseQuery(queryData) {
-		if((twyrEnv === 'development') && this.$config.debug) console.debug(`${this.name}::_databaseQuery: ${JSON.stringify(queryData, undefined, '\t')}`);
+		if((twyrEnv === 'development' || twyrEnv === 'test') && this.$config.debug) console.debug(`${this.name}::_databaseQuery: ${JSON.stringify(queryData, undefined, '\t')}`);
 	}
 
 	_databaseNotice() {
-		if((twyrEnv === 'development') && this.$config.debug) console.info(`${this.name}::_databaseNotice: ${JSON.stringify(arguments, undefined, '\t')}`);
+		if((twyrEnv === 'development' || twyrEnv === 'test') && this.$config.debug) console.info(`${this.name}::_databaseNotice: ${JSON.stringify(arguments, undefined, '\t')}`);
 	}
 
 	_databaseQueryError(err, queryData) {

@@ -50,7 +50,7 @@ class TwyrApplication extends TwyrBaseModule {
 	 * @summary  Loads / Initializes / Starts-up sub-modules.
 	 */
 	async bootupServer() {
-		if(twyrEnv === 'development') console.log(`${this.name}::bootupServer`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::bootupServer`);
 
 		const allStatuses = [];
 		let bootupError = null;
@@ -82,13 +82,13 @@ class TwyrApplication extends TwyrBaseModule {
 			allStatuses.push(`${process.title} start status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}\n`);
 			this.emit('server-started');
 
-			this.emit('server-online');
-			console.info(`\n\n${allStatuses.join('\n')}\n\n`);
-
 			// TODO: Remove TEST STUFF!
 			await this._setupExpressRoutes();
 			await this._doDBSanityCheck();
 			await this._doStorageSanityCheck();
+
+			if(twyrEnv === 'development' || twyrEnv === 'test') console.info(`\n\n${allStatuses.join('\n')}\n\n`);
+			this.emit('server-online');
 		}
 		catch(err) {
 			allStatuses.push(`Bootup error: ${err.toString()}`);
@@ -115,7 +115,7 @@ class TwyrApplication extends TwyrBaseModule {
 	 * @summary  Shuts-down / Un-initializes / Un-loads sub-modules.
 	 */
 	async shutdownServer() {
-		if(twyrEnv === 'development') console.log(`${this.name}::shutdownServer`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::shutdownServer`);
 
 		const allStatuses = [];
 		let shutdownError = null;
@@ -149,7 +149,7 @@ class TwyrApplication extends TwyrBaseModule {
 				throw shutdownError;
 			}
 
-			console.info(`\n\n${allStatuses.join('\n')}\n\n`);
+			if(twyrEnv === 'development' || twyrEnv === 'test') console.info(`\n\n${allStatuses.join('\n')}\n\n`);
 			return null;
 		}
 	}
@@ -220,17 +220,18 @@ class TwyrApplication extends TwyrBaseModule {
 	}
 
 	async _doDBSanityCheck() {
-		await snooze(2500);
+		if(twyrEnv !== 'development' && twyrEnv !== 'test')
+			return;
 
 		const dbSrvc = this.$services.DatabaseService.Interface;
 		const modules = await dbSrvc.knex.raw(`SELECT id, type, name FROM modules`);
 
 		console.table(modules.rows);
-		return;
 	}
 
 	async _doStorageSanityCheck() {
-		await snooze(2500);
+		if(twyrEnv !== 'development' && twyrEnv !== 'test')
+			return;
 
 		const storageSrvc = this.$services.StorageService.Interface;
 		const fileContents = await storageSrvc.readFileAsync('.gitkeep');

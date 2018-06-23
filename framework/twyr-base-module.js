@@ -30,7 +30,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	// #region Constructor
 	constructor(parent, loader) {
 		super();
-		if(twyrEnv === 'development') console.log(`${this.name}::constructor`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::constructor`);
 
 		let actualLoader = loader;
 		if(!loader) {
@@ -77,7 +77,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 * +  Call the loader (typically, {@link TwyrModuleLoader#load}) to load sub-modules, if any.
 	 */
 	async load(configSrvc) {
-		if(twyrEnv === 'development') console.log(`${this.name}::load`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::load`);
 
 		try {
 			let config = this.$config || { 'state': true };
@@ -111,7 +111,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 * Call the loader (typically, {@link TwyrModuleLoader#initialize}) to initialize sub-modules, if any.
 	 */
 	async initialize() {
-		if(twyrEnv === 'development') console.log(`${this.name}::initialize`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::initialize`);
 
 		try {
 			const subModuleStatus = await this.$loader.initialize();
@@ -139,7 +139,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 * Call the loader (typically, {@link TwyrModuleLoader#start}) to start sub-modules, if any.
 	 */
 	async start(dependencies) {
-		if(twyrEnv === 'development') console.log(`${this.name}::start`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::start`);
 
 		try {
 			this.$dependencies = dependencies;
@@ -178,7 +178,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 * Call the loader (typically, {@link TwyrModuleLoader#stop}) to shutdown sub-modules, if any.
 	 */
 	async stop() {
-		if(twyrEnv === 'development') console.log(`${this.name}::stop`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::stop`);
 
 		try {
 			const subModuleStatus = await this.$loader.stop();
@@ -206,7 +206,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 * Call the loader (typically, {@link TwyrModuleLoader#uninitialize}) to uninitialize sub-modules, if any.
 	 */
 	async uninitialize() {
-		if(twyrEnv === 'development') console.log(`${this.name}::uninitialize`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::uninitialize`);
 
 		try {
 			const subModuleStatus = await this.$loader.uninitialize();
@@ -232,7 +232,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 * Call the loader (typically, {@link TwyrModuleLoader#unload}) to unload sub-modules, if any.
 	 */
 	async unload() {
-		if(twyrEnv === 'development') console.log(`${this.name}::unload`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::unload`);
 
 		try {
 			const subModuleStatus = await this.$loader.unload();
@@ -255,7 +255,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 * @summary  To be implemented by derived classes for setting themselves up.
 	 */
 	async _setup() {
-		if(twyrEnv === 'development') console.log(`${this.name}::_setup`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::_setup`);
 		return null;
 	}
 
@@ -271,7 +271,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 * @summary  To be implemented by derived classes for un-setting themselves down.
 	 */
 	async _teardown() {
-		if(twyrEnv === 'development') console.log(`${this.name}::_teardown`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::_teardown`);
 		return null;
 	}
 	// #endregion
@@ -291,7 +291,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 * @summary  Changes the configuration of this module, and informs everyone interested.
 	 */
 	async _reconfigure(newConfig) {
-		if(twyrEnv === 'development') console.log(`${this.name}::_reconfigure`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::_reconfigure`);
 
 		try {
 			// Step 1: If the config has not changed, do nothing
@@ -357,7 +357,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 * @summary  Lets the module know that one of its subModules changed configuration.
 	 */
 	async _subModuleReconfigure(subModule) {
-		if(twyrEnv === 'development') console.log(`${this.name}::_subModuleReconfigure: ${subModule.name}`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::_subModuleReconfigure: ${subModule.name}`);
 		return null;
 	}
 
@@ -373,7 +373,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 * @summary  Lets the module know that its parent changed configuration.
 	 */
 	async _parentReconfigure() {
-		if(twyrEnv === 'development') console.log(`${this.name}::_parentReconfigure: ${this.$parent.name}`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::_parentReconfigure: ${this.$parent.name}`);
 		return null;
 	}
 
@@ -391,7 +391,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 * @summary  Lets the module know that one of its dependencies changed configuration.
 	 */
 	async _dependencyReconfigure(dependency) {
-		if(twyrEnv === 'development') console.log(`${this.name}::_dependencyReconfigure: ${dependency.name}`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::_dependencyReconfigure: ${dependency.name}`);
 		return null;
 	}
 	// #endregion
@@ -414,7 +414,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 		if(this.$enabled === newState)
 			return null;
 
-		if(twyrEnv === 'development') console.log(`${this.name}::_changeState`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::_changeState`);
 
 		try {
 			// Step 1: Go up the hierarcy and let the parent modules reset themselves
@@ -463,7 +463,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 * @summary  Lets the module know that one of its subModules changed state.
 	 */
 	async _subModuleStateChange(subModule, newState) {
-		if(twyrEnv === 'development') console.log(`${this.name}::_subModuleStateChange::${subModule.name}: ${newState}`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::_subModuleStateChange::${subModule.name}: ${newState}`);
 		return null;
 	}
 
@@ -481,7 +481,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 * @summary  Lets the module know that its parent changed state.
 	 */
 	async _parentStateChange(newState) {
-		if(twyrEnv === 'development') console.log(`${this.name}::_parentStateChange::${this.$parent.name}: ${newState}`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::_parentStateChange::${this.$parent.name}: ${newState}`);
 		await this._changeState(newState);
 
 		return null;
@@ -502,7 +502,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 	 * @summary  Lets the module know that one of its dependencies changed state.
 	 */
 	async _dependencyStateChange(dependency, newState) {
-		if(twyrEnv === 'development') console.log(`${this.name}::_dependencyChangeState::${dependency.name}: ${newState}`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::_dependencyChangeState::${dependency.name}: ${newState}`);
 		if(!this.$dependencies) return null;
 
 		// Since dependencies return thir interface only if they are enabled, this is a good way

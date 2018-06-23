@@ -1324,7 +1324,6 @@ class TwyrModuleLoader extends TwyrBaseClass {
 			return fileList;
 		}
 		catch(err) {
-			// console.error(new TwyrBaseError(`${this.$twyrModule.name}::loader::_findFiles error`, err).toString());
 			return [];
 		}
 	}

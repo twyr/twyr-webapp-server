@@ -15,16 +15,18 @@ jobs:
 
       # documented at https://circleci.com/docs/2.0/circleci-images/
       - image: circleci/postgres:latest
+        environment:
+          POSTGRES_DB: twyr
+          POSTGRES_USER: twyr
+          POSTGRES_PASSWORD: twyr
+
       - image: circleci/redis:latest
-      - image: circleci/cassandra:3.10
+      - image: strapdata/elassandra:latest
 
     working_directory: ~/repo
 
     steps:
       - checkout
-
-      # Copy example config to config
-      - run: mv ./example.config ./config
 
       # Download cached dependencies
       - restore_cache:
@@ -32,6 +34,9 @@ jobs:
           - v1-dependencies-{{ checksum "package.json" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
+
+      # Start Elassandra
+      # - run: service start cassandra
 
       # Install new dependencies
       - run: npm i
@@ -46,7 +51,7 @@ jobs:
 
           key: v1-dependencies-{{ checksum "package.json" }}
 
-      # run build - clean, test, coverage, and docs
+      # run build - clean, test, coverage, performance, and docs
       - run: npm run build
 
       # store test results

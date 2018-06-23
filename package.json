@@ -51,15 +51,15 @@
 		"amqplib": "*",
 		"app-module-path": "*",
 		"ascoltatori": "*",
-		"aws-sdk": "^2.255.1",
+		"aws-sdk": "^2.262.1",
 		"bluebird": "*",
 		"body-parser": "^1.18.3",
 		"bookshelf": "*",
-		"bookshelf-jsonapi-params": "^1.1.2",
+		"bookshelf-jsonapi-params": "^1.1.3",
 		"busboy": "*",
 		"cassandra-driver": "*",
 		"cheerio": "*",
-		"chokidar": "*",
+		"chokidar": "^2.0.4",
 		"clean-stack": "*",
 		"compression": "*",
 		"connect-acceptoverride": "0.0.4",
@@ -83,7 +83,7 @@
 		"ejs": "^2.6.1",
 		"email-existence": "*",
 		"ember-cli-htmlbars": "*",
-		"ember-source": "^3.2.0",
+		"ember-source": "^3.2.2",
 		"envfile": "*",
 		"express": "*",
 		"express-async-errors": "^3.0.0",
@@ -106,10 +106,11 @@
 		"memory-cache": "*",
 		"method-override": "*",
 		"moment": "^2.22.2",
-		"nodemailer": "^4.6.6",
+		"nodemailer": "^4.6.7",
 		"nodemailer-smtp-transport": "*",
 		"on-finished": "*",
 		"os-locale": "*",
+		"overload-protection": "*",
 		"passport": "*",
 		"passport-local": "*",
 		"patrun": "^1.0.0",
@@ -139,7 +140,9 @@
 		"ws": "^5.2.0"
 	},
 	"devDependencies": {
+		"autocannon": "*",
 		"chai": "*",
+		"clinic": "*",
 		"docdash2": "*",
 		"eslint": "^4.19.1",
 		"eslint-junit": "*",
@@ -159,7 +162,7 @@
 		"mocha": "^5.2.0",
 		"mocha-junit-reporter": "*",
 		"mocha-prepare": "^0.1.0",
-		"redis-mock": "^0.25.0"
+		"redis-mock": "^0.27.0"
 	},
 	"scripts": {
 		"build": "./node_modules/.bin/grunt --force",
@@ -168,7 +171,9 @@
 		"docs": "./node_modules/.bin/jsdoc --verbose --configure ./jsdoc.json",
 		"lint": "./node_modules/.bin/eslint .",
 		"start": "rm -f ./logs/*.log && touch ./logs/init.log && BLUEBIRD_DEBUG=1 DEBUG=* node index.js",
-		"test": "NODE_ENV=test ./node_modules/.bin/mocha --forbid-only \"test/**/*.js\""
+		"test": "NODE_ENV=test ./node_modules/.bin/mocha --forbid-only \"test/**/*.js\"",
+		"clinic-doctor": "NODE_ENV=test ./node_modules/.bin/clinic doctor --collect-only --on-port=\"./node_modules/.bin/autocannon -c100 localhost:9100/\" -- node index.js",
+		"clinic-flame": "NODE_ENV=test ./node_modules/.bin/clinic flame --collect-only --on-port=\"./node_modules/.bin/autocannon -c100 localhost:9100/\" -- node index.js"
 	},
 	"license": "MITNFA",
 	"readmeFilename": "README.md"

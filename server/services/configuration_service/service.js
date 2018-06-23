@@ -50,53 +50,8 @@ class ConfigurationService extends TwyrBaseService {
 	 */
 	async load(configSrvc) {
 		try {
-			this.$config = {
-				'state': true,
-				'configuration': {
-					'priorities': {
-						'FileConfigurationService': 10,
-						'DatabaseConfigurationService': 20,
-						'DotEnvConfigurationService': 30
-					},
-					'subservices': {
-						'DatabaseConfigurationService': {
-							'client': process.env.services_DatabaseService_client || 'pg',
-							'debug': process.env.services_DatabaseService_debug === 'true',
-							'connection': {
-								'host': process.env.services_DatabaseService_connection_host || '127.0.0.1',
-								'port': process.env.services_DatabaseService_connection_port || '5432',
-								'user': process.env.services_DatabaseService_connection_user || 'twyr',
-								'password': process.env.services_DatabaseService_connection_password || 'twyr',
-								'database': process.env.services_DatabaseService_connection_database || 'twyr'
-							},
-							'pool': {
-								'min': Number(process.env.services_DatabaseService_pool_min) || 2,
-								'max': Number(process.env.services_DatabaseService_pool_max) || 4
-							},
-							'migrations': {
-								'directory': process.env.services_ConfigurationService_subservices_DatabaseConfigurationService_migrations_directory || 'knex_migrations/migrations',
-								'tableName': process.env.services_ConfigurationService_subservices_DatabaseConfigurationService_migrations_tableName || 'knex_migrations'
-							},
-							'seeds': {
-								'directory': process.env.services_ConfigurationService_subservices_DatabaseConfigurationService_seeds_directory || 'knex_migrations/seeds',
-								'tableName': process.env.services_ConfigurationService_subservices_DatabaseConfigurationService_seeds_tableName || 'knex_seeds'
-							}
-						},
-
-						'DotEnvConfigurationService': {
-							'persistExample': true
-						},
-
-						'RedisConfigurationService': {
-							'port': Number(process.env.services_CacheService_port) || 6379,
-							'host': process.env.services_CacheService_host || '127.0.0.1',
-							'options': {
-								'detect_buffers': process.env.services_CacheService_options_detect_buffers === 'true'
-							}
-						}
-					}
-				}
-			};
+			const path = require('path');
+			this.$config = require(path.join(path.dirname(require.main.filename), `config/${twyrEnv}/server/services/configuration_service`)).config;
 
 			this.on('new-config', this._processConfigChange.bind(this));
 			this.on('update-config', this._processConfigChange.bind(this));
@@ -358,7 +313,7 @@ class ConfigurationService extends TwyrBaseService {
 			if(currentModule) currentModule._reconfigure(config);
 		}
 		catch(err) {
-			if(twyrEnv === 'development') console.error(`${this.name}::_getModuleFromPath error: ${err.message}\n${err.stack}`);
+			console.error(`${this.name}::_processConfigChange error: ${err.message}\n${err.stack}`);
 		}
 	}
 
@@ -391,7 +346,7 @@ class ConfigurationService extends TwyrBaseService {
 			if(currentModule) currentModule._changeState(state);
 		}
 		catch(err) {
-			if(twyrEnv === 'development') console.error(`${this.name}::_getModuleFromPath error: ${err.message}\n${err.stack}`);
+			console.error(`${this.name}::_processStateChange error: ${err.message}\n${err.stack}`);
 		}
 	}
 
@@ -445,7 +400,7 @@ class ConfigurationService extends TwyrBaseService {
 			return currentModule;
 		}
 		catch(err) {
-			if(twyrEnv === 'development') console.error(`${this.name}::_getModuleFromPath error: ${err.message}\n${err.stack}`);
+			console.error(`${this.name}::_getModuleFromPath error: ${err.message}\n${err.stack}`);
 			return null;
 		}
 	}
@@ -492,7 +447,7 @@ class ConfigurationService extends TwyrBaseService {
 			return pathSegments.join(path.sep);
 		}
 		catch(err) {
-			if(twyrEnv === 'development') console.error(`${this.name}::_getPathForModule error: ${err.message}\n${err.stack}`);
+			console.error(`${this.name}::_getPathForModule error: ${err.message}\n${err.stack}`);
 			return null;
 		}
 	}

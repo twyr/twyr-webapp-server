@@ -151,7 +151,6 @@ class AuditService extends TwyrBaseService {
 				this.$auditCache.put(hasResponse.twyrRequestId, hasResponse, 100000, this._processTimedoutRequests.bind(this));
 			}
 
-			// console.log(`addRequest\nHas Response: ${JSON.stringify(this.$auditCache.get(hasResponse.twyrRequestId), null, '\t')}`);
 			return null;
 		}
 		catch(err) {
@@ -224,7 +223,6 @@ class AuditService extends TwyrBaseService {
 				this.$auditCache.put(hasRequest.twyrRequestId, hasRequest, 100000, this._processTimedoutRequests.bind(this));
 			}
 
-			// console.log(`addResponse\nHas Request: ${JSON.stringify(this.$auditCache.get(hasRequest.twyrRequestId), null, '\t')}`);
 			return null;
 		}
 		catch(err) {
@@ -294,8 +292,6 @@ class AuditService extends TwyrBaseService {
 			}
 
 			this.$auditCache.put(payloadDetails.twyrRequestId, hasPayload, 100000, this._processTimedoutRequests.bind(this));
-			// console.log(`addResponsePayload\nPayLoad Details: ${JSON.stringify(payloadDetails, null, '\t')}\nHas Payload: ${JSON.stringify(this.$auditCache.get(payloadDetails.twyrRequestId), null, '\t')}`);
-
 			return null;
 		}
 		catch(err) {
@@ -327,7 +323,9 @@ class AuditService extends TwyrBaseService {
 			this.$auditCache.put(`${id}-scheduled`, true);
 			await snooze(500);
 
-			const auditDetails = this.$auditCache.get(id);
+			const auditDetails = this.$auditCache ? this.$auditCache.get(id) : null;
+			if(!auditDetails) return;
+
 			this._cleanBeforePublish(auditDetails);
 			if(!auditDetails) return;
 
@@ -345,8 +343,8 @@ class AuditService extends TwyrBaseService {
 		}
 
 		try {
-			this.$auditCache.del(`${id}-scheduled`);
-			this.$auditCache.del(id);
+			if(this.$auditCache) this.$auditCache.del(`${id}-scheduled`);
+			if(this.$auditCache) this.$auditCache.del(id);
 		}
 		catch(err) {
 			throw new TwyrSrvcError(`${this.name}::_publishAudit error`, err);

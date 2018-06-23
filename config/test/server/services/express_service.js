@@ -53,7 +53,9 @@ exports.config = {
 	"connectionTimeout": 120,
 	"subdomainMappings": {
 		"cloud-portal": "www",
-		"local-portal": "www"
+		"local-portal": "www",
+		"localhost": "www",
+		"127.0.0.1": "www"
 	},
 	"corsAllowedDomains": [],
 	"requestLogLevel": "debug"
