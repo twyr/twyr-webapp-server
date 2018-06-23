@@ -2,7 +2,7 @@ exports.config = {
 	"File": {
 		"json": false,
 		"name": "File",
-		"level": "warn",
+		"level": "debug",
 		"maxsize": 10485760,
 		"colorize": false,
 		"filename": "logs/twyr-web-application.log",
@@ -17,7 +17,7 @@ exports.config = {
 	"Console": {
 		"json": false,
 		"name": "Console",
-		"level": "warn",
+		"level": "debug",
 		"colorize": true,
 		"timestamp": true,
 		"prettyPrint": true,
