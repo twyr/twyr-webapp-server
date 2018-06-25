@@ -118,7 +118,7 @@
 		"pg": "^7.4.3",
 		"pg-error": "*",
 		"pg-query-native": "*",
-		"pg-structure": "^4.1.2",
+		"pg-structure": "^4.1.3",
 		"primus": "^7.2.2",
 		"primus-rooms": "*",
 		"redis": "*",
@@ -137,7 +137,7 @@
 		"unionfs": "*",
 		"uuid": "*",
 		"winston": "^3.0.0",
-		"ws": "^5.2.0"
+		"ws": "^5.2.1"
 	},
 	"devDependencies": {
 		"autocannon": "*",

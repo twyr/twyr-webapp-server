@@ -190,7 +190,7 @@ class WebsocketService extends TwyrBaseService {
 			return;
 
 		await snooze(1000);
-		this.$dependencies.LoggerService.debug(`Websocket Server has been initialised with options: ${JSON.stringify(options, null, '\t')}`);
+		this.$dependencies.LoggerService.debug(`Websocket Server has been initialised with options`, options);
 	}
 
 	_websocketServerLog() {

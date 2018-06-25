@@ -5,5 +5,5 @@ exports.config = {
 		"retry": "Yellow"
 	},
 
-	"monitorLogLevel": "debug"
+	"monitorLogLevel": "silly"
 };

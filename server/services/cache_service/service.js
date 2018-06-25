@@ -129,7 +129,9 @@ class CacheService extends TwyrBaseService {
 
 	// #region Private Methods
 	_logRedisCommands(time, redisArgs) {
-		this.$dependencies.LoggerService.log(this.$config.monitorLogLevel || 'silly', `\nRedis Command: ${JSON.stringify(redisArgs)}`);
+		redisArgs['level'] = this.$config.monitorLogLevel || 'silly';
+		redisArgs['message'] = 'Redis Command Monitoring';
+		this.$dependencies.LoggerService.log(redisArgs);
 	}
 
 	_handleRedisError(err) {

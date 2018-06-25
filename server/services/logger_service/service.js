@@ -51,15 +51,11 @@ class LoggerService extends TwyrBaseService {
 			const rootPath = path.dirname(require.main.filename);
 			const transports = [];
 
-			this.$winston = new winston.Logger({
-				'transports': [new winston.transports.Console()]
-			});
-
-			for(const transportIdx in this.$config) {
-				if(!Object.prototype.hasOwnProperty.call(this.$config, transportIdx) && !{}.hasOwnProperty.call(this.$config, transportIdx))
+			for(const transportIdx in this.$config.transports) {
+				if(!Object.prototype.hasOwnProperty.call(this.$config.transports, transportIdx) && !{}.hasOwnProperty.call(this.$config.transports, transportIdx))
 					continue;
 
-				const thisTransport = JSON.parse(JSON.stringify(this.$config[transportIdx]));
+				const thisTransport = JSON.parse(JSON.stringify(this.$config.transports[transportIdx]));
 				if(thisTransport.filename) {
 					const baseName = path.basename(thisTransport.filename, path.extname(thisTransport.filename));
 					const dirName = path.isAbsolute(thisTransport.filename) ? path.dirname(thisTransport.filename) : path.join(rootPath, path.dirname(thisTransport.filename));
@@ -67,39 +63,55 @@ class LoggerService extends TwyrBaseService {
 					thisTransport.filename = path.resolve(path.join(dirName, `${baseName}-${this.$parent.$uuid}${path.extname(thisTransport.filename)}`));
 				}
 
-				transports.push(new winston.transports[transportIdx](thisTransport));
+				const transportName = thisTransport.name || 'Console';
+				delete thisTransport.name;
+
+				transports.push(new winston.transports[transportName](thisTransport));
 			}
 
-			// Re-configure with new
-			this.$winston.configure({
-				'transports': transports,
-				'rewriters': [(level, msg, meta) => {
-					if(!meta) return '\n';
-					if(!Object.keys(meta).length) return '\n';
+			const maskSensitiveData = winston.format((info) => {
+				if(!info) return info;
+				if(!Object.keys(info).length) return info;
 
-					Object.keys(meta).forEach((key) => {
-						if(!meta[key]) {
-							delete meta[key];
-							return;
-						}
+				Object.keys(info).forEach((key) => {
+					if(!info[key]) {
+						delete info[key];
+						return;
+					}
 
-						const dangerousKeys = Object.keys(meta[key]).filter((metaKeyKey) => {
-							return (metaKeyKey.toLowerCase().indexOf('password') >= 0) || (metaKeyKey.toLowerCase().indexOf('image') >= 0) || (metaKeyKey.toLowerCase().indexOf('random') >= 0) || (metaKeyKey === '_');
-						});
-
-						dangerousKeys.forEach((dangerousKey) => {
-							delete meta[key][dangerousKey];
-						});
-
-						if(!Object.keys(meta[key]).length)
-							delete meta[key];
+					const dangerousKeys = Object.keys(info[key]).filter((infoKeyKey) => {
+						return (infoKeyKey.toLowerCase().indexOf('password') >= 0) || (infoKeyKey.toLowerCase().indexOf('image') >= 0) || (infoKeyKey.toLowerCase().indexOf('random') >= 0) || (infoKeyKey === '_');
 					});
 
-					if(!Object.keys(meta).length)
-						return '\n';
+					dangerousKeys.forEach((dangerousKey) => {
+						delete info[key][dangerousKey];
+					});
 
-					return `${JSON.stringify(meta, undefined, '\t')}\n\n`;
-				}]
+					if(!Object.keys(info[key]).length)
+						delete info[key];
+				});
+
+				if(!Object.keys(info).length)
+					return {};
+
+				return info;
+			});
+
+			this.$winston = winston.createLogger({
+				'level': this.$config.logger.level,
+
+				'transports': transports,
+
+				'format': winston.format.combine(
+					winston.format.timestamp(),
+					winston.format.metadata({
+						'fillExcept': ['level', 'message', 'timestamp', 'responseTime']
+					}),
+					maskSensitiveData(),
+					winston.format.json(/* { 'replacer': null, 'space': '\t' } */) // eslint-disable-line no-inline-comments
+				),
+
+				'exitOnError': this.$config.logger.exitOnError
 			});
 
 			// Add trace === silly
@@ -109,9 +121,6 @@ class LoggerService extends TwyrBaseService {
 			this.$winston.on('error', (err) => {
 				console.error(`Winston Logger Error:\n${err.stack}`);
 			});
-
-			// Ensure the logger isn't crashing the Server :-)
-			this.$winston.exitOnError = false;
 
 			// The first log of this logger instance...
 			if(twyrEnv === 'development' || twyrEnv === 'test') this.$winston.debug('\n\nTicking away the packets that make up a dull day...');
@@ -139,13 +148,7 @@ class LoggerService extends TwyrBaseService {
 			// The last log of this logger instance...
 			if(twyrEnv === 'development' || twyrEnv === 'test') this.$winston.debug('\n\nGoodbye, wi-fi, goodbye...');
 
-			try {
-				this.$winston.clear();
-			}
-			catch(err) {
-				console.error(new TwyrSrvcError(`Error clearing the Winston instance`, err).toString());
-			}
-
+			this.$winston.clear();
 			delete this.$winston;
 
 			await super._teardown();
