@@ -95,7 +95,7 @@
 		"fs-extra": "^6.0.1",
 		"helmet": "*",
 		"html-entities": "*",
-		"html-minifier": "^3.5.16",
+		"html-minifier": "^3.5.17",
 		"i18n": "*",
 		"inflection": "*",
 		"jsonapi-mapper": "^1.0.0-beta.16",
@@ -142,7 +142,7 @@
 	"devDependencies": {
 		"autocannon": "*",
 		"chai": "*",
-		"clinic": "*",
+		"clinic": "^0.8.2",
 		"docdash2": "*",
 		"eslint": "^5.0.0",
 		"eslint-junit": "*",
@@ -173,7 +173,8 @@
 		"start": "rm -f ./logs/*.log && touch ./logs/init.log && BLUEBIRD_DEBUG=1 DEBUG=* node index.js",
 		"test": "NODE_ENV=test ./node_modules/.bin/mocha --forbid-only \"test/**/*.js\"",
 		"clinic-doctor": "NODE_ENV=test ./node_modules/.bin/clinic doctor --collect-only --on-port=\"./node_modules/.bin/autocannon -c100 localhost:9100/\" -- node index.js",
-		"clinic-flame": "NODE_ENV=test ./node_modules/.bin/clinic flame --collect-only --on-port=\"./node_modules/.bin/autocannon -c100 localhost:9100/\" -- node index.js"
+		"clinic-flame": "NODE_ENV=test ./node_modules/.bin/clinic flame --collect-only --on-port=\"./node_modules/.bin/autocannon -c100 localhost:9100/\" -- node index.js",
+		"clinic-clean": "NODE_ENV=test ./node_modules/.bin/clinic clean"
 	},
 	"license": "MITNFA",
 	"readmeFilename": "README.md"
