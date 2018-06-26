@@ -150,7 +150,7 @@
 		"grunt": "^1.0.3",
 		"grunt-contrib-clean": "*",
 		"grunt-env": "*",
-		"grunt-eslint": "^20.2.0",
+		"grunt-eslint": "^21.0.0",
 		"grunt-exec": "*",
 		"grunt-jsbeautifier": "*",
 		"grunt-mocha-istanbul": "*",
