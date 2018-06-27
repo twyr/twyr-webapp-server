@@ -45,20 +45,14 @@ class DatabaseService extends TwyrBaseService {
 		try {
 			await super._setup();
 
-			const bookshelf = require('bookshelf');
-			const jsonApiParams = require('bookshelf-jsonapi-params');
-			const knex = require('knex');
-			const path = require('path');
-			const promises = require('bluebird');
-
-			this.$config.debug = (process.env.services_DatabaseService_debug === 'true') || (this.$config.debug === true);
+			this.$config.debug = (this.$config.debug === true);
 			if(this.$config.connection) { // eslint-disable-line curly
-				this.$config.connection.port = Number(process.env.services_DatabaseService_connection_port || this.$config.connection.port);
+				this.$config.connection.port = Number(this.$config.connection.port);
 			}
 
 			if(this.$config.pool) {
-				this.$config.pool.min = Number(process.env.services_DatabaseService_pool_min || this.$config.pool.min);
-				this.$config.pool.max = Number(process.env.services_DatabaseService_pool_max || this.$config.pool.max);
+				this.$config.pool.min = Number(this.$config.pool.min);
+				this.$config.pool.max = Number(this.$config.pool.max);
 
 				this.$config.pool['afterCreate'] = async function(rawConnection, done) {
 					try {
@@ -81,7 +75,9 @@ class DatabaseService extends TwyrBaseService {
 							}
 						});
 
+						const promises = require('bluebird');
 						promises.promisifyAll(rawConnection);
+
 						done();
 					}
 					catch(err) {
@@ -90,15 +86,16 @@ class DatabaseService extends TwyrBaseService {
 				};
 			}
 
-			if(this.$config.migrations) thisConfig.migrations.directory = path.isAbsolute(thisConfig.migrations.directory) ? thisConfig.migrations.directory : path.join(rootPath, thisConfig.migrations.directory); // eslint-disable-line no-undef
-			if(this.$config.seeds) thisConfig.seeds.directory = path.isAbsolute(thisConfig.seeds.directory) ? thisConfig.seeds.directory : path.join(rootPath, thisConfig.seeds.directory); // eslint-disable-line no-undef
-
+			const knex = require('knex');
 			const knexInstance = knex(this.$config);
 			knexInstance.on('query', this._databaseQuery.bind(this));
 			knexInstance.on('query-response', this._databaseQuery.bind(this));
 			knexInstance.on('query-error', this._databaseQueryError.bind(this));
 
+			const bookshelf = require('bookshelf');
 			this.$database = bookshelf(knexInstance);
+
+			const jsonApiParams = require('bookshelf-jsonapi-params');
 			this.$database.plugin(jsonApiParams, {
 				'pagination': {
 					'limit': 25

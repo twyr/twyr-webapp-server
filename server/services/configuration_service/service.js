@@ -65,7 +65,7 @@ class ConfigurationService extends TwyrBaseService {
 				this.$prioritizedSubServices = [].concat(Object.keys(this.$services));
 
 				this.$prioritizedSubServices.forEach((prioritizedService) => {
-					this.$config.priorities[prioritizedService] = Number(process.env[`services_ConfigurationService_priorities_${prioritizedService}`]) || this.$config.priorities[prioritizedService] || 0;
+					this.$config.priorities[prioritizedService] = this.$config.priorities[prioritizedService] || 0;
 				});
 
 				this.$prioritizedSubServices.sort((left, right) => {

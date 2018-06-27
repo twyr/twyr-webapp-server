@@ -52,30 +52,25 @@ class DatabaseConfigurationService extends TwyrBaseService {
 			if(!this.$parent.$config.subservices[this.name])
 				return null;
 
-			const knex = require('knex');
-			const path = require('path');
 			const promises = require('bluebird');
-
-			const env = twyrEnv.toLowerCase();
-			const rootPath = path.dirname(require.main.filename);
 
 			this.$config = this.$parent.$config.subservices[this.name];
 			const thisConfig = JSON.parse(JSON.stringify(this.$config));
 
-			thisConfig.client = process.env.services_DatabaseService_client || thisConfig.client;
-			thisConfig.debug = (process.env.services_DatabaseService_debug === 'true') || (thisConfig.debug === true);
+			thisConfig.client = thisConfig.client;
+			thisConfig.debug = (thisConfig.debug === true);
 
 			if(thisConfig.connection) {
-				thisConfig.connection.host = process.env.services_DatabaseService_connection_host || thisConfig.connection.host;
-				thisConfig.connection.port = Number(process.env.services_DatabaseService_connection_port || thisConfig.connection.port);
-				thisConfig.connection.user = process.env.services_DatabaseService_connection_user || thisConfig.connection.user;
-				thisConfig.connection.password = process.env.services_DatabaseService_connection_password || thisConfig.connection.password;
-				thisConfig.connection.database = process.env.services_DatabaseService_connection_database || thisConfig.connection.database;
+				thisConfig.connection.host = thisConfig.connection.host;
+				thisConfig.connection.port = Number(thisConfig.connection.port);
+				thisConfig.connection.user = thisConfig.connection.user;
+				thisConfig.connection.password = thisConfig.connection.password;
+				thisConfig.connection.database = thisConfig.connection.database;
 			}
 
 			if(thisConfig.pool) {
-				thisConfig.pool.min = Number(process.env.services_DatabaseService_pool_min || thisConfig.pool.min);
-				thisConfig.pool.max = Number(process.env.services_DatabaseService_pool_max || thisConfig.pool.max);
+				thisConfig.pool.min = Number(thisConfig.pool.min);
+				thisConfig.pool.max = Number(thisConfig.pool.max);
 
 				thisConfig.pool['afterCreate'] = function(rawConnection, done) {
 					const pgError = require('pg-error');
@@ -99,21 +94,6 @@ class DatabaseConfigurationService extends TwyrBaseService {
 
 					done();
 				};
-			}
-
-			thisConfig.migrations.directory = path.isAbsolute(thisConfig.migrations.directory) ? thisConfig.migrations.directory : path.join(rootPath, thisConfig.migrations.directory);
-			thisConfig.seeds.directory = path.isAbsolute(thisConfig.seeds.directory) ? thisConfig.seeds.directory : path.join(rootPath, thisConfig.seeds.directory);
-
-			if(env === 'development' || env === 'test') {
-				const knexInstance = knex(thisConfig);
-
-				knexInstance.on('query', this._databaseQuery.bind(this));
-				knexInstance.on('query-response', this._databaseQuery.bind(this));
-				knexInstance.on('query-error', this._databaseQueryError.bind(this));
-
-				await knexInstance.migrate.latest();
-				await knexInstance.seed.run();
-				await knexInstance.destroy();
 			}
 
 			const pg = require('pg');
