@@ -105,10 +105,10 @@ class CassandraService extends TwyrBaseService {
 		if(level === 'warning') level = 'warn';
 		if(level === 'verbose') level = 'silly';
 
-		furtherInfo['level'] = level;
-		furtherInfo['message'] = message;
-
-		this.$dependencies.LoggerService.log(furtherInfo);
+		this.$dependencies.LoggerService.log({
+			'level': level,
+			'message': `${message}\nFurther Info: ${furtherInfo}`
+		});
 	}
 
 	async _onCassandraError() {

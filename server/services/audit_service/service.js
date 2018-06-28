@@ -368,7 +368,7 @@ class AuditService extends TwyrBaseService {
 	async _processTimedoutRequests(key, value) {
 		try {
 			const auditDetails = this._cleanBeforePublish(key, value);
-			auditDetails.error = 'Timed Out';
+			if(typeof auditDetails === 'string') return;
 
 			this.$dependencies.LoggerService.error(`Timeout Servicing Request ${auditDetails.twyrRequestId} - ${auditDetails.url}:`, auditDetails);
 			await this.$dependencies.PubsubService.publish('twyr-audit', 'TWYR.AUDIT.TIMEOUT', JSON.stringify(auditDetails));
@@ -377,7 +377,8 @@ class AuditService extends TwyrBaseService {
 			return;
 		}
 		catch(err) {
-			this.$dependencies.LoggerService.error(`${this.name} process timedout request error:`, err);
+			const error = new TwyrSrvcError(`${this.name}::_processTimedoutRequests error`, err);
+			this.$dependencies.LoggerService.error(error.toString());
 			return;
 		}
 	}
@@ -397,7 +398,7 @@ class AuditService extends TwyrBaseService {
 	 * @summary  Deletes any empty keys in the audit trail data.
 	 */
 	_cleanBeforePublish(auditDetails, value) {
-		if(!auditDetails && value) auditDetails = value;
+		if(!auditDetails && value) auditDetails = { 'payload': value };
 		if(!auditDetails) return null;
 
 		if(!Object.keys(auditDetails).length)
