@@ -48,7 +48,7 @@ class LoggerService extends TwyrBaseService {
 			const path = require('path');
 			const winston = require('winston');
 
-			const rootPath = path.dirname(require.main.filename);
+			const rootPath = path.dirname(path.dirname(require.main.filename));
 			const transports = [];
 
 			for(const transportIdx in this.$config.transports) {

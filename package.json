@@ -3,7 +3,7 @@
 	"version": "3.0.1",
 	"description": "Twyr Web Application Server",
 	"homepage": "https://twyr.github.io/twyr-webapp-server",
-	"main": "index.js",
+	"main": "server/index.js",
 	"keywords": [
 		"Twyr",
 		"cassandra",
@@ -167,13 +167,13 @@
 	"scripts": {
 		"build": "./node_modules/.bin/grunt --force",
 		"clean": "rm -rf docs && rm -rf buildresults",
-		"debug": "node --inspect index.js",
+		"debug": "node --inspect ./server/index.js",
 		"docs": "./node_modules/.bin/jsdoc --verbose --configure ./jsdoc.json",
 		"lint": "./node_modules/.bin/eslint .",
-		"start": "rm -f ./logs/*.log && touch ./logs/init.log && BLUEBIRD_DEBUG=1 DEBUG=* node index.js",
+		"start": "rm -f ./logs/*.log && touch ./logs/init.log && BLUEBIRD_DEBUG=1 DEBUG=* node ./server/index.js",
 		"test": "NODE_ENV=test ./node_modules/.bin/mocha --forbid-only \"test/**/*.js\"",
-		"clinic-doctor": "NODE_ENV=test ./node_modules/.bin/clinic doctor --collect-only --on-port=\"sleep 20 && ./node_modules/.bin/autocannon -c100 localhost:9100/\" -- node index.js",
-		"clinic-flame": "NODE_ENV=test ./node_modules/.bin/clinic flame --collect-only --on-port=\"sleep 20 && ./node_modules/.bin/autocannon -c100 localhost:9100/\" -- node index.js",
+		"clinic-doctor": "NODE_ENV=test ./node_modules/.bin/clinic doctor --collect-only --on-port=\"sleep 20 && ./node_modules/.bin/autocannon -c100 localhost:9100/\" -- node ./server/index.js",
+		"clinic-flame": "NODE_ENV=test ./node_modules/.bin/clinic flame --collect-only --on-port=\"sleep 20 && ./node_modules/.bin/autocannon -c100 localhost:9100/\" -- node ./server/index.js",
 		"clinic-clean": "NODE_ENV=test ./node_modules/.bin/clinic clean"
 	},
 	"license": "MITNFA",

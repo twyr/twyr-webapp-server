@@ -176,7 +176,7 @@ class ExpressService extends TwyrBaseService {
 				next();
 			})
 			.use(this._serveTenantStaticAssets.bind(this))
-			.use(serveStatic(path.join(path.dirname(require.main.filename), 'static_assets'), {
+			.use(serveStatic(path.join(path.dirname(path.dirname(require.main.filename)), 'static_assets'), {
 				'index': this.$config.static.index || 'index.html',
 				'maxAge': this.$config.static.maxAge || 300
 			}))
@@ -630,7 +630,7 @@ class ExpressService extends TwyrBaseService {
 		const serveStatic = require('serve-static');
 
 		try {
-			const tenantStaticAssetPath = path.join(path.dirname(require.main.filename), 'static_assets', request.tenant['sub_domain']);
+			const tenantStaticAssetPath = path.join(path.dirname(path.dirname(require.main.filename)), 'static_assets', request.tenant['sub_domain']);
 			serveStatic(tenantStaticAssetPath, {
 				'index': this.$config.static.index || 'index.html',
 				'maxAge': this.$config.static.maxAge || 300

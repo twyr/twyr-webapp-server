@@ -1,7 +1,7 @@
 exports.config = {
 	"pool": {
-		"max": 4,
-		"min": 0
+		"max": 2,
+		"min": 1
 	},
 	"debug": false,
 	"client": "pg",

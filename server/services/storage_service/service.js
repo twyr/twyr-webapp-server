@@ -99,7 +99,7 @@ class StorageService extends TwyrBaseService {
 			const sanboxedFs = require('sandboxed-fs');
 			const path = require('path');
 
-			fsInterface = sanboxedFs.bind(path.join(path.dirname(require.main.filename), 'static_assets', tenantDomain));
+			fsInterface = sanboxedFs.bind(path.join(path.dirname(path.dirname(require.main.filename)), 'static_assets', tenantDomain));
 		}
 
 		if(this.$config.mode === 's3') {

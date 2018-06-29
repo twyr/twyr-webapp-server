@@ -49,7 +49,7 @@ class LocalizationService extends TwyrBaseService {
 				path = require('path');
 
 			const loggerSrvc = this.$dependencies.LoggerService;
-			this.$config.directory = path.isAbsolute(this.$config.directory) ? this.$config.directory : path.join(path.dirname(require.main.filename), this.$config.directory);
+			this.$config.directory = path.isAbsolute(this.$config.directory) ? this.$config.directory : path.join(path.dirname(path.dirname(require.main.filename)), this.$config.directory);
 			this.$config.logDebugFn = (message) => { loggerSrvc.debug(message); };
 			this.$config.logWarnFn = (message) => { loggerSrvc.warn(message); };
 			this.$config.logErrorFn = (message) => { loggerSrvc.error(message); };

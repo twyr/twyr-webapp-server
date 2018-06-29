@@ -49,7 +49,7 @@ class FileConfigurationService extends TwyrBaseService {
 			const chokidar = require('chokidar'),
 				path = require('path');
 
-			const rootPath = path.dirname(require.main.filename);
+			const rootPath = path.dirname(path.dirname(require.main.filename));
 			this.$watcher = chokidar.watch(path.join(rootPath, `config${path.sep}${twyrEnv}`), {
 				'ignored': /[/\\]\./,
 				'ignoreInitial': true
@@ -118,7 +118,7 @@ class FileConfigurationService extends TwyrBaseService {
 				promises = require('bluebird');
 
 			const filesystem = promises.promisifyAll(fs);
-			const rootPath = path.dirname(require.main.filename);
+			const rootPath = path.dirname(path.dirname(require.main.filename));
 			const configPath = path.join(rootPath, `config${path.sep}${twyrEnv}`, `${twyrModulePath}.js`);
 
 			await filesystem.ensureDirAsync(path.dirname(configPath));
@@ -161,7 +161,7 @@ class FileConfigurationService extends TwyrBaseService {
 
 			this.$cacheMap[twyrModulePath] = config;
 
-			const rootPath = path.dirname(require.main.filename);
+			const rootPath = path.dirname(path.dirname(require.main.filename));
 			const configPath = path.join(rootPath, `config${path.sep}${twyrEnv}`, `${twyrModulePath}.js`);
 
 			const filesystem = promises.promisifyAll(fs);
@@ -252,7 +252,7 @@ class FileConfigurationService extends TwyrBaseService {
 			if(deepEqual(this.$cacheMap[configUpdateModule], config))
 				return;
 
-			const rootPath = path.dirname(require.main.filename);
+			const rootPath = path.dirname(path.dirname(require.main.filename));
 			const configPath = path.join(rootPath, `config${path.sep}${twyrEnv}`, configUpdateModule);
 
 			this.$cacheMap[configUpdateModule] = config;
@@ -302,7 +302,7 @@ class FileConfigurationService extends TwyrBaseService {
 		try {
 			const path = require('path');
 
-			const rootPath = path.dirname(require.main.filename);
+			const rootPath = path.dirname(path.dirname(require.main.filename));
 			const twyrModulePath = path.relative(rootPath, filePath).replace(`config${path.sep}${twyrEnv}${path.sep}`, '').replace('.js', '');
 
 			this.$cacheMap[twyrModulePath] = require(filePath).config;
@@ -331,7 +331,7 @@ class FileConfigurationService extends TwyrBaseService {
 			const deepEqual = require('deep-equal'),
 				path = require('path');
 
-			const rootPath = path.dirname(require.main.filename);
+			const rootPath = path.dirname(path.dirname(require.main.filename));
 			const twyrModulePath = path.relative(rootPath, filePath).replace(`config${path.sep}${twyrEnv}${path.sep}`, '').replace('.js', '');
 
 			delete require.cache[filePath];
@@ -365,7 +365,7 @@ class FileConfigurationService extends TwyrBaseService {
 		try {
 			const path = require('path');
 
-			const rootPath = path.dirname(require.main.filename);
+			const rootPath = path.dirname(path.dirname(require.main.filename));
 			const twyrModulePath = path.relative(rootPath, filePath).replace(`config${path.sep}${twyrEnv}${path.sep}`, '').replace('.js', '');
 
 			delete require.cache[filePath];

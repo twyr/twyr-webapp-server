@@ -14,7 +14,7 @@
  * Pre-flight stuff - to be done before the application class starts the server
  * @ignore
  */
-require('app-module-path').addPath(`${__dirname}/framework`);
+require('app-module-path').addPath(`${__dirname}/../framework`);
 require('dotenv').config();
 
 /**
@@ -43,7 +43,7 @@ global.snooze = async (ms) => {
  * Module dependencies, required for this module
  * @ignore
  */
-const TwyrApplication = require('./server/twyr-application-class').TwyrApplication;
+const TwyrApplication = require('./twyr-application-class').TwyrApplication;
 
 /**
  * Finally, start the server - let's get going!

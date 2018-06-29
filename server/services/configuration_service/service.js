@@ -51,7 +51,7 @@ class ConfigurationService extends TwyrBaseService {
 	async load(configSrvc) {
 		try {
 			const path = require('path');
-			this.$config = require(path.join(path.dirname(require.main.filename), `config/${twyrEnv}/server/services/configuration_service`)).config;
+			this.$config = require(path.join(path.dirname(path.dirname(require.main.filename)), `config/${twyrEnv}/server/services/configuration_service`)).config;
 
 			this.on('new-config', this._processConfigChange.bind(this));
 			this.on('update-config', this._processConfigChange.bind(this));
