@@ -83,20 +83,22 @@ class TwyrApplication extends TwyrBaseModule {
 			this.emit('server-started');
 
 			// TODO: Remove TEST STUFF!
-			await this._setupExpressRoutes();
+			await this._setupWebserverRoutes();
 			await this._doDBSanityCheck();
 			await this._doStorageSanityCheck();
 
-			if(twyrEnv === 'development' || twyrEnv === 'test') console.info(`\n\n${allStatuses.join('\n')}\n\n`);
 			this.emit('server-online');
 		}
 		catch(err) {
-			allStatuses.push(`Bootup error: ${err.toString()}`);
-			bootupError = err;
+			bootupError = (err instanceof TwyrBaseError) ? err : new TwyrBaseError(`Bootup Error`, err);
+			allStatuses.push(`Bootup error: ${bootupError.toString()}`);
 		}
 		finally {
+			if(!bootupError && ((twyrEnv === 'development') || (twyrEnv === 'test')))
+				console.info(`\n\n${allStatuses.join('\n')}\n\n`);
+
 			if(bootupError) {
-				console.error(`\n\nBootup ${process.title} with error:\n${bootupError.toString()}\n\n`);
+				console.error(`\n\n${allStatuses.join('\n')}\n\n`);
 				throw bootupError;
 			}
 
@@ -140,16 +142,18 @@ class TwyrApplication extends TwyrBaseModule {
 			this.emit('server-unloaded');
 		}
 		catch(err) {
-			allStatuses.push(`Shutdown error: ${err.toString()}`);
-			shutdownError = err;
+			shutdownError = (err instanceof TwyrBaseError) ? err : new TwyrBaseError(`Shutdown Error`, err);
+			allStatuses.push(`Shutdown error: ${shutdownError.toString()}`);
 		}
 		finally {
+			if(!shutdownError && ((twyrEnv === 'development') || (twyrEnv === 'test')))
+				console.info(`\n\n${allStatuses.join('\n')}\n\n`);
+
 			if(shutdownError) {
-				console.error(`\n\nShutdown ${process.title} with error:\n${shutdownError.toString()}\n\n`);
+				console.error(`\n\n${allStatuses.join('\n')}\n\n`);
 				throw shutdownError;
 			}
 
-			if(twyrEnv === 'development' || twyrEnv === 'test') console.info(`\n\n${allStatuses.join('\n')}\n\n`);
 			return null;
 		}
 	}
@@ -167,7 +171,7 @@ class TwyrApplication extends TwyrBaseModule {
 	 *
 	 * @returns  {null} - Nothing.
 	 *
-	 * @summary  Ignores everything except the reconfiguration of DatabaseService / ExpressService. In that case, re-does its checks
+	 * @summary  Ignores everything except the reconfiguration of DatabaseService / WebserverService. In that case, re-does its checks
 	 *
 	 * @description
 	 * Call the loader (typically, {@link TwyrModuleLoader#start}) to start sub-modules, if any.
@@ -175,9 +179,9 @@ class TwyrApplication extends TwyrBaseModule {
 	async _subModuleReconfigure(subModule) {
 		try {
 			// Setup common routes - to be enhanced
-			if(subModule.name === 'ExpressService') {
+			if(subModule.name === 'WebserverService') {
 				this.emit('server-offline');
-				await this._setupExpressRoutes();
+				await this._setupWebserverRoutes();
 				this.emit('server-online');
 			}
 
@@ -195,15 +199,15 @@ class TwyrApplication extends TwyrBaseModule {
 	// #endregion
 
 	// #region Private Methods
-	async _setupExpressRoutes() {
-		const expressRouter = this.$services.ExpressService.Interface.Router;
+	async _setupWebserverRoutes() {
+		const koaRouter = this.$services.WebserverService.Interface.Router;
 
-		expressRouter.use(async (request, response) => {
+		koaRouter.use(async (request, response) => {
 			const respString = { 'message': `${this.name}::${request.originalUrl}` };
 			response.status(200).json(respString);
 		});
 
-		expressRouter.use(async (error, request, response, next) => {
+		koaRouter.use(async (error, request, response, next) => {
 			if(response.finished)
 				return;
 

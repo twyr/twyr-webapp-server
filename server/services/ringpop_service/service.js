@@ -88,12 +88,12 @@ class RingpopService extends TwyrBaseService {
 						},
 
 						'logger': this.$dependencies.LoggerService,
-						'trace': (twyrEnv === 'development')
+						'trace': (twyrEnv === 'development' || twyrEnv === 'test')
 					});
 
 					const subChannel = tchannel.makeSubChannel({
 						'serviceName': 'ringpop',
-						'trace': (twyrEnv === 'development')
+						'trace': (twyrEnv === 'development' || twyrEnv === 'test')
 					});
 
 					const ringpop = new Ringpop({
@@ -128,7 +128,7 @@ class RingpopService extends TwyrBaseService {
 							this.$ringpop.on('ringChanged', this.onRingChanged.bind(this));
 							this.$ringpop.on('error', this.onRingpopError.bind(this));
 
-							this.$parent.on('server-online', this._printInformation.bind(this));
+							this.$parent.once('server-online', this._printInformation.bind(this));
 							resolve();
 
 							return;
@@ -162,6 +162,9 @@ class RingpopService extends TwyrBaseService {
 			return null;
 
 		try {
+			this.$ringpop.off('error', this.onRingpopError.bind(this));
+			this.$ringpop.off('ringChanged', this.onRingChanged.bind(this));
+
 			this.$ringpop.destroy();
 			delete this.$ringpop;
 
@@ -176,7 +179,7 @@ class RingpopService extends TwyrBaseService {
 
 	// #region Private Methods
 	async _printInformation() {
-		if(twyrEnv !== 'development')
+		if((twyrEnv !== 'development') && (twyrEnv !== 'test'))
 			return;
 
 		await snooze(600);

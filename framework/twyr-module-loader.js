@@ -365,7 +365,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 					continue;
 
 				this.$twyrModule.$utilities[utility.name] = utility.method.bind(this.$twyrModule);
-				if(utility.isAsync) this.$twyrModule.$utilities[`${utility.name}Async`] = promises.promisify(utility.method).bind(this.$twyrModule);
+				if(utility.isAsync) this.$twyrModule.$utilities[`${utility.name}Async`] = promises.promisify(utility.method.bind(this.$twyrModule));
 			}
 
 			return {
@@ -579,11 +579,12 @@ class TwyrModuleLoader extends TwyrBaseClass {
 					const dependencies = this._getDependencies(moduleInstance);
 
 					lifecycleStatus = await moduleInstance.start(dependencies);
-					nameStatusPairs[serviceName] = lifecycleStatus;
 				}
 				catch(err) {
 					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_startServices::${serviceName} error`, err);
 				}
+
+				nameStatusPairs[serviceName] = lifecycleStatus;
 			}
 
 			return { 'type': 'services', 'status': nameStatusPairs };
@@ -638,9 +639,8 @@ class TwyrModuleLoader extends TwyrBaseClass {
 				catch(err) {
 					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_stopServices error`, err);
 				}
-				finally {
-					nameStatusPairs[serviceName] = lifecycleStatus;
-				}
+
+				nameStatusPairs[serviceName] = lifecycleStatus;
 			}
 
 			return {
@@ -735,8 +735,8 @@ class TwyrModuleLoader extends TwyrBaseClass {
 				const middlewareInstance = new Middleware(this.$twyrModule);
 
 				// Check to see valid typeof
-				// if(!(serviceInstance instanceof TwyrBaseService))
-				// 	throw new TwyrBaseError(`${definedService} does not contain a valid TwyrBaseService definition`);
+				// if(!(middlewareInstance instanceof TwyrBaseMiddleware))
+				// 	throw new TwyrBaseError(`${definedMiddleware} does not contain a valid TwyrBaseMiddleware definition`);
 
 				this.$twyrModule.$middlewares[middlewareInstance.name] = middlewareInstance;
 			}
@@ -803,9 +803,8 @@ class TwyrModuleLoader extends TwyrBaseClass {
 				catch(err) {
 					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_doLifecycleAction (${middlewareName} / start) error`, err);
 				}
-				finally {
-					nameStatusPairs[middlewareName] = lifecycleStatus;
-				}
+
+				nameStatusPairs[middlewareName] = lifecycleStatus;
 			}
 
 			return {
@@ -992,9 +991,8 @@ class TwyrModuleLoader extends TwyrBaseClass {
 				catch(err) {
 					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_doLifecycleAction (${componentName} / start) error`, err);
 				}
-				finally {
-					nameStatusPairs[componentName] = lifecycleStatus;
-				}
+
+				nameStatusPairs[componentName] = lifecycleStatus;
 			}
 
 			return {
@@ -1182,9 +1180,8 @@ class TwyrModuleLoader extends TwyrBaseClass {
 				catch(err) {
 					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_doLifecycleAction (${templateName} / start) error`, err);
 				}
-				finally {
-					nameStatusPairs[templateName] = lifecycleStatus;
-				}
+
+				nameStatusPairs[templateName] = lifecycleStatus;
 			}
 
 			return {
@@ -1414,9 +1411,8 @@ class TwyrModuleLoader extends TwyrBaseClass {
 				catch(err) {
 					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_doLifecycleAction (${moduleName} / ${action}) error`, err);
 				}
-				finally {
-					nameStatusPairs[moduleName] = lifecycleStatus;
-				}
+
+				nameStatusPairs[moduleName] = lifecycleStatus;
 			}
 
 			return nameStatusPairs;

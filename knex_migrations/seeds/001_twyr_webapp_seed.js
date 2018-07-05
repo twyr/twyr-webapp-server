@@ -168,22 +168,6 @@ exports.seed = async function(knex) {
 		'parent': configSrvcId[0],
 		'type': 'service',
 		'admin_only': true,
-		'name': 'DotEnvConfigurationService',
-		'display_name': '.env Configuration Service',
-		'description': 'The Twyr Web Application .env Configuration Service',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
-
-	await knex('modules').insert({
-		'parent': configSrvcId[0],
-		'type': 'service',
-		'admin_only': true,
 		'name': 'FileConfigurationService',
 		'display_name': 'File Configuration Service',
 		'description': 'The Twyr Web Application Filesystem-based Configuration Service',
@@ -203,22 +187,6 @@ exports.seed = async function(knex) {
 		'name': 'DatabaseService',
 		'display_name': 'Database Service',
 		'description': 'The Twyr Web Application Database Service - built on top of Knex / Bookshelf',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
-
-	await knex('modules').insert({
-		'parent': parentId[0],
-		'type': 'service',
-		'admin_only': true,
-		'name': 'ExpressService',
-		'display_name': 'Express Service',
-		'description': 'The Twyr Web Application Webserver Service - based on Express and node.js HTTP/HTTPS modules',
 		'metadata': {
 			'author': 'Twyr',
 			'version': '3.0.1',
@@ -296,6 +264,22 @@ exports.seed = async function(knex) {
 		'parent': parentId[0],
 		'type': 'service',
 		'admin_only': true,
+		'name': 'RingpopService',
+		'display_name': 'Cluster Service',
+		'description': 'The Twyr Web Application Cluster Service - based on Ringpop by Uber',
+		'metadata': {
+			'author': 'Twyr',
+			'version': '3.0.1',
+			'website': 'https://twyr.com',
+			'demo': 'https://twyr.com',
+			'documentation': 'https://twyr.com'
+		}
+	});
+
+	await knex('modules').insert({
+		'parent': parentId[0],
+		'type': 'service',
+		'admin_only': true,
 		'name': 'StorageService',
 		'display_name': 'Storage Service',
 		'description': 'The Twyr Web Application Storage Service - depending on configuration, a wrapper around sandboxed-fs or s3fs',
@@ -312,9 +296,9 @@ exports.seed = async function(knex) {
 		'parent': parentId[0],
 		'type': 'service',
 		'admin_only': true,
-		'name': 'RingpopService',
-		'display_name': 'Cluster Service',
-		'description': 'The Twyr Web Application Cluster Service - based on Ringpop by Uber',
+		'name': 'WebserverService',
+		'display_name': 'Express Service',
+		'description': 'The Twyr Web Application Webserver Service - based on Koa',
 		'metadata': {
 			'author': 'Twyr',
 			'version': '3.0.1',

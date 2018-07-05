@@ -11,7 +11,7 @@
 			"runtimeExecutable": "node",
 			"runtimeArgs": [
 				"--inspect",
-				"index.js"
+				"server/index.js"
 			],
 			"port": 9229,
 			"autoAttachChildProcesses":true
@@ -26,7 +26,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}/index.js"
+            "program": "${workspaceFolder}/server/index.js"
         }
     ]
 }

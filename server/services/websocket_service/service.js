@@ -41,12 +41,12 @@ class WebsocketService extends TwyrBaseService {
 	 *
 	 * @returns  {null} Nothing.
 	 *
-	 * @summary  If ExpressService was reconfigured, reset. Otherwise, ignore
+	 * @summary  If WebserverService was reconfigured, reset. Otherwise, ignore
 	 */
 	async _dependencyReconfigure(dependency) {
 		try {
 			const superStatus = await super._dependencyReconfigure(dependency);
-			if(dependency.name !== 'ExpressService')
+			if(dependency.name !== 'WebserverService')
 				return superStatus;
 
 			await this._teardown();
@@ -114,7 +114,7 @@ class WebsocketService extends TwyrBaseService {
 
 			// Step 1: Setup the realtime streaming server
 			const thisConfig = JSON.parse(JSON.stringify(this.$config.primus));
-			this.$websocketServer = new PrimusServer(this.$dependencies.ExpressService.Server, thisConfig);
+			this.$websocketServer = new PrimusServer(this.$dependencies.WebserverService.Server, thisConfig);
 
 			// Step 2: Put in the middlewares we need
 			this.$websocketServer.use('cookieParser', _cookieParser, undefined, 0);
@@ -243,7 +243,7 @@ class WebsocketService extends TwyrBaseService {
 	 * @override
 	 */
 	get dependencies() {
-		return ['AuditService', 'AuthService', 'ConfigurationService', 'CacheService', 'DatabaseService', 'ExpressService', 'LocalizationService', 'LoggerService'].concat(super.dependencies);
+		return ['AuditService', 'AuthService', 'ConfigurationService', 'CacheService', 'DatabaseService', 'LocalizationService', 'LoggerService', 'WebserverService'].concat(super.dependencies);
 	}
 
 	/**

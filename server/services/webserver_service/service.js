@@ -13,15 +13,15 @@ const TwyrBaseService = require('twyr-base-service').TwyrBaseService;
 const TwyrSrvcError = require('twyr-service-error').TwyrServiceError;
 
 /**
- * @class   ExpressService
+ * @class   WebserverService
  * @extends {TwyrBaseService}
- * @classdesc The Twyr Web Application Server Express Service.
+ * @classdesc The Twyr Web Application Server Webserver Service - based on Koa.
  *
  * @description
  * Allows the rest of the Twyr Modules to expose REST API.
  *
  */
-class ExpressService extends TwyrBaseService {
+class WebserverService extends TwyrBaseService {
 	// #region Constructor
 	constructor(parent, loader) {
 		super(parent, loader);
@@ -240,15 +240,17 @@ class ExpressService extends TwyrBaseService {
 			// Add utility to force-stop server
 			serverDestroy(server);
 
+			// Start listening to events
+			server.on('connection', this._serverConnection.bind(this));
+			server.on('error', this._serverError.bind(this));
+
 			// Step 6: Setup the server to listen to requests forwarded via Ringpop, just in case
-			this.$dependencies.RingpopService.on('request', this._processRequestFromAnotherNode());
+			this.$dependencies.RingpopService.on('request', this._processRequestFromAnotherNode.bind(this));
 
 			// Finally, Start listening...
 			this.$server = promises.promisifyAll(server);
-			this.$server.on('connection', this._serverConnection.bind(this));
-			this.$server.on('error', this._serverError.bind(this));
+			this.$parent.once('server-online', this._listenAndPrintNetworkInterfaces.bind(this));
 
-			this.$parent.on('server-online', this._listenAndPrintNetworkInterfaces.bind(this));
 			return null;
 		}
 		catch(err) {
@@ -270,19 +272,15 @@ class ExpressService extends TwyrBaseService {
 	 */
 	async _teardown() {
 		try {
-			this.$dependencies.RingpopService.removeAllListeners('request');
-			this.$dependencies.RingpopService.removeAllListeners('ringServerAdded');
-			this.$dependencies.RingpopService.removeAllListeners('ringServerRemoved');
+			this.$dependencies.RingpopService.off('request', this._processRequestFromAnotherNode.bind(this));
 
-			if(!this.$server)
-				return null;
-
+			if(!this.$server) return null;
 			if(this.$server.listening) { // eslint-disable-line curly
 				await this.$server.destroyAsync();
 			}
 
-			this.$server.removeAllListeners('connection');
-			this.$server.removeAllListeners('error');
+			this.$server.off('connection', this._serverConnection.bind(this));
+			this.$server.off('error', this._serverError.bind(this));
 
 			this.$express._router.stack.length = 0;
 
@@ -586,7 +584,7 @@ class ExpressService extends TwyrBaseService {
 
 			const hostPort = [];
 			hostPort.push(ringpop.lookup(request.tenant.id).split(':').shift());
-			hostPort.push(this.$config.port[this.$parent.$application] || 9090);
+			hostPort.push(this.$config.port || 9090);
 
 			const dest = `${this.$config.protocol}://${hostPort.filter((val) => { return !!val; }).join(':')}${request.path}`;
 
@@ -681,7 +679,7 @@ class ExpressService extends TwyrBaseService {
 
 	async _listenAndPrintNetworkInterfaces() {
 		await snooze(1000);
-		await this.$server.listenAsync(this.$config.port[this.$parent.$application] || 9090);
+		await this.$server.listenAsync(this.$config.port || 9090);
 
 		if(twyrEnv !== 'development' && twyrEnv !== 'test')
 			return;
@@ -697,7 +695,7 @@ class ExpressService extends TwyrBaseService {
 					'Interface': networkInterfaceName,
 					'Protocol': address.family,
 					'Address': address.address,
-					'Port': this.$config.port[this.$parent.$application] || 9090
+					'Port': this.$config.port || 9090
 				});
 		});
 
@@ -741,4 +739,4 @@ class ExpressService extends TwyrBaseService {
 	// #endregion
 }
 
-exports.service = ExpressService;
+exports.service = WebserverService;

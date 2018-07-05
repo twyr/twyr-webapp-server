@@ -51,24 +51,6 @@ class LoggerService extends TwyrBaseService {
 			const rootPath = path.dirname(path.dirname(require.main.filename));
 			const transports = [];
 
-			for(const transportIdx in this.$config.transports) {
-				if(!Object.prototype.hasOwnProperty.call(this.$config.transports, transportIdx) && !{}.hasOwnProperty.call(this.$config.transports, transportIdx))
-					continue;
-
-				const thisTransport = JSON.parse(JSON.stringify(this.$config.transports[transportIdx]));
-				if(thisTransport.filename) {
-					const baseName = path.basename(thisTransport.filename, path.extname(thisTransport.filename));
-					const dirName = path.isAbsolute(thisTransport.filename) ? path.dirname(thisTransport.filename) : path.join(rootPath, path.dirname(thisTransport.filename));
-
-					thisTransport.filename = path.resolve(path.join(dirName, `${baseName}-${this.$parent.$uuid}${path.extname(thisTransport.filename)}`));
-				}
-
-				const transportName = thisTransport.name || 'Console';
-				delete thisTransport.name;
-
-				transports.push(new winston.transports[transportName](thisTransport));
-			}
-
 			const maskSensitiveData = winston.format((info) => {
 				if(!info) return info;
 				if(!Object.keys(info).length) return info;
@@ -97,20 +79,65 @@ class LoggerService extends TwyrBaseService {
 				return info;
 			});
 
+			for(const transportIdx in this.$config.transports) {
+				if(!Object.prototype.hasOwnProperty.call(this.$config.transports, transportIdx) && !{}.hasOwnProperty.call(this.$config.transports, transportIdx))
+					continue;
+
+				const thisTransport = JSON.parse(JSON.stringify(this.$config.transports[transportIdx]));
+				if(thisTransport.filename) {
+					const baseName = path.basename(thisTransport.filename, path.extname(thisTransport.filename));
+					const dirName = path.isAbsolute(thisTransport.filename) ? path.dirname(thisTransport.filename) : path.join(rootPath, path.dirname(thisTransport.filename));
+
+					thisTransport.filename = path.resolve(path.join(dirName, `${baseName}-${this.$parent.$uuid}${path.extname(thisTransport.filename)}`));
+				}
+
+				const transportName = thisTransport.name || 'Console';
+				delete thisTransport.name;
+
+				const transportFormats = [];
+				transportFormats.push(winston.format.timestamp());
+				transportFormats.push(winston.format.metadata({
+					'fillExcept': ['level', 'message', 'timestamp', 'responseTime']
+				}));
+				transportFormats.push(maskSensitiveData());
+
+				if(typeof thisTransport.format === 'string') { // eslint-disable-line curly
+					transportFormats.push(winston.format[thisTransport.format]());
+				}
+
+				if(Array.isArray(thisTransport.format)) { // eslint-disable-line curly
+					thisTransport.format.forEach((transportFormat) => {
+						if(typeof transportFormat === 'string') {
+							transportFormats.push(winston.format[transportFormat]());
+							return;
+						}
+
+						if(transportFormat.name === 'printf') { // eslint-disable-line curly
+							transportFormat.options = new Function('info', 'opts', transportFormat.options); // eslint-disable-line no-new-func
+							transportFormats.push(winston.format[transportFormat.name](transportFormat.options));
+							return;
+						}
+
+						if(transportFormat.name === 'custom') {
+							transportFormat.function = new Function('info', 'opts', transportFormat.function); // eslint-disable-line no-new-func
+
+							const thisFormat = winston.format(transportFormat.function);
+							transportFormats.push(thisFormat(transportFormat.options));
+							return;
+						}
+
+						const thisFormat = winston.format[transportFormat.name](transportFormat.options);
+						transportFormats.push(thisFormat);
+					});
+				}
+
+				thisTransport.format = winston.format.combine.apply(winston, transportFormats);
+				transports.push(new winston.transports[transportName](thisTransport));
+			}
+
 			this.$winston = winston.createLogger({
 				'level': this.$config.logger.level,
-
 				'transports': transports,
-
-				'format': winston.format.combine(
-					winston.format.timestamp(),
-					winston.format.metadata({
-						'fillExcept': ['level', 'message', 'timestamp', 'responseTime']
-					}),
-					maskSensitiveData(),
-					winston.format.json(/* { 'replacer': null, 'space': '\t' } */) // eslint-disable-line no-inline-comments
-				),
-
 				'exitOnError': this.$config.logger.exitOnError
 			});
 
@@ -123,7 +150,7 @@ class LoggerService extends TwyrBaseService {
 			});
 
 			// The first log of this logger instance...
-			if(twyrEnv === 'development' || twyrEnv === 'test') this.$winston.debug('\n\nTicking away the packets that make up a dull day...');
+			if(twyrEnv === 'development' || twyrEnv === 'test') this.$winston.debug('Ticking away the packets that make up a dull day...');
 			return null;
 		}
 		catch(err) {
@@ -146,7 +173,7 @@ class LoggerService extends TwyrBaseService {
 	async _teardown() {
 		try {
 			// The last log of this logger instance...
-			if(twyrEnv === 'development' || twyrEnv === 'test') this.$winston.debug('\n\nGoodbye, wi-fi, goodbye...');
+			if(twyrEnv === 'development' || twyrEnv === 'test') this.$winston.debug('Goodbye, wi-fi, goodbye...');
 
 			this.$winston.clear();
 			delete this.$winston;

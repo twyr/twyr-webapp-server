@@ -52,25 +52,42 @@ const TwyrApplication = require('./twyr-application-class').TwyrApplication;
 const serverInstance = new TwyrApplication(SERVER_NAME);
 let shuttingDown = false;
 
-const onDeath = require('death')({ 'uncaughtException': false, 'debug': (twyrEnv === 'development') });
+const onDeath = require('death')({ 'uncaughtException': false, 'debug': (twyrEnv === 'development' || twyrEnv === 'test') });
 const offDeath = onDeath(async () => {
+	if(shuttingDown) return;
+	shuttingDown = true;
+
+	console.time(`${SERVER_NAME} shutdown in: `);
+
+	let shutDownErr = null;
+
 	try {
-		if(shuttingDown) return;
-		shuttingDown = true;
-
 		await serverInstance.shutdownServer();
-		offDeath();
+	}
+	catch(error) {
+		shutDownErr = error;
+	}
 
-		process.exit(0); // eslint-disable-line no-process-exit
-	}
-	catch(shutdownError) {
-		console.error(`Shutdown Error: ${shutdownError.toString()}`);
-		process.exit(1); // eslint-disable-line no-process-exit
-	}
+	console.timeEnd(`${SERVER_NAME} shutdown in: `);
+
+	offDeath();
+	process.exit(!!shutDownErr); // eslint-disable-line no-process-exit
 });
 
+console.time(`${SERVER_NAME} booted up in: `);
+
+let bootError = null;
 serverInstance.bootupServer()
-.catch((bootupError) => {
-	console.error(`Bootup Error: ${bootupError.toString()}`);
+.catch((bootupErr) => {
+	bootError = bootupErr;
+	shuttingDown = true;
+
+	return serverInstance.shutdownServer();
+})
+.finally(() => {
+	console.timeEnd(`${SERVER_NAME} booted up in: `);
+	if(!bootError) return;
+
+	offDeath();
 	process.exit(1); // eslint-disable-line no-process-exit
 });
