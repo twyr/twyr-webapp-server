@@ -51,7 +51,7 @@
 		"amqplib": "*",
 		"app-module-path": "*",
 		"ascoltatori": "*",
-		"aws-sdk": "^2.268.1",
+		"aws-sdk": "^2.270.1",
 		"bluebird": "*",
 		"body-parser": "^1.18.3",
 		"bookshelf": "*",
@@ -142,7 +142,7 @@
 	"devDependencies": {
 		"autocannon": "*",
 		"chai": "*",
-		"clinic": "^0.8.2",
+		"clinic": "^0.8.3",
 		"docdash2": "*",
 		"eslint": "^5.0.1",
 		"eslint-junit": "*",

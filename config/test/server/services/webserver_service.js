@@ -1,7 +1,5 @@
 exports.config = {
-	"port": {
-		"TwyrWebappServer": 9100
-	},
+	"port": 9100,
 	"static": {
 		"path": "./../../../static_assets",
 		"index": "/",
