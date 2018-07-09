@@ -144,7 +144,7 @@
 		"chai": "*",
 		"clinic": "^0.8.3",
 		"docdash2": "*",
-		"eslint": "^5.0.1",
+		"eslint": "^5.1.0",
 		"eslint-junit": "*",
 		"eslint-plugin-jsdoc": "^3.7.1",
 		"grunt": "^1.0.3",

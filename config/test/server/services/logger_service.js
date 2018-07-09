@@ -6,7 +6,7 @@ exports.config = {
 	"transports": {
 		"File1": {
 			"name": "File",
-			"level": "warn",
+			"level": "info",
 			"format": "json",
 			"filename": "logs/twyr-web-application.log",
 			"maxsize": 10485760,
