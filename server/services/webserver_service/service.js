@@ -44,176 +44,270 @@ class WebserverService extends TwyrBaseService {
 	 */
 	async _setup() {
 		try {
-			if(this.$server)
-				return null;
-
+			if(this.$server) return null;
 			await super._setup();
 
-			// Step 1: Require the Web Server
-			const express = require('express');
-			require('express-async-errors');
+			// Step 1: Instantiate Koa & do basic setup
+			const Koa = require('koa');
+			this.$koa = new Koa();
 
-			const acceptOverride = require('connect-acceptoverride'),
-				bodyParser = require('body-parser'),
-				compress = require('compression'),
-				cookieParser = require('cookie-parser'),
-				cors = require('cors'),
-				debounce = require('connect-debounce'),
-				device = require('express-device'),
-				engines = require('consolidate'),
-				expressLogger = require('express-winston'),
-				flash = require('connect-flash'),
-				fs = require('fs-extra'),
-				helmet = require('helmet'),
-				httpContext = require('express-http-context'),
-				methodOverride = require('method-override'),
-				moment = require('moment'),
-				path = require('path'),
-				poweredBy = require('connect-powered-by'),
-				serveStatic = require('serve-static'),
-				serverDestroy = require('server-destroy'),
-				session = require('express-session'),
-				timeout = require('connect-timeout'),
-				uuid = require('uuid/v4');
+			this.$koa.proxy = ((twyrEnv !== 'development') && (twyrEnv !== 'test'));
 
-			const overloadProtection = require('overload-protection')('express');
+			const requestId = require('koa-requestid');
+			this.$koa.use(requestId({
+				'expose': 'X-Request-Id',
+				'header': 'X-Request-Id',
+				'query': 'requestId'
+			}));
+			this.$koa.use(async (ctxt, next) => {
+				ctxt.request.headers['x-request-id'] = ctxt.state.id;
+				ctxt.set('x-powered-by', this.$config.poweredBy);
 
-			// Step 2: Setup CORS configuration
-			const corsOptions = {
-				'origin': (origin, corsCallback) => {
-					if(!this.$config.corsAllowedDomains) {
-						if(corsCallback) corsCallback(null, true);
-						return;
-					}
-
-					const isAllowedOrigin = (this.$config.corsAllowedDomains.indexOf(origin) !== -1);
-					if(corsCallback) corsCallback(null, isAllowedOrigin);
-				},
-
-				'credentials': true
-			};
-
-			// Step 3: Setup Session Store, etc.
-			const SessionStore = require(`connect-${this.$config.session.store.media}`)(session);
-			const _sessionStore = new SessionStore({
-				'client': this.$dependencies.CacheService,
-				'prefix': this.$config.session.store.prefix,
-				'ttl': this.$config.session.ttl
+				await next();
 			});
 
-			this.$config.cookieParser.maxAge = moment().add(10, 'year').valueOf();
-			const _cookieParser = cookieParser(this.$config.session.secret, this.$config.cookieParser);
-			const _session = session({
-				'cookie': this.$config.cookieParser,
-				'key': this.$config.session.key,
-				'secret': this.$config.session.secret,
-				'store': _sessionStore,
-				'saveUninitialized': false,
-				'resave': false,
+			// Step 2: Compressor for large response payloads
+			const compressor = require('koa-compress');
+			this.$koa.use(compressor({
+				'threshold': 4096
+			}));
 
-				'genid': () => {
-					return uuid().toString();
+			// Step 3: Logger for auditing...
+			const koaLogger = require('koa2-winston').logger;
+			this.$koa.use(koaLogger({
+				'resSelect': ['body'],
+				'logger': this.$dependencies.LoggerService
+			}));
+
+			// Step 4: Handle the bloody errors...
+			this.$koa.use(async (ctxt, next) => {
+				try {
+					await next();
+				}
+				catch(err) {
+					let error = err;
+					if(error && !(error instanceof TwyrSrvcError)) { // eslint-disable-line curly
+						error = new TwyrSrvcError(`Web Request Error: `, err);
+					}
+
+					ctxt.type = 'application/json; charset=utf-8';
+					ctxt.status = error.code || error.number || 500;
+					ctxt.body = error.toString().split('\n');
+
+					ctxt.app.emit('error', error, ctxt);
+				}
+				finally {
+					if(this.$config.protocol === 'http2')
+						delete ctxt.status;
 				}
 			});
 
-			// Step 4: Setup Express
-			const webServer = express();
-			this.$express = webServer;
+			// Step 5: Security middlewares, Rate Limiters, first
+			const koaCors = require('@koa/cors');
+			this.$koa.use(koaCors({
+				'credentials': true,
+				'keepHeadersOnError': true,
 
-			webServer.set('view engine', this.$config.templateEngine);
-			webServer.engine(this.$config.templateEngine, engines[this.$config.templateEngine]);
+				'origin': (ctx) => {
+					return (ctx.hostname.indexOf('twyr.com') >= 0);
+				}
+			}));
 
-			if(this.$config.cookieParser.secure)
-				webServer.set('trust proxy', 1);
-
-			webServer
-			.use(overloadProtection)
-			.use(async (request, response, next) => {
-				request.twyrRequestId = request.headers['x-request-id'] || uuid().toString();
-				request.headers['x-request-id'] = request.twyrRequestId;
-
-				response.set('x-request-id', request.twyrRequestId);
-				next();
-			})
-			.use(debounce())
-			.use(cors(corsOptions))
-			.use(expressLogger.logger({
-				'winstonInstance': this.$dependencies.LoggerService,
-				'level': this.$config.requestLogLevel || 'silly',
-				'colorize': true,
-				'meta': true
-			}))
 			// TODO: Enable proper Content-Security-Policy once we're done with figuring out where we get stuff from
 			// And add a CSP report uri, as well
-			.use(poweredBy(this.$config.poweredBy))
-			.use(helmet({
+			const koaHelmet = require('koa-helmet');
+			this.$koa.use(koaHelmet({
 				'hidePoweredBy': false,
 				'hpkp': (twyrEnv !== 'development' && twyrEnv !== 'test'),
 				'hsts': (twyrEnv !== 'development' && twyrEnv !== 'test')
-			}))
-			.use(acceptOverride())
-			.use(methodOverride())
-			.use(flash())
-			.use(compress())
-			.use(_cookieParser)
-			.use(_session)
-			.use(device.capture())
-			.use(this.$dependencies.LocalizationService.init)
-			.use(async (request, response, next) => {
-				response.cookie('twyr-webapp-locale', request.getLocale(), this.$config.cookieParser);
-				next();
-			})
-			.use(this._tenantSetter.bind(this))
-			.use(this._setupRequestResponseForAudit.bind(this))
-			.use(this._requestResponseCycleHandler.bind(this))
-			.use(this._handleOrProxytoCluster.bind(this))
-			.use(httpContext.middleware)
-			.use(async (request, response, next) => {
-				httpContext.set('twyrRequestId', request.twyrRequestId);
-				httpContext.set('user', request.user);
-				httpContext.set('tenant', request.tenant);
+			}));
 
-				next();
-			})
-			.use(this._serveTenantStaticAssets.bind(this))
-			.use(serveStatic(path.join(path.dirname(path.dirname(require.main.filename)), 'static_assets'), {
-				'index': this.$config.static.index || 'index.html',
-				'maxAge': this.$config.static.maxAge || 300
-			}))
-			.use(bodyParser.raw({
-				'limit': this.$config.maxRequestSize
-			}))
-			.use(bodyParser.urlencoded({
-				'extended': true,
-				'limit': this.$config.maxRequestSize
-			}))
-			.use(bodyParser.json({
-				'limit': this.$config.maxRequestSize
-			}))
-			.use(bodyParser.json({
-				'type': 'application/vnd.api+json',
-				'limit': this.$config.maxRequestSize
-			}))
-			.use(bodyParser.text({
-				'limit': this.$config.maxRequestSize
-			}))
-			.use(this.$dependencies.AuthService.initialize())
-			.use(this.$dependencies.AuthService.session())
-			.use(timeout(this.$config.requestTimeout * 1000));
+			const overloadProtection = require('overload-protection')('koa');
+			this.$koa.use(overloadProtection);
 
-			// Convenience....
-			device.enableDeviceHelpers(webServer);
+			const ratelimiter = require('koa-ratelimit');
+			this.$koa.use(ratelimiter({
+				'db': this.$dependencies.CacheService,
+				'duration': 60000,
+				'max': 12
+			}));
+
+			// Step 6: Add in the request modifying middlewares
+			const acceptOverride = require('koa-accept-override');
+			this.$koa.use(acceptOverride());
+
+			const methodOverride = require('koa-methodoverride');
+			this.$koa.use(methodOverride());
+
+			// Step 7: Add in the router
+			const Router = require('koa-router');
+			this.$router = new Router();
+
+			this.$koa.use(this.$router.routes());
+			this.$koa.use(this.$router.allowedMethods());
+
+			// Step 1: Require the Web Server
+			// 	bodyParser = require('body-parser'),
+			// 	compress = require('compression'),
+			// 	cookieParser = require('cookie-parser'),
+			// 	cors = require('cors'),
+			// 	debounce = require('connect-debounce'),
+			// 	device = require('express-device'),
+			// 	engines = require('consolidate'),
+			// 	expressLogger = require('express-winston'),
+			// 	flash = require('connect-flash'),
+			// 	fs = require('fs-extra'),
+			// 	helmet = require('helmet'),
+			// 	httpContext = require('express-http-context'),
+			// 	methodOverride = require('method-override'),
+			// 	moment = require('moment'),
+			// 	poweredBy = require('connect-powered-by'),
+			// 	serveStatic = require('serve-static'),
+			// 	serverDestroy = require('server-destroy'),
+			// 	session = require('express-session'),
+			// 	timeout = require('connect-timeout'),
+			// 	uuid = require('uuid/v4');
+
+			// const overloadProtection = require('overload-protection')('express');
+
+			// // Step 2: Setup CORS configuration
+			// const corsOptions = {
+			// 	'origin': (origin, corsCallback) => {
+			// 		if(!this.$config.corsAllowedDomains) {
+			// 			if(corsCallback) corsCallback(null, true);
+			// 			return;
+			// 		}
+
+			// 		const isAllowedOrigin = (this.$config.corsAllowedDomains.indexOf(origin) !== -1);
+			// 		if(corsCallback) corsCallback(null, isAllowedOrigin);
+			// 	},
+
+			// 	'credentials': true
+			// };
+
+			// // Step 3: Setup Session Store, etc.
+			// const SessionStore = require(`connect-${this.$config.session.store.media}`)(session);
+			// const _sessionStore = new SessionStore({
+			// 	'client': this.$dependencies.CacheService,
+			// 	'prefix': this.$config.session.store.prefix,
+			// 	'ttl': this.$config.session.ttl
+			// });
+
+			// this.$config.cookieParser.maxAge = moment().add(10, 'year').valueOf();
+			// const _cookieParser = cookieParser(this.$config.session.secret, this.$config.cookieParser);
+			// const _session = session({
+			// 	'cookie': this.$config.cookieParser,
+			// 	'key': this.$config.session.key,
+			// 	'secret': this.$config.session.secret,
+			// 	'store': _sessionStore,
+			// 	'saveUninitialized': false,
+			// 	'resave': false,
+
+			// 	'genid': () => {
+			// 		return uuid().toString();
+			// 	}
+			// });
+
+			// // Step 4: Setup Express
+			// const webServer = express();
+			// this.$express = webServer;
+
+			// webServer.set('view engine', this.$config.templateEngine);
+			// webServer.engine(this.$config.templateEngine, engines[this.$config.templateEngine]);
+
+			// if(this.$config.cookieParser.secure)
+			// 	webServer.set('trust proxy', 1);
+
+			// webServer
+			// .use(overloadProtection)
+			// .use(async (request, response, next) => {
+			// 	request.twyrRequestId = request.headers['x-request-id'] || uuid().toString();
+			// 	request.headers['x-request-id'] = request.twyrRequestId;
+
+			// 	response.set('x-request-id', request.twyrRequestId);
+			// 	next();
+			// })
+			// .use(debounce())
+			// .use(cors(corsOptions))
+			// .use(expressLogger.logger({
+			// 	'winstonInstance': this.$dependencies.LoggerService,
+			// 	'level': this.$config.requestLogLevel || 'silly',
+			// 	'colorize': true,
+			// 	'meta': true
+			// }))
+			// // TODO: Enable proper Content-Security-Policy once we're done with figuring out where we get stuff from
+			// // And add a CSP report uri, as well
+			// .use(poweredBy(this.$config.poweredBy))
+			// .use(helmet({
+			// 	'hidePoweredBy': false,
+			// 	'hpkp': (twyrEnv !== 'development' && twyrEnv !== 'test'),
+			// 	'hsts': (twyrEnv !== 'development' && twyrEnv !== 'test')
+			// }))
+			// .use(acceptOverride())
+			// .use(methodOverride())
+			// .use(flash())
+			// .use(compress())
+			// .use(_cookieParser)
+			// .use(_session)
+			// .use(device.capture())
+			// .use(this.$dependencies.LocalizationService.init)
+			// .use(async (request, response, next) => {
+			// 	response.cookie('twyr-webapp-locale', request.getLocale(), this.$config.cookieParser);
+			// 	next();
+			// })
+			// .use(this._tenantSetter.bind(this))
+			// .use(this._setupRequestResponseForAudit.bind(this))
+			// .use(this._requestResponseCycleHandler.bind(this))
+			// .use(this._handleOrProxytoCluster.bind(this))
+			// .use(httpContext.middleware)
+			// .use(async (request, response, next) => {
+			// 	httpContext.set('twyrRequestId', request.twyrRequestId);
+			// 	httpContext.set('user', request.user);
+			// 	httpContext.set('tenant', request.tenant);
+
+			// 	next();
+			// })
+			// .use(this._serveTenantStaticAssets.bind(this))
+			// .use(serveStatic(path.join(path.dirname(path.dirname(require.main.filename)), 'static_assets'), {
+			// 	'index': this.$config.static.index || 'index.html',
+			// 	'maxAge': this.$config.static.maxAge || 300
+			// }))
+			// .use(bodyParser.raw({
+			// 	'limit': this.$config.maxRequestSize
+			// }))
+			// .use(bodyParser.urlencoded({
+			// 	'extended': true,
+			// 	'limit': this.$config.maxRequestSize
+			// }))
+			// .use(bodyParser.json({
+			// 	'limit': this.$config.maxRequestSize
+			// }))
+			// .use(bodyParser.json({
+			// 	'type': 'application/vnd.api+json',
+			// 	'limit': this.$config.maxRequestSize
+			// }))
+			// .use(bodyParser.text({
+			// 	'limit': this.$config.maxRequestSize
+			// }))
+			// .use(this.$dependencies.AuthService.initialize())
+			// .use(this.$dependencies.AuthService.session())
+			// .use(timeout(this.$config.requestTimeout * 1000));
+
+			// // Convenience....
+			// device.enableDeviceHelpers(webServer);
 
 			// Step 5: Create the Server
 			this.$config.protocol = this.$config.protocol || 'http';
 			const protocol = require(this.$config.protocol || 'http');
 
+			const fs = require('fs');
+			const path = require('path');
 			const promises = require('bluebird');
+
 			const filesystem = promises.promisifyAll(fs);
 
-			let server = undefined;
 			if(this.$config.protocol === 'http') { // eslint-disable-line curly
-				server = protocol.createServer(webServer);
+				this.$server = protocol.createServer(this.$koa.callback());
 			}
 
 			if((this.$config.protocol === 'https') || this.$config.protocol === 'spdy') {
@@ -223,32 +317,85 @@ class WebserverService extends TwyrBaseService {
 				this.$config.secureProtocols[this.$config.protocol].key = secureKey;
 				this.$config.secureProtocols[this.$config.protocol].cert = secureCert;
 
-				server = protocol.createServer(this.$config.secureProtocols[this.$config.protocol], webServer);
+				this.$server = protocol.createServer(this.$config.secureProtocols[this.$config.protocol], this.$koa.callback());
 			}
 
-			// TODO: Enable whenever Express starts supporting the HTTP2 style "context" [instead of the HTTP/1.1 request / response]
+			if(this.$config.protocol === 'http2') {
+				const secureKey = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].key) ? this.$config.secureProtocols[this.$config.protocol].key : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].key));
+				const secureCert = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].cert) ? this.$config.secureProtocols[this.$config.protocol].cert : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].cert));
+
+				this.$config.secureProtocols[this.$config.protocol].key = secureKey;
+				this.$config.secureProtocols[this.$config.protocol].cert = secureCert;
+
+				this.$server = protocol.createSecureServer(this.$config.secureProtocols[this.$config.protocol], this.$koa.callback());
+			}
+
+			// For whenever we do decide to use Let's encrypt
+			// if((this.$config.protocol === 'https') || this.$config.protocol === 'spdy') {
+			// 	const acmeConfig = JSON.parse(JSON.stringify(this.$config.acme));
+			// 	delete acmeConfig.challengeDir;
+
+			// 	acmeConfig.debug = ((twyrEnv === 'development') || (twyrEnv === 'test'));
+			// 	acmeConfig.configDir = path.isAbsolute(acmeConfig.configDir) ? acmeConfig.configDir : path.join(path.dirname(path.dirname(require.main.filename)), acmeConfig.configDir);
+
+			// 	acmeConfig.server = acmeConfig.server[twyrEnv] || acmeConfig.server['default'];
+			// 	acmeConfig.approveDomains = this._approveDomains.bind(this);
+
+			// 	acmeConfig.challenges = {
+			// 		'dns-01': require('le-challenge-ddns').create({
+			// 			'email': acmeConfig.email,
+			// 			'ttl': 600,
+			// 			'debug': acmeConfig.debug
+			// 		})
+			// 	};
+
+			// 	acmeConfig.challengeType = 'dns-01';
+			// 	acmeConfig.challenge = acmeConfig.challenges[acmeConfig.challengeType];
+
+			// 	const greenlock = require('greenlock-koa').create(acmeConfig);
+			// 	this.$server = protocol.createServer(greenlock.tlsOptions, greenlock.middleware(this.$koa.callback()));
+			// }
+
 			// if(this.$config.protocol === 'http2') {
-			// 	const secureKey = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].key) ? this.$config.secureProtocols[this.$config.protocol].key : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].key));
-			// 	const secureCert = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].cert) ? this.$config.secureProtocols[this.$config.protocol].cert : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].cert));
+			// 	const acmeConfig = JSON.parse(JSON.stringify(this.$config.acme));
+			// 	delete acmeConfig.challengeDir;
 
-			// 	this.$config.secureProtocols[this.$config.protocol].key = secureKey;
-			// 	this.$config.secureProtocols[this.$config.protocol].cert = secureCert;
+			// 	acmeConfig.debug = ((twyrEnv === 'development') || (twyrEnv === 'test'));
+			// 	acmeConfig.configDir = path.isAbsolute(acmeConfig.configDir) ? acmeConfig.configDir : path.join(path.dirname(path.dirname(require.main.filename)), acmeConfig.configDir);
 
-			// 	server = protocol.createSecureServer(this.$config.secureProtocols[this.$config.protocol], webServer);
+			// 	acmeConfig.server = acmeConfig.server[twyrEnv] || acmeConfig.server['default'];
+			// 	acmeConfig.approveDomains = this._approveDomains.bind(this);
+
+			// 	acmeConfig.challenges = {
+			// 		'dns-01': require('le-challenge-ddns').create({
+			// 			'email': acmeConfig.email,
+			// 			'ttl': 600,
+			// 			'debug': acmeConfig.debug
+			// 		})
+			// 	};
+
+			// 	acmeConfig.challengeType = 'dns-01';
+			// 	acmeConfig.challenge = acmeConfig.challenges[acmeConfig.challengeType];
+
+			// 	const greenlock = require('greenlock-koa').create(acmeConfig);
+			// 	this.$server = protocol.createSecureServer(greenlock.tlsOptions, greenlock.middleware(this.$koa.callback()));
 			// }
 
 			// Add utility to force-stop server
-			serverDestroy(server);
+			const serverDestroy = require('server-destroy');
+			serverDestroy(this.$server);
 
 			// Start listening to events
-			server.on('connection', this._serverConnection.bind(this));
-			server.on('error', this._serverError.bind(this));
+			this.$server.on('connection', this._serverConnection.bind(this));
+
+			this.$koa.on('error', this._handleKoaError.bind(this));
+			this.$server.on('error', this._serverError.bind(this));
 
 			// Step 6: Setup the server to listen to requests forwarded via Ringpop, just in case
 			this.$dependencies.RingpopService.on('request', this._processRequestFromAnotherNode.bind(this));
 
 			// Finally, Start listening...
-			this.$server = promises.promisifyAll(server);
+			this.$server = promises.promisifyAll(this.$server);
 			this.$parent.once('server-online', this._listenAndPrintNetworkInterfaces.bind(this));
 
 			return null;
@@ -280,11 +427,14 @@ class WebserverService extends TwyrBaseService {
 			}
 
 			this.$server.off('connection', this._serverConnection.bind(this));
+
 			this.$server.off('error', this._serverError.bind(this));
+			this.$koa.off('error', this._handleKoaError.bind(this));
 
-			this.$express._router.stack.length = 0;
+			this.$router.stack.length = 0;
 
-			delete this.$express;
+			delete this.$router;
+			delete this.$koa;
 			delete this.$server;
 
 			await super._teardown();
@@ -584,7 +734,7 @@ class WebserverService extends TwyrBaseService {
 
 			const hostPort = [];
 			hostPort.push(ringpop.lookup(request.tenant.id).split(':').shift());
-			hostPort.push(this.$config.port || 9090);
+			hostPort.push(this.$config.port || 9100);
 
 			const dest = `${this.$config.protocol}://${hostPort.filter((val) => { return !!val; }).join(':')}${request.path}`;
 
@@ -650,14 +800,15 @@ class WebserverService extends TwyrBaseService {
 	 * @memberof ExpressService
 	 * @name     _processRequestFromAnotherNode
 	 *
+	 * @param    {Object} request - Request coming in from the outside world.
+	 * @param    {Object} response - Response going out to the outside world.
+	 *
 	 * @returns  {undefined} Nothing.
 	 *
 	 * @summary  Returns a function that can handle the request coming in from another Ringpop node.
 	 */
-	_processRequestFromAnotherNode() {
-		return (request, response) => {
-			response.end();
-		};
+	_processRequestFromAnotherNode(request, response) {
+		response.end();
 	}
 	// #endregion
 
@@ -675,6 +826,18 @@ class WebserverService extends TwyrBaseService {
 		}
 
 		this.$dependencies.LoggerService.error(`${this.name}::_serverError\n\n${error.toString()}`);
+	}
+
+	_handleKoaError(err, ctxt) {
+		let error = err;
+
+		// eslint-disable-next-line curly
+		if(error && !(error instanceof TwyrSrvcError)) {
+			error = new TwyrSrvcError(`${this.name}::_handleKoaError`, error);
+		}
+
+		// TODO: Stop Logging! Send it to the Audit Service for centralized logging!!
+		this.$dependencies.LoggerService.error(`${this.name}::_handleKoaError\n\n${error.toString()}`);
 	}
 
 	async _listenAndPrintNetworkInterfaces() {
@@ -709,7 +872,7 @@ class WebserverService extends TwyrBaseService {
 	 */
 	get Interface() {
 		return {
-			'Router': this.$express,
+			'Router': this.$router,
 			'Server': this.$server
 		};
 	}

@@ -81,45 +81,14 @@ class WebsocketService extends TwyrBaseService {
 
 			await super._setup();
 
-			const PrimusRooms = require('primus-rooms'),
-				PrimusServer = require('primus');
-
-			const cookieParser = require('cookie-parser'),
-				device = require('express-device'),
-				moment = require('moment'),
-				session = require('express-session'),
-				uuid = require('uuid/v4');
-
-			const SessionStore = require(`connect-${this.$config.session.store.media}`)(session);
-			const _sessionStore = new SessionStore({
-				'client': this.$dependencies.CacheService,
-				'prefix': this.$config.session.store.prefix,
-				'ttl': this.$config.session.ttl
-			});
-
-			this.$config.cookieParser.maxAge = moment().add(10, 'year').valueOf();
-			const _cookieParser = cookieParser(this.$config.session.secret, this.$config.cookieParser);
-			const _session = session({
-				'cookie': this.$config.cookieParser,
-				'key': this.$config.session.key,
-				'secret': this.$config.session.secret,
-				'store': _sessionStore,
-				'saveUninitialized': false,
-				'resave': false,
-
-				'genid': () => {
-					return uuid().toString().replace(/-/g, '');
-				}
-			});
+			const PrimusRooms = require('primus-rooms');
+			const PrimusServer = require('primus');
 
 			// Step 1: Setup the realtime streaming server
 			const thisConfig = JSON.parse(JSON.stringify(this.$config.primus));
 			this.$websocketServer = new PrimusServer(this.$dependencies.WebserverService.Server, thisConfig);
 
 			// Step 2: Put in the middlewares we need
-			this.$websocketServer.use('cookieParser', _cookieParser, undefined, 0);
-			this.$websocketServer.use('session', _session, undefined, 1);
-			this.$websocketServer.use('device', device.capture(), undefined, 2);
 			this.$websocketServer.use('passportInit', this.$dependencies.AuthService.initialize(), undefined, 3);
 			this.$websocketServer.use('passportSession', this.$dependencies.AuthService.session(), undefined, 4);
 
@@ -186,7 +155,7 @@ class WebsocketService extends TwyrBaseService {
 	}
 
 	async _websocketServerInitialised(transformer, parser, options) { // eslint-disable-line
-		if(twyrEnv !== 'development')
+		if((twyrEnv !== 'development') && (twyrEnv !== 'test'))
 			return;
 
 		await snooze(1000);

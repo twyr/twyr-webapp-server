@@ -1,6 +1,10 @@
-# Presonal configs
+# Personal configs
 config/development
 config/production
+
+# Let's Encrypt
+acme/certificates/accounts
+acme/certificates/live
 
 # Logs
 logs/*.log

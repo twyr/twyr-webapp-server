@@ -85,7 +85,7 @@ class TwyrApplication extends TwyrBaseModule {
 			// TODO: Remove TEST STUFF!
 			await this._setupWebserverRoutes();
 			await this._doDBSanityCheck();
-			await this._doStorageSanityCheck();
+			// await this._doStorageSanityCheck();
 
 			this.emit('server-online');
 		}
@@ -189,8 +189,8 @@ class TwyrApplication extends TwyrBaseModule {
 			if(subModule.name === 'DatabaseService')
 				await this._doDBSanityCheck();
 
-			if(subModule.name === 'StorageService')
-				await this._doStorageSanityCheck();
+			// if(subModule.name === 'StorageService')
+			// 	await this._doStorageSanityCheck();
 		}
 		catch(err) {
 			throw new TwyrBaseError(`${this.name}::start error`, err);
@@ -202,22 +202,12 @@ class TwyrApplication extends TwyrBaseModule {
 	async _setupWebserverRoutes() {
 		const koaRouter = this.$services.WebserverService.Interface.Router;
 
-		koaRouter.use(async (request, response) => {
-			const respString = { 'message': `${this.name}::${request.originalUrl}` };
-			response.status(200).json(respString);
-		});
+		koaRouter.all('/', async (ctxt) => {
+			const response = { 'message': `${this.name}::${ctxt.originalUrl}` };
 
-		koaRouter.use(async (error, request, response, next) => {
-			if(response.finished)
-				return;
-
-			if(request.xhr) {
-				response.status(403).send(error.message);
-				return;
-			}
-
-			next(error);
-			return;
+			ctxt.status = 200;
+			ctxt.type = 'application/json; charset=utf-8';
+			ctxt.body = response;
 		});
 
 		return;
@@ -233,15 +223,15 @@ class TwyrApplication extends TwyrBaseModule {
 		console.table(modules.rows);
 	}
 
-	async _doStorageSanityCheck() {
-		if(twyrEnv !== 'development' && twyrEnv !== 'test')
-			return;
+	// async _doStorageSanityCheck() {
+	// 	if(twyrEnv !== 'development' && twyrEnv !== 'test')
+	// 		return;
 
-		const storageSrvc = this.$services.StorageService.Interface;
-		const fileContents = await storageSrvc.readFileAsync('.gitkeep');
+	// 	const storageSrvc = this.$services.StorageService.Interface;
+	// 	const fileContents = await storageSrvc.readFileAsync('.gitkeep');
 
-		console.log(`.gitkeep::contents: ${fileContents}`);
-	}
+	// 	console.log(`.gitkeep::contents: ${fileContents}`);
+	// }
 	// #endregion
 
 	// #region Properties
