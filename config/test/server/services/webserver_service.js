@@ -5,6 +5,13 @@ exports.config = {
 	"version": "3.0.1",
 	"poweredBy": "Twyr Portal",
 
+	"connectionTimeout": 120,
+	"logLevel": "silly",
+
+	"honeyPot": {
+		"apiKey": "YOUR_API_KEY"
+	},
+
 	"secureProtocols": {
 		"https": {
 			"key": "./ssl/server.key",
@@ -26,7 +33,20 @@ exports.config = {
 		}
 	},
 
-	"connectionTimeout": 120,
+	"session": {
+		"domain": ".twyr.com",
+		"keys": ["Th1s!sTheTwyrWebAppFramew0rk"],
+
+		"config": {
+			"key": "twyr!webapp!server",
+			"maxAge": 86400000,
+			"overwrite": true,
+			"httpOnly": false,
+			"signed": true,
+			"rolling": false,
+			"renew": false
+		}
+	},
 
 	"subdomainMappings": {
 		"cloud-portal": "www",

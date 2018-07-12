@@ -10,6 +10,8 @@
  * @ignore
  */
 const TwyrBaseService = require('twyr-base-service').TwyrBaseService;
+
+const TwyrBaseError = require('twyr-base-error').TwyrBaseError;
 const TwyrSrvcError = require('twyr-service-error').TwyrServiceError;
 
 /**
@@ -35,7 +37,7 @@ class WebserverService extends TwyrBaseService {
 	 * @function
 	 * @override
 	 * @instance
-	 * @memberof ExpressService
+	 * @memberof WebserverService
 	 * @name     _setup
 	 *
 	 * @returns  {null} Nothing.
@@ -47,11 +49,13 @@ class WebserverService extends TwyrBaseService {
 			if(this.$server) return null;
 			await super._setup();
 
-			// Step 1: Instantiate Koa & do basic setup
+			// Step 1.1: Instantiate Koa & do basic setup
 			const Koa = require('koa');
-			this.$koa = new Koa();
+			const promises = require('bluebird');
 
+			this.$koa = new Koa();
 			this.$koa.proxy = ((twyrEnv !== 'development') && (twyrEnv !== 'test'));
+			this.$koa.keys = this.$config.session.keys;
 
 			const requestId = require('koa-requestid');
 			this.$koa.use(requestId({
@@ -59,6 +63,7 @@ class WebserverService extends TwyrBaseService {
 				'header': 'X-Request-Id',
 				'query': 'requestId'
 			}));
+
 			this.$koa.use(async (ctxt, next) => {
 				ctxt.request.headers['x-request-id'] = ctxt.state.id;
 				ctxt.set('x-powered-by', this.$config.poweredBy);
@@ -66,28 +71,32 @@ class WebserverService extends TwyrBaseService {
 				await next();
 			});
 
-			// Step 2: Compressor for large response payloads
+			// Step 1.2: Compressor for large response payloads
 			const compressor = require('koa-compress');
 			this.$koa.use(compressor({
 				'threshold': 4096
 			}));
 
-			// Step 3: Logger for auditing...
+			// Step 1.3: Twyr Auditing & Logger for auditing...
+			this.$koa.use(this._auditLog.bind(this));
+
 			const koaLogger = require('koa2-winston').logger;
 			this.$koa.use(koaLogger({
+				'level': this.$config.logLevel,
+				'reqSelect': ['body'],
 				'resSelect': ['body'],
 				'logger': this.$dependencies.LoggerService
 			}));
 
-			// Step 4: Handle the bloody errors...
+			// Step 1.4: Handle the bloody errors...
 			this.$koa.use(async (ctxt, next) => {
 				try {
 					await next();
 				}
 				catch(err) {
 					let error = err;
-					if(error && !(error instanceof TwyrSrvcError)) { // eslint-disable-line curly
-						error = new TwyrSrvcError(`Web Request Error: `, err);
+					if(error && !(error instanceof TwyrBaseError)) { // eslint-disable-line curly
+						error = new TwyrBaseError(`Web Request Error: `, err);
 					}
 
 					ctxt.type = 'application/json; charset=utf-8';
@@ -102,7 +111,30 @@ class WebserverService extends TwyrBaseService {
 				}
 			});
 
-			// Step 5: Security middlewares, Rate Limiters, first
+			// Step 1.5: Security middlewares, Rate Limiters, etc. - first
+			const overloadProtection = require('overload-protection')('koa');
+			this.$koa.use(overloadProtection);
+
+			const ratelimiter = require('koa-ratelimit');
+			this.$koa.use(ratelimiter({
+				'db': this.$dependencies.CacheService,
+				'duration': 60000,
+				'max': 12
+			}));
+
+			if(twyrEnv === 'production') {
+				const honeypot = promises.promisifyAll(require('project-honeypot')(this.$config.honeyPot.apiKey));
+				this.$koa.use(async (ctxt, next) => {
+					const honeyPayload = await honeypot.queryAsync(ctxt.ip);
+					if(!honeyPayload.found) {
+						await next();
+						return;
+					}
+
+					throw new URIError(`Blacklisted Request IP Address!`);
+				});
+			}
+
 			const koaCors = require('@koa/cors');
 			this.$koa.use(koaCors({
 				'credentials': true,
@@ -122,189 +154,70 @@ class WebserverService extends TwyrBaseService {
 				'hsts': (twyrEnv !== 'development' && twyrEnv !== 'test')
 			}));
 
-			const overloadProtection = require('overload-protection')('koa');
-			this.$koa.use(overloadProtection);
-
-			const ratelimiter = require('koa-ratelimit');
-			this.$koa.use(ratelimiter({
-				'db': this.$dependencies.CacheService,
-				'duration': 60000,
-				'max': 12
-			}));
-
-			// Step 6: Add in the request modifying middlewares
+			// Step 1.6: Add in the request modifying middlewares
 			const acceptOverride = require('koa-accept-override');
 			this.$koa.use(acceptOverride());
 
 			const methodOverride = require('koa-methodoverride');
 			this.$koa.use(methodOverride());
 
-			// Step 7: Add in the router
+			const device = require('device');
+			this.$koa.use(async (ctxt, next) => {
+				ctxt.state.device = device(ctxt.req.headers['user-agent'] || '');
+				await next();
+			});
+
+			// Step 1.7: Set Tenant, Session, etc.
+			const koaSession = require('koa-session');
+			const KoaSessionStore = require('koa-redis');
+
+			this.$config.session.config.store = new KoaSessionStore({
+				'client': this.$dependencies.CacheService
+			});
+
+			this.$config.session.config.genid = function() {
+				const uuid = require('uuid/v4');
+				return `twyr!webapp!server!${uuid()}`;
+			};
+
+			this.$koa.use(koaSession(this.$config.session.config, this.$koa));
+			this.$koa.use(this._setTenant.bind(this));
+
+			// Step 1.8: Before proceeding further, check if this node will process this...
+			this.$koa.use(this._handleOrProxytoCluster.bind(this));
+
+			// Step 1.9: The body parser...
+			const koaBodyParser = require('koa-bodyparser');
+			this.$koa.use(koaBodyParser({
+				'extendTypes': {
+					'json': ['application/x-javascript', 'application/json', 'application/vnd.api+json']
+				}
+			}));
+
+			// Step 1.10: Passport based authentication
+			this.$koa.use(this.$dependencies.AuthService.initialize());
+			this.$koa.use(this.$dependencies.AuthService.session());
+
+			// Step 1.11: Static Assets / Favicon / etc.
+			// .use(this._serveTenantStaticAssets.bind(this))
+			// .use(serveStatic(path.join(path.dirname(path.dirname(require.main.filename)), 'static_assets'), {
+			// 	'index': this.$config.static.index || 'index.html',
+			// 	'maxAge': this.$config.static.maxAge || 300
+			// }))
+
+			// Step 1.12: Add in the router
 			const Router = require('koa-router');
 			this.$router = new Router();
 
 			this.$koa.use(this.$router.routes());
 			this.$koa.use(this.$router.allowedMethods());
 
-			// Step 1: Require the Web Server
-			// 	bodyParser = require('body-parser'),
-			// 	compress = require('compression'),
-			// 	cookieParser = require('cookie-parser'),
-			// 	cors = require('cors'),
-			// 	debounce = require('connect-debounce'),
-			// 	device = require('express-device'),
-			// 	engines = require('consolidate'),
-			// 	expressLogger = require('express-winston'),
-			// 	flash = require('connect-flash'),
-			// 	fs = require('fs-extra'),
-			// 	helmet = require('helmet'),
-			// 	httpContext = require('express-http-context'),
-			// 	methodOverride = require('method-override'),
-			// 	moment = require('moment'),
-			// 	poweredBy = require('connect-powered-by'),
-			// 	serveStatic = require('serve-static'),
-			// 	serverDestroy = require('server-destroy'),
-			// 	session = require('express-session'),
-			// 	timeout = require('connect-timeout'),
-			// 	uuid = require('uuid/v4');
-
-			// const overloadProtection = require('overload-protection')('express');
-
-			// // Step 2: Setup CORS configuration
-			// const corsOptions = {
-			// 	'origin': (origin, corsCallback) => {
-			// 		if(!this.$config.corsAllowedDomains) {
-			// 			if(corsCallback) corsCallback(null, true);
-			// 			return;
-			// 		}
-
-			// 		const isAllowedOrigin = (this.$config.corsAllowedDomains.indexOf(origin) !== -1);
-			// 		if(corsCallback) corsCallback(null, isAllowedOrigin);
-			// 	},
-
-			// 	'credentials': true
-			// };
-
-			// // Step 3: Setup Session Store, etc.
-			// const SessionStore = require(`connect-${this.$config.session.store.media}`)(session);
-			// const _sessionStore = new SessionStore({
-			// 	'client': this.$dependencies.CacheService,
-			// 	'prefix': this.$config.session.store.prefix,
-			// 	'ttl': this.$config.session.ttl
-			// });
-
-			// this.$config.cookieParser.maxAge = moment().add(10, 'year').valueOf();
-			// const _cookieParser = cookieParser(this.$config.session.secret, this.$config.cookieParser);
-			// const _session = session({
-			// 	'cookie': this.$config.cookieParser,
-			// 	'key': this.$config.session.key,
-			// 	'secret': this.$config.session.secret,
-			// 	'store': _sessionStore,
-			// 	'saveUninitialized': false,
-			// 	'resave': false,
-
-			// 	'genid': () => {
-			// 		return uuid().toString();
-			// 	}
-			// });
-
-			// // Step 4: Setup Express
-			// const webServer = express();
-			// this.$express = webServer;
-
-			// webServer.set('view engine', this.$config.templateEngine);
-			// webServer.engine(this.$config.templateEngine, engines[this.$config.templateEngine]);
-
-			// if(this.$config.cookieParser.secure)
-			// 	webServer.set('trust proxy', 1);
-
-			// webServer
-			// .use(overloadProtection)
-			// .use(async (request, response, next) => {
-			// 	request.twyrRequestId = request.headers['x-request-id'] || uuid().toString();
-			// 	request.headers['x-request-id'] = request.twyrRequestId;
-
-			// 	response.set('x-request-id', request.twyrRequestId);
-			// 	next();
-			// })
-			// .use(debounce())
-			// .use(cors(corsOptions))
-			// .use(expressLogger.logger({
-			// 	'winstonInstance': this.$dependencies.LoggerService,
-			// 	'level': this.$config.requestLogLevel || 'silly',
-			// 	'colorize': true,
-			// 	'meta': true
-			// }))
-			// // TODO: Enable proper Content-Security-Policy once we're done with figuring out where we get stuff from
-			// // And add a CSP report uri, as well
-			// .use(poweredBy(this.$config.poweredBy))
-			// .use(helmet({
-			// 	'hidePoweredBy': false,
-			// 	'hpkp': (twyrEnv !== 'development' && twyrEnv !== 'test'),
-			// 	'hsts': (twyrEnv !== 'development' && twyrEnv !== 'test')
-			// }))
-			// .use(acceptOverride())
-			// .use(methodOverride())
-			// .use(flash())
-			// .use(compress())
-			// .use(_cookieParser)
-			// .use(_session)
-			// .use(device.capture())
-			// .use(this.$dependencies.LocalizationService.init)
-			// .use(async (request, response, next) => {
-			// 	response.cookie('twyr-webapp-locale', request.getLocale(), this.$config.cookieParser);
-			// 	next();
-			// })
-			// .use(this._tenantSetter.bind(this))
-			// .use(this._setupRequestResponseForAudit.bind(this))
-			// .use(this._requestResponseCycleHandler.bind(this))
-			// .use(this._handleOrProxytoCluster.bind(this))
-			// .use(httpContext.middleware)
-			// .use(async (request, response, next) => {
-			// 	httpContext.set('twyrRequestId', request.twyrRequestId);
-			// 	httpContext.set('user', request.user);
-			// 	httpContext.set('tenant', request.tenant);
-
-			// 	next();
-			// })
-			// .use(this._serveTenantStaticAssets.bind(this))
-			// .use(serveStatic(path.join(path.dirname(path.dirname(require.main.filename)), 'static_assets'), {
-			// 	'index': this.$config.static.index || 'index.html',
-			// 	'maxAge': this.$config.static.maxAge || 300
-			// }))
-			// .use(bodyParser.raw({
-			// 	'limit': this.$config.maxRequestSize
-			// }))
-			// .use(bodyParser.urlencoded({
-			// 	'extended': true,
-			// 	'limit': this.$config.maxRequestSize
-			// }))
-			// .use(bodyParser.json({
-			// 	'limit': this.$config.maxRequestSize
-			// }))
-			// .use(bodyParser.json({
-			// 	'type': 'application/vnd.api+json',
-			// 	'limit': this.$config.maxRequestSize
-			// }))
-			// .use(bodyParser.text({
-			// 	'limit': this.$config.maxRequestSize
-			// }))
-			// .use(this.$dependencies.AuthService.initialize())
-			// .use(this.$dependencies.AuthService.session())
-			// .use(timeout(this.$config.requestTimeout * 1000));
-
-			// // Convenience....
-			// device.enableDeviceHelpers(webServer);
-
-			// Step 5: Create the Server
+			// Step 2.1: Create the Server
 			this.$config.protocol = this.$config.protocol || 'http';
 			const protocol = require(this.$config.protocol || 'http');
 
-			const fs = require('fs');
 			const path = require('path');
-			const promises = require('bluebird');
-
-			const filesystem = promises.promisifyAll(fs);
+			const filesystem = promises.promisifyAll(require('fs'));
 
 			if(this.$config.protocol === 'http') { // eslint-disable-line curly
 				this.$server = protocol.createServer(this.$koa.callback());
@@ -381,17 +294,17 @@ class WebserverService extends TwyrBaseService {
 			// 	this.$server = protocol.createSecureServer(greenlock.tlsOptions, greenlock.middleware(this.$koa.callback()));
 			// }
 
-			// Add utility to force-stop server
+			// Step 2.2: Add utility to force-stop server
 			const serverDestroy = require('server-destroy');
 			serverDestroy(this.$server);
 
-			// Start listening to events
+			// Step 2.3: Start listening to events
 			this.$server.on('connection', this._serverConnection.bind(this));
 
 			this.$koa.on('error', this._handleKoaError.bind(this));
 			this.$server.on('error', this._serverError.bind(this));
 
-			// Step 6: Setup the server to listen to requests forwarded via Ringpop, just in case
+			// Step 2.4: Setup the server to listen to requests forwarded via Ringpop, just in case
 			this.$dependencies.RingpopService.on('request', this._processRequestFromAnotherNode.bind(this));
 
 			// Finally, Start listening...
@@ -410,7 +323,7 @@ class WebserverService extends TwyrBaseService {
 	 * @function
 	 * @override
 	 * @instance
-	 * @memberof ExpressService
+	 * @memberof WebserverService
 	 * @name     _teardown
 	 *
 	 * @returns  {undefined} Nothing.
@@ -451,29 +364,28 @@ class WebserverService extends TwyrBaseService {
 	 * @async
 	 * @function
 	 * @instance
-	 * @memberof ExpressService
-	 * @name     _tenantSetter
+	 * @memberof WebserverService
+	 * @name     _setTenant
 	 *
-	 * @param    {Object} request - Request coming in from the outside world.
-	 * @param    {Object} response - Response going out to the outside world.
+	 * @param    {Object} ctxt - Koa context.
 	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
 	 *
 	 * @returns  {undefined} Nothing.
 	 *
 	 * @summary  Sets up the tenant context on each request so Ringpop knows which node in the cluster to route it to.
 	 */
-	async _tenantSetter(request, response, next) {
+	async _setTenant(ctxt, next) {
 		try {
 			const cacheSrvc = this.$dependencies.CacheService,
 				dbSrvc = this.$dependencies.DatabaseService.knex;
 
-			let tenantSubDomain = request.hostname.replace(this.$config.cookieParser.domain, '');
+			let tenantSubDomain = ctxt.hostname.replace(this.$config.session.domain, '');
 			if(this.$config.subdomainMappings && this.$config.subdomainMappings[tenantSubDomain])
 				tenantSubDomain = this.$config.subdomainMappings[tenantSubDomain];
 
 			let tenant = null;
-			if(request.headers['tenant']) { // eslint-disable-line curly
-				tenant = JSON.parse(request.headers['tenant']);
+			if(ctxt.get['tenant']) { // eslint-disable-line curly
+				tenant = JSON.parse(ctxt.get['tenant']);
 			}
 
 			if(!tenant) {
@@ -483,11 +395,9 @@ class WebserverService extends TwyrBaseService {
 
 			if(!tenant) {
 				tenant = await dbSrvc.raw('SELECT id, name, sub_domain FROM tenants WHERE sub_domain = ?', [tenantSubDomain]);
-				if(!tenant) throw new Error(`Invalid sub-domain: ${tenantSubDomain}`);
-				if(!tenant.rows) throw new Error(`Invalid sub-domain: ${tenantSubDomain}`);
 				if(!tenant.rows.length) throw new Error(`Invalid sub-domain: ${tenantSubDomain}`);
 
-				tenant = tenant.rows[0];
+				tenant = tenant.rows.shift();
 
 				const cacheMulti = cacheSrvc.multi();
 				cacheMulti.setAsync(`twyr!webapp!tenant!${tenantSubDomain}`, JSON.stringify(tenant));
@@ -496,104 +406,17 @@ class WebserverService extends TwyrBaseService {
 				await cacheMulti.execAsync();
 			}
 
-			request.tenant = tenant;
-			request.headers['tenant'] = JSON.stringify(tenant);
+			ctxt.state.tenant = tenant;
+			ctxt.request.headers['tenant'] = JSON.stringify(tenant);
 
-			next();
+			await next();
 		}
 		catch(err) {
 			let error = err;
 
 			// eslint-disable-next-line curly
 			if(error && !(error instanceof TwyrSrvcError)) {
-				error = new TwyrSrvcError(`${this.name}::tenantSetter`, error);
-			}
-
-			console.error(`${err.message}\n${err.stack}`);
-			throw error;
-		}
-	}
-
-	/**
-	 * @async
-	 * @function
-	 * @instance
-	 * @memberof ExpressService
-	 * @name     _setupRequestResponseForAudit
-	 *
-	 * @param    {Object} request - Request coming in from the outside world.
-	 * @param    {Object} response - Response going out to the outside world.
-	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
-	 *
-	 * @returns  {undefined} Nothing.
-	 *
-	 * @summary  Wraps the response.send function so that the entire request / response cycle leaves an audit trail.
-	 */
-	async _setupRequestResponseForAudit(request, response, next) {
-		if(!this.$enabled) { // eslint-disable-line curly
-			response.status(500).redirect('/error');
-			return;
-		}
-
-		try {
-			const auditService = this.$dependencies.AuditService;
-			const loggerService = this.$dependencies.LoggerService;
-
-			if(!request.session.passport) { // eslint-disable-line curly
-				request.session.passport = {};
-			}
-
-			if(!request.session.passport.user) { // eslint-disable-line curly
-				request.session.passport.user = 'ffffffff-ffff-4fff-ffff-ffffffffffff';
-			}
-
-			const realSend = response.send.bind(response);
-
-			response.send = async function(body) {
-				if(response.finished) return;
-
-				const auditBody = { 'twyrRequestId': request.twyrRequestId, 'payload': body };
-				if(body && (typeof body === 'string')) { // eslint-disable-line curly
-					try {
-						auditBody.payload = JSON.parse(auditBody.payload);
-					}
-					catch(parseOrAuditErr) {
-						loggerService.silly(`${parseOrAuditErr.message}\n${parseOrAuditErr.stack}`);
-					}
-				}
-
-				try {
-					await auditService.addResponsePayload(auditBody);
-				}
-				catch(auditError) {
-					let error = auditError;
-					if(!(error instanceof TwyrSrvcError))
-						error = new TwyrSrvcError(`${this.name}::setupRequestResponseForAudit::auditService.addResponsePayload error`, auditError);
-
-					loggerService.error(error.toString());
-				}
-
-				try {
-					realSend(body);
-				}
-				catch(realSendError) {
-					let error = realSendError;
-					if(!(error instanceof TwyrSrvcError))
-						error = new TwyrSrvcError(`${this.name}::setupRequestResponseForAudit::realSendError`, realSendError);
-
-					loggerService.error(error.toString());
-				}
-			}.bind(response);
-
-			next();
-			return;
-		}
-		catch(err) {
-			let error = err;
-
-			// eslint-disable-next-line curly
-			if(error && !(error instanceof TwyrSrvcError)) {
-				error = new TwyrSrvcError(`${this.name}::setupRequestResponseForAudit`, error);
+				error = new TwyrSrvcError(`${this.name}::_setTenant`, error);
 			}
 
 			throw error;
@@ -604,105 +427,55 @@ class WebserverService extends TwyrBaseService {
 	 * @async
 	 * @function
 	 * @instance
-	 * @memberof ExpressService
-	 * @name     _requestResponseCycleHandler
+	 * @memberof WebserverService
+	 * @name     _auditLog
 	 *
-	 * @param    {Object} request - Request coming in from the outside world.
-	 * @param    {Object} response - Response going out to the outside world.
+	 * @param    {Object} ctxt - Koa context.
 	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
 	 *
 	 * @returns  {undefined} Nothing.
 	 *
 	 * @summary  Pushes the data from the request/response cycle to the Audit Service for publication.
 	 */
-	async _requestResponseCycleHandler(request, response, next) {
+	async _auditLog(ctxt, next) {
 		try {
-			const onFinished = require('on-finished');
 			const statusCodes = require('http').STATUS_CODES;
 
 			const auditService = this.$dependencies.AuditService;
-			const loggerService = this.$dependencies.LoggerService;
-			const logMsgMeta = { 'user': undefined, 'userId': undefined };
+			const logMsgMeta = {};
 
-			onFinished(request, async (err) => {
-				try {
-					logMsgMeta.twyrRequestId = request.twyrRequestId;
-					logMsgMeta.url = `${request.method} ${request.baseUrl ? request.baseUrl : ''}${request.path}`;
-					logMsgMeta.userId = request.user ? `${request.user.id}` : logMsgMeta.userId || 'ffffffff-ffff-4fff-ffff-ffffffffffff';
-					logMsgMeta.user = request.user ? `${request.user.first_name} ${request.user.last_name}` : logMsgMeta.user;
-					logMsgMeta.tenantId = request.tenant ? `${request.tenant.id}` : 'Unknown';
-					logMsgMeta.tenant = request.tenant ? `${request.tenant.name}` : 'Unknown';
-					logMsgMeta.query = JSON.parse(JSON.stringify(request.query || {}));
-					logMsgMeta.params = JSON.parse(JSON.stringify(request.params || {}));
-					logMsgMeta.body = JSON.parse(JSON.stringify(request.body || {}));
+			await next();
 
-					if(err) {
-						let error = err;
-						if(!(error instanceof TwyrSrvcError)) { // eslint-disable-line curly
-							error = new TwyrSrvcError(`${this.name}::requestResponseCycleHandler::onFinished::request`, error);
-						}
+			logMsgMeta.twyrRequestId = ctxt.state.id;
 
-						logMsgMeta.error = error.toString();
-					}
+			logMsgMeta.method = ctxt.method;
+			logMsgMeta.url = ctxt.originalUrl;
+			logMsgMeta.userAgent = ctxt.req.headers['user-agent'] || '';
 
-					await auditService.addRequest(logMsgMeta);
-				}
-				catch(auditErr) {
-					let error = auditErr;
-					if(!(error instanceof TwyrSrvcError)) { // eslint-disable-line curly
-						error = new TwyrSrvcError(`${this.name}::requestResponseCycleHandler::onFinished::request::auditErr`, auditErr);
-					}
+			logMsgMeta.userId = ctxt.state.user ? ctxt.state.user.id : 'ffffffff-ffff-4fff-ffff-ffffffffffff';
+			logMsgMeta.userName = ctxt.state.user ? `${ctxt.state.user.first_name} ${ctxt.state.user.last_name}` : 'Public';
 
-					loggerService.error(error.toString());
-				}
-			});
+			logMsgMeta.tenantId = ctxt.state.tenant ? ctxt.state.tenant.id : '00000000-0000-4000-0000-000000000000';
+			logMsgMeta.tenantName = ctxt.state.tenant ? ctxt.state.tenant.name : 'Unknown';
 
-			onFinished(response, async (err) => {
-				try {
-					logMsgMeta.twyrRequestId = request.twyrRequestId;
-					logMsgMeta.url = `${request.method} ${request.baseUrl ? request.baseUrl : ''}${request.path}`;
-					logMsgMeta.userId = request.user ? `${request.user.id}` : logMsgMeta.userId || 'ffffffff-ffff-4fff-ffff-ffffffffffff';
-					logMsgMeta.user = request.user ? `${request.user.first_name} ${request.user.last_name}` : logMsgMeta.user;
-					logMsgMeta.tenantId = request.tenant ? `${request.tenant.id}` : 'Unknown';
-					logMsgMeta.tenant = request.tenant ? `${request.tenant.name}` : 'Unknown';
-					logMsgMeta.query = JSON.parse(JSON.stringify(request.query || {}));
-					logMsgMeta.params = JSON.parse(JSON.stringify(request.params || {}));
-					logMsgMeta.body = JSON.parse(JSON.stringify(request.body || {}));
+			logMsgMeta.query = JSON.parse(JSON.stringify(ctxt.query || {}));
+			logMsgMeta.params = JSON.parse(JSON.stringify(ctxt.params || {}));
+			logMsgMeta.body = JSON.parse(JSON.stringify(ctxt.request.body || {}));
 
-					logMsgMeta.statusCode = response.statusCode.toString();
-					logMsgMeta.statusMessage = response.statusMessage ? response.statusMessage : statusCodes[response.statusCode];
+			logMsgMeta.payload = JSON.parse(JSON.stringify(ctxt.body || {}));
+			logMsgMeta.statusCode = ctxt.status.toString();
+			logMsgMeta.statusMessage = statusCodes[ctxt.status];
 
-					if(response.statusCode >= 400) logMsgMeta.error = `${logMsgMeta.statusCode}: ${logMsgMeta.statusMessage}`;
+			logMsgMeta.error = (ctxt.status >= 400);
 
-					if(err) {
-						let error = err;
-						if(!(error instanceof TwyrSrvcError)) { // eslint-disable-line curly
-							error = new TwyrSrvcError(`${this.name}::requestResponseCycleHandler::onFinished::response`, error);
-						}
-
-						logMsgMeta.error = error.toString();
-					}
-
-					await auditService.addResponse(logMsgMeta);
-				}
-				catch(auditErr) {
-					let error = auditErr;
-					if(!(error instanceof TwyrSrvcError)) { // eslint-disable-line curly
-						error = new TwyrSrvcError(`${this.name}::requestResponseCycleHandler::onFinished::response::auditErr`, auditErr);
-					}
-
-					loggerService.error(error.toString());
-				}
-			});
-
-			next();
+			await auditService.publish(logMsgMeta);
 		}
 		catch(err) {
 			let error = err;
 
 			// eslint-disable-next-line curly
 			if(error && !(error instanceof TwyrSrvcError)) {
-				error = new TwyrSrvcError(`${this.name}::requestResponseCycleHandler`, error);
+				error = new TwyrSrvcError(`${this.name}::_auditLog`, error);
 			}
 
 			throw error;
@@ -713,45 +486,46 @@ class WebserverService extends TwyrBaseService {
 	 * @async
 	 * @function
 	 * @instance
-	 * @memberof ExpressService
+	 * @memberof WebserverService
 	 * @name     _handleOrProxytoCluster
 	 *
-	 * @param    {Object} request - Request coming in from the outside world.
-	 * @param    {Object} response - Response going out to the outside world.
+	 * @param    {Object} ctxt - Koa context.
 	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
 	 *
 	 * @returns  {undefined} Nothing.
 	 *
 	 * @summary  Call Ringpop to decide whether to handle the request, or to forward it someplace else.
 	 */
-	async _handleOrProxytoCluster(request, response, next) {
+	async _handleOrProxytoCluster(ctxt, next) {
 		try {
 			const ringpop = this.$dependencies.RingpopService;
-			if(ringpop.lookup(request.tenant.id) === ringpop.whoami()) {
-				next();
+			if(ringpop.lookup(ctxt.state.tenant.id) === ringpop.whoami()) {
+				await next();
 				return;
 			}
 
 			const hostPort = [];
-			hostPort.push(ringpop.lookup(request.tenant.id).split(':').shift());
+			hostPort.push(ringpop.lookup(ctxt.state.tenant.id).split(':').shift());
 			hostPort.push(this.$config.port || 9100);
 
-			const dest = `${this.$config.protocol}://${hostPort.filter((val) => { return !!val; }).join(':')}${request.path}`;
+			const dest = `${this.$config.protocol}://${hostPort.filter((val) => { return !!val; }).join(':')}${ctxt.path}`;
 
 			if(!this.$proxies[dest]) {
-				const proxy = require('express-http-proxy');
-				this.$proxies[dest] = proxy(dest);
+				const proxy = require('koa-better-http-proxy');
+				this.$proxies[dest] = proxy(dest, {
+					'preserveReqSession': true,
+					'preserveHostHdr': true
+				});
 			}
 
-			this.$proxies[dest](request, response, next);
+			await this.$proxies[dest](ctxt, next);
 		}
 		catch(err) {
 			let error = err;
 
 			// eslint-disable-next-line curly
 			if(error && !(error instanceof TwyrSrvcError)) {
-				error = new TwyrSrvcError(`${this.name}::tenantSetter`, error);
-				console.error(error.toString());
+				error = new TwyrSrvcError(`${this.name}::_handleOrProxytoCluster`, error);
 			}
 
 			throw error;
@@ -762,7 +536,7 @@ class WebserverService extends TwyrBaseService {
 	 * @async
 	 * @function
 	 * @instance
-	 * @memberof ExpressService
+	 * @memberof WebserverService
 	 * @name     _serveStaticAssets
 	 *
 	 * @param    {Object} request - Request coming in from the outside world.
@@ -797,7 +571,7 @@ class WebserverService extends TwyrBaseService {
 	/**
 	 * @function
 	 * @instance
-	 * @memberof ExpressService
+	 * @memberof WebserverService
 	 * @name     _processRequestFromAnotherNode
 	 *
 	 * @param    {Object} request - Request coming in from the outside world.

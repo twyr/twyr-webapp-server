@@ -49,7 +49,7 @@ class AuthService extends TwyrBaseService {
 			const path = require('path');
 			const promises = require('bluebird');
 
-			this.$passport = promises.promisifyAll(require('passport'));
+			this.$passport = promises.promisifyAll(require('koa-passport'));
 
 			const filesystem = promises.promisifyAll(fs);
 			const authStrategyPath = path.resolve(path.join(this.basePath, 'strategies'));
