@@ -1,5 +1,5 @@
 exports.config = {
-	"protocol": "http2",
+	"protocol": "http",
 	"port": 9100,
 
 	"version": "3.0.1",

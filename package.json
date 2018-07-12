@@ -47,10 +47,11 @@
 		"node": ">=8.0"
 	},
 	"dependencies": {
+		"@koa/cors": "*",
 		"amqplib": "*",
 		"app-module-path": "*",
 		"ascoltatori": "*",
-		"aws-sdk": "^2.272.1",
+		"aws-sdk": "^2.273.1",
 		"bluebird": "*",
 		"bookshelf": "*",
 		"bookshelf-jsonapi-params": "^1.1.3",
@@ -74,8 +75,6 @@
 		"jsonapi-serializer": "*",
 		"knex": "^0.15.0",
 		"koa": "*",
-		"@koa/cors": "*",
-		"koa2-winston": "*",
 		"koa-accept-override": "*",
 		"koa-compress": "*",
 		"koa-helmet": "*",
@@ -83,6 +82,7 @@
 		"koa-ratelimit": "*",
 		"koa-requestid": "*",
 		"koa-router": "*",
+		"koa2-winston": "*",
 		"memory-cache": "*",
 		"moment": "^2.22.2",
 		"nodemailer": "^4.6.7",
@@ -107,7 +107,7 @@
 		"umzug": "*",
 		"uuid": "^3.3.2",
 		"winston": "^3.0.0",
-		"ws": "^5.2.1"
+		"ws": "^5.2.2"
 	},
 	"devDependencies": {
 		"autocannon": "*",
