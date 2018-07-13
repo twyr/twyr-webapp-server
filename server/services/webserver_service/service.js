@@ -71,13 +71,7 @@ class WebserverService extends TwyrBaseService {
 				await next();
 			});
 
-			// Step 1.2: Compressor for large response payloads
-			const compressor = require('koa-compress');
-			this.$koa.use(compressor({
-				'threshold': 4096
-			}));
-
-			// Step 1.3: Twyr Auditing & Logger for auditing...
+			// Step 1.2: Twyr Auditing & Logger for auditing...
 			this.$koa.use(this._auditLog.bind(this));
 
 			const koaLogger = require('koa2-winston').logger;
@@ -88,7 +82,7 @@ class WebserverService extends TwyrBaseService {
 				'logger': this.$dependencies.LoggerService
 			}));
 
-			// Step 1.4: Handle the bloody errors...
+			// Step 1.3: Handle the bloody errors...
 			this.$koa.use(async (ctxt, next) => {
 				try {
 					await next();
@@ -111,17 +105,13 @@ class WebserverService extends TwyrBaseService {
 				}
 			});
 
+			// Step 1.4: Before proceeding further, check if this node will process this...
+			this.$koa.use(this._setTenant.bind(this));
+			this.$koa.use(this._handleOrProxytoCluster.bind(this));
+
 			// Step 1.5: Security middlewares, Rate Limiters, etc. - first
-			const overloadProtection = require('overload-protection')('koa');
-			this.$koa.use(overloadProtection);
 
-			const ratelimiter = require('koa-ratelimit');
-			this.$koa.use(ratelimiter({
-				'db': this.$dependencies.CacheService,
-				'duration': 60000,
-				'max': 12
-			}));
-
+			// Blacklisted IP? No chance...
 			if(twyrEnv === 'production') {
 				const honeypot = promises.promisifyAll(require('project-honeypot')(this.$config.honeyPot.apiKey));
 				this.$koa.use(async (ctxt, next) => {
@@ -135,6 +125,7 @@ class WebserverService extends TwyrBaseService {
 				});
 			}
 
+			// Not blacklisted but not whitelisted here? Forget it
 			const koaCors = require('@koa/cors');
 			this.$koa.use(koaCors({
 				'credentials': true,
@@ -144,6 +135,18 @@ class WebserverService extends TwyrBaseService {
 					return (ctx.hostname.indexOf('twyr.com') >= 0);
 				}
 			}));
+
+			// Ok... whitelisted, but exceeding request quotas? Stop right now!
+			const ratelimiter = require('koa-ratelimit');
+			this.$koa.use(ratelimiter({
+				'db': this.$dependencies.CacheService,
+				'duration': 60000,
+				'max': 12
+			}));
+
+			// All fine, but the server is overloaded? You gotta wait, dude!
+			const overloadProtection = require('overload-protection')('koa');
+			this.$koa.use(overloadProtection);
 
 			// TODO: Enable proper Content-Security-Policy once we're done with figuring out where we get stuff from
 			// And add a CSP report uri, as well
@@ -167,7 +170,7 @@ class WebserverService extends TwyrBaseService {
 				await next();
 			});
 
-			// Step 1.7: Set Tenant, Session, etc.
+			// Step 1.7: Session
 			const koaSession = require('koa-session');
 			const KoaSessionStore = require('koa-redis');
 
@@ -181,12 +184,8 @@ class WebserverService extends TwyrBaseService {
 			};
 
 			this.$koa.use(koaSession(this.$config.session.config, this.$koa));
-			this.$koa.use(this._setTenant.bind(this));
 
-			// Step 1.8: Before proceeding further, check if this node will process this...
-			this.$koa.use(this._handleOrProxytoCluster.bind(this));
-
-			// Step 1.9: The body parser...
+			// Step 1.8: The body parser...
 			const koaBodyParser = require('koa-bodyparser');
 			this.$koa.use(koaBodyParser({
 				'extendTypes': {
@@ -194,9 +193,15 @@ class WebserverService extends TwyrBaseService {
 				}
 			}));
 
-			// Step 1.10: Passport based authentication
+			// Step 1.9: Passport based authentication
 			this.$koa.use(this.$dependencies.AuthService.initialize());
 			this.$koa.use(this.$dependencies.AuthService.session());
+
+			// Step 1.10: Compressor for large response payloads
+			const compressor = require('koa-compress');
+			this.$koa.use(compressor({
+				'threshold': 4096
+			}));
 
 			// Step 1.11: Static Assets / Favicon / etc.
 			// .use(this._serveTenantStaticAssets.bind(this))
