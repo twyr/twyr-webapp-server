@@ -1,12 +1,12 @@
 exports.config = {
 	"logger": {
-		"level": "debug",
+		"level": "warn",
 		"exitOnError": true
 	},
 	"transports": {
 		"File1": {
 			"name": "File",
-			"level": "info",
+			"level": "warn",
 			"format": "json",
 			"filename": "logs/twyr-web-application.log",
 			"maxsize": 10485760,
