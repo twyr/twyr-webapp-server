@@ -83,9 +83,10 @@ class TwyrApplication extends TwyrBaseModule {
 			this.emit('server-started');
 
 			// TODO: Remove TEST STUFF!
-			await this._setupWebserverRoutes();
-			await this._doDBSanityCheck();
-			// await this._doStorageSanityCheck();
+			this.on('server-online', async () => {
+				await this._setupWebserverRoutes();
+				await this._doDBSanityCheck();
+			});
 
 			this.emit('server-online');
 		}
@@ -159,45 +160,6 @@ class TwyrApplication extends TwyrBaseModule {
 	}
 	// #endregion
 
-	// #region Configuration Change Handlers
-	/**
-	 * @async
-	 * @function
-	 * @instance
-	 * @memberof TwyrApplication
-	 * @name     _subModuleReconfigure
-	 *
-	 * @param    {TwyrBaseModule} subModule - The submodule that was reconfigured.
-	 *
-	 * @returns  {null} - Nothing.
-	 *
-	 * @summary  Ignores everything except the reconfiguration of DatabaseService / WebserverService. In that case, re-does its checks
-	 *
-	 * @description
-	 * Call the loader (typically, {@link TwyrModuleLoader#start}) to start sub-modules, if any.
-	 */
-	async _subModuleReconfigure(subModule) {
-		try {
-			// Setup common routes - to be enhanced
-			if(subModule.name === 'WebserverService') {
-				this.emit('server-offline');
-				await this._setupWebserverRoutes();
-				this.emit('server-online');
-			}
-
-			// Sanity check - to be deprecated...
-			if(subModule.name === 'DatabaseService')
-				await this._doDBSanityCheck();
-
-			// if(subModule.name === 'StorageService')
-			// 	await this._doStorageSanityCheck();
-		}
-		catch(err) {
-			throw new TwyrBaseError(`${this.name}::start error`, err);
-		}
-	}
-	// #endregion
-
 	// #region Private Methods
 	async _setupWebserverRoutes() {
 		const koaRouter = this.$services.WebserverService.Interface.Router;
@@ -222,16 +184,6 @@ class TwyrApplication extends TwyrBaseModule {
 
 		console.table(modules.rows);
 	}
-
-	// async _doStorageSanityCheck() {
-	// 	if(twyrEnv !== 'development' && twyrEnv !== 'test')
-	// 		return;
-
-	// 	const storageSrvc = this.$services.StorageService.Interface;
-	// 	const fileContents = await storageSrvc.readFileAsync('.gitkeep');
-
-	// 	console.log(`.gitkeep::contents: ${fileContents}`);
-	// }
 	// #endregion
 
 	// #region Properties

@@ -76,7 +76,7 @@ class RingpopService extends TwyrBaseService {
 				if(hosts.length === 1)
 					this.$config.host = hosts[0];
 				else
-					throw new Error(`Multiple possible hosts for clustering: ${JSON.stringify(hosts)}`);
+					throw new Error(`Multiple possible IPv4 addresses for clustering: ${JSON.stringify(hosts)}`);
 			}
 
 			return new Promise((resolve, reject) => {
@@ -96,6 +96,7 @@ class RingpopService extends TwyrBaseService {
 						'trace': (twyrEnv === 'development' || twyrEnv === 'test')
 					});
 
+					const self = this; // eslint-disable-line consistent-this
 					const ringpop = new Ringpop({
 						'app': this.$parent.$application,
 						'hostPort': `${this.$config.host}:${this.$config.port}`,
@@ -104,7 +105,37 @@ class RingpopService extends TwyrBaseService {
                         'joinSize': 1,
 						'joinTimeout': 100,
 
-                        'logger': this.$dependencies.LoggerService
+                        'logger': {
+							'log': function() {
+								self.$dependencies.LoggerService.log(...arguments);
+							},
+							'trace': function() {
+								self.$dependencies.LoggerService.silly(...arguments);
+							},
+							'silly': function() {
+								self.$dependencies.LoggerService.silly(...arguments);
+							},
+
+							'debug': function() {
+								self.$dependencies.LoggerService.debug(...arguments);
+							},
+
+							'verbose': function() {
+								self.$dependencies.LoggerService.verbose(...arguments);
+							},
+
+							'info': function() {
+								self.$dependencies.LoggerService.info(...arguments);
+							},
+
+							'warn': function() {
+								self.$dependencies.LoggerService.warn(...arguments);
+							},
+
+							'error': function() {
+								self.$dependencies.LoggerService.error(...arguments);
+							}
+						}
 					});
 
 					ringpop.appChannel = tchannel.makeSubChannel({

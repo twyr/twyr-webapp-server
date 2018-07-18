@@ -27,7 +27,6 @@ class WebserverService extends TwyrBaseService {
 	// #region Constructor
 	constructor(parent, loader) {
 		super(parent, loader);
-		this.$proxies = {};
 	}
 	// #endregion
 
@@ -49,14 +48,27 @@ class WebserverService extends TwyrBaseService {
 			if(this.$server) return null;
 			await super._setup();
 
+			const self = this; // eslint-disable-line consistent-this
+
+			this.$proxies = {};
+			this.$serveFavicons = {};
+			this.$serveStatics = {};
+
+			/**
+			 * Step 1: Setup Koa Application
+			 * @ignore
+			 */
+
 			// Step 1.1: Instantiate Koa & do basic setup
 			const Koa = require('koa');
+			const path = require('path');
 			const promises = require('bluebird');
 
 			this.$koa = new Koa();
 			this.$koa.proxy = ((twyrEnv !== 'development') && (twyrEnv !== 'test'));
 			this.$koa.keys = this.$config.session.keys;
 
+			// Step 1.2: Generate or Use a unique id for this request
 			const requestId = require('koa-requestid');
 			this.$koa.use(requestId({
 				'expose': 'X-Request-Id',
@@ -70,17 +82,6 @@ class WebserverService extends TwyrBaseService {
 
 				await next();
 			});
-
-			// Step 1.2: Twyr Auditing & Logger for auditing...
-			this.$koa.use(this._auditLog.bind(this));
-
-			const koaLogger = require('koa2-winston').logger;
-			this.$koa.use(koaLogger({
-				'level': this.$config.logLevel,
-				'reqSelect': ['body'],
-				'resSelect': ['body'],
-				'logger': this.$dependencies.LoggerService
-			}));
 
 			// Step 1.3: Handle the bloody errors...
 			this.$koa.use(async (ctxt, next) => {
@@ -110,9 +111,9 @@ class WebserverService extends TwyrBaseService {
 			this.$koa.use(this._handleOrProxytoCluster.bind(this));
 
 			// Step 1.5: Security middlewares, Rate Limiters, etc. - first
-
-			// Blacklisted IP? No chance...
+			// But only in production - its a pain having to deal with these in development
 			if(twyrEnv === 'production') {
+				// Blacklisted IP? No chance...
 				const honeypot = promises.promisifyAll(require('project-honeypot')(this.$config.honeyPot.apiKey));
 				this.$koa.use(async (ctxt, next) => {
 					const honeyPayload = await honeypot.queryAsync(ctxt.ip);
@@ -123,39 +124,39 @@ class WebserverService extends TwyrBaseService {
 
 					throw new URIError(`Blacklisted Request IP Address!`);
 				});
+
+				// Not blacklisted but not whitelisted here? Forget it
+				const koaCors = require('@koa/cors');
+				this.$koa.use(koaCors({
+					'credentials': true,
+					'keepHeadersOnError': true,
+
+					'origin': (ctx) => {
+						return (ctx.hostname.indexOf('twyr.com') >= 0);
+					}
+				}));
+
+				// Ok... whitelisted, but exceeding request quotas? Stop right now!
+				const ratelimiter = require('koa-ratelimit');
+				this.$koa.use(ratelimiter({
+					'db': this.$dependencies.CacheService,
+					'duration': 60000,
+					'max': 12
+				}));
+
+				// All fine, but the server is overloaded? You gotta wait, dude!
+				const overloadProtection = require('overload-protection')('koa');
+				this.$koa.use(overloadProtection);
+
+				// TODO: Enable proper Content-Security-Policy once we're done with figuring out where we get stuff from
+				// And add a CSP report uri, as well
+				const koaHelmet = require('koa-helmet');
+				this.$koa.use(koaHelmet({
+					'hidePoweredBy': false,
+					'hpkp': (twyrEnv !== 'development' && twyrEnv !== 'test'),
+					'hsts': (twyrEnv !== 'development' && twyrEnv !== 'test')
+				}));
 			}
-
-			// Not blacklisted but not whitelisted here? Forget it
-			const koaCors = require('@koa/cors');
-			this.$koa.use(koaCors({
-				'credentials': true,
-				'keepHeadersOnError': true,
-
-				'origin': (ctx) => {
-					return (ctx.hostname.indexOf('twyr.com') >= 0);
-				}
-			}));
-
-			// Ok... whitelisted, but exceeding request quotas? Stop right now!
-			const ratelimiter = require('koa-ratelimit');
-			this.$koa.use(ratelimiter({
-				'db': this.$dependencies.CacheService,
-				'duration': 60000,
-				'max': 12
-			}));
-
-			// All fine, but the server is overloaded? You gotta wait, dude!
-			const overloadProtection = require('overload-protection')('koa');
-			this.$koa.use(overloadProtection);
-
-			// TODO: Enable proper Content-Security-Policy once we're done with figuring out where we get stuff from
-			// And add a CSP report uri, as well
-			const koaHelmet = require('koa-helmet');
-			this.$koa.use(koaHelmet({
-				'hidePoweredBy': false,
-				'hpkp': (twyrEnv !== 'development' && twyrEnv !== 'test'),
-				'hsts': (twyrEnv !== 'development' && twyrEnv !== 'test')
-			}));
 
 			// Step 1.6: Add in the request modifying middlewares
 			const acceptOverride = require('koa-accept-override');
@@ -203,25 +204,70 @@ class WebserverService extends TwyrBaseService {
 				'threshold': 4096
 			}));
 
-			// Step 1.11: Static Assets / Favicon / etc.
-			// .use(this._serveTenantStaticAssets.bind(this))
-			// .use(serveStatic(path.join(path.dirname(path.dirname(require.main.filename)), 'static_assets'), {
-			// 	'index': this.$config.static.index || 'index.html',
-			// 	'maxAge': this.$config.static.maxAge || 300
-			// }))
+			// Step 1.11: Twyr Auditing & Logger for auditing...
+			this.$koa.use(this._auditLog.bind(this));
 
-			// Step 1.12: Add in the router
+			const koaLogger = require('koa2-winston').logger;
+			this.$koa.use(koaLogger({
+				'level': this.$config.logLevel,
+				'reqSelect': ['body'],
+				'resSelect': ['body'],
+				'logger': {
+					'log': function() {
+						self.$dependencies.LoggerService.log(...arguments);
+					},
+					'silly': function() {
+						self.$dependencies.LoggerService.silly(...arguments);
+					},
+
+					'debug': function() {
+						self.$dependencies.LoggerService.debug(...arguments);
+					},
+
+					'verbose': function() {
+						self.$dependencies.LoggerService.verbose(...arguments);
+					},
+
+					'info': function() {
+						self.$dependencies.LoggerService.info(...arguments);
+					},
+
+					'warn': function() {
+						self.$dependencies.LoggerService.warn(...arguments);
+					},
+
+					'error': function() {
+						self.$dependencies.LoggerService.error(...arguments);
+					}
+				}
+			}));
+
+			// Step 1.12: Static Assets / Favicon / etc.
+			const koaFavicon = require('koa-favicon');
+			const koaStatic = require('koa-static');
+
+			this.$koa.use(this._serveTenantFavicon.bind(this));
+			this.$koa.use(koaFavicon(path.join(path.dirname(path.dirname(require.main.filename)), 'static_assets/favicon.ico')));
+
+			this.$koa.use(this._serveTenantStaticAssets.bind(this));
+			this.$koa.use(koaStatic(path.join(path.dirname(path.dirname(require.main.filename)), 'static_assets')));
+
+			// Step 1.13: Add in the router
 			const Router = require('koa-router');
 			this.$router = new Router();
 
 			this.$koa.use(this.$router.routes());
 			this.$koa.use(this.$router.allowedMethods());
 
+			/**
+			 * Step 2: Setup node.js Web Server
+			 * @ignore
+			 */
+
 			// Step 2.1: Create the Server
 			this.$config.protocol = this.$config.protocol || 'http';
 			const protocol = require(this.$config.protocol || 'http');
 
-			const path = require('path');
 			const filesystem = promises.promisifyAll(require('fs'));
 
 			if(this.$config.protocol === 'http') { // eslint-disable-line curly
@@ -364,6 +410,29 @@ class WebserverService extends TwyrBaseService {
 	}
 	// #endregion
 
+	// #region Configuration Change Handlers
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof WebserverService
+	 * @name     _reconfigure
+	 *
+	 * @param    {Object} newConfig - The changed configuration.
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Changes the configuration of this module, and informs everyone interested.
+	 */
+	async _reconfigure(newConfig) {
+		this.$parent.emit('server-offline');
+		await super._reconfigure(newConfig);
+		this.$parent.emit('server-online');
+
+		return null;
+	}
+	// #endregion
+
 	// #region Express Middlewares
 	/**
 	 * @async
@@ -449,7 +518,7 @@ class WebserverService extends TwyrBaseService {
 			const auditService = this.$dependencies.AuditService;
 			const logMsgMeta = {};
 
-			await next();
+			if(next) await next();
 
 			logMsgMeta.twyrRequestId = ctxt.state.id;
 
@@ -467,12 +536,11 @@ class WebserverService extends TwyrBaseService {
 			logMsgMeta.params = JSON.parse(JSON.stringify(ctxt.params || {}));
 			logMsgMeta.body = JSON.parse(JSON.stringify(ctxt.request.body || {}));
 
-			logMsgMeta.payload = JSON.parse(JSON.stringify(ctxt.body || {}));
+			logMsgMeta.payload = (Buffer.isBuffer(ctxt.body)) ? 'BUFFER' : JSON.parse(JSON.stringify(ctxt.body || {}));
 			logMsgMeta.statusCode = ctxt.status.toString();
 			logMsgMeta.statusMessage = statusCodes[ctxt.status];
 
-			logMsgMeta.error = (ctxt.status >= 400);
-
+			logMsgMeta.error = ctxt.state.error || (ctxt.status >= 400);
 			await auditService.publish(logMsgMeta);
 		}
 		catch(err) {
@@ -504,16 +572,22 @@ class WebserverService extends TwyrBaseService {
 	async _handleOrProxytoCluster(ctxt, next) {
 		try {
 			const ringpop = this.$dependencies.RingpopService;
-			if(ringpop.lookup(ctxt.state.tenant.id) === ringpop.whoami()) {
-				await next();
-				return;
-			}
 
 			const hostPort = [];
 			hostPort.push(ringpop.lookup(ctxt.state.tenant.id).split(':').shift());
 			hostPort.push(this.$config.port || 9100);
 
-			const dest = `${this.$config.protocol}://${hostPort.filter((val) => { return !!val; }).join(':')}${ctxt.path}`;
+			const dest = `${this.$config.protocol}://${hostPort.join(':')}${ctxt.path}`;
+
+			if(ringpop.lookup(ctxt.state.tenant.id) === ringpop.whoami()) {
+				delete this.$proxies[dest];
+
+				await next();
+				return;
+			}
+
+			delete this.$serveFavicons[ctxt.state.tenant.sub_domain];
+			delete this.$serveStatics[ctxt.state.tenant.sub_domain];
 
 			if(!this.$proxies[dest]) {
 				const proxy = require('koa-better-http-proxy');
@@ -542,31 +616,60 @@ class WebserverService extends TwyrBaseService {
 	 * @function
 	 * @instance
 	 * @memberof WebserverService
-	 * @name     _serveStaticAssets
+	 * @name     _serveTenantFavicon
 	 *
-	 * @param    {Object} request - Request coming in from the outside world.
-	 * @param    {Object} response - Response going out to the outside world.
+	 * @param    {Object} ctxt - Koa context.
 	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
 	 *
 	 * @returns  {undefined} Nothing.
 	 *
-	 * @summary  Serve up the favicon and other static assets from the current tenants folder.
+	 * @summary  Return the favicon set by the tenant.
 	 */
-	async _serveTenantStaticAssets(request, response, next) {
+	async _serveTenantFavicon(ctxt, next) {
 		const path = require('path');
-		const serveStatic = require('serve-static');
+		const serveFavicon = require('koa-favicon');
 
 		try {
-			const tenantStaticAssetPath = path.join(path.dirname(path.dirname(require.main.filename)), 'static_assets', request.tenant['sub_domain']);
-			serveStatic(tenantStaticAssetPath, {
-				'index': this.$config.static.index || 'index.html',
-				'maxAge': this.$config.static.maxAge || 300
-			})(request, response, next);
+			const tenantFaviconPath = path.join(path.dirname(path.dirname(require.main.filename)), 'static_assets', ctxt.state.tenant['sub_domain'], 'favicon.ico');
+			if(!this.$serveFavicons[ctxt.state.tenant.sub_domain]) { // eslint-disable-line curly
+				this.$serveFavicons[ctxt.state.tenant.sub_domain] = serveFavicon(tenantFaviconPath);
+			}
 
-			return;
+			await this.$serveFavicons[ctxt.state.tenant.sub_domain](ctxt, next);
 		}
 		catch(err) {
-			next(err);
+			await next();
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof WebserverService
+	 * @name     _serveTenantStaticAssets
+	 *
+	 * @param    {Object} ctxt - Koa context.
+	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Serve up the static assets from the current tenants folder.
+	 */
+	async _serveTenantStaticAssets(ctxt, next) {
+		const path = require('path');
+		const serveStatic = require('koa-static');
+
+		try {
+			const tenantStaticAssetPath = path.join(path.dirname(path.dirname(require.main.filename)), 'static_assets', ctxt.state.tenant['sub_domain']);
+			if(!this.$serveStatics[ctxt.state.tenant.sub_domain]) { // eslint-disable-line curly
+				this.$serveStatics[ctxt.state.tenant.sub_domain] = serveStatic(tenantStaticAssetPath);
+			}
+
+			await this.$serveStatics[ctxt.state.tenant.sub_domain](ctxt, next);
+		}
+		catch(err) {
+			await next();
 		}
 	}
 
@@ -615,8 +718,8 @@ class WebserverService extends TwyrBaseService {
 			error = new TwyrSrvcError(`${this.name}::_handleKoaError`, error);
 		}
 
-		// TODO: Stop Logging! Send it to the Audit Service for centralized logging!!
-		this.$dependencies.LoggerService.error(`${this.name}::_handleKoaError\n\n${error.toString()}`);
+		ctxt.state.error = error;
+		this._auditLog(ctxt);
 	}
 
 	async _listenAndPrintNetworkInterfaces() {

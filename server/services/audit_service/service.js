@@ -10,6 +10,8 @@
  * @ignore
  */
 const TwyrBaseService = require('twyr-base-service').TwyrBaseService;
+
+const TwyrBaseError = require('twyr-base-error').TwyrBaseError;
 const TwyrSrvcError = require('twyr-service-error').TwyrServiceError;
 
 /**
@@ -102,19 +104,30 @@ class AuditService extends TwyrBaseService {
 				return;
 			}
 
-			if(typeof auditDetails[key] === 'object')
+			if(auditDetails[key] instanceof TwyrBaseError) {
+				auditDetails[key] = auditDetails[key].toString();
+				return;
+			}
+
+			if(auditDetails[key] instanceof Error) {
+				auditDetails[key] = new TwyrBaseError(`Wrapped for Auditing`, auditDetails[key]).toString();
+				return;
+			}
+
+			if(typeof auditDetails[key] === 'object') {
 				auditDetails[key] = this._cleanBeforePublish(auditDetails[key]);
 
-			if(!Object.keys(auditDetails[key] || {}).length)
-				delete auditDetails[key];
-		});
+				if(!auditDetails[key]) {
+					delete auditDetails[key];
+					return;
+				}
 
-		// eslint-disable-next-line curly
-		if(auditDetails.params) {
-			Object.keys(auditDetails.params).forEach((key) => {
-				auditDetails.url = auditDetails.url.replace(`/${auditDetails.params[key]}`, '');
-			});
-		}
+				if(!Object.keys(auditDetails[key]).length) {
+					delete auditDetails[key];
+					return;
+				}
+			}
+		});
 
 		if(!Object.keys(auditDetails).length)
 			return null;
