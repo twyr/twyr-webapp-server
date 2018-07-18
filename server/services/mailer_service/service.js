@@ -45,13 +45,46 @@ class MailerService extends TwyrBaseService {
 		try {
 			await super._setup();
 
+			const self = this; // eslint-disable-line consistent-this
+			const loggerProxy = {
+				'log': function() {
+					self.$dependencies.LoggerService.log(...arguments);
+				},
+				'trace': function() {
+					self.$dependencies.LoggerService.silly(...arguments);
+				},
+				'silly': function() {
+					self.$dependencies.LoggerService.silly(...arguments);
+				},
+
+				'debug': function() {
+					self.$dependencies.LoggerService.debug(...arguments);
+				},
+
+				'verbose': function() {
+					self.$dependencies.LoggerService.verbose(...arguments);
+				},
+
+				'info': function() {
+					self.$dependencies.LoggerService.info(...arguments);
+				},
+
+				'warn': function() {
+					self.$dependencies.LoggerService.warn(...arguments);
+				},
+
+				'error': function() {
+					self.$dependencies.LoggerService.error(...arguments);
+				}
+			};
+
 			const promises = require('bluebird');
 			const mailer = promises.promisifyAll(require('nodemailer'));
 
 			const account = (this.$config.test) ? await mailer.createTestAccountAsync() : null;
 			const transporter = promises.promisifyAll(mailer.createTransport({
 				'debug': (twyrEnv === 'development'),
-				'logger': this.$dependencies.LoggerService,
+				'logger': loggerProxy,
 
 				'host': this.$config.host,
 				'port': this.$config.port,

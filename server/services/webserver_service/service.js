@@ -65,8 +65,9 @@ class WebserverService extends TwyrBaseService {
 			const promises = require('bluebird');
 
 			this.$koa = new Koa();
-			this.$koa.proxy = ((twyrEnv !== 'development') && (twyrEnv !== 'test'));
 			this.$koa.keys = this.$config.session.keys;
+			this.$koa.proxy = ((twyrEnv !== 'development') && (twyrEnv !== 'test'));
+			this.$koa.subdomainOffset = this.$config.domain.split('.').length;
 
 			// Step 1.2: Generate or Use a unique id for this request
 			const requestId = require('koa-requestid');
@@ -112,7 +113,7 @@ class WebserverService extends TwyrBaseService {
 
 			// Step 1.5: Security middlewares, Rate Limiters, etc. - first
 			// But only in production - its a pain having to deal with these in development
-			if(twyrEnv === 'production') {
+			if((twyrEnv !== 'development') && (twyrEnv !== 'test')) {
 				// Blacklisted IP? No chance...
 				const honeypot = promises.promisifyAll(require('project-honeypot')(this.$config.honeyPot.apiKey));
 				this.$koa.use(async (ctxt, next) => {
@@ -141,7 +142,7 @@ class WebserverService extends TwyrBaseService {
 				this.$koa.use(ratelimiter({
 					'db': this.$dependencies.CacheService,
 					'duration': 60000,
-					'max': 12
+					'max': 250
 				}));
 
 				// All fine, but the server is overloaded? You gotta wait, dude!
@@ -268,12 +269,11 @@ class WebserverService extends TwyrBaseService {
 			this.$config.protocol = this.$config.protocol || 'http';
 			const protocol = require(this.$config.protocol || 'http');
 
-			const filesystem = promises.promisifyAll(require('fs'));
-
 			if(this.$config.protocol === 'http') { // eslint-disable-line curly
 				this.$server = protocol.createServer(this.$koa.callback());
 			}
 
+			const filesystem = promises.promisifyAll(require('fs'));
 			if((this.$config.protocol === 'https') || this.$config.protocol === 'spdy') {
 				const secureKey = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].key) ? this.$config.secureProtocols[this.$config.protocol].key : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].key));
 				const secureCert = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].cert) ? this.$config.secureProtocols[this.$config.protocol].cert : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].cert));
@@ -303,7 +303,7 @@ class WebserverService extends TwyrBaseService {
 			// 	acmeConfig.configDir = path.isAbsolute(acmeConfig.configDir) ? acmeConfig.configDir : path.join(path.dirname(path.dirname(require.main.filename)), acmeConfig.configDir);
 
 			// 	acmeConfig.server = acmeConfig.server[twyrEnv] || acmeConfig.server['default'];
-			// 	acmeConfig.approveDomains = this._approveDomains.bind(this);
+			// 	acmeConfig.approveDomains = acmeConfig.approveDomains;
 
 			// 	acmeConfig.challenges = {
 			// 		'dns-01': require('le-challenge-ddns').create({
@@ -328,10 +328,10 @@ class WebserverService extends TwyrBaseService {
 			// 	acmeConfig.configDir = path.isAbsolute(acmeConfig.configDir) ? acmeConfig.configDir : path.join(path.dirname(path.dirname(require.main.filename)), acmeConfig.configDir);
 
 			// 	acmeConfig.server = acmeConfig.server[twyrEnv] || acmeConfig.server['default'];
-			// 	acmeConfig.approveDomains = this._approveDomains.bind(this);
+			// 	acmeConfig.approveDomains = acmeConfig.approveDomains;
 
 			// 	acmeConfig.challenges = {
-			// 		'dns-01': require('le-challenge-ddns').create({
+			// 		'dns-01': require('le-challenge-dns').create({
 			// 			'email': acmeConfig.email,
 			// 			'ttl': 600,
 			// 			'debug': acmeConfig.debug
@@ -453,7 +453,13 @@ class WebserverService extends TwyrBaseService {
 			const cacheSrvc = this.$dependencies.CacheService,
 				dbSrvc = this.$dependencies.DatabaseService.knex;
 
-			let tenantSubDomain = ctxt.hostname.replace(this.$config.session.domain, '');
+			let tenantSubDomain = 'www';
+			if(ctxt.subdomains.length) {
+				ctxt.subdomains.reverse();
+				tenantSubDomain = ctxt.subdomains.join('.');
+				ctxt.subdomains.reverse();
+			}
+
 			if(this.$config.subdomainMappings && this.$config.subdomainMappings[tenantSubDomain])
 				tenantSubDomain = this.$config.subdomainMappings[tenantSubDomain];
 
@@ -575,7 +581,8 @@ class WebserverService extends TwyrBaseService {
 
 			const hostPort = [];
 			hostPort.push(ringpop.lookup(ctxt.state.tenant.id).split(':').shift());
-			hostPort.push(this.$config.port || 9100);
+			// hostPort.push(this.$config.port || 9100);
+			hostPort.push(this.$config.port === 9100 ? 9101 : 9100);
 
 			const dest = `${this.$config.protocol}://${hostPort.join(':')}${ctxt.path}`;
 

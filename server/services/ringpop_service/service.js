@@ -49,6 +49,39 @@ class RingpopService extends TwyrBaseService {
 			const TChannel = require('tchannel');
 			const Ringpop = require('ringpop');
 
+			const self = this; // eslint-disable-line consistent-this
+			const loggerProxy = {
+				'log': function() {
+					self.$dependencies.LoggerService.log(...arguments);
+				},
+				'trace': function() {
+					self.$dependencies.LoggerService.silly(...arguments);
+				},
+				'silly': function() {
+					self.$dependencies.LoggerService.silly(...arguments);
+				},
+
+				'debug': function() {
+					self.$dependencies.LoggerService.debug(...arguments);
+				},
+
+				'verbose': function() {
+					self.$dependencies.LoggerService.verbose(...arguments);
+				},
+
+				'info': function() {
+					self.$dependencies.LoggerService.info(...arguments);
+				},
+
+				'warn': function() {
+					self.$dependencies.LoggerService.warn(...arguments);
+				},
+
+				'error': function() {
+					self.$dependencies.LoggerService.error(...arguments);
+				}
+			};
+
 			if(!this.$config.host) {
 				const networkInterfaceList = require('os').networkInterfaces();
 				let hosts = null;
@@ -87,7 +120,7 @@ class RingpopService extends TwyrBaseService {
 							'cluster': process.title
 						},
 
-						'logger': this.$dependencies.LoggerService,
+						'logger': loggerProxy,
 						'trace': (twyrEnv === 'development' || twyrEnv === 'test')
 					});
 
@@ -96,7 +129,6 @@ class RingpopService extends TwyrBaseService {
 						'trace': (twyrEnv === 'development' || twyrEnv === 'test')
 					});
 
-					const self = this; // eslint-disable-line consistent-this
 					const ringpop = new Ringpop({
 						'app': this.$parent.$application,
 						'hostPort': `${this.$config.host}:${this.$config.port}`,
@@ -105,37 +137,7 @@ class RingpopService extends TwyrBaseService {
                         'joinSize': 1,
 						'joinTimeout': 100,
 
-                        'logger': {
-							'log': function() {
-								self.$dependencies.LoggerService.log(...arguments);
-							},
-							'trace': function() {
-								self.$dependencies.LoggerService.silly(...arguments);
-							},
-							'silly': function() {
-								self.$dependencies.LoggerService.silly(...arguments);
-							},
-
-							'debug': function() {
-								self.$dependencies.LoggerService.debug(...arguments);
-							},
-
-							'verbose': function() {
-								self.$dependencies.LoggerService.verbose(...arguments);
-							},
-
-							'info': function() {
-								self.$dependencies.LoggerService.info(...arguments);
-							},
-
-							'warn': function() {
-								self.$dependencies.LoggerService.warn(...arguments);
-							},
-
-							'error': function() {
-								self.$dependencies.LoggerService.error(...arguments);
-							}
-						}
+                        'logger': loggerProxy
 					});
 
 					ringpop.appChannel = tchannel.makeSubChannel({

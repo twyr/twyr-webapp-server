@@ -1,17 +1,14 @@
 exports.config = {
+	"domain": "twyr.com",
 	"protocol": "http",
 	"port": 9100,
-
 	"version": "3.0.1",
 	"poweredBy": "Twyr Portal",
-
 	"connectionTimeout": 120,
 	"logLevel": "silly",
-
 	"honeyPot": {
 		"apiKey": "YOUR_API_KEY"
 	},
-
 	"secureProtocols": {
 		"https": {
 			"key": "./ssl/server.key",
@@ -32,11 +29,10 @@ exports.config = {
 			}
 		}
 	},
-
 	"session": {
-		"domain": ".twyr.com",
-		"keys": ["Th1s!sTheTwyrWebAppFramew0rk"],
-
+		"keys": [
+			"Th1s!sTheTwyrWebAppFramew0rk"
+		],
 		"config": {
 			"key": "twyr!webapp!server",
 			"maxAge": 86400000,
@@ -47,28 +43,25 @@ exports.config = {
 			"renew": false
 		}
 	},
-
 	"subdomainMappings": {
 		"cloud-portal": "www",
 		"local-portal": "www",
 		"localhost": "www",
 		"127.0.0.1": "www"
 	},
-
 	"acme": {
 		"server": {
 			"default": "https://acme-staging-v02.api.letsencrypt.org/directory",
 			"production": "https://acme-v02.api.letsencrypt.org/directory"
 		},
-		"version": "draft-11",
-		"email": "john.doe@example.com",
+		"version": "draft-12",
+		"email": "shadyvd@hotmail.com",
 		"agreeTos": true,
 		"approveDomains": [
 			"*.twyr.com"
 		],
 		"communityMember": true,
 		"telemetry": true,
-
 		"configDir": "./acme/certificates"
 	}
 };
