@@ -141,7 +141,7 @@
 		"mocha": "^5.2.0",
 		"mocha-junit-reporter": "*",
 		"mocha-prepare": "^0.1.0",
-		"redis-mock": "^0.27.0"
+		"redis-mock": "^0.28.0"
 	},
 	"scripts": {
 		"build": "./node_modules/.bin/grunt --force",
