@@ -46,19 +46,35 @@ global.snooze = async (ms) => {
 const TwyrApplication = require('./twyr-application-class').TwyrApplication;
 
 /**
- * Finally, start the server - let's get going!
+ * Let's instantiate the server object
  * @ignore
  */
 const serverInstance = new TwyrApplication(SERVER_NAME);
-let shuttingDown = false;
 
+/**
+ * Mandatory error handlers, now that the server class has been instantiated
+ * @ignore
+ */
+process.on('uncaughtException', (err) => {
+	console.error(`Uncaught Exception: ${err.message}\n${err.stack}`);
+	process.exit(1); // eslint-disable-line no-process-exit
+});
+
+process.on('unhandledRejection', (reason) => {
+	console.error(`Unhandled Rejection: ${reason}`);
+});
+
+/**
+ * Finally, start the server - let's get going!
+ * @ignore
+ */
+let shuttingDown = false;
 const onDeath = require('death')({ 'uncaughtException': false, 'debug': (twyrEnv === 'development' || twyrEnv === 'test') });
 const offDeath = onDeath(async () => {
 	if(shuttingDown) return;
 	shuttingDown = true;
 
-	console.time(`${SERVER_NAME} shutdown in: `);
-
+	const shutdownTime = process.hrtime();
 	let shutDownErr = null;
 
 	try {
@@ -68,15 +84,18 @@ const offDeath = onDeath(async () => {
 		shutDownErr = error;
 	}
 
-	console.timeEnd(`${SERVER_NAME} shutdown in: `);
+	const shutdownDuration = process.hrtime(shutdownTime);
+
+	const convertHRTime = require('convert-hrtime');
+	console.log(`${SERVER_NAME} stopped in: ${convertHRTime(shutdownDuration).milliseconds.toFixed(2)}ms`);
 
 	offDeath();
 	process.exit(!!shutDownErr); // eslint-disable-line no-process-exit
 });
 
-console.time(`${SERVER_NAME} booted up in: `);
-
+const startTime = process.hrtime();
 let bootError = null;
+
 serverInstance.bootupServer()
 .catch((bootupErr) => {
 	bootError = bootupErr;
@@ -85,7 +104,11 @@ serverInstance.bootupServer()
 	return serverInstance.shutdownServer();
 })
 .finally(() => {
-	console.timeEnd(`${SERVER_NAME} booted up in: `);
+	const startDuration = process.hrtime(startTime);
+
+	const convertHRTime = require('convert-hrtime');
+	console.log(`${SERVER_NAME} started in: ${convertHRTime(startDuration).milliseconds.toFixed(2)}ms`);
+
 	if(!bootError) return;
 
 	offDeath();

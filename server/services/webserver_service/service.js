@@ -154,8 +154,8 @@ class WebserverService extends TwyrBaseService {
 				const koaHelmet = require('koa-helmet');
 				this.$koa.use(koaHelmet({
 					'hidePoweredBy': false,
-					'hpkp': (twyrEnv !== 'development' && twyrEnv !== 'test'),
-					'hsts': (twyrEnv !== 'development' && twyrEnv !== 'test')
+					'hpkp': false,
+					'hsts': false
 				}));
 			}
 
@@ -581,8 +581,8 @@ class WebserverService extends TwyrBaseService {
 
 			const hostPort = [];
 			hostPort.push(ringpop.lookup(ctxt.state.tenant.id).split(':').shift());
-			// hostPort.push(this.$config.port || 9100);
-			hostPort.push(this.$config.port === 9100 ? 9101 : 9100);
+			hostPort.push(this.$config.port || 9100);
+			// hostPort.push(this.$config.port === 9100 ? 9101 : 9100);
 
 			const dest = `${this.$config.protocol}://${hostPort.join(':')}${ctxt.path}`;
 
