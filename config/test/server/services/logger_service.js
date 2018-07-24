@@ -8,7 +8,7 @@ exports.config = {
 			"name": "File",
 			"level": "warn",
 			"format": "json",
-			"filename": "logs/twyr-web-application.log",
+			"filename": "logs/twyr-webapp-server.log",
 			"maxsize": 10485760,
 			"maxFiles": 10,
 			"tailable": true,

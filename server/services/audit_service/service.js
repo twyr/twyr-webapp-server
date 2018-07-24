@@ -52,11 +52,11 @@ class AuditService extends TwyrBaseService {
 			if(!Object.keys(auditPayload).length) return;
 
 			if(auditPayload.error) {
-				this.$dependencies.LoggerService.error(`Error Servicing Request ${auditPayload.twyrRequestId} - ${auditPayload.url}:`, auditPayload);
+				this.$dependencies.LoggerService.error(`Error Servicing Request ${auditPayload.id} - ${auditPayload['request-meta']['url']}:`, auditPayload);
 				await this.$dependencies.PubsubService.publish('twyr-audit', 'TWYR.AUDIT.ERROR', JSON.stringify(auditPayload));
 			}
 			else {
-				if(twyrEnv === 'development') this.$dependencies.LoggerService.debug(`Serviced Request ${auditPayload.twyrRequestId} - ${auditPayload.url}:`, auditPayload);
+				if(twyrEnv === 'development') this.$dependencies.LoggerService.debug(`Serviced Request ${auditPayload.id} - ${auditPayload['request-meta']['url']}:`, auditPayload);
 				await this.$dependencies.PubsubService.publish('twyr-audit', 'TWYR.AUDIT.LOG', JSON.stringify(auditPayload));
 			}
 		}

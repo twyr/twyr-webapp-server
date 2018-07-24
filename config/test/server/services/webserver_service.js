@@ -48,20 +48,5 @@ exports.config = {
 		"local-portal": "www",
 		"localhost": "www",
 		"127.0.0.1": "www"
-	},
-	"acme": {
-		"server": {
-			"default": "https://acme-staging-v02.api.letsencrypt.org/directory",
-			"production": "https://acme-v02.api.letsencrypt.org/directory"
-		},
-		"version": "draft-12",
-		"email": "shadyvd@hotmail.com",
-		"agreeTos": true,
-		"approveDomains": [
-			"*.twyr.com"
-		],
-		"communityMember": true,
-		"telemetry": true,
-		"configDir": "./acme/certificates"
 	}
 };

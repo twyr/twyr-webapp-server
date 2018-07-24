@@ -123,7 +123,7 @@ class WebserverService extends TwyrBaseService {
 						return;
 					}
 
-					throw new URIError(`Blacklisted Request IP Address!`);
+					throw new URIError(`Blacklisted Request IP Address: ${ctxt.ip}`);
 				});
 
 				// Not blacklisted but not whitelisted here? Forget it
@@ -133,7 +133,7 @@ class WebserverService extends TwyrBaseService {
 					'keepHeadersOnError': true,
 
 					'origin': (ctx) => {
-						return (ctx.hostname.indexOf('twyr.com') >= 0);
+						return (ctx.hostname.indexOf(this.$config.domain) >= 0);
 					}
 				}));
 
@@ -208,41 +208,6 @@ class WebserverService extends TwyrBaseService {
 			// Step 1.11: Twyr Auditing & Logger for auditing...
 			this.$koa.use(this._auditLog.bind(this));
 
-			const koaLogger = require('koa2-winston').logger;
-			this.$koa.use(koaLogger({
-				'level': this.$config.logLevel,
-				'reqSelect': ['body'],
-				'resSelect': ['body'],
-				'logger': {
-					'log': function() {
-						self.$dependencies.LoggerService.log(...arguments);
-					},
-					'silly': function() {
-						self.$dependencies.LoggerService.silly(...arguments);
-					},
-
-					'debug': function() {
-						self.$dependencies.LoggerService.debug(...arguments);
-					},
-
-					'verbose': function() {
-						self.$dependencies.LoggerService.verbose(...arguments);
-					},
-
-					'info': function() {
-						self.$dependencies.LoggerService.info(...arguments);
-					},
-
-					'warn': function() {
-						self.$dependencies.LoggerService.warn(...arguments);
-					},
-
-					'error': function() {
-						self.$dependencies.LoggerService.error(...arguments);
-					}
-				}
-			}));
-
 			// Step 1.12: Static Assets / Favicon / etc.
 			const koaFavicon = require('koa-favicon');
 			const koaStatic = require('koa-static');
@@ -293,57 +258,6 @@ class WebserverService extends TwyrBaseService {
 
 				this.$server = protocol.createSecureServer(this.$config.secureProtocols[this.$config.protocol], this.$koa.callback());
 			}
-
-			// For whenever we do decide to use Let's encrypt
-			// if((this.$config.protocol === 'https') || this.$config.protocol === 'spdy') {
-			// 	const acmeConfig = JSON.parse(JSON.stringify(this.$config.acme));
-			// 	delete acmeConfig.challengeDir;
-
-			// 	acmeConfig.debug = ((twyrEnv === 'development') || (twyrEnv === 'test'));
-			// 	acmeConfig.configDir = path.isAbsolute(acmeConfig.configDir) ? acmeConfig.configDir : path.join(path.dirname(path.dirname(require.main.filename)), acmeConfig.configDir);
-
-			// 	acmeConfig.server = acmeConfig.server[twyrEnv] || acmeConfig.server['default'];
-			// 	acmeConfig.approveDomains = acmeConfig.approveDomains;
-
-			// 	acmeConfig.challenges = {
-			// 		'dns-01': require('le-challenge-ddns').create({
-			// 			'email': acmeConfig.email,
-			// 			'ttl': 600,
-			// 			'debug': acmeConfig.debug
-			// 		})
-			// 	};
-
-			// 	acmeConfig.challengeType = 'dns-01';
-			// 	acmeConfig.challenge = acmeConfig.challenges[acmeConfig.challengeType];
-
-			// 	const greenlock = require('greenlock-koa').create(acmeConfig);
-			// 	this.$server = protocol.createServer(greenlock.tlsOptions, greenlock.middleware(this.$koa.callback()));
-			// }
-
-			// if(this.$config.protocol === 'http2') {
-			// 	const acmeConfig = JSON.parse(JSON.stringify(this.$config.acme));
-			// 	delete acmeConfig.challengeDir;
-
-			// 	acmeConfig.debug = ((twyrEnv === 'development') || (twyrEnv === 'test'));
-			// 	acmeConfig.configDir = path.isAbsolute(acmeConfig.configDir) ? acmeConfig.configDir : path.join(path.dirname(path.dirname(require.main.filename)), acmeConfig.configDir);
-
-			// 	acmeConfig.server = acmeConfig.server[twyrEnv] || acmeConfig.server['default'];
-			// 	acmeConfig.approveDomains = acmeConfig.approveDomains;
-
-			// 	acmeConfig.challenges = {
-			// 		'dns-01': require('le-challenge-dns').create({
-			// 			'email': acmeConfig.email,
-			// 			'ttl': 600,
-			// 			'debug': acmeConfig.debug
-			// 		})
-			// 	};
-
-			// 	acmeConfig.challengeType = 'dns-01';
-			// 	acmeConfig.challenge = acmeConfig.challenges[acmeConfig.challengeType];
-
-			// 	const greenlock = require('greenlock-koa').create(acmeConfig);
-			// 	this.$server = protocol.createSecureServer(greenlock.tlsOptions, greenlock.middleware(this.$koa.callback()));
-			// }
 
 			// Step 2.2: Add utility to force-stop server
 			const serverDestroy = require('server-destroy');
@@ -519,35 +433,61 @@ class WebserverService extends TwyrBaseService {
 	 */
 	async _auditLog(ctxt, next) {
 		try {
+			const convertHRTime = require('convert-hrtime');
+			const moment = require('moment');
 			const statusCodes = require('http').STATUS_CODES;
 
-			const auditService = this.$dependencies.AuditService;
-			const logMsgMeta = {};
+			const logMsgMeta = {
+				'id': ctxt.state.id,
+				'start-time': moment().valueOf(),
+				'duration': 0,
 
+				'user': {
+					'id': ctxt.state.user ? ctxt.state.user.id : 'ffffffff-ffff-4fff-ffff-ffffffffffff',
+					'name': ctxt.state.user ? `${ctxt.state.user.first_name} ${ctxt.state.user.last_name}` : 'Public'
+				},
+
+				'tenant': {
+					'id': ctxt.state.tenant ? ctxt.state.tenant.id : '00000000-0000-4000-0000-000000000000',
+					'sub-domain': ctxt.state.tenant ? ctxt.state.tenant.sub_domain : '???',
+					'name': ctxt.state.tenant ? ctxt.state.tenant.name : 'Unknown'
+				},
+
+				'request-meta': {
+					'headers': JSON.parse(JSON.stringify(ctxt.request.headers)),
+					'method': ctxt.request.method,
+					'url': ctxt.request.url,
+					'ip': ctxt.request.ip,
+					'ips': JSON.parse(JSON.stringify(ctxt.request.ips || []))
+				},
+
+				'response-meta': {
+				},
+
+				'query': JSON.parse(JSON.stringify(ctxt.query || {})),
+				'params': JSON.parse(JSON.stringify(ctxt.params || {})),
+				'body': JSON.parse(JSON.stringify(ctxt.request.body || {})),
+				'payload': null,
+				'error': null
+			};
+
+			const startTime = process.hrtime();
 			if(next) await next();
+			const duration = process.hrtime(startTime);
 
-			logMsgMeta.twyrRequestId = ctxt.state.id;
+			logMsgMeta.duration = convertHRTime(duration).milliseconds;
 
-			logMsgMeta.method = ctxt.method;
-			logMsgMeta.url = ctxt.originalUrl;
-			logMsgMeta.userAgent = ctxt.req.headers['user-agent'] || '';
+			logMsgMeta['response-meta']['headers'] = JSON.parse(JSON.stringify(ctxt.response.headers));
+			logMsgMeta['response-meta']['status'] = {
+				'code': ctxt.status,
+				'message': statusCodes[ctxt.status]
+			};
 
-			logMsgMeta.userId = ctxt.state.user ? ctxt.state.user.id : 'ffffffff-ffff-4fff-ffff-ffffffffffff';
-			logMsgMeta.userName = ctxt.state.user ? `${ctxt.state.user.first_name} ${ctxt.state.user.last_name}` : 'Public';
+			logMsgMeta['payload'] = (Buffer.isBuffer(ctxt.body)) ? 'BUFFER' : JSON.parse(JSON.stringify(ctxt.body || {}));
+			logMsgMeta['error'] = ctxt.state.error || (ctxt.status >= 400);
 
-			logMsgMeta.tenantId = ctxt.state.tenant ? ctxt.state.tenant.id : '00000000-0000-4000-0000-000000000000';
-			logMsgMeta.tenantName = ctxt.state.tenant ? ctxt.state.tenant.name : 'Unknown';
-
-			logMsgMeta.query = JSON.parse(JSON.stringify(ctxt.query || {}));
-			logMsgMeta.params = JSON.parse(JSON.stringify(ctxt.params || {}));
-			logMsgMeta.body = JSON.parse(JSON.stringify(ctxt.request.body || {}));
-
-			logMsgMeta.payload = (Buffer.isBuffer(ctxt.body)) ? 'BUFFER' : JSON.parse(JSON.stringify(ctxt.body || {}));
-			logMsgMeta.statusCode = ctxt.status.toString();
-			logMsgMeta.statusMessage = statusCodes[ctxt.status];
-
-			logMsgMeta.error = ctxt.state.error || (ctxt.status >= 400);
-			await auditService.publish(logMsgMeta);
+			logMsgMeta['request-meta']['headers']['tenant'] = undefined;
+			await this.$dependencies.AuditService.publish(logMsgMeta);
 		}
 		catch(err) {
 			let error = err;
