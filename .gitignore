@@ -2,10 +2,6 @@
 config/development
 config/production
 
-# Let's Encrypt
-acme/certificates/accounts
-acme/certificates/live
-
 # Logs
 logs/*.log
 npm-debug.log*
@@ -44,9 +40,6 @@ node_modules
 
 # Environment specific variables
 .env
-
-# Generated Documentation
-docs
 
 # Test Results
 buildresults
