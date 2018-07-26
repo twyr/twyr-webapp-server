@@ -1,0 +1,5097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="utf-8">
+    <title>TwyrModuleLoader - Twyr Web Application Server</title>
+    
+    <meta name="description" content="Twyr Web Application Server" />
+    
+        <meta name="keywords" content="twyr" />
+        <meta name="keyword" content="twyr" />
+    
+    
+    
+    <meta property="og:title" content="Twyr Web Application Server"/>
+    <meta property="og:type" content="documentation"/>
+    <meta property="og:image" content="./tenant_assets/www/img/logo.png"/>
+    <meta property="og:site_name" content="Twyr Web Application Server"/>
+    <meta property="og:url" content="https://twyr.github.io/twyr-webapp-server"/>
+    
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    
+    <input type="text" id="nav-search" placeholder="Search" />
+    
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ApiService.html">ApiService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="ApiService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#add">add</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#execute">execute</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#remove">remove</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#unload">unload</a></li></ul></li><li><a href="AuditService.html">AuditService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="AuditService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_cleanBeforePublish">_cleanBeforePublish</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#publish">publish</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#unload">unload</a></li></ul></li><li><a href="AuthService.html">AuthService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="AuthService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#unload">unload</a></li></ul></li><li><a href="AwsService.html">AwsService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="AwsService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#unload">unload</a></li></ul></li><li><a href="CacheService.html">CacheService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="CacheService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#unload">unload</a></li></ul></li><li><a href="CassandraService.html">CassandraService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="CassandraService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#unload">unload</a></li></ul></li><li><a href="ConfigurationService.html">ConfigurationService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#getModuleId">getModuleId</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#getModuleState">getModuleState</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#loadConfiguration">loadConfiguration</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#saveConfiguration">saveConfiguration</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#setModuleState">setModuleState</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#unload">unload</a></li></ul></li><li><a href="ConfigurationServiceLoader.html">ConfigurationServiceLoader</a><ul class='methods'><li data-type='method' style='display: none;'><a href="ConfigurationServiceLoader.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="ConfigurationServiceLoader.html#load">load</a></li><li data-type='method' style='display: none;'><a href="ConfigurationServiceLoader.html#start">start</a></li><li data-type='method' style='display: none;'><a href="ConfigurationServiceLoader.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="ConfigurationServiceLoader.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="ConfigurationServiceLoader.html#unload">unload</a></li></ul></li><li><a href="DatabaseConfigurationService.html">DatabaseConfigurationService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_processStateChange">_processStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#getModuleId">getModuleId</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#getModuleState">getModuleState</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#loadConfiguration">loadConfiguration</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#saveConfiguration">saveConfiguration</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#setModuleState">setModuleState</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#unload">unload</a></li></ul></li><li><a href="DatabaseService.html">DatabaseService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="DatabaseService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#unload">unload</a></li></ul></li><li><a href="FileConfigurationService.html">FileConfigurationService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_onDeleteConfiguration">_onDeleteConfiguration</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_onNewConfiguration">_onNewConfiguration</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_onUpdateConfiguration">_onUpdateConfiguration</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_processStateChange">_processStateChange</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#getModuleId">getModuleId</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#getModuleState">getModuleState</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#loadConfiguration">loadConfiguration</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#saveConfiguration">saveConfiguration</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#setModuleState">setModuleState</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#unload">unload</a></li></ul></li><li><a href="LocalizationService.html">LocalizationService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="LocalizationService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#unload">unload</a></li></ul></li><li><a href="LoggerService.html">LoggerService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="LoggerService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#unload">unload</a></li></ul></li><li><a href="MailerService.html">MailerService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="MailerService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#unload">unload</a></li></ul></li><li><a href="PubsubService.html">PubsubService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="PubsubService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#publish">publish</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#subscribe">subscribe</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#unload">unload</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#unsubscribe">unsubscribe</a></li></ul></li><li><a href="RingpopService.html">RingpopService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="RingpopService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#unload">unload</a></li></ul></li><li><a href="TwyrApplication.html">TwyrApplication</a><ul class='methods'><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#bootupServer">bootupServer</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#load">load</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#shutdownServer">shutdownServer</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#start">start</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#unload">unload</a></li></ul></li><li><a href="TwyrBaseClass.html">TwyrBaseClass</a><ul class='methods'><li data-type='method' style='display: none;'><a href="TwyrBaseClass.html#_handleUncaughtException">_handleUncaughtException</a></li></ul></li><li><a href="TwyrBaseError.html">TwyrBaseError</a></li><li><a href="TwyrBaseModule.html">TwyrBaseModule</a><ul class='methods'><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#load">load</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#start">start</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#unload">unload</a></li></ul></li><li><a href="TwyrBaseService.html">TwyrBaseService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#unload">unload</a></li></ul></li><li><a href="TwyrModuleLoader.html">TwyrModuleLoader</a><ul class='methods'><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_doLifecycleAction">_doLifecycleAction</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_filterStatus">_filterStatus</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_findFiles">_findFiles</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_getDependencies">_getDependencies</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_initializeComponents">_initializeComponents</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_initializeMiddlewares">_initializeMiddlewares</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_initializeServices">_initializeServices</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_initializeTemplates">_initializeTemplates</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_loadComponents">_loadComponents</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_loadMiddlewares">_loadMiddlewares</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_loadServices">_loadServices</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_loadTemplates">_loadTemplates</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_loadUtilities">_loadUtilities</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_startComponents">_startComponents</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_startMiddlewares">_startMiddlewares</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_startServices">_startServices</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_startTemplates">_startTemplates</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_stopComponents">_stopComponents</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_stopMiddlewares">_stopMiddlewares</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_stopServices">_stopServices</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_stopTemplates">_stopTemplates</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_uninitializeComponents">_uninitializeComponents</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_uninitializeMiddlewares">_uninitializeMiddlewares</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_uninitializeServices">_uninitializeServices</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_uninitializeTemplates">_uninitializeTemplates</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_unloadComponents">_unloadComponents</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_unloadMiddlewares">_unloadMiddlewares</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_unloadServices">_unloadServices</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_unloadTemplates">_unloadTemplates</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_unloadUtilities">_unloadUtilities</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#load">load</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#start">start</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#unload">unload</a></li></ul></li><li><a href="WebserverService.html">WebserverService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="WebserverService.html#_auditLog">_auditLog</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_handleOrProxytoCluster">_handleOrProxytoCluster</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_processRequestFromAnotherNode">_processRequestFromAnotherNode</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_serveTenantFavicon">_serveTenantFavicon</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_serveTenantStaticAssets">_serveTenantStaticAssets</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_setTenant">_setTenant</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#unload">unload</a></li></ul></li><li><a href="WebsocketService.html">WebsocketService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="WebsocketService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#unload">unload</a></li></ul></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">TwyrModuleLoader</h1>
+    
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+        TwyrModuleLoader
+        </h2>
+        
+            <div class="class-description"><p>The Twyr Server Base Class for all Module Loaders.</p></div>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+    
+    <h2>Constructor</h2>
+    
+
+    <h4 class="name" id="TwyrModuleLoader"><span class="type-signature"></span>new TwyrModuleLoader<span class="signature">(twyrModule<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+
+    
+    <p class="summary"><p>Serves as the &quot;base class&quot; for all other loaders in the Twyr Web Application Server, including <code>TwyrComponentLoader</code>,
+<code>TwyrMiddlewareLoader</code>, <a href="TwyrServiceLoader.html"><code>TwyrServiceLoader</code></a>, and <code>TwyrTemplateLoader</code>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line17">line 17</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Serves as the &quot;base class&quot; for all other loaders in the Twyr Web Application Server, including <code>TwyrComponentLoader</code>,
+<code>TwyrMiddlewareLoader</code>, <a href="TwyrServiceLoader.html"><code>TwyrServiceLoader</code></a>, and <code>TwyrTemplateLoader</code>.</p>
+<p>Responsible for invoking the standard &quot;lifecycle&quot; hooks on sub-modules of this module, if any - see <a href="TwyrBaseModule.html#load"><code>TwyrBaseModule#load</code></a>,
+<a href="TwyrBaseModule.html#initialize"><code>TwyrBaseModule#initialize</code></a>, <a href="TwyrBaseModule.html#start"><code>TwyrBaseModule#start</code></a>, <a href="TwyrBaseModule.html#stop"><code>TwyrBaseModule#stop</code></a>, <a href="TwyrBaseModule.html#uninitialize"><code>TwyrBaseModule#uninitialize</code></a>,
+and <a href="TwyrBaseModule.html#unload"><code>TwyrBaseModule#unload</code></a>.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>twyrModule</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="TwyrBaseModule.html">TwyrBaseModule</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>The parent module, if any.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    </div>
+
+    
+        <h3 class="subsection-title">Extends</h3>
+
+        
+
+
+    <ul>
+        <li><a href="TwyrBaseClass.html">TwyrBaseClass</a></li>
+    </ul>
+
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id="basePath"><span class="type-signature">(readonly) </span>basePath<span class="type-signature"> :string</span></h4>
+
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-base-class.js.html">framework/twyr-base-class.js</a>, <a href="framework_twyr-base-class.js.html#line58">line 58</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="TwyrBaseClass.html#basePath">TwyrBaseClass#basePath</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">string</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="name"><span class="type-signature">(readonly) </span>name<span class="type-signature"> :string</span></h4>
+
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-base-class.js.html">framework/twyr-base-class.js</a>, <a href="framework_twyr-base-class.js.html#line47">line 47</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrBaseClass.html#name">TwyrBaseClass#name</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">string</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+
+        
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id="_doLifecycleAction"><span class="type-signature">(async) </span>_doLifecycleAction<span class="signature">(moduleType, action, args)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Executes a lifecycle action on the given hashmap.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line1382">line 1382</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>moduleType</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The type of the module to iterate over (services, components, etc.).</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>action</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The lifecycle action to execute (initialize, start, etc.).</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>args</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The arguments to pass to the lifecycle method.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Hash map of the lifecycle status for each of the modules found.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_exists"><span class="type-signature">(async) </span>_exists<span class="signature">(filepath, mode)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+
+    
+    <p class="summary"><p>Checks to see if the path can be accessed by this process using the mode specified.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line1425">line 1425</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>filepath</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Path of the filesystem entity.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>mode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Permission to be checked for.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>True / False.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_filterStatus"><span class="type-signature"></span>_filterStatus<span class="signature">(status)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+    
+    <p class="summary"><p>Converts statuses to strings, depending on their type.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line1456">line 1456</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>status</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The statuses to process and filter.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>The stringified statuses.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_findFiles"><span class="type-signature">(async) </span>_findFiles<span class="signature">(rootDir, filename)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+    
+    <p class="summary"><p>Finds files in folders, and recursively, sub-folders, as well.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line1274">line 1274</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>rootDir</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Path of the folder to recursively search for.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>filename</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Name of the file to search for.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>List of files in the folder matching the name passed in.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_getDependencies"><span class="type-signature"></span>_getDependencies<span class="signature">(moduleInstance)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Walks up the $twyrModule.$parent chain, and at each level searches for a $service.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line1328">line 1328</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>moduleInstance</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="TwyrBaseModule.html">TwyrBaseModule</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The module to find dependencies for.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>The dependencies.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_handleUncaughtException"><span class="type-signature"></span>_handleUncaughtException<span class="signature">(err)</span><span class="type-signature"> &rarr; {undefined}</span></h4>
+
+    
+    <p class="summary"><p>Logs Unhandled Exceptions to prevent the process from crashing.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-base-class.js.html">framework/twyr-base-class.js</a>, <a href="framework_twyr-base-class.js.html#line31">line 31</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrBaseClass.html#_handleUncaughtException">TwyrBaseClass#_handleUncaughtException</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>err</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Error</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The unhandled exception.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Nothing.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">undefined</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_initializeComponents"><span class="type-signature">(async) </span>_initializeComponents<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Initialize Components defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line943">line 943</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the initialization status of each of the $twyrModule components.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_initializeMiddlewares"><span class="type-signature">(async) </span>_initializeMiddlewares<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Initialize Middlewares defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line755">line 755</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the initialization status of each of the $twyrModule middlewares.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_initializeServices"><span class="type-signature">(async) </span>_initializeServices<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Initialize Services defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line517">line 517</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the initialization status of each of the $twyrModule services.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_initializeTemplates"><span class="type-signature">(async) </span>_initializeTemplates<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Initialize Templates defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line1132">line 1132</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the initialization status of each of the $twyrModule templates.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_loadComponents"><span class="type-signature">(async) </span>_loadComponents<span class="signature">(configSrvc)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Load components defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line897">line 897</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>configSrvc</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ConfigurationService.html">ConfigurationService</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Instance of the <a href="ConfigurationService.html"><code>ConfigurationService</code></a> that supplies configuration.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the load status of each of the $twyrModule components.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_loadMiddlewares"><span class="type-signature">(async) </span>_loadMiddlewares<span class="signature">(configSrvc)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Load middlewares defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line709">line 709</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>configSrvc</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ConfigurationService.html">ConfigurationService</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Instance of the <a href="ConfigurationService.html"><code>ConfigurationService</code></a> that supplies configuration.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the load status of each of the $twyrModule middlewares.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_loadServices"><span class="type-signature">(async) </span>_loadServices<span class="signature">(configSrvc)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Load services defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line419">line 419</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Special processing:
+If the configSrvc parameter is undefined, load the <a href="ConfigurationService.html"><code>ConfigurationService</code></a> first, if any found.</p>
+<p>Since the <a href="ConfigurationServiceLoader.html"><code>ConfigurationServiceLoader</code></a> calls load / initialize / start in one shot, the other sub-modules get, basically,
+a fully functional configuration service by the time they load, allowing them to use their configurations from the get-go.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>configSrvc</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ConfigurationService.html">ConfigurationService</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Instance of the <a href="ConfigurationService.html"><code>ConfigurationService</code></a> that supplies configuration.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the load status of each of the $twyrModule services.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_loadTemplates"><span class="type-signature">(async) </span>_loadTemplates<span class="signature">(configSrvc)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Load templates defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line1085">line 1085</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>configSrvc</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ConfigurationService.html">ConfigurationService</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Instance of the <a href="ConfigurationService.html"><code>ConfigurationService</code></a> that supplies configuration.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the load status of each of the $twyrModule templates.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_loadUtilities"><span class="type-signature">(async) </span>_loadUtilities<span class="signature">(configSrvc)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Load utilities defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line339">line 339</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>configSrvc</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ConfigurationService.html">ConfigurationService</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Instance of the <a href="ConfigurationService.html"><code>ConfigurationService</code></a> that supplies configuration.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the load status of each of the $twyrModule utilities.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_startComponents"><span class="type-signature">(async) </span>_startComponents<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Start Components defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line967">line 967</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the start status of each of the $twyrModule components.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_startMiddlewares"><span class="type-signature">(async) </span>_startMiddlewares<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Start Middlewares defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line779">line 779</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the start status of each of the $twyrModule middlewares.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_startServices"><span class="type-signature">(async) </span>_startServices<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Start Services defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line541">line 541</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the start status of each of the $twyrModule services.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_startTemplates"><span class="type-signature">(async) </span>_startTemplates<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Start Templates defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line1156">line 1156</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the start status of each of the $twyrModule templates.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_stopComponents"><span class="type-signature">(async) </span>_stopComponents<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Stop Components defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line1011">line 1011</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the stop status of each of the $twyrModule components.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_stopMiddlewares"><span class="type-signature">(async) </span>_stopMiddlewares<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Stop Middlewares defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line823">line 823</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the stop status of each of the $twyrModule middlewares.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_stopServices"><span class="type-signature">(async) </span>_stopServices<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Stop Services defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line600">line 600</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the stop status of each of the $twyrModule services.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_stopTemplates"><span class="type-signature">(async) </span>_stopTemplates<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Stop Templates defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line1200">line 1200</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the stop status of each of the $twyrModule templates.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_uninitializeComponents"><span class="type-signature">(async) </span>_uninitializeComponents<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Uninitialize Components defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line1035">line 1035</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the uninit status of each of the $twyrModule components.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_uninitializeMiddlewares"><span class="type-signature">(async) </span>_uninitializeMiddlewares<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Uninitialize Middlewares defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line847">line 847</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the uninit status of each of the $twyrModule middlewares.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_uninitializeServices"><span class="type-signature">(async) </span>_uninitializeServices<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Uninitialize Services defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line659">line 659</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the uninit status of each of the $twyrModule services.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_uninitializeTemplates"><span class="type-signature">(async) </span>_uninitializeTemplates<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Uninitialize Templates defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line1224">line 1224</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the uninit status of each of the $twyrModule templates.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_unloadComponents"><span class="type-signature">(async) </span>_unloadComponents<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Unload Components defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line1059">line 1059</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the unload status of each of the $twyrModule components.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_unloadMiddlewares"><span class="type-signature">(async) </span>_unloadMiddlewares<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Unload Middlewares defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line871">line 871</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the unload status of each of the $twyrModule middlewares.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_unloadServices"><span class="type-signature">(async) </span>_unloadServices<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Unload Services defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line683">line 683</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the unload status of each of the $twyrModule services.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_unloadTemplates"><span class="type-signature">(async) </span>_unloadTemplates<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Unload Templates defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line1248">line 1248</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the unload status of each of the $twyrModule templates.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_unloadUtilities"><span class="type-signature">(async) </span>_unloadUtilities<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Unload utilities defined as part of this <a href="TwyrBaseModule.html"><code>TwyrBaseModule</code></a>.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line384">line 384</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object containing the unload status of each of the $twyrModule utilities.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="initialize"><span class="type-signature">(async) </span>initialize<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Initializes sub-modules.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line101">line 101</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <ul>
+<li>The initialization status of $twyrModule's sub-modules.</li>
+</ul>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="load"><span class="type-signature">(async) </span>load<span class="signature">(configSrvc)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Loads sub-modules.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line47">line 47</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>configSrvc</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ConfigurationService.html">ConfigurationService</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Instance of the <a href="ConfigurationService.html"><code>ConfigurationService</code></a> that supplies configuration.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <ul>
+<li>The load status of $twyrModule's sub-modules.</li>
+</ul>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="start"><span class="type-signature">(async) </span>start<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Starts sub-modules.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line147">line 147</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <ul>
+<li>The start status of $twyrModule's sub-modules.</li>
+</ul>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="stop"><span class="type-signature">(async) </span>stop<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Stops sub-modules.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line193">line 193</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <ul>
+<li>The stop status of $twyrModule's sub-modules.</li>
+</ul>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="uninitialize"><span class="type-signature">(async) </span>uninitialize<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Un-initializes sub-modules.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line239">line 239</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <ul>
+<li>The uninitialization status of $twyrModule's sub-modules.</li>
+</ul>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="unload"><span class="type-signature">(async) </span>unload<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Unloads sub-modules.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line285">line 285</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <ul>
+<li>The unloading status of $twyrModule's sub-modules.</li>
+</ul>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+    
+    
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Thu Jul 26 2018 11:10:40 GMT+0530 (India Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+
+<script src="scripts/jquery-3.1.1.min.js"></script>
+
+<script src="scripts/search.js"></script>
+
+
+<script src="scripts/collapse.js"></script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="utf-8">
+    <title>server/services/webserver_service/service.js - Twyr Web Application Server</title>
+    
+    <meta name="description" content="Twyr Web Application Server" />
+    
+        <meta name="keywords" content="twyr" />
+        <meta name="keyword" content="twyr" />
+    
+    
+    
+    <meta property="og:title" content="Twyr Web Application Server"/>
+    <meta property="og:type" content="documentation"/>
+    <meta property="og:image" content="./tenant_assets/www/img/logo.png"/>
+    <meta property="og:site_name" content="Twyr Web Application Server"/>
+    <meta property="og:url" content="https://twyr.github.io/twyr-webapp-server"/>
+    
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    
+    <input type="text" id="nav-search" placeholder="Search" />
+    
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ApiService.html">ApiService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="ApiService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#add">add</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#execute">execute</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#remove">remove</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#unload">unload</a></li></ul></li><li><a href="AuditService.html">AuditService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="AuditService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_cleanBeforePublish">_cleanBeforePublish</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#publish">publish</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#unload">unload</a></li></ul></li><li><a href="AuthService.html">AuthService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="AuthService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#unload">unload</a></li></ul></li><li><a href="AwsService.html">AwsService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="AwsService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#unload">unload</a></li></ul></li><li><a href="CacheService.html">CacheService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="CacheService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#unload">unload</a></li></ul></li><li><a href="CassandraService.html">CassandraService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="CassandraService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#unload">unload</a></li></ul></li><li><a href="ConfigurationService.html">ConfigurationService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#getModuleId">getModuleId</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#getModuleState">getModuleState</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#loadConfiguration">loadConfiguration</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#saveConfiguration">saveConfiguration</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#setModuleState">setModuleState</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#unload">unload</a></li></ul></li><li><a href="ConfigurationServiceLoader.html">ConfigurationServiceLoader</a><ul class='methods'><li data-type='method' style='display: none;'><a href="ConfigurationServiceLoader.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="ConfigurationServiceLoader.html#load">load</a></li><li data-type='method' style='display: none;'><a href="ConfigurationServiceLoader.html#start">start</a></li><li data-type='method' style='display: none;'><a href="ConfigurationServiceLoader.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="ConfigurationServiceLoader.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="ConfigurationServiceLoader.html#unload">unload</a></li></ul></li><li><a href="DatabaseConfigurationService.html">DatabaseConfigurationService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_processStateChange">_processStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#getModuleId">getModuleId</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#getModuleState">getModuleState</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#loadConfiguration">loadConfiguration</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#saveConfiguration">saveConfiguration</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#setModuleState">setModuleState</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#unload">unload</a></li></ul></li><li><a href="DatabaseService.html">DatabaseService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="DatabaseService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#unload">unload</a></li></ul></li><li><a href="FileConfigurationService.html">FileConfigurationService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_onDeleteConfiguration">_onDeleteConfiguration</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_onNewConfiguration">_onNewConfiguration</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_onUpdateConfiguration">_onUpdateConfiguration</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_processStateChange">_processStateChange</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#getModuleId">getModuleId</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#getModuleState">getModuleState</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#loadConfiguration">loadConfiguration</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#saveConfiguration">saveConfiguration</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#setModuleState">setModuleState</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#unload">unload</a></li></ul></li><li><a href="LocalizationService.html">LocalizationService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="LocalizationService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#unload">unload</a></li></ul></li><li><a href="LoggerService.html">LoggerService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="LoggerService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#unload">unload</a></li></ul></li><li><a href="MailerService.html">MailerService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="MailerService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#unload">unload</a></li></ul></li><li><a href="PubsubService.html">PubsubService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="PubsubService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#publish">publish</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#subscribe">subscribe</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#unload">unload</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#unsubscribe">unsubscribe</a></li></ul></li><li><a href="RingpopService.html">RingpopService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="RingpopService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#unload">unload</a></li></ul></li><li><a href="TwyrApplication.html">TwyrApplication</a><ul class='methods'><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#bootupServer">bootupServer</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#load">load</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#shutdownServer">shutdownServer</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#start">start</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#unload">unload</a></li></ul></li><li><a href="TwyrBaseClass.html">TwyrBaseClass</a><ul class='methods'><li data-type='method' style='display: none;'><a href="TwyrBaseClass.html#_handleUncaughtException">_handleUncaughtException</a></li></ul></li><li><a href="TwyrBaseError.html">TwyrBaseError</a></li><li><a href="TwyrBaseModule.html">TwyrBaseModule</a><ul class='methods'><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#load">load</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#start">start</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#unload">unload</a></li></ul></li><li><a href="TwyrBaseService.html">TwyrBaseService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#unload">unload</a></li></ul></li><li><a href="TwyrModuleLoader.html">TwyrModuleLoader</a><ul class='methods'><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_doLifecycleAction">_doLifecycleAction</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_filterStatus">_filterStatus</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_findFiles">_findFiles</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_getDependencies">_getDependencies</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_initializeComponents">_initializeComponents</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_initializeMiddlewares">_initializeMiddlewares</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_initializeServices">_initializeServices</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_initializeTemplates">_initializeTemplates</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_loadComponents">_loadComponents</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_loadMiddlewares">_loadMiddlewares</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_loadServices">_loadServices</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_loadTemplates">_loadTemplates</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_loadUtilities">_loadUtilities</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_startComponents">_startComponents</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_startMiddlewares">_startMiddlewares</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_startServices">_startServices</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_startTemplates">_startTemplates</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_stopComponents">_stopComponents</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_stopMiddlewares">_stopMiddlewares</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_stopServices">_stopServices</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_stopTemplates">_stopTemplates</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_uninitializeComponents">_uninitializeComponents</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_uninitializeMiddlewares">_uninitializeMiddlewares</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_uninitializeServices">_uninitializeServices</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_uninitializeTemplates">_uninitializeTemplates</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_unloadComponents">_unloadComponents</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_unloadMiddlewares">_unloadMiddlewares</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_unloadServices">_unloadServices</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_unloadTemplates">_unloadTemplates</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_unloadUtilities">_unloadUtilities</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#load">load</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#start">start</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#unload">unload</a></li></ul></li><li><a href="WebserverService.html">WebserverService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="WebserverService.html#_auditLog">_auditLog</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_handleOrProxytoCluster">_handleOrProxytoCluster</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_processRequestFromAnotherNode">_processRequestFromAnotherNode</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_serveTenantFavicon">_serveTenantFavicon</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_serveTenantStaticAssets">_serveTenantStaticAssets</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_setTenant">_setTenant</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#unload">unload</a></li></ul></li><li><a href="WebsocketService.html">WebsocketService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="WebsocketService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#unload">unload</a></li></ul></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">server/services/webserver_service/service.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>'use strict';
+
+/**
+ * Module dependencies, required for ALL Twyr' modules
+ * @ignore
+ */
+
+/**
+ * Module dependencies, required for this module
+ * @ignore
+ */
+const TwyrBaseService = require('twyr-base-service').TwyrBaseService;
+
+const TwyrBaseError = require('twyr-base-error').TwyrBaseError;
+const TwyrSrvcError = require('twyr-service-error').TwyrServiceError;
+
+/**
+ * @class   WebserverService
+ * @extends {TwyrBaseService}
+ * @classdesc The Twyr Web Application Server Webserver Service - based on Koa.
+ *
+ * @description
+ * Allows the rest of the Twyr Modules to expose REST API.
+ *
+ */
+class WebserverService extends TwyrBaseService {
+	// #region Constructor
+	constructor(parent, loader) {
+		super(parent, loader);
+	}
+	// #endregion
+
+	// #region startup/teardown code
+	/**
+	 * @async
+	 * @function
+	 * @override
+	 * @instance
+	 * @memberof WebserverService
+	 * @name     _setup
+	 *
+	 * @returns  {null} Nothing.
+	 *
+	 * @summary  Sets up the Web Server using ExpressJS.
+	 */
+	async _setup() {
+		try {
+			if(this.$server) return null;
+			await super._setup();
+
+			const self = this; // eslint-disable-line consistent-this
+
+			this.$proxies = {};
+			this.$serveFavicons = {};
+			this.$serveStatics = {};
+
+			/**
+			 * Step 1: Setup Koa Application
+			 * @ignore
+			 */
+
+			// Step 1.1: Instantiate Koa &amp; do basic setup
+			const Koa = require('koa');
+			const path = require('path');
+			const promises = require('bluebird');
+
+			this.$koa = new Koa();
+			this.$koa.keys = this.$config.session.keys;
+			this.$koa.proxy = ((twyrEnv !== 'development') &amp;&amp; (twyrEnv !== 'test'));
+			this.$koa.subdomainOffset = this.$config.domain.split('.').length;
+
+			// Step 1.2: Generate or Use a unique id for this request
+			const requestId = require('koa-requestid');
+			this.$koa.use(requestId({
+				'expose': 'X-Request-Id',
+				'header': 'X-Request-Id',
+				'query': 'requestId'
+			}));
+
+			this.$koa.use(async (ctxt, next) => {
+				ctxt.request.headers['x-request-id'] = ctxt.state.id;
+				ctxt.set('x-powered-by', this.$config.poweredBy);
+
+				await next();
+			});
+
+			// Step 1.3: Handle the bloody errors...
+			this.$koa.use(async (ctxt, next) => {
+				try {
+					await next();
+				}
+				catch(err) {
+					let error = err;
+					if(error &amp;&amp; !(error instanceof TwyrBaseError)) { // eslint-disable-line curly
+						error = new TwyrBaseError(`Web Request Error: `, err);
+					}
+
+					ctxt.type = 'application/json; charset=utf-8';
+					ctxt.status = error.code || error.number || 500;
+					ctxt.body = error.toString().split('\n');
+
+					ctxt.app.emit('error', error, ctxt);
+				}
+				finally {
+					if(this.$config.protocol === 'http2')
+						delete ctxt.status;
+				}
+			});
+
+			// Step 1.4: Before proceeding further, check if this node will process this...
+			this.$koa.use(this._setTenant.bind(this));
+			this.$koa.use(this._handleOrProxytoCluster.bind(this));
+
+			// Step 1.5: Security middlewares, Rate Limiters, etc. - first
+			// But only in production - its a pain having to deal with these in development
+			if((twyrEnv !== 'development') &amp;&amp; (twyrEnv !== 'test')) {
+				// Blacklisted IP? No chance...
+				const honeypot = promises.promisifyAll(require('project-honeypot')(this.$config.honeyPot.apiKey));
+				this.$koa.use(async (ctxt, next) => {
+					const honeyPayload = await honeypot.queryAsync(ctxt.ip);
+					if(!honeyPayload.found) {
+						await next();
+						return;
+					}
+
+					throw new URIError(`Blacklisted Request IP Address: ${ctxt.ip}`);
+				});
+
+				// Not blacklisted but not whitelisted here? Forget it
+				const koaCors = require('@koa/cors');
+				this.$koa.use(koaCors({
+					'credentials': true,
+					'keepHeadersOnError': true,
+
+					'origin': (ctx) => {
+						return (ctx.hostname.indexOf(this.$config.domain) >= 0);
+					}
+				}));
+
+				// Ok... whitelisted, but exceeding request quotas? Stop right now!
+				const ratelimiter = require('koa-ratelimit');
+				this.$koa.use(ratelimiter({
+					'db': this.$dependencies.CacheService,
+					'duration': 60000,
+					'max': 250
+				}));
+
+				// All fine, but the server is overloaded? You gotta wait, dude!
+				const overloadProtection = require('overload-protection')('koa');
+				this.$koa.use(overloadProtection);
+
+				// TODO: Enable proper Content-Security-Policy once we're done with figuring out where we get stuff from
+				// And add a CSP report uri, as well
+				const koaHelmet = require('koa-helmet');
+				this.$koa.use(koaHelmet({
+					'hidePoweredBy': false,
+					'hpkp': false,
+					'hsts': false
+				}));
+			}
+
+			// Step 1.6: Add in the request modifying middlewares
+			const acceptOverride = require('koa-accept-override');
+			this.$koa.use(acceptOverride());
+
+			const methodOverride = require('koa-methodoverride');
+			this.$koa.use(methodOverride());
+
+			const device = require('device');
+			this.$koa.use(async (ctxt, next) => {
+				ctxt.state.device = device(ctxt.req.headers['user-agent'] || '');
+				await next();
+			});
+
+			// Step 1.7: Session
+			const koaSession = require('koa-session');
+			const KoaSessionStore = require('koa-redis');
+
+			this.$config.session.config.store = new KoaSessionStore({
+				'client': this.$dependencies.CacheService
+			});
+
+			this.$config.session.config.genid = function() {
+				const uuid = require('uuid/v4');
+				return `twyr!webapp!server!${uuid()}`;
+			};
+
+			this.$koa.use(koaSession(this.$config.session.config, this.$koa));
+
+			// Step 1.8: The body parser...
+			const koaBodyParser = require('koa-bodyparser');
+			this.$koa.use(koaBodyParser({
+				'extendTypes': {
+					'json': ['application/x-javascript', 'application/json', 'application/vnd.api+json']
+				}
+			}));
+
+			// Step 1.9: Passport based authentication
+			this.$koa.use(this.$dependencies.AuthService.initialize());
+			this.$koa.use(this.$dependencies.AuthService.session());
+
+			// Step 1.10: Compressor for large response payloads
+			const compressor = require('koa-compress');
+			this.$koa.use(compressor({
+				'threshold': 4096
+			}));
+
+			// Step 1.11: Twyr Auditing &amp; Logger for auditing...
+			this.$koa.use(this._auditLog.bind(this));
+
+			// Step 1.12: Static Assets / Favicon / etc.
+			const koaFavicon = require('koa-favicon');
+			const koaStatic = require('koa-static');
+
+			this.$koa.use(this._serveTenantFavicon.bind(this));
+			this.$koa.use(koaFavicon(path.join(path.dirname(path.dirname(require.main.filename)), 'static_assets/favicon.ico')));
+
+			this.$koa.use(this._serveTenantStaticAssets.bind(this));
+			this.$koa.use(koaStatic(path.join(path.dirname(path.dirname(require.main.filename)), 'static_assets')));
+
+			// Step 1.13: Add in the router
+			const Router = require('koa-router');
+			this.$router = new Router();
+
+			this.$koa.use(this.$router.routes());
+			this.$koa.use(this.$router.allowedMethods());
+
+			/**
+			 * Step 2: Setup node.js Web Server
+			 * @ignore
+			 */
+
+			// Step 2.1: Create the Server
+			this.$config.protocol = this.$config.protocol || 'http';
+			const protocol = require(this.$config.protocol || 'http');
+
+			if(this.$config.protocol === 'http') { // eslint-disable-line curly
+				this.$server = protocol.createServer(this.$koa.callback());
+			}
+
+			const filesystem = promises.promisifyAll(require('fs'));
+			if((this.$config.protocol === 'https') || this.$config.protocol === 'spdy') {
+				const secureKey = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].key) ? this.$config.secureProtocols[this.$config.protocol].key : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].key));
+				const secureCert = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].cert) ? this.$config.secureProtocols[this.$config.protocol].cert : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].cert));
+
+				this.$config.secureProtocols[this.$config.protocol].key = secureKey;
+				this.$config.secureProtocols[this.$config.protocol].cert = secureCert;
+
+				this.$server = protocol.createServer(this.$config.secureProtocols[this.$config.protocol], this.$koa.callback());
+			}
+
+			if(this.$config.protocol === 'http2') {
+				const secureKey = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].key) ? this.$config.secureProtocols[this.$config.protocol].key : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].key));
+				const secureCert = await filesystem.readFileAsync(path.isAbsolute(this.$config.secureProtocols[this.$config.protocol].cert) ? this.$config.secureProtocols[this.$config.protocol].cert : path.join(__dirname, this.$config.secureProtocols[this.$config.protocol].cert));
+
+				this.$config.secureProtocols[this.$config.protocol].key = secureKey;
+				this.$config.secureProtocols[this.$config.protocol].cert = secureCert;
+
+				this.$server = protocol.createSecureServer(this.$config.secureProtocols[this.$config.protocol], this.$koa.callback());
+			}
+
+			// Step 2.2: Add utility to force-stop server
+			const serverDestroy = require('server-destroy');
+			serverDestroy(this.$server);
+
+			// Step 2.3: Start listening to events
+			this.$server.on('connection', this._serverConnection.bind(this));
+
+			this.$koa.on('error', this._handleKoaError.bind(this));
+			this.$server.on('error', this._serverError.bind(this));
+
+			// Step 2.4: Setup the server to listen to requests forwarded via Ringpop, just in case
+			this.$dependencies.RingpopService.on('request', this._processRequestFromAnotherNode.bind(this));
+
+			// Finally, Start listening...
+			this.$server = promises.promisifyAll(this.$server);
+			this.$parent.once('server-online', this._listenAndPrintNetworkInterfaces.bind(this));
+
+			return null;
+		}
+		catch(err) {
+			throw new TwyrSrvcError(`${this.name}::_startup error`, err);
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @override
+	 * @instance
+	 * @memberof WebserverService
+	 * @name     _teardown
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Destroys the ExpressJS Web Server.
+	 */
+	async _teardown() {
+		try {
+			this.$dependencies.RingpopService.off('request', this._processRequestFromAnotherNode.bind(this));
+
+			if(!this.$server) return null;
+			if(this.$server.listening) { // eslint-disable-line curly
+				await this.$server.destroyAsync();
+			}
+
+			this.$server.off('connection', this._serverConnection.bind(this));
+
+			this.$server.off('error', this._serverError.bind(this));
+			this.$koa.off('error', this._handleKoaError.bind(this));
+
+			this.$router.stack.length = 0;
+
+			delete this.$router;
+			delete this.$koa;
+			delete this.$server;
+
+			await super._teardown();
+			return null;
+		}
+		catch(err) {
+			throw new TwyrSrvcError(`${this.name}::_teardown error`, err);
+		}
+	}
+	// #endregion
+
+	// #region Configuration Change Handlers
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof WebserverService
+	 * @name     _reconfigure
+	 *
+	 * @param    {Object} newConfig - The changed configuration.
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Changes the configuration of this module, and informs everyone interested.
+	 */
+	async _reconfigure(newConfig) {
+		this.$parent.emit('server-offline');
+		await super._reconfigure(newConfig);
+		this.$parent.emit('server-online');
+
+		return null;
+	}
+	// #endregion
+
+	// #region Express Middlewares
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof WebserverService
+	 * @name     _setTenant
+	 *
+	 * @param    {Object} ctxt - Koa context.
+	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Sets up the tenant context on each request so Ringpop knows which node in the cluster to route it to.
+	 */
+	async _setTenant(ctxt, next) {
+		try {
+			const cacheSrvc = this.$dependencies.CacheService,
+				dbSrvc = this.$dependencies.DatabaseService.knex;
+
+			let tenantSubDomain = 'www';
+			if(ctxt.subdomains.length) {
+				ctxt.subdomains.reverse();
+				tenantSubDomain = ctxt.subdomains.join('.');
+				ctxt.subdomains.reverse();
+			}
+
+			if(this.$config.subdomainMappings &amp;&amp; this.$config.subdomainMappings[tenantSubDomain])
+				tenantSubDomain = this.$config.subdomainMappings[tenantSubDomain];
+
+			let tenant = null;
+			if(ctxt.get['tenant']) { // eslint-disable-line curly
+				tenant = JSON.parse(ctxt.get['tenant']);
+			}
+
+			if(!tenant) {
+				tenant = await cacheSrvc.getAsync(`twyr!webapp!tenant!${tenantSubDomain}`);
+				if(tenant) tenant = JSON.parse(tenant);
+			}
+
+			if(!tenant) {
+				tenant = await dbSrvc.raw('SELECT id, name, sub_domain FROM tenants WHERE sub_domain = ?', [tenantSubDomain]);
+				if(!tenant.rows.length) throw new Error(`Invalid sub-domain: ${tenantSubDomain}`);
+
+				tenant = tenant.rows.shift();
+
+				const cacheMulti = cacheSrvc.multi();
+				cacheMulti.setAsync(`twyr!webapp!tenant!${tenantSubDomain}`, JSON.stringify(tenant));
+				cacheMulti.expireAsync(`twyr!webapp!tenant!${tenantSubDomain}`, ((twyrEnv === 'development') ? 30 : 43200));
+
+				await cacheMulti.execAsync();
+			}
+
+			ctxt.state.tenant = tenant;
+			ctxt.request.headers['tenant'] = JSON.stringify(tenant);
+
+			await next();
+		}
+		catch(err) {
+			let error = err;
+
+			// eslint-disable-next-line curly
+			if(error &amp;&amp; !(error instanceof TwyrSrvcError)) {
+				error = new TwyrSrvcError(`${this.name}::_setTenant`, error);
+			}
+
+			throw error;
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof WebserverService
+	 * @name     _auditLog
+	 *
+	 * @param    {Object} ctxt - Koa context.
+	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Pushes the data from the request/response cycle to the Audit Service for publication.
+	 */
+	async _auditLog(ctxt, next) {
+		try {
+			const convertHRTime = require('convert-hrtime');
+			const moment = require('moment');
+			const statusCodes = require('http').STATUS_CODES;
+
+			const logMsgMeta = {
+				'id': ctxt.state.id,
+				'start-time': moment().valueOf(),
+				'duration': 0,
+
+				'user': {
+					'id': ctxt.state.user ? ctxt.state.user.id : 'ffffffff-ffff-4fff-ffff-ffffffffffff',
+					'name': ctxt.state.user ? `${ctxt.state.user.first_name} ${ctxt.state.user.last_name}` : 'Public'
+				},
+
+				'tenant': {
+					'id': ctxt.state.tenant ? ctxt.state.tenant.id : '00000000-0000-4000-0000-000000000000',
+					'sub-domain': ctxt.state.tenant ? ctxt.state.tenant.sub_domain : '???',
+					'name': ctxt.state.tenant ? ctxt.state.tenant.name : 'Unknown'
+				},
+
+				'request-meta': {
+					'headers': JSON.parse(JSON.stringify(ctxt.request.headers)),
+					'method': ctxt.request.method,
+					'url': ctxt.request.url,
+					'ip': ctxt.request.ip,
+					'ips': JSON.parse(JSON.stringify(ctxt.request.ips || []))
+				},
+
+				'response-meta': {
+				},
+
+				'query': JSON.parse(JSON.stringify(ctxt.query || {})),
+				'params': JSON.parse(JSON.stringify(ctxt.params || {})),
+				'body': JSON.parse(JSON.stringify(ctxt.request.body || {})),
+				'payload': null,
+				'error': null
+			};
+
+			const startTime = process.hrtime();
+			if(next) await next();
+			const duration = process.hrtime(startTime);
+
+			logMsgMeta.duration = convertHRTime(duration).milliseconds;
+
+			logMsgMeta['response-meta']['headers'] = JSON.parse(JSON.stringify(ctxt.response.headers));
+			logMsgMeta['response-meta']['status'] = {
+				'code': ctxt.status,
+				'message': statusCodes[ctxt.status]
+			};
+
+			logMsgMeta['payload'] = (Buffer.isBuffer(ctxt.body)) ? 'BUFFER' : JSON.parse(JSON.stringify(ctxt.body || {}));
+			logMsgMeta['error'] = ctxt.state.error || (ctxt.status >= 400);
+
+			logMsgMeta['request-meta']['headers']['tenant'] = undefined;
+			await this.$dependencies.AuditService.publish(logMsgMeta);
+		}
+		catch(err) {
+			let error = err;
+
+			// eslint-disable-next-line curly
+			if(error &amp;&amp; !(error instanceof TwyrSrvcError)) {
+				error = new TwyrSrvcError(`${this.name}::_auditLog`, error);
+			}
+
+			throw error;
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof WebserverService
+	 * @name     _handleOrProxytoCluster
+	 *
+	 * @param    {Object} ctxt - Koa context.
+	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Call Ringpop to decide whether to handle the request, or to forward it someplace else.
+	 */
+	async _handleOrProxytoCluster(ctxt, next) {
+		try {
+			const ringpop = this.$dependencies.RingpopService;
+
+			const hostPort = [];
+			hostPort.push(ringpop.lookup(ctxt.state.tenant.id).split(':').shift());
+			hostPort.push(this.$config.port || 9100);
+			// hostPort.push(this.$config.port === 9100 ? 9101 : 9100);
+
+			const dest = `${this.$config.protocol}://${hostPort.join(':')}${ctxt.path}`;
+
+			if(ringpop.lookup(ctxt.state.tenant.id) === ringpop.whoami()) {
+				delete this.$proxies[dest];
+
+				await next();
+				return;
+			}
+
+			delete this.$serveFavicons[ctxt.state.tenant.sub_domain];
+			delete this.$serveStatics[ctxt.state.tenant.sub_domain];
+
+			if(!this.$proxies[dest]) {
+				const proxy = require('koa-better-http-proxy');
+				this.$proxies[dest] = proxy(dest, {
+					'preserveReqSession': true,
+					'preserveHostHdr': true
+				});
+			}
+
+			await this.$proxies[dest](ctxt, next);
+		}
+		catch(err) {
+			let error = err;
+
+			// eslint-disable-next-line curly
+			if(error &amp;&amp; !(error instanceof TwyrSrvcError)) {
+				error = new TwyrSrvcError(`${this.name}::_handleOrProxytoCluster`, error);
+			}
+
+			throw error;
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof WebserverService
+	 * @name     _serveTenantFavicon
+	 *
+	 * @param    {Object} ctxt - Koa context.
+	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Return the favicon set by the tenant.
+	 */
+	async _serveTenantFavicon(ctxt, next) {
+		const path = require('path');
+		const serveFavicon = require('koa-favicon');
+
+		try {
+			const tenantFaviconPath = path.join(path.dirname(path.dirname(require.main.filename)), 'static_assets', ctxt.state.tenant['sub_domain'], 'favicon.ico');
+			if(!this.$serveFavicons[ctxt.state.tenant.sub_domain]) { // eslint-disable-line curly
+				this.$serveFavicons[ctxt.state.tenant.sub_domain] = serveFavicon(tenantFaviconPath);
+			}
+
+			await this.$serveFavicons[ctxt.state.tenant.sub_domain](ctxt, next);
+		}
+		catch(err) {
+			await next();
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof WebserverService
+	 * @name     _serveTenantStaticAssets
+	 *
+	 * @param    {Object} ctxt - Koa context.
+	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Serve up the static assets from the current tenants folder.
+	 */
+	async _serveTenantStaticAssets(ctxt, next) {
+		const path = require('path');
+		const serveStatic = require('koa-static');
+
+		try {
+			const tenantStaticAssetPath = path.join(path.dirname(path.dirname(require.main.filename)), 'static_assets', ctxt.state.tenant['sub_domain']);
+			if(!this.$serveStatics[ctxt.state.tenant.sub_domain]) { // eslint-disable-line curly
+				this.$serveStatics[ctxt.state.tenant.sub_domain] = serveStatic(tenantStaticAssetPath);
+			}
+
+			await this.$serveStatics[ctxt.state.tenant.sub_domain](ctxt, next);
+		}
+		catch(err) {
+			await next();
+		}
+	}
+
+	// #endregion
+
+	// #region Miscellaneous
+	/**
+	 * @function
+	 * @instance
+	 * @memberof WebserverService
+	 * @name     _processRequestFromAnotherNode
+	 *
+	 * @param    {Object} request - Request coming in from the outside world.
+	 * @param    {Object} response - Response going out to the outside world.
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Returns a function that can handle the request coming in from another Ringpop node.
+	 */
+	_processRequestFromAnotherNode(request, response) {
+		response.end();
+	}
+	// #endregion
+
+	// #region Private Methods
+	_serverConnection(socket) {
+		socket.setTimeout(this.$config.connectionTimeout * 1000);
+	}
+
+	_serverError(err) {
+		let error = err;
+
+		// eslint-disable-next-line curly
+		if(error &amp;&amp; !(error instanceof TwyrSrvcError)) {
+			error = new TwyrSrvcError(`${this.name}::_serverError`, error);
+		}
+
+		this.$dependencies.LoggerService.error(`${this.name}::_serverError\n\n${error.toString()}`);
+	}
+
+	_handleKoaError(err, ctxt) {
+		let error = err;
+
+		// eslint-disable-next-line curly
+		if(error &amp;&amp; !(error instanceof TwyrSrvcError)) {
+			error = new TwyrSrvcError(`${this.name}::_handleKoaError`, error);
+		}
+
+		ctxt.state.error = error;
+		this._auditLog(ctxt);
+	}
+
+	async _listenAndPrintNetworkInterfaces() {
+		await snooze(1000);
+		await this.$server.listenAsync(this.$config.port || 9090);
+
+		if(twyrEnv !== 'development' &amp;&amp; twyrEnv !== 'test')
+			return;
+
+		const forPrint = [],
+			networkInterfaces = require('os').networkInterfaces();
+
+		Object.keys(networkInterfaces).forEach((networkInterfaceName) => {
+			const networkInterfaceAddresses = networkInterfaces[networkInterfaceName];
+
+			for(const address of networkInterfaceAddresses)
+				forPrint.push({
+					'Interface': networkInterfaceName,
+					'Protocol': address.family,
+					'Address': address.address,
+					'Port': this.$config.port || 9090
+				});
+		});
+
+		console.table(forPrint);
+	}
+	// #endregion
+
+	// #region Properties
+	/**
+	 * @override
+	 */
+	get Interface() {
+		return {
+			'Router': this.$router,
+			'Server': this.$server
+		};
+	}
+
+	/**
+	 * @override
+	 */
+	get dependencies() {
+		return [
+			'AuditService',
+			'AuthService',
+			'CacheService',
+			'ConfigurationService',
+			'DatabaseService',
+			'LocalizationService',
+			'LoggerService',
+			'RingpopService'
+		].concat(super.dependencies);
+	}
+
+	/**
+	 * @override
+	 */
+	get basePath() {
+		return __dirname;
+	}
+	// #endregion
+}
+
+exports.service = WebserverService;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+    
+    
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Thu Jul 26 2018 11:10:40 GMT+0530 (India Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+
+<script src="scripts/jquery-3.1.1.min.js"></script>
+
+<script src="scripts/search.js"></script>
+
+
+<script src="scripts/collapse.js"></script>
+
+
+
+</body>
+</html>

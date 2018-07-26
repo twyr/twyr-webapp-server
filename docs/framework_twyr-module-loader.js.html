@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="utf-8">
+    <title>framework/twyr-module-loader.js - Twyr Web Application Server</title>
+    
+    <meta name="description" content="Twyr Web Application Server" />
+    
+        <meta name="keywords" content="twyr" />
+        <meta name="keyword" content="twyr" />
+    
+    
+    
+    <meta property="og:title" content="Twyr Web Application Server"/>
+    <meta property="og:type" content="documentation"/>
+    <meta property="og:image" content="./tenant_assets/www/img/logo.png"/>
+    <meta property="og:site_name" content="Twyr Web Application Server"/>
+    <meta property="og:url" content="https://twyr.github.io/twyr-webapp-server"/>
+    
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    
+    <input type="text" id="nav-search" placeholder="Search" />
+    
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ApiService.html">ApiService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="ApiService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#add">add</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#execute">execute</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#remove">remove</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="ApiService.html#unload">unload</a></li></ul></li><li><a href="AuditService.html">AuditService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="AuditService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_cleanBeforePublish">_cleanBeforePublish</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#publish">publish</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="AuditService.html#unload">unload</a></li></ul></li><li><a href="AuthService.html">AuthService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="AuthService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="AuthService.html#unload">unload</a></li></ul></li><li><a href="AwsService.html">AwsService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="AwsService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="AwsService.html#unload">unload</a></li></ul></li><li><a href="CacheService.html">CacheService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="CacheService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="CacheService.html#unload">unload</a></li></ul></li><li><a href="CassandraService.html">CassandraService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="CassandraService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="CassandraService.html#unload">unload</a></li></ul></li><li><a href="ConfigurationService.html">ConfigurationService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#getModuleId">getModuleId</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#getModuleState">getModuleState</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#loadConfiguration">loadConfiguration</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#saveConfiguration">saveConfiguration</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#setModuleState">setModuleState</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="ConfigurationService.html#unload">unload</a></li></ul></li><li><a href="ConfigurationServiceLoader.html">ConfigurationServiceLoader</a><ul class='methods'><li data-type='method' style='display: none;'><a href="ConfigurationServiceLoader.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="ConfigurationServiceLoader.html#load">load</a></li><li data-type='method' style='display: none;'><a href="ConfigurationServiceLoader.html#start">start</a></li><li data-type='method' style='display: none;'><a href="ConfigurationServiceLoader.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="ConfigurationServiceLoader.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="ConfigurationServiceLoader.html#unload">unload</a></li></ul></li><li><a href="DatabaseConfigurationService.html">DatabaseConfigurationService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_processStateChange">_processStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#getModuleId">getModuleId</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#getModuleState">getModuleState</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#loadConfiguration">loadConfiguration</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#saveConfiguration">saveConfiguration</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#setModuleState">setModuleState</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="DatabaseConfigurationService.html#unload">unload</a></li></ul></li><li><a href="DatabaseService.html">DatabaseService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="DatabaseService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="DatabaseService.html#unload">unload</a></li></ul></li><li><a href="FileConfigurationService.html">FileConfigurationService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_onDeleteConfiguration">_onDeleteConfiguration</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_onNewConfiguration">_onNewConfiguration</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_onUpdateConfiguration">_onUpdateConfiguration</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_processStateChange">_processStateChange</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#getModuleId">getModuleId</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#getModuleState">getModuleState</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#loadConfiguration">loadConfiguration</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#saveConfiguration">saveConfiguration</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#setModuleState">setModuleState</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="FileConfigurationService.html#unload">unload</a></li></ul></li><li><a href="LocalizationService.html">LocalizationService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="LocalizationService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="LocalizationService.html#unload">unload</a></li></ul></li><li><a href="LoggerService.html">LoggerService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="LoggerService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="LoggerService.html#unload">unload</a></li></ul></li><li><a href="MailerService.html">MailerService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="MailerService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="MailerService.html#unload">unload</a></li></ul></li><li><a href="PubsubService.html">PubsubService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="PubsubService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#publish">publish</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#subscribe">subscribe</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#unload">unload</a></li><li data-type='method' style='display: none;'><a href="PubsubService.html#unsubscribe">unsubscribe</a></li></ul></li><li><a href="RingpopService.html">RingpopService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="RingpopService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="RingpopService.html#unload">unload</a></li></ul></li><li><a href="TwyrApplication.html">TwyrApplication</a><ul class='methods'><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#bootupServer">bootupServer</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#load">load</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#shutdownServer">shutdownServer</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#start">start</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="TwyrApplication.html#unload">unload</a></li></ul></li><li><a href="TwyrBaseClass.html">TwyrBaseClass</a><ul class='methods'><li data-type='method' style='display: none;'><a href="TwyrBaseClass.html#_handleUncaughtException">_handleUncaughtException</a></li></ul></li><li><a href="TwyrBaseError.html">TwyrBaseError</a></li><li><a href="TwyrBaseModule.html">TwyrBaseModule</a><ul class='methods'><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#load">load</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#start">start</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseModule.html#unload">unload</a></li></ul></li><li><a href="TwyrBaseService.html">TwyrBaseService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="TwyrBaseService.html#unload">unload</a></li></ul></li><li><a href="TwyrModuleLoader.html">TwyrModuleLoader</a><ul class='methods'><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_doLifecycleAction">_doLifecycleAction</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_filterStatus">_filterStatus</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_findFiles">_findFiles</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_getDependencies">_getDependencies</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_initializeComponents">_initializeComponents</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_initializeMiddlewares">_initializeMiddlewares</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_initializeServices">_initializeServices</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_initializeTemplates">_initializeTemplates</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_loadComponents">_loadComponents</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_loadMiddlewares">_loadMiddlewares</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_loadServices">_loadServices</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_loadTemplates">_loadTemplates</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_loadUtilities">_loadUtilities</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_startComponents">_startComponents</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_startMiddlewares">_startMiddlewares</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_startServices">_startServices</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_startTemplates">_startTemplates</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_stopComponents">_stopComponents</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_stopMiddlewares">_stopMiddlewares</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_stopServices">_stopServices</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_stopTemplates">_stopTemplates</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_uninitializeComponents">_uninitializeComponents</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_uninitializeMiddlewares">_uninitializeMiddlewares</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_uninitializeServices">_uninitializeServices</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_uninitializeTemplates">_uninitializeTemplates</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_unloadComponents">_unloadComponents</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_unloadMiddlewares">_unloadMiddlewares</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_unloadServices">_unloadServices</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_unloadTemplates">_unloadTemplates</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#_unloadUtilities">_unloadUtilities</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#load">load</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#start">start</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="TwyrModuleLoader.html#unload">unload</a></li></ul></li><li><a href="WebserverService.html">WebserverService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="WebserverService.html#_auditLog">_auditLog</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_handleOrProxytoCluster">_handleOrProxytoCluster</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_processRequestFromAnotherNode">_processRequestFromAnotherNode</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_serveTenantFavicon">_serveTenantFavicon</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_serveTenantStaticAssets">_serveTenantStaticAssets</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_setTenant">_setTenant</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="WebserverService.html#unload">unload</a></li></ul></li><li><a href="WebsocketService.html">WebsocketService</a><ul class='methods'><li data-type='method' style='display: none;'><a href="WebsocketService.html#_changeState">_changeState</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_dependencyReconfigure">_dependencyReconfigure</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_dependencyStateChange">_dependencyStateChange</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_exists">_exists</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_handleUncaughtException">_handleUncaughtException</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_parentReconfigure">_parentReconfigure</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_parentStateChange">_parentStateChange</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_reconfigure">_reconfigure</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_setup">_setup</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_subModuleReconfigure">_subModuleReconfigure</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_subModuleStateChange">_subModuleStateChange</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#_teardown">_teardown</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#initialize">initialize</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#load">load</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#start">start</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#stop">stop</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#uninitialize">uninitialize</a></li><li data-type='method' style='display: none;'><a href="WebsocketService.html#unload">unload</a></li></ul></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">framework/twyr-module-loader.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>'use strict';
+
+/**
+ * Module dependencies, required for ALL Twyr' modules
+ * @ignore
+ */
+
+/**
+ * Module dependencies, required for this module
+ * @ignore
+ */
+const TwyrBaseClass = require('./twyr-base-class').TwyrBaseClass;
+const TwyrBaseError = require('./twyr-base-error').TwyrBaseError;
+
+const TwyrBaseService = require('./twyr-base-service').TwyrBaseService;
+
+/**
+ * @class   TwyrModuleLoader
+ * @extends {TwyrBaseClass}
+ * @classdesc The Twyr Server Base Class for all Module Loaders.
+ *
+ * @param   {TwyrBaseModule} [twyrModule] - The parent module, if any.
+ *
+ * @description
+ * Serves as the "base class" for all other loaders in the Twyr Web Application Server, including {@link TwyrComponentLoader},
+ * {@link TwyrMiddlewareLoader}, {@link TwyrServiceLoader}, and {@link TwyrTemplateLoader}.
+ *
+ * Responsible for invoking the standard "lifecycle" hooks on sub-modules of this module, if any - see {@link TwyrBaseModule#load},
+ * {@link TwyrBaseModule#initialize}, {@link TwyrBaseModule#start}, {@link TwyrBaseModule#stop}, {@link TwyrBaseModule#uninitialize},
+ * and {@link TwyrBaseModule#unload}.
+ *
+ */
+class TwyrModuleLoader extends TwyrBaseClass {
+	// #region Constructor
+	constructor(twyrModule) {
+		super();
+
+		Object.defineProperties(this, {
+			'$twyrModule': {
+				'get': () => { return twyrModule; }
+			}
+		});
+	}
+	// #endregion
+
+	// #region Lifecycle hooks
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     load
+	 *
+	 * @param    {ConfigurationService} configSrvc - Instance of the {@link ConfigurationService} that supplies configuration.
+	 *
+	 * @returns  {Object} - The load status of $twyrModule's sub-modules.
+	 *
+	 * @summary  Loads sub-modules.
+	 */
+	async load(configSrvc) {
+		try {
+			const allStatuses = [];
+			let lifecycleStatuses = null;
+
+			lifecycleStatuses = await this._loadUtilities(configSrvc);
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._loadServices(configSrvc);
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._loadMiddlewares(configSrvc);
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._loadComponents(configSrvc);
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._loadTemplates(configSrvc);
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+			return this._filterStatus(allStatuses);
+		}
+		catch(err) {
+			throw new TwyrBaseError(`${this.$twyrModule.name}::loader::load error`, err);
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     initialize
+	 *
+	 * @returns  {Object} - The initialization status of $twyrModule's sub-modules.
+	 *
+	 * @summary  Initializes sub-modules.
+	 */
+	async initialize() {
+		try {
+			const allStatuses = [];
+			let lifecycleStatuses = null;
+
+			lifecycleStatuses = await this._initializeServices();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._initializeMiddlewares();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._initializeComponents();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._initializeTemplates();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+			return this._filterStatus(allStatuses);
+		}
+		catch(err) {
+			throw new TwyrBaseError(`${this.$twyrModule.name}::loader::initialize error`, err);
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     start
+	 *
+	 * @returns  {Object} - The start status of $twyrModule's sub-modules.
+	 *
+	 * @summary  Starts sub-modules.
+	 */
+	async start() {
+		try {
+			const allStatuses = [];
+			let lifecycleStatuses = null;
+
+			lifecycleStatuses = await this._startServices();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._startMiddlewares();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._startComponents();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._startTemplates();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+			return this._filterStatus(allStatuses);
+		}
+		catch(err) {
+			throw new TwyrBaseError(`${this.$twyrModule.name}::loader::start error`, err);
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     stop
+	 *
+	 * @returns  {Object} - The stop status of $twyrModule's sub-modules.
+	 *
+	 * @summary  Stops sub-modules.
+	 */
+	async stop() {
+		try {
+			const allStatuses = [];
+			let lifecycleStatuses = null;
+
+			lifecycleStatuses = await this._stopTemplates();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._stopComponents();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._stopMiddlewares();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._stopServices();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+			return this._filterStatus(allStatuses);
+		}
+		catch(err) {
+			throw new TwyrBaseError(`${this.$twyrModule.name}::loader::stop error`, err);
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     uninitialize
+	 *
+	 * @returns  {Object} - The uninitialization status of $twyrModule's sub-modules.
+	 *
+	 * @summary  Un-initializes sub-modules.
+	 */
+	async uninitialize() {
+		try {
+			const allStatuses = [];
+			let lifecycleStatuses = null;
+
+			lifecycleStatuses = await this._uninitializeTemplates();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._uninitializeComponents();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._uninitializeMiddlewares();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._uninitializeServices();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+			return this._filterStatus(allStatuses);
+		}
+		catch(err) {
+			throw new TwyrBaseError(`${this.$twyrModule.name}::loader::uninitialize error`, err);
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     unload
+	 *
+	 * @returns  {Object} - The unloading status of $twyrModule's sub-modules.
+	 *
+	 * @summary  Unloads sub-modules.
+	 */
+	async unload() {
+		try {
+			const allStatuses = [];
+			let lifecycleStatuses = null;
+
+			lifecycleStatuses = await this._unloadTemplates();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._unloadComponents();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._unloadMiddlewares();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._unloadServices();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._unloadUtilities();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+			return this._filterStatus(allStatuses);
+		}
+		catch(err) {
+			throw new TwyrBaseError(`${this.$twyrModule.name}::loader::unload error`, err);
+		}
+	}
+	// #endregion
+
+	// #region Utilities Lifecycle hooks
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _loadUtilities
+	 *
+	 * @param    {ConfigurationService} configSrvc - Instance of the {@link ConfigurationService} that supplies configuration.
+	 *
+	 * @returns  {Object} Object containing the load status of each of the $twyrModule utilities.
+	 *
+	 * @summary  Load utilities defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _loadUtilities(configSrvc) { // eslint-disable-line no-unused-vars
+		const path = require('path');
+		const promises = require('bluebird');
+
+		try {
+			if(!this.$twyrModule.$utilities) this.$twyrModule.$utilities = {};
+
+			const definedUtilities = await this._findFiles(path.join(this.$twyrModule.basePath, 'utilities'), 'utility.js');
+			for(const definedUtility of definedUtilities) {
+				const utility = require(definedUtility).utility;
+				if(!utility) continue;
+
+				if(!utility.name || !utility.method)
+					continue;
+
+				this.$twyrModule.$utilities[utility.name] = utility.method.bind(this.$twyrModule);
+				if(utility.isAsync) this.$twyrModule.$utilities[`${utility.name}Async`] = promises.promisify(utility.method.bind(this.$twyrModule));
+			}
+
+			return {
+				'type': 'utilities',
+				'status': Object.keys(this.$twyrModule.$utilities).length ? Object.keys(this.$twyrModule.$utilities) : null
+			};
+		}
+		catch(err) {
+			return {
+				'type': 'utilities',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_loadUtilities error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _unloadUtilities
+	 *
+	 * @returns  {Object} Object containing the unload status of each of the $twyrModule utilities.
+	 *
+	 * @summary  Unload utilities defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _unloadUtilities() {
+		try {
+			const utilityNames = Object.keys(this.$twyrModule.$utilities || {});
+			utilityNames.forEach((utilityName) => {
+				delete this.$twyrModule.$utilities[utilityName];
+				delete this.$twyrModule.$utilities[`${utilityName}Async`];
+			});
+
+			delete this.$twyrModule.$utilities;
+			return {
+				'type': 'utilities',
+				'status': utilityNames.length ? utilityNames : null
+			};
+		}
+		catch(err) {
+			return {
+				'type': 'utilities',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_unloadServices error`, err)
+			};
+		}
+	}
+	// #endregion
+
+	// #region Services Lifecycle hooks
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _loadServices
+	 *
+	 * @param    {ConfigurationService} configSrvc - Instance of the {@link ConfigurationService} that supplies configuration.
+	 *
+	 * @returns  {Object} Object containing the load status of each of the $twyrModule services.
+	 *
+	 * @summary  Load services defined as part of this {@link TwyrBaseModule}.
+	 *
+	 * @description
+	 * Special processing:
+	 * If the configSrvc parameter is undefined, load the {@link ConfigurationService} first, if any found.
+	 *
+	 * Since the {@link ConfigurationServiceLoader} calls load / initialize / start in one shot, the other sub-modules get, basically,
+	 * a fully functional configuration service by the time they load, allowing them to use their configurations from the get-go.
+	 */
+	async _loadServices(configSrvc) {
+		const path = require('path');
+
+		try {
+			if(!this.$twyrModule.$services) this.$twyrModule.$services = {};
+
+			const definedServices = await this._findFiles(path.join(this.$twyrModule.basePath, 'services'), 'service.js');
+
+			let configSrvcLoadStatus = null,
+				instConfigSrvc = null;
+
+			if(!configSrvc) { // eslint-disable-line curly
+				for(const definedService of definedServices) {
+					const Service = require(definedService).service;
+					if(!Service) continue;
+
+					// Construct the Service...
+					instConfigSrvc = new Service(this.$twyrModule);
+					instConfigSrvc.$dependants = [];
+
+					if(instConfigSrvc.name !== 'ConfigurationService') {
+						instConfigSrvc = undefined;
+						continue;
+					}
+
+					// Check to see valid typeof
+					// eslint-disable-next-line curly
+					if(!(instConfigSrvc instanceof TwyrBaseService)) {
+						throw new TwyrBaseError(`${definedService} does not contain a valid TwyrBaseService definition`);
+					}
+
+					configSrvcLoadStatus = await instConfigSrvc.load(null);
+					break;
+				}
+			}
+
+			for(const definedService of definedServices) {
+				// Check validity of the definition...
+				const Service = require(definedService).service;
+				if(!Service) continue;
+
+				// Construct the service
+				const serviceInstance = new Service(this.$twyrModule);
+				serviceInstance.$dependants = [];
+
+				if(serviceInstance.name === 'ConfigurationService')
+					continue;
+
+				// Check to see valid typeof
+				// eslint-disable-next-line curly
+				if(!(serviceInstance instanceof TwyrBaseService)) {
+					throw new TwyrBaseError(`${definedService} does not contain a valid TwyrBaseService definition`);
+				}
+
+				this.$twyrModule.$services[serviceInstance.name] = serviceInstance;
+			}
+
+			const nameStatusPairs = await this._doLifecycleAction('services', 'load', [configSrvc || instConfigSrvc]);
+
+			if(instConfigSrvc) {
+				this.$twyrModule.$services['ConfigurationService'] = instConfigSrvc;
+				nameStatusPairs['ConfigurationService'] = configSrvcLoadStatus;
+			}
+
+			return {
+				'type': 'services',
+				'status': nameStatusPairs
+			};
+		}
+		catch(err) {
+			return {
+				'type': 'services',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_loadServices error`, err)
+
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _initializeServices
+	 *
+	 * @returns  {Object} Object containing the initialization status of each of the $twyrModule services.
+	 *
+	 * @summary  Initialize Services defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _initializeServices() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('services', 'initialize');
+			return { 'type': 'services', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'services',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_initializeServices error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _startServices
+	 *
+	 * @returns  {Object} Object containing the start status of each of the $twyrModule services.
+	 *
+	 * @summary  Start Services defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _startServices() {
+		try {
+			const DepGraph = require('dependency-graph').DepGraph;
+			const initOrder = new DepGraph();
+
+			const serviceNames = Object.keys(this.$twyrModule.$services || {});
+			serviceNames.forEach((serviceName) => {
+				initOrder.addNode(serviceName);
+			});
+
+			serviceNames.forEach((serviceName) => {
+				const thisService = this.$twyrModule.$services[serviceName];
+				if(!thisService.dependencies.length) return;
+
+				thisService.dependencies.forEach((thisServiceDependency) => {
+					if(serviceNames.indexOf(thisServiceDependency) &lt; 0) return;
+					initOrder.addDependency(thisService.name, thisServiceDependency);
+				});
+			});
+
+			const initOrderList = initOrder.overallOrder();
+
+			const nameStatusPairs = {};
+			for(const serviceName of initOrderList) {
+				let lifecycleStatus = null;
+				try {
+					const moduleInstance = this.$twyrModule.$services[serviceName];
+					const dependencies = this._getDependencies(moduleInstance);
+
+					lifecycleStatus = await moduleInstance.start(dependencies);
+				}
+				catch(err) {
+					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_startServices::${serviceName} error`, err);
+				}
+
+				nameStatusPairs[serviceName] = lifecycleStatus;
+			}
+
+			return { 'type': 'services', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'services',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_startServices error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _stopServices
+	 *
+	 * @returns  {Object} Object containing the stop status of each of the $twyrModule services.
+	 *
+	 * @summary  Stop Services defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _stopServices() {
+		try {
+			const DepGraph = require('dependency-graph').DepGraph;
+			const uninitOrder = new DepGraph();
+
+			const serviceNames = Object.keys(this.$twyrModule.$services || {});
+			serviceNames.forEach((serviceName) => {
+				uninitOrder.addNode(serviceName);
+			});
+
+			serviceNames.forEach((serviceName) => {
+				const thisService = this.$twyrModule.$services[serviceName];
+				if(!thisService.dependencies.length) return;
+
+				thisService.dependencies.forEach((thisServiceDependency) => {
+					if(serviceNames.indexOf(thisServiceDependency) &lt; 0) return;
+					uninitOrder.addDependency(thisService.name, thisServiceDependency);
+				});
+			});
+
+			const uninitOrderList = uninitOrder.overallOrder().reverse();
+
+			const nameStatusPairs = {};
+			for(const serviceName of uninitOrderList) {
+				let lifecycleStatus = null;
+				try {
+					lifecycleStatus = await this.$twyrModule.$services[serviceName].stop();
+				}
+				catch(err) {
+					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_stopServices error`, err);
+				}
+
+				nameStatusPairs[serviceName] = lifecycleStatus;
+			}
+
+			return {
+				'type': 'services',
+				'status': nameStatusPairs
+			};
+		}
+		catch(err) {
+			return {
+				'type': 'services',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_stopServices error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _uninitializeServices
+	 *
+	 * @returns  {Object} Object containing the uninit status of each of the $twyrModule services.
+	 *
+	 * @summary  Uninitialize Services defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _uninitializeServices() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('services', 'uninitialize');
+			return { 'type': 'services', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'services',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_uninitializeServices error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _unloadServices
+	 *
+	 * @returns  {Object} Object containing the unload status of each of the $twyrModule services.
+	 *
+	 * @summary  Unload Services defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _unloadServices() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('services', 'unload');
+			return { 'type': 'services', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'services',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_uninitializeServices error`, err)
+			};
+		}
+	}
+	// #endregion
+
+	// #region Middlewares Lifecycle hooks
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _loadMiddlewares
+	 *
+	 * @param    {ConfigurationService} configSrvc - Instance of the {@link ConfigurationService} that supplies configuration.
+	 *
+	 * @returns  {Object} Object containing the load status of each of the $twyrModule middlewares.
+	 *
+	 * @summary  Load middlewares defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _loadMiddlewares(configSrvc) {
+		const path = require('path');
+
+		try {
+			if(!this.$twyrModule.$middlewares) this.$twyrModule.$middlewares = {};
+
+			const definedMiddlewares = await this._findFiles(path.join(this.$twyrModule.basePath, 'middlewares'), 'middleware.js');
+			for(const definedMiddleware of definedMiddlewares) {
+				// Check validity of the definition...
+				const Middleware = require(definedMiddleware).middleware;
+				if(!Middleware) continue;
+
+				// Construct the service
+				const middlewareInstance = new Middleware(this.$twyrModule);
+
+				// Check to see valid typeof
+				// if(!(middlewareInstance instanceof TwyrBaseMiddleware))
+				// 	throw new TwyrBaseError(`${definedMiddleware} does not contain a valid TwyrBaseMiddleware definition`);
+
+				this.$twyrModule.$middlewares[middlewareInstance.name] = middlewareInstance;
+			}
+
+			const nameStatusPairs = await this._doLifecycleAction('middlewares', 'load', [configSrvc]);
+			return { 'type': 'middlewares', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'middlewares',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_loadMiddlewares error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _initializeMiddlewares
+	 *
+	 * @returns  {Object} Object containing the initialization status of each of the $twyrModule middlewares.
+	 *
+	 * @summary  Initialize Middlewares defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _initializeMiddlewares() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('middlewares', 'initialize');
+			return { 'type': 'middlewares', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'middlwares',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_initializeMiddlewares error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _startMiddlewares
+	 *
+	 * @returns  {Object} Object containing the start status of each of the $twyrModule middlewares.
+	 *
+	 * @summary  Start Middlewares defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _startMiddlewares() {
+		try {
+			const middlewareNames = Object.keys(this.$twyrModule.$middlewares || {}),
+				nameStatusPairs = {};
+
+			for(const middlewareName of middlewareNames) {
+				let lifecycleStatus = null;
+				try {
+					const moduleInstance = this.$twyrModule.$middlewares[middlewareName];
+					const dependencies = this._getDependencies(moduleInstance);
+
+					lifecycleStatus = await moduleInstance.start(dependencies);
+				}
+				catch(err) {
+					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_doLifecycleAction (${middlewareName} / start) error`, err);
+				}
+
+				nameStatusPairs[middlewareName] = lifecycleStatus;
+			}
+
+			return {
+				'type': 'middlewares',
+				'status': nameStatusPairs
+			};
+		}
+		catch(err) {
+			return {
+				'type': 'middlwares',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_startMiddlewares error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _stopMiddlewares
+	 *
+	 * @returns  {Object} Object containing the stop status of each of the $twyrModule middlewares.
+	 *
+	 * @summary  Stop Middlewares defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _stopMiddlewares() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('middlewares', 'stop');
+			return { 'type': 'middlewares', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'middlewares',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_stopMiddlewares error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _uninitializeMiddlewares
+	 *
+	 * @returns  {Object} Object containing the uninit status of each of the $twyrModule middlewares.
+	 *
+	 * @summary  Uninitialize Middlewares defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _uninitializeMiddlewares() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('middlewares', 'uninitialize');
+			return { 'type': 'middlewares', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'middlewares',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_uninitializeMiddlewares error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _unloadMiddlewares
+	 *
+	 * @returns  {Object} Object containing the unload status of each of the $twyrModule middlewares.
+	 *
+	 * @summary  Unload Middlewares defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _unloadMiddlewares() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('middlewares', 'unload');
+			return { 'type': 'middlewares', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'middlewares',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_unloadMiddlewares error`, err)
+			};
+		}
+	}
+	// #endregion
+
+	// #region Components Lifecycle hooks
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _loadComponents
+	 *
+	 * @param    {ConfigurationService} configSrvc - Instance of the {@link ConfigurationService} that supplies configuration.
+	 *
+	 * @returns  {Object} Object containing the load status of each of the $twyrModule components.
+	 *
+	 * @summary  Load components defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _loadComponents(configSrvc) {
+		const path = require('path');
+
+		try {
+			if(!this.$twyrModule.$components) this.$twyrModule.$components = {};
+
+			const definedComponents = await this._findFiles(path.join(this.$twyrModule.basePath, 'components'), 'component.js');
+			for(const definedComponent of definedComponents) {
+				// Check validity of the definition...
+				const Component = require(definedComponent).component;
+				if(!Component) continue;
+
+				// Construct the service
+				const componentInstance = new Component(this.$twyrModule);
+
+				// Check to see valid typeof
+				// if(!(serviceInstance instanceof TwyrBaseService))
+				// 	throw new TwyrBaseError(`${definedService} does not contain a valid TwyrBaseService definition`);
+
+				this.$twyrModule.$components[componentInstance.name] = componentInstance;
+			}
+
+			const nameStatusPairs = await this._doLifecycleAction('components', 'load', [configSrvc]);
+			return { 'type': 'components', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'components',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_loadComponents error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _initializeComponents
+	 *
+	 * @returns  {Object} Object containing the initialization status of each of the $twyrModule components.
+	 *
+	 * @summary  Initialize Components defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _initializeComponents() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('components', 'initialize');
+			return { 'type': 'components', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'components',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_initializeComponents error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _startComponents
+	 *
+	 * @returns  {Object} Object containing the start status of each of the $twyrModule components.
+	 *
+	 * @summary  Start Components defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _startComponents() {
+		try {
+			const componentNames = Object.keys(this.$twyrModule.$components || {}),
+				nameStatusPairs = {};
+
+			for(const componentName of componentNames) {
+				let lifecycleStatus = null;
+				try {
+					const moduleInstance = this.$twyrModule.$components[componentName];
+					const dependencies = this._getDependencies(moduleInstance);
+
+					lifecycleStatus = await moduleInstance.start(dependencies);
+				}
+				catch(err) {
+					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_doLifecycleAction (${componentName} / start) error`, err);
+				}
+
+				nameStatusPairs[componentName] = lifecycleStatus;
+			}
+
+			return {
+				'type': 'components',
+				'status': nameStatusPairs
+			};
+		}
+		catch(err) {
+			return {
+				'type': 'components',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_startComponents error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _stopComponents
+	 *
+	 * @returns  {Object} Object containing the stop status of each of the $twyrModule components.
+	 *
+	 * @summary  Stop Components defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _stopComponents() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('components', 'stop');
+			return { 'type': 'components', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'components',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_stopComponents error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _uninitializeComponents
+	 *
+	 * @returns  {Object} Object containing the uninit status of each of the $twyrModule components.
+	 *
+	 * @summary  Uninitialize Components defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _uninitializeComponents() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('components', 'uninitialize');
+			return { 'type': 'components', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'components',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_uninitializeComponents error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _unloadComponents
+	 *
+	 * @returns  {Object} Object containing the unload status of each of the $twyrModule components.
+	 *
+	 * @summary  Unload Components defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _unloadComponents() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('components', 'unload');
+			return { 'type': 'components', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'components',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_unloadComponents error`, err)
+			};
+		}
+	}
+	// #endregion
+
+	// #region Templates Lifecycle hooks
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _loadTemplates
+	 *
+	 * @param    {ConfigurationService} configSrvc - Instance of the {@link ConfigurationService} that supplies configuration.
+	 *
+	 * @returns  {Object} Object containing the load status of each of the $twyrModule templates.
+	 *
+	 * @summary  Load templates defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _loadTemplates(configSrvc) {
+		const path = require('path');
+
+		try {
+			if(!this.$twyrModule.$templates) this.$twyrModule.$templates = {};
+
+			const definedTemplates = await this._findFiles(path.join(this.$twyrModule.basePath, 'templates'), 'template.js');
+
+			for(const definedTemplate of definedTemplates) {
+				// Check validity of the definition...
+				const Template = require(definedTemplate).template;
+				if(!Template) continue;
+
+				// Construct the template
+				const templateInstance = new Template(this.$twyrModule);
+
+				// Check to see valid typeof
+				// if(!(serviceInstance instanceof TwyrBaseService))
+				// 	throw new TwyrBaseError(`${definedService} does not contain a valid TwyrBaseService definition`);
+
+				this.$twyrModule.$templates[templateInstance.name] = templateInstance;
+			}
+
+			const nameStatusPairs = await this._doLifecycleAction('templates', 'load', [configSrvc]);
+			return { 'type': 'templates', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'templates',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_loadTemplates error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _initializeTemplates
+	 *
+	 * @returns  {Object} Object containing the initialization status of each of the $twyrModule templates.
+	 *
+	 * @summary  Initialize Templates defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _initializeTemplates() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('templates', 'initialize');
+			return { 'type': 'templates', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'templates',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_initializeTemplates error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _startTemplates
+	 *
+	 * @returns  {Object} Object containing the start status of each of the $twyrModule templates.
+	 *
+	 * @summary  Start Templates defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _startTemplates() {
+		try {
+			const nameStatusPairs = {},
+				templateNames = Object.keys(this.$twyrModule.$templates || {});
+
+			for(const templateName of templateNames) {
+				let lifecycleStatus = null;
+				try {
+					const moduleInstance = this.$twyrModule.$templates[templateName];
+					const dependencies = this._getDependencies(moduleInstance);
+
+					lifecycleStatus = await moduleInstance.start(dependencies);
+				}
+				catch(err) {
+					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_doLifecycleAction (${templateName} / start) error`, err);
+				}
+
+				nameStatusPairs[templateName] = lifecycleStatus;
+			}
+
+			return {
+				'type': 'templates',
+				'status': nameStatusPairs
+			};
+		}
+		catch(err) {
+			return {
+				'type': 'templates',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_startTemplates error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _stopTemplates
+	 *
+	 * @returns  {Object} Object containing the stop status of each of the $twyrModule templates.
+	 *
+	 * @summary  Stop Templates defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _stopTemplates() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('templates', 'stop');
+			return { 'type': 'templates', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'templates',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_stopTemplates error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _uninitializeTemplates
+	 *
+	 * @returns  {Object} Object containing the uninit status of each of the $twyrModule templates.
+	 *
+	 * @summary  Uninitialize Templates defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _uninitializeTemplates() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('templates', 'uninitialize');
+			return { 'type': 'templates', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'templates',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_uninitializeTemplates error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _unloadTemplates
+	 *
+	 * @returns  {Object} Object containing the unload status of each of the $twyrModule templates.
+	 *
+	 * @summary  Unload Templates defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _unloadTemplates() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('templates', 'unload');
+			return { 'type': 'templates', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'templates',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_unloadTemplates error`, err)
+			};
+		}
+	}
+	// #endregion
+
+	// #region Utilities
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _findFiles
+	 *
+	 * @param    {string} rootDir - Path of the folder to recursively search for.
+	 * @param    {string} filename - Name of the file to search for.
+	 *
+	 * @returns  {Array} List of files in the folder matching the name passed in.
+	 *
+	 * @summary  Finds files in folders, and recursively, sub-folders, as well.
+	 */
+	async _findFiles(rootDir, filename) {
+		try {
+			const fs = require('fs-extra'),
+				path = require('path'),
+				promises = require('bluebird');
+
+			const filesystem = promises.promisifyAll(fs);
+			let fileList = [];
+
+			const exists = await this._exists(path.join(rootDir, filename));
+			if(exists) {
+				fileList.push(path.join(rootDir, filename));
+				return fileList;
+			}
+
+			const rootDirObjects = await filesystem.readdirAsync(rootDir);
+			if(!rootDirObjects) return null;
+
+			const rootDirFolders = [];
+			for(const rootDirObject of rootDirObjects) {
+				const rootDirFolder = path.join(rootDir, rootDirObject);
+
+				const stat = await filesystem.statAsync(rootDirFolder);
+				if(!stat.isDirectory()) continue;
+
+				rootDirFolders.push(rootDirFolder);
+			}
+
+			for(const rootDirFolder of rootDirFolders) {
+				const subFolderFiles = await this._findFiles(rootDirFolder, filename);
+				if(subFolderFiles) fileList = fileList.concat(subFolderFiles);
+			}
+
+			return fileList;
+		}
+		catch(err) {
+			return [];
+		}
+	}
+
+	/**
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _getDependencies
+	 *
+	 * @param    {TwyrBaseModule} moduleInstance - The module to find dependencies for.
+	 *
+	 * @returns  {Object} The dependencies.
+	 *
+	 * @summary  Walks up the $twyrModule.$parent chain, and at each level searches for a $service.
+	 */
+	_getDependencies(moduleInstance) {
+		try {
+			const moduleDependencies = {};
+
+			moduleInstance.dependencies.forEach((thisDependency) => {
+				let currentDependency = null,
+					currentModule = this.$twyrModule;
+
+				while(!!currentModule &amp;&amp; !currentDependency) {
+					if(!currentModule.$services) {
+						currentModule = currentModule.$parent;
+						continue;
+					}
+
+					currentDependency = currentModule.$services[thisDependency];
+					if(!currentDependency) currentModule = currentModule.$parent;
+				}
+
+				if(!currentDependency) throw new Error(`${moduleInstance.name}::dependency::${thisDependency} not found!`);
+
+				const interfaceMethod = function() {
+					if(!this.$enabled) return null;
+					return this.Interface ? this.Interface : this;
+				}.bind(currentDependency);
+
+				Object.defineProperty(moduleDependencies, thisDependency, {
+					'__proto__': null,
+					'configurable': true,
+					'enumerable': true,
+					'get': interfaceMethod
+				});
+
+				currentDependency.$dependants.push(moduleInstance);
+			});
+
+			return moduleDependencies;
+		}
+		catch(err) {
+			throw new TwyrBaseError(`${this.$twyrModule.name}::loader::_getDependencies error`, err);
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _doLifecycleAction
+	 *
+	 * @param    {string} moduleType - The type of the module to iterate over (services, components, etc.).
+	 * @param    {string} action - The lifecycle action to execute (initialize, start, etc.).
+	 * @param    {Array} args - The arguments to pass to the lifecycle method.
+	 *
+	 * @returns  {Object} Hash map of the lifecycle status for each of the modules found.
+	 *
+	 * @summary  Executes a lifecycle action on the given hashmap.
+	 */
+	async _doLifecycleAction(moduleType, action, args) {
+		try {
+			args = args || [];
+
+			const modules = this.$twyrModule['$' + moduleType]; // eslint-disable-line prefer-template
+			const moduleNames = Object.keys(modules || {});
+
+			const nameStatusPairs = {};
+			for(const moduleName of moduleNames) {
+				let lifecycleStatus = null;
+				try {
+					const moduleInstance = modules[moduleName];
+					lifecycleStatus = await moduleInstance[action](...args);
+				}
+				catch(err) {
+					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_doLifecycleAction (${moduleName} / ${action}) error`, err);
+				}
+
+				nameStatusPairs[moduleName] = lifecycleStatus;
+			}
+
+			return nameStatusPairs;
+		}
+		catch(err) {
+			throw new TwyrBaseError(`${this.$twyrModule.name}::loader::_doLifecycleAction (${moduleType} / ${action}) error`, err);
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _exists
+	 *
+	 * @param    {string} filepath - Path of the filesystem entity.
+	 * @param    {number} mode - Permission to be checked for.
+	 *
+	 * @returns  {boolean} True / False.
+	 *
+	 * @summary  Checks to see if the path can be accessed by this process using the mode specified.
+	 */
+	async _exists(filepath, mode) {
+		const Promise = require('bluebird'),
+			filesystem = require('fs-extra');
+
+		return new Promise((resolve, reject) => {
+			try {
+				filesystem.access(filepath, (mode || filesystem.constants.F_OK), (exists) => {
+					resolve(!exists);
+				});
+			}
+			catch(err) {
+				const error = new TwyrBaseError(`${this.$twyrModule.name}::loader::_findFiles error`, err);
+				reject(error);
+			}
+		});
+	}
+
+	/**
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _filterStatus
+	 *
+	 * @param    {Array} status - The statuses to process and filter.
+	 *
+	 * @returns  {Array} The stringified statuses.
+	 *
+	 * @summary  Converts statuses to strings, depending on their type.
+	 */
+	_filterStatus(status) {
+		try {
+			const filteredStatus = status.map((thisStatus) => {
+				if(thisStatus.status === null)
+					return true;
+
+				if(thisStatus.status instanceof Error)
+					return thisStatus;
+
+				// eslint-disable-next-line curly
+				if(typeof thisStatus.status === 'object') {
+					Object.keys(thisStatus.status).forEach((key) => {
+						if(thisStatus.status[key] instanceof Error) {
+							thisStatus.status[key] = (thisStatus.status[key] instanceof TwyrBaseError) ? thisStatus.status[key].toString() : thisStatus.status[key]['stack'];
+							return;
+						}
+
+						if(Array.isArray(thisStatus.status[key])) {
+							thisStatus.status[key] = this._filterStatus(thisStatus.status[key]);
+							if(!thisStatus.status[key].length) thisStatus.status[key] = true;
+						}
+					});
+				}
+
+				return thisStatus;
+			})
+			.filter((thisStatus) => {
+				if(!thisStatus) return false;
+				if(!thisStatus.status) return false;
+
+				if(!Object.keys(thisStatus.status).length)
+					return false;
+
+				return true;
+			});
+
+			return filteredStatus.length ? filteredStatus : true;
+		}
+		catch(err) {
+			return [];
+		}
+	}
+	// #endregion
+
+	// #region Properties
+	/**
+	 * @override
+	 */
+	get basePath() {
+		return __dirname;
+	}
+	// #endregion
+}
+
+exports.TwyrModuleLoader = TwyrModuleLoader;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+    
+    
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Thu Jul 26 2018 11:10:40 GMT+0530 (India Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+
+<script src="scripts/jquery-3.1.1.min.js"></script>
+
+<script src="scripts/search.js"></script>
+
+
+<script src="scripts/collapse.js"></script>
+
+
+
+</body>
+</html>
