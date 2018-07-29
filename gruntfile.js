@@ -26,20 +26,23 @@ module.exports = function (grunt) {
 			'clean': {
 				'command': 'npm run-script clean'
 			},
+			'clinic-clean': {
+				'command': 'npm run-script clinic-clean'
+			},
 			'docs': {
 				'command': 'npm run-script docs'
 			},
 			'doctor': {
 				'command': 'npm run-script clinic-doctor && npm run-script clinic-flame'
 			},
-			'rename_docs': {
-				'command': 'mv ./jsdoc_default/twyr-webapp-server/<%= pkg.version %> ./docs && rm -r ./jsdoc_default'
-			},
 			'organize_build_results': {
 				'command': 'mkdir ./buildresults/mocha && mkdir ./buildresults/eslint && mkdir ./buildresults/istanbul && mkdir ./buildresults/performance && mv ./*.clinic-* ./buildresults/performance && mv ./buildresults/lint.xml ./buildresults/eslint/results.xml && mv ./buildresults/tests.xml ./buildresults/mocha/results.xml && mv ./buildresults/cobertura-coverage.xml ./buildresults/istanbul/results.xml'
 			},
-			'clinic-clean': {
-				'command': 'npm run-script clinic-clean'
+			'rename-docs': {
+				'command': 'mv ./jsdoc_default/twyr-webapp-server/<%= pkg.version %> ./docs && rm -r ./jsdoc_default'
+			},
+			'setup-test-db': {
+				'command': 'pushd ./knex_migrations && NODE_ENV=test ./../node_modules/.bin/knex migrate:latest && NODE_ENV=test ./../node_modules/.bin/knex seed:run && popd'
 			}
 		},
 
@@ -134,5 +137,5 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-mocha-istanbul');
 	grunt.loadNpmTasks('grunt-xmlstoke');
 
-	grunt.registerTask('default', ['exec:clean', 'env', 'eslint', 'xmlstoke:deleteESLintBugs', 'xmlstoke:deleteEmptyTestcases', 'xmlstoke:deleteEmptyTestsuites', 'xmlstoke:prettify', 'mochaTest', 'mocha_istanbul:coverage', 'exec:docs', 'exec:rename_docs', 'exec:doctor', 'clean', 'jsbeautifier', 'exec:organize_build_results', 'exec:clinic-clean']);
+	grunt.registerTask('default', ['exec:clean', 'env', 'eslint', 'xmlstoke:deleteESLintBugs', 'xmlstoke:deleteEmptyTestcases', 'xmlstoke:deleteEmptyTestsuites', 'xmlstoke:prettify', 'exec:setup-test-db', 'mochaTest', 'mocha_istanbul:coverage', 'exec:docs', 'exec:rename-docs', 'exec:doctor', 'clean', 'jsbeautifier', 'exec:organize_build_results', 'exec:clinic-clean']);
 };

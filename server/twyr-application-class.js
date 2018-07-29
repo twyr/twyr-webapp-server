@@ -176,7 +176,7 @@ class TwyrApplication extends TwyrBaseModule {
 	}
 
 	async _doDBSanityCheck() {
-		if(twyrEnv !== 'development' && twyrEnv !== 'test')
+		if(twyrEnv !== 'development')
 			return;
 
 		const dbSrvc = this.$services.DatabaseService.Interface;

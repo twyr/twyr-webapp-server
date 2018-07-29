@@ -21,7 +21,7 @@ jobs:
           POSTGRES_PASSWORD: twyr
 
       - image: circleci/redis:latest
-      - image: strapdata/elassandra:latest
+      # - image: strapdata/elassandra:latest
 
     working_directory: ~/repo
 
@@ -37,6 +37,9 @@ jobs:
 
       # Start Elassandra
       # - run: service start cassandra
+
+      # Prune old dependencies
+      - run: npm prune
 
       # Install new dependencies
       - run: npm i

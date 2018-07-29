@@ -4,12 +4,12 @@ exports.up = async function(knex) {
 	let exists = null;
 
 	// Step 1: Setup the basics in the database
-	await knex.schema.raw('SET check_function_bodies = true'),
-	await knex.schema.raw('CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public')
+	await knex.schema.raw('SET check_function_bodies = true');
+	await knex.schema.raw('CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public');
 
 	// Step 2: Create the enums we need
-	await knex.schema.raw("CREATE TYPE public.module_type AS ENUM ('component','middleware','service', 'server', 'template')"),
-	await knex.schema.raw("CREATE TYPE public.contact_type AS ENUM ('email','landline','mobile','other')")
+	await knex.schema.raw("CREATE TYPE public.module_type AS ENUM ('component','middleware','service', 'server', 'template')");
+	await knex.schema.raw("CREATE TYPE public.contact_type AS ENUM ('email','landline','mobile','other')");
 
 	// Step 3: Create the basic tables - modules, tenants, and users
 	exists = await knex.schema.withSchema('public').hasTable('modules');
