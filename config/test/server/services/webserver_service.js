@@ -7,7 +7,7 @@ exports.config = {
 	"connectionTimeout": 120,
 	"logLevel": "silly",
 	"honeyPot": {
-		"apiKey": "YOUR_API_KEY"
+		"apiKey": "rvitcgsbkqns"
 	},
 	"secureProtocols": {
 		"https": {

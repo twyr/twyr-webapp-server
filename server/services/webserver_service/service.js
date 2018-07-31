@@ -48,8 +48,6 @@ class WebserverService extends TwyrBaseService {
 			if(this.$server) return null;
 			await super._setup();
 
-			const self = this; // eslint-disable-line consistent-this
-
 			this.$proxies = {};
 			this.$serveFavicons = {};
 			this.$serveStatics = {};
