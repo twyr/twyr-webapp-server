@@ -58,10 +58,10 @@ class DatabaseService extends TwyrBaseService {
 					try {
 						const pgError = require('pg-error');
 
-						rawConnection.parseE = pgError.parse;
-						rawConnection.parseN = pgError.parse;
+						rawConnection.connection.parseE = pgError.parse;
+						rawConnection.connection.parseN = pgError.parse;
 
-						rawConnection.on('PgError', function(err) {
+						rawConnection.connection.on('PgError', function(err) {
 							switch (err.severity) {
 								case 'ERROR':
 								case 'FATAL':
@@ -76,8 +76,7 @@ class DatabaseService extends TwyrBaseService {
 						});
 
 						const promises = require('bluebird');
-						promises.promisifyAll(rawConnection);
-
+						promises.promisifyAll(rawConnection.connection);
 						done();
 					}
 					catch(err) {
@@ -143,12 +142,9 @@ class DatabaseService extends TwyrBaseService {
 		this.$dependencies.LoggerService.silly(`${this.name}::_databaseQuery: ${JSON.stringify(queryData, null, '\t')}`);
 	}
 
-	_databaseNotice() {
-		this.$dependencies.LoggerService.info(`${this.name}::_databaseNotification: ${JSON.stringify(arguments, null, '\t')}`);
-	}
-
-	_databaseQueryError() {
-		this.$dependencies.LoggerService.error(`${this.name}::_databaseQueryError: ${JSON.stringify(arguments, null, '\t')}`);
+	_databaseQueryError(error, query) {
+		const queryLog = { 'sql': query.sql, 'bindings': query.bindings, 'options': query.options };
+		this.$dependencies.LoggerService.error(`${this.name}::_databaseQueryError:\nQuery: ${JSON.stringify(queryLog, null, '\t')}\nError: ${JSON.stringify(error, null, '\t')}`);
 	}
 	// #endregion
 

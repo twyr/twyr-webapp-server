@@ -180,7 +180,7 @@ class TwyrApplication extends TwyrBaseModule {
 			return;
 
 		const dbSrvc = this.$services.DatabaseService.Interface;
-		const modules = await dbSrvc.knex.raw(`SELECT id, type, name FROM modules`);
+		const modules = await dbSrvc.knex.raw(`SELECT module_id, type, name FROM modules`);
 
 		console.table(modules.rows);
 	}

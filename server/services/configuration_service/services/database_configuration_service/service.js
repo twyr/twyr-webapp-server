@@ -75,10 +75,10 @@ class DatabaseConfigurationService extends TwyrBaseService {
 				thisConfig.pool['afterCreate'] = function(rawConnection, done) {
 					const pgError = require('pg-error');
 
-					rawConnection.parseE = pgError.parse;
-					rawConnection.parseN = pgError.parse;
+					rawConnection.connection.parseE = pgError.parse;
+					rawConnection.connection.parseN = pgError.parse;
 
-					rawConnection.on('PgError', function(err) {
+					rawConnection.connection.on('PgError', function(err) {
 						switch (err.severity) {
 							case 'ERROR':
 							case 'FATAL':
@@ -92,8 +92,9 @@ class DatabaseConfigurationService extends TwyrBaseService {
 						}
 					});
 
+					promises.promisifyAll(rawConnection.connection);
 					done();
-				};
+			};
 			}
 
 			const pg = require('pg');
@@ -107,8 +108,8 @@ class DatabaseConfigurationService extends TwyrBaseService {
 			let rootModule = this.$parent;
 			while(rootModule.$parent) rootModule = rootModule.$parent;
 
-			await this.$database.queryAsync(`LISTEN "${rootModule.$application}ConfigChange"`);
-			await this.$database.queryAsync(`LISTEN "${rootModule.$application}StateChange"`);
+			await this.$database.queryAsync(`LISTEN "${rootModule.$application}!Config!Changed"`);
+			await this.$database.queryAsync(`LISTEN "${rootModule.$application}!State!Changed"`);
 
 			await this._reloadAllConfig();
 			return null;
@@ -138,8 +139,8 @@ class DatabaseConfigurationService extends TwyrBaseService {
 			let rootModule = this.$parent;
 			while(rootModule.$parent) rootModule = rootModule.$parent;
 
-			await this.$database.queryAsync(`UNLISTEN "${rootModule.$application}ConfigChange"`);
-			await this.$database.queryAsync(`UNLISTEN "${rootModule.$application}StateChange"`);
+			await this.$database.queryAsync(`UNLISTEN "${rootModule.$application}!Config!Changed"`);
+			await this.$database.queryAsync(`UNLISTEN "${rootModule.$application}!State!Changed"`);
 
 			this.$database.end();
 			delete this.$database;
@@ -215,7 +216,7 @@ class DatabaseConfigurationService extends TwyrBaseService {
 
 			cachedModule.configuration = config;
 
-			await this.$database.queryAsync('UPDATE modules SET configuration = $1 WHERE id = $2;', [config, cachedModule.id]);
+			await this.$database.queryAsync('UPDATE modules SET configuration = $1 WHERE module_id = $2;', [config, cachedModule.module_id]);
 			return config;
 		}
 		catch(err) {
@@ -271,7 +272,7 @@ class DatabaseConfigurationService extends TwyrBaseService {
 				return enabled;
 
 			cachedModule.enabled = enabled;
-			await this.$database.queryAsync('UPDATE modules SET enabled = $1 WHERE id = $2', [enabled, cachedModule.id]);
+			await this.$database.queryAsync('UPDATE modules SET enabled = $1 WHERE module_id = $2', [enabled, cachedModule.module_id]);
 
 			return enabled;
 		}
@@ -298,7 +299,7 @@ class DatabaseConfigurationService extends TwyrBaseService {
 			const twyrModulePath = this.$parent._getPathForModule(twyrModule);
 			const cachedModule = this._getCachedModule(twyrModulePath);
 
-			return cachedModule ? cachedModule.id : null;
+			return cachedModule ? cachedModule.module_id : null;
 		}
 		catch(err) {
 			throw new TwyrSrvcError(`${this.name}::getModuleId::${twyrModule.name} error`, err);
@@ -330,7 +331,7 @@ class DatabaseConfigurationService extends TwyrBaseService {
 				return;
 
 			cachedModule.configuration = config;
-			await this.$database.queryAsync('UPDATE modules SET configuration = $1 WHERE id = $2;', [config, cachedModule.id]);
+			await this.$database.queryAsync('UPDATE modules SET configuration = $1 WHERE module_id = $2;', [config, cachedModule.module_id]);
 
 			return;
 		}
@@ -362,7 +363,7 @@ class DatabaseConfigurationService extends TwyrBaseService {
 				return;
 
 			cachedModule.enabled = state;
-			await this.$database.queryAsync('UPDATE modules SET enabled = $1 WHERE id = $2;', [state, cachedModule.id]);
+			await this.$database.queryAsync('UPDATE modules SET enabled = $1 WHERE module_id = $2;', [state, cachedModule.module_id]);
 
 			return;
 		}
@@ -378,11 +379,11 @@ class DatabaseConfigurationService extends TwyrBaseService {
 			let serverModule = this.$parent;
 			while(serverModule.$parent) serverModule = serverModule.$parent;
 
-			const serverId = await this.$database.queryAsync('SELECT id FROM modules WHERE name = $1 AND parent IS NULL', [serverModule.$application]);
+			const serverId = await this.$database.queryAsync('SELECT module_id FROM modules WHERE name = $1 AND parent_module_id IS NULL', [serverModule.$application]);
 			let moduleConfigs = null;
 
 			if(serverId.rows.length) {
-				moduleConfigs = await this.$database.queryAsync('SELECT A.*, B.display_name, B.configuration, B.enabled FROM fn_get_module_descendants($1) A INNER JOIN modules B ON (A.id = B.id)', [serverId.rows[0].id]);
+				moduleConfigs = await this.$database.queryAsync('SELECT A.*, B.display_name, B.configuration, B.enabled FROM fn_get_module_descendants($1) A INNER JOIN modules B ON (A.module_id = B.module_id)', [serverId.rows[0]['module_id']]);
 				moduleConfigs = moduleConfigs.rows;
 			}
 
@@ -409,14 +410,14 @@ class DatabaseConfigurationService extends TwyrBaseService {
 		const tree = {};
 		filteredConfigs.forEach((filteredConfig) => {
 			const relevantConfig = {
-				'id': filteredConfig.id,
+				'module_id': filteredConfig.module_id,
 				'name': filteredConfig.name,
 				'displayName': filteredConfig.display_name,
 				'configuration': filteredConfig.configuration,
 				'enabled': filteredConfig.enabled
 			};
 
-			const subModuleConfigs = this._reorderConfigsToTree(moduleConfigs, relevantConfig.id);
+			const subModuleConfigs = this._reorderConfigsToTree(moduleConfigs, relevantConfig.module_id);
 			Object.keys(subModuleConfigs).forEach((moduleType) => {
 				relevantConfig[moduleType] = subModuleConfigs[moduleType];
 			});
@@ -450,7 +451,7 @@ class DatabaseConfigurationService extends TwyrBaseService {
 
 			if(configTree[key]['configuration'])
 				cachedMap[currentPrefix] = {
-					'id': configTree[key]['id'],
+					'module_id': configTree[key]['module_id'],
 					'name': configTree[key]['name'],
 					'displayName': configTree[key]['display_name'],
 					'configuration': configTree[key]['configuration'],
@@ -496,13 +497,13 @@ class DatabaseConfigurationService extends TwyrBaseService {
 
 			let twyrModulePath = null;
 			Object.keys(this.$cachedMap).forEach((cachedKey) => {
-				if(this.$cachedMap[cachedKey].id === moduleId)
+				if(this.$cachedMap[cachedKey]['module_id'] === moduleId)
 					twyrModulePath = cachedKey;
 			});
 
 			if(!twyrModulePath) return null;
 
-			const result = await this.$database.queryAsync('SELECT configuration FROM modules WHERE id = $1', [moduleId]);
+			const result = await this.$database.queryAsync('SELECT configuration FROM modules WHERE module_id = $1', [moduleId]);
 			if(!result.rows.length) return null;
 
 			if(deepEqual(this.$cachedMap[twyrModulePath].configuration, result.rows[0].configuration))
@@ -523,13 +524,13 @@ class DatabaseConfigurationService extends TwyrBaseService {
 		try {
 			let twyrModulePath = null;
 			Object.keys(this.$cachedMap).forEach((cachedKey) => {
-				if(this.$cachedMap[cachedKey].id === moduleId)
+				if(this.$cachedMap[cachedKey]['module_id'] === moduleId)
 					twyrModulePath = cachedKey;
 			});
 
 			if(!twyrModulePath) return null;
 
-			const result = await this.$database.queryAsync('SELECT enabled FROM modules WHERE id = $1', [moduleId]);
+			const result = await this.$database.queryAsync('SELECT enabled FROM modules WHERE module_id = $1', [moduleId]);
 			if(!result.rows.length) return null;
 
 			if(this.$cachedMap[twyrModulePath].enabled === result.rows[0].enabled)
@@ -554,8 +555,9 @@ class DatabaseConfigurationService extends TwyrBaseService {
 		if((twyrEnv === 'development' || twyrEnv === 'test') && this.$config.debug) console.info(`${this.name}::_databaseNotice: ${JSON.stringify(arguments, undefined, '\t')}`);
 	}
 
-	_databaseQueryError(err, queryData) {
-		console.error(`${this.name}::_databaseQueryError: ${JSON.stringify({ 'query': queryData, 'error': err }, undefined, '\t')}`);
+	_databaseQueryError(error, query) {
+		const queryLog = { 'sql': query.sql, 'bindings': query.bindings, 'options': query.options };
+		this.$dependencies.LoggerService.error(`${this.name}::_databaseQueryError:\nQuery: ${JSON.stringify(queryLog, null, '\t')}\nError: ${JSON.stringify(error, null, '\t')}`);
 	}
 	// #endregion
 

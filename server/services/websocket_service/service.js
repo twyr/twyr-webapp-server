@@ -88,9 +88,34 @@ class WebsocketService extends TwyrBaseService {
 			const thisConfig = JSON.parse(JSON.stringify(this.$config.primus));
 			this.$websocketServer = new PrimusServer(this.$dependencies.WebserverService.Server, thisConfig);
 
-			// Step 2: Put in the middlewares we need
-			this.$websocketServer.use('passportInit', this.$dependencies.AuthService.initialize(), undefined, 3);
-			this.$websocketServer.use('passportSession', this.$dependencies.AuthService.session(), undefined, 4);
+			// Step 2: Re-use Koa middlewares so we don't duplicate session / cookie handling
+			const self = this; // eslint-disable-line consistent-this
+			this.$websocketServer.use('twyr', function() {
+				const httpMocks = require('node-mocks-http');
+				const koaRequestHandler = self.$dependencies.WebserverService.App.callback();
+
+				const twyrPrimusMiddleware = async function(request, response, next) {
+					const mockResponse = httpMocks.createResponse({
+						'locals': response.locals,
+						'req': request
+					});
+
+					await koaRequestHandler(request, mockResponse);
+					const responseData = JSON.parse(mockResponse._getData());
+
+					request.headers['x-request-id'] = responseData.id;
+					request.user = responseData.user;
+					request.tenant = responseData.tenant;
+
+					Object.keys(responseData['response-meta']['headers']).forEach((responseHeader) => {
+						response.setHeader(responseHeader, responseData['response-meta']['headers'][responseHeader]);
+					});
+
+					next();
+				};
+
+				return twyrPrimusMiddleware;
+			}, undefined, 0);
 
 			// Step 3: Authorization hook
 			this.$websocketServer.authorize(this._authorizeWebsocketConnection.bind(this));

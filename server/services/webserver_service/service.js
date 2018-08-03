@@ -95,7 +95,7 @@ class WebserverService extends TwyrBaseService {
 
 					ctxt.type = 'application/json; charset=utf-8';
 					ctxt.status = error.code || error.number || 500;
-					ctxt.body = error.toString().split('\n');
+					ctxt.body = error.toString().split('\n').filter((errString) => { return !!errString; });
 
 					ctxt.app.emit('error', error, ctxt);
 				}
@@ -386,7 +386,7 @@ class WebserverService extends TwyrBaseService {
 			}
 
 			if(!tenant) {
-				tenant = await dbSrvc.raw('SELECT id, name, sub_domain FROM tenants WHERE sub_domain = ?', [tenantSubDomain]);
+				tenant = await dbSrvc.raw('SELECT tenant_id, name, sub_domain FROM tenants WHERE sub_domain = ?', [tenantSubDomain]);
 				if(!tenant.rows.length) throw new Error(`Invalid sub-domain: ${tenantSubDomain}`);
 
 				tenant = tenant.rows.shift();
@@ -435,24 +435,34 @@ class WebserverService extends TwyrBaseService {
 			const moment = require('moment');
 			const statusCodes = require('http').STATUS_CODES;
 
+			const reqHeaders = {};
+			Object.keys(ctxt.request.headers).forEach((reqHeader) => {
+				try {
+					reqHeaders[reqHeader] = JSON.parse(JSON.stringify(ctxt.request.headers[reqHeader]));
+				}
+				catch(err) {
+					// Do Nothing
+				}
+			});
+
 			const logMsgMeta = {
 				'id': ctxt.state.id,
 				'start-time': moment().valueOf(),
 				'duration': 0,
 
 				'user': {
-					'id': ctxt.state.user ? ctxt.state.user.id : 'ffffffff-ffff-4fff-ffff-ffffffffffff',
+					'user_id': ctxt.state.user ? ctxt.state.user.user_id : 'ffffffff-ffff-4fff-ffff-ffffffffffff',
 					'name': ctxt.state.user ? `${ctxt.state.user.first_name} ${ctxt.state.user.last_name}` : 'Public'
 				},
 
 				'tenant': {
-					'id': ctxt.state.tenant ? ctxt.state.tenant.id : '00000000-0000-4000-0000-000000000000',
+					'tenant_id': ctxt.state.tenant ? ctxt.state.tenant.tenant_id : '00000000-0000-4000-0000-000000000000',
 					'sub-domain': ctxt.state.tenant ? ctxt.state.tenant.sub_domain : '???',
 					'name': ctxt.state.tenant ? ctxt.state.tenant.name : 'Unknown'
 				},
 
 				'request-meta': {
-					'headers': JSON.parse(JSON.stringify(ctxt.request.headers)),
+					'headers': reqHeaders || {},
 					'method': ctxt.request.method,
 					'url': ctxt.request.url,
 					'ip': ctxt.request.ip,
@@ -485,6 +495,15 @@ class WebserverService extends TwyrBaseService {
 			logMsgMeta['error'] = ctxt.state.error || (ctxt.status >= 400);
 
 			logMsgMeta['request-meta']['headers']['tenant'] = undefined;
+
+			if(ctxt.request.url.indexOf('websockets') >= 0) {
+				ctxt.status = 200;
+				ctxt.type = 'application/json; charset=utf-8';
+				ctxt.body = logMsgMeta;
+
+				return;
+			}
+
 			await this.$dependencies.AuditService.publish(logMsgMeta);
 		}
 		catch(err) {
@@ -518,13 +537,13 @@ class WebserverService extends TwyrBaseService {
 			const ringpop = this.$dependencies.RingpopService;
 
 			const hostPort = [];
-			hostPort.push(ringpop.lookup(ctxt.state.tenant.id).split(':').shift());
+			hostPort.push(ringpop.lookup(ctxt.state.tenant.tenant_id).split(':').shift());
 			hostPort.push(this.$config.port || 9100);
 			// hostPort.push(this.$config.port === 9100 ? 9101 : 9100);
 
 			const dest = `${this.$config.protocol}://${hostPort.join(':')}${ctxt.path}`;
 
-			if(ringpop.lookup(ctxt.state.tenant.id) === ringpop.whoami()) {
+			if(ringpop.lookup(ctxt.state.tenant.tenant_id) === ringpop.whoami()) {
 				delete this.$proxies[dest];
 
 				await next();
@@ -699,6 +718,7 @@ class WebserverService extends TwyrBaseService {
 	 */
 	get Interface() {
 		return {
+			'App': this.$koa,
 			'Router': this.$router,
 			'Server': this.$server
 		};

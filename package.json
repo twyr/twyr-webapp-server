@@ -91,6 +91,7 @@
 		"koa-static": "*",
 		"memory-cache": "*",
 		"moment": "^2.22.2",
+		"node-mocks-http": "*",
 		"nodemailer": "^4.6.7",
 		"nodemailer-smtp-transport": "*",
 		"on-finished": "*",
@@ -119,6 +120,7 @@
 	"devDependencies": {
 		"autocannon": "*",
 		"chai": "*",
+		"chai-http": "*",
 		"clinic": "^1.0.2",
 		"docdash2": "*",
 		"eslint": "^5.2.0",
@@ -142,7 +144,7 @@
 		"redis-mock": "^0.29.0"
 	},
 	"scripts": {
-		"build": "./node_modules/.bin/grunt --force",
+		"build": "./node_modules/.bin/grunt",
 		"clean": "rm -rf docs && rm -rf buildresults && touch ./logs/init.log && rm -f ./logs/*.log",
 		"debug": "node --inspect-brk ./server/index.js",
 		"docs": "./node_modules/.bin/jsdoc --verbose --configure ./jsdoc.json",
