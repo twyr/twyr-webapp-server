@@ -51,7 +51,7 @@
 		"amqplib": "*",
 		"app-module-path": "*",
 		"ascoltatori": "*",
-		"aws-sdk": "^2.283.1",
+		"aws-sdk": "^2.286.2",
 		"bluebird": "*",
 		"bookshelf": "*",
 		"bookshelf-jsonapi-params": "^1.1.3",
