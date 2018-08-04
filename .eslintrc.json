@@ -1,6 +1,6 @@
 {
-    "parserOptions": {
-        "ecmaVersion": 2017,
+	"parserOptions": {
+		"ecmaVersion": 2017,
 
 		"ecmaFeatures": {
 			"arrowFunctions": true,
@@ -27,7 +27,7 @@
 			"globalReturn": false,
 			"jsx": false
 		}
-    },
+	},
 
 	"env": {
 		"browser": false,
@@ -52,7 +52,7 @@
 		"no-console": 0,
 		"no-constant-condition": 0,
 		"no-control-regex": 0,
-		"no-debugger": 0,
+		"no-debugger": 2,
 		"no-dupe-args": 2,
 		"no-dupe-keys": 2,
 		"no-duplicate-case": 2,
@@ -160,7 +160,7 @@
 		"func-style": 1,
 		"indent": 0,
 		"key-spacing": 1,
-		"keyword-spacing": ["warn", { "before":true, "after":true, "overrides": { "if": { "after": false }, "for": { "after": false }, "while": { "after": false }, "catch": { "after": false } } }],
+		"keyword-spacing": ["warn", { "before": true, "after": true, "overrides": { "if": { "after": false }, "for": { "after": false }, "while": { "after": false }, "catch": { "after": false } } }],
 		"lines-around-comment": 0,
 		"linebreak-style": 1,
 		"max-nested-callbacks": 1,
@@ -218,17 +218,17 @@
 		"no-bitwise": 0,
 		"no-plusplus": 0,
 
-        "jsdoc/check-param-names": 1,
-        "jsdoc/check-tag-names": 0,
-        "jsdoc/check-types": 1,
-        "jsdoc/newline-after-description": 1,
-        "jsdoc/require-description-complete-sentence": 1,
-        "jsdoc/require-example": 0,
-        "jsdoc/require-hyphen-before-param-description": 1,
-        "jsdoc/require-param": 1,
-        "jsdoc/require-param-description": 1,
-        "jsdoc/require-param-type": 1,
-        "jsdoc/require-returns-description": 1,
-        "jsdoc/require-returns-type": 1
+		"jsdoc/check-param-names": 1,
+		"jsdoc/check-tag-names": 0,
+		"jsdoc/check-types": 1,
+		"jsdoc/newline-after-description": 1,
+		"jsdoc/require-description-complete-sentence": 1,
+		"jsdoc/require-example": 0,
+		"jsdoc/require-hyphen-before-param-description": 1,
+		"jsdoc/require-param": 1,
+		"jsdoc/require-param-description": 1,
+		"jsdoc/require-param-type": 1,
+		"jsdoc/require-returns-description": 1,
+		"jsdoc/require-returns-type": 1
 	}
 }
