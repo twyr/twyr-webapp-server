@@ -36,7 +36,7 @@ module.exports = function (grunt) {
 				'command': 'npm run-script clinic-doctor && npm run-script clinic-flame'
 			},
 			'organize_build_results': {
-				'command': 'mkdir ./buildresults/mocha && mkdir ./buildresults/eslint && mkdir ./buildresults/istanbul && mkdir ./buildresults/performance && mv ./*.clinic-* ./buildresults/performance && mv ./buildresults/lint.xml ./buildresults/eslint/results.xml && mv ./buildresults/tests.xml ./buildresults/mocha/results.xml && mv ./buildresults/cobertura-coverage.xml ./buildresults/istanbul/results.xml'
+				'command': 'mkdir ./buildresults/mocha && mkdir ./buildresults/eslint && mkdir ./buildresults/istanbul && mkdir ./buildresults/performance && mv ./*.clinic-* ./buildresults/performance && mv ./buildresults/lint.xml ./buildresults/eslint/results.xml && mv ./buildresults/tests.xml ./buildresults/mocha/results.xml && mv ./buildresults/cobertura-coverage.xml ./buildresults/istanbul/results.xml && mv ./buildresults/lcov.info ./buildresults/istanbul/lcov.info'
 			},
 			'rename-docs': {
 				'command': 'mv ./jsdoc_default/twyr-webapp-server/<%= pkg.version %> ./docs && rm -r ./jsdoc_default'
@@ -69,8 +69,23 @@ module.exports = function (grunt) {
 			'coverage': {
 				'src': 'test',
 				'options': {
+					'mask': '**/*.spec.js',
 					'coverageFolder': 'buildresults',
-					'reportFormats': ['cobertura']
+					'reportFormats': ['cobertura', 'lcovonly']
+				}
+			}
+		},
+
+		'coveralls': {
+			// Options relevant to all targets
+			'options': {
+				'force': true
+			},
+
+			'webapp-server': {
+				'src': 'buildresults/instanbul/lcov.info',
+				'options': {
+					// Any options for just this target
 				}
 			}
 		},
@@ -132,10 +147,11 @@ module.exports = function (grunt) {
 		'clean': ['buildresults/eslint-orig.xml', 'buildresults/eslint-no-bugs.xml', 'buildresults/eslint-no-empty-testcases.xml', 'buildresults/eslint-no-empty-testsuites.xml', 'buildresults/coverage.raw.json']
 	});
 
+	grunt.loadNpmTasks('grunt-coveralls');
 	grunt.loadNpmTasks('grunt-eslint');
 	grunt.loadNpmTasks('grunt-env');
 	grunt.loadNpmTasks('grunt-mocha-istanbul');
 	grunt.loadNpmTasks('grunt-xmlstoke');
 
-	grunt.registerTask('default', ['exec:clean', 'env', 'eslint', 'xmlstoke:deleteESLintBugs', 'xmlstoke:deleteEmptyTestcases', 'xmlstoke:deleteEmptyTestsuites', 'xmlstoke:prettify', 'exec:setup-test-db', 'mochaTest', 'mocha_istanbul:coverage', 'exec:docs', 'exec:rename-docs', 'exec:doctor', 'clean', 'jsbeautifier', 'exec:organize_build_results', 'exec:clinic-clean']);
+	grunt.registerTask('default', ['exec:clean', 'env', 'eslint', 'xmlstoke:deleteESLintBugs', 'xmlstoke:deleteEmptyTestcases', 'xmlstoke:deleteEmptyTestsuites', 'xmlstoke:prettify', 'exec:setup-test-db', 'mochaTest', 'mocha_istanbul:coverage', 'exec:docs', 'exec:rename-docs', 'exec:doctor', 'clean', 'jsbeautifier', 'exec:organize_build_results', 'exec:clinic-clean', 'coveralls']);
 };
