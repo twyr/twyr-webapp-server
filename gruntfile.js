@@ -29,6 +29,9 @@ module.exports = function(grunt) {
 			'clinic-clean': {
 				'command': 'npm run-script clinic-clean'
 			},
+			'codecov': {
+				'command': 'cat ./buildresults/istanbul/lcov.info | ./node_modules/.bin/codecov'
+			},
 			'docs': {
 				'command': 'npm run-script docs'
 			},
@@ -153,5 +156,5 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-mocha-istanbul');
 	grunt.loadNpmTasks('grunt-xmlstoke');
 
-	grunt.registerTask('default', ['exec:clean', 'env', 'eslint', 'xmlstoke:deleteESLintBugs', 'xmlstoke:deleteEmptyTestcases', 'xmlstoke:deleteEmptyTestsuites', 'xmlstoke:prettify', 'exec:setup-test-db', 'mochaTest', 'mocha_istanbul:coverage', 'exec:docs', 'exec:rename-docs', 'exec:doctor', 'clean', 'jsbeautifier', 'exec:organize_build_results', 'exec:clinic-clean', 'coveralls']);
+	grunt.registerTask('default', ['exec:clean', 'env', 'eslint', 'xmlstoke:deleteESLintBugs', 'xmlstoke:deleteEmptyTestcases', 'xmlstoke:deleteEmptyTestsuites', 'xmlstoke:prettify', 'exec:setup-test-db', 'mochaTest', 'mocha_istanbul:coverage', 'exec:docs', 'exec:rename-docs', 'exec:doctor', 'clean', 'jsbeautifier', 'exec:organize_build_results', 'exec:clinic-clean', 'coveralls', 'exec:codecov']);
 };

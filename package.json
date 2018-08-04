@@ -122,6 +122,7 @@
 		"chai": "*",
 		"chai-http": "*",
 		"clinic": "^1.0.2",
+		"codecov.io": "*",
 		"docdash2": "*",
 		"eslint": "^5.3.0",
 		"eslint-junit": "*",
