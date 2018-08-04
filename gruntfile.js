@@ -83,7 +83,7 @@ module.exports = function (grunt) {
 			},
 
 			'webapp-server': {
-				'src': 'buildresults/instanbul/lcov.info',
+				'src': 'buildresults/istanbul/lcov.info',
 				'options': {
 					// Any options for just this target
 				}
