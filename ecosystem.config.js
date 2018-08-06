@@ -2,9 +2,8 @@
 
 module.exports = {
 	'apps': [{
-		'name': 'twyr-webapp',
+		'name': 'twyr-webapp-server',
 		'script': './index.js',
-		'exec_mode': 'cluster',
 
 		'watch': false,
 		'ignore_watch': [],

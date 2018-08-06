@@ -155,6 +155,8 @@
 		"test": "NODE_ENV=test ./node_modules/.bin/mocha --forbid-only \"test/**/*.js\"",
 		"clinic-doctor": "NODE_ENV=test ./node_modules/.bin/clinic doctor --collect-only --on-port=\"sleep 20 && ./node_modules/.bin/autocannon -c100 localhost:9100/\" -- node ./server/index.js",
 		"clinic-flame": "NODE_ENV=test ./node_modules/.bin/clinic flame --collect-only --on-port=\"sleep 20 && ./node_modules/.bin/autocannon -c100 localhost:9100/\" -- node ./server/index.js",
+		"clinic-profile": "NODE_ENV=test ./node_modules/.bin/clinic bubbleprof --collect-only --on-port=\"sleep 20 && ./node_modules/.bin/autocannon -c100 localhost:9100/\" -- node ./server/index.js",
+		"clinic-upload": "./node_modules/.bin/clinic upload *.clinic-doctor && ./node_modules/.bin/clinic upload *.clinic-bubbleprof",
 		"clinic-clean": "NODE_ENV=test ./node_modules/.bin/clinic clean"
 	},
 	"license": "MITNFA",
