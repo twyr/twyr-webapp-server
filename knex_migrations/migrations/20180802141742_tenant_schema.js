@@ -45,6 +45,7 @@ exports.up = async function(knex) {
 			tmplTbl.uuid('tenant_template_id').notNullable().defaultTo(knex.raw('uuid_generate_v4()'));
 			tmplTbl.text('name').notNullable();
 			tmplTbl.text('display_name').notNullable();
+			tmplTbl.text('relative_path_to_index').notNullable().defaultTo('dist/index.html');
 			tmplTbl.text('description');
 			tmplTbl.boolean('default').notNullable().defaultTo(false);
 			tmplTbl.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
@@ -71,7 +72,28 @@ exports.up = async function(knex) {
 		});
 	}
 
-	// Step 5: Setup user-defined functions on the groups table for traversing the tree, etc.
+	// Step 5: Create the tenant_relationships table
+	await knex.schema.raw("CREATE TYPE public.tenant_relationship_type AS ENUM ('customer', 'oem', 'service provider', 'vendor')");
+	exists = await knex.schema.withSchema('public').hasTable('tenant_relationships');
+	if(!exists) {
+		await knex.schema.withSchema('public').createTable('tenant_relationships', function(tenantRelationshipsTbl) {
+			tenantRelationshipsTbl.uuid('tenant_id').notNullable();
+			tenantRelationshipsTbl.uuid('other_tenant_id').notNullable();
+			tenantRelationshipsTbl.uuid('tenant_relationship_id').notNullable().defaultTo(knex.raw('uuid_generate_v4()'));
+			tenantRelationshipsTbl.specificType('relationship', 'public.tenant_relationship_type').notNullable();
+
+			tenantRelationshipsTbl.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
+			tenantRelationshipsTbl.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
+
+			tenantRelationshipsTbl.primary(['tenant_id', 'other_tenant_id', 'relationship']);
+			tenantRelationshipsTbl.unique(['tenant_relationship_id']);
+
+			tenantRelationshipsTbl.foreign(['tenant_id']).references(['tenant_id']).inTable('tenants').onDelete('CASCADE').onUpdate('CASCADE');
+			tenantRelationshipsTbl.foreign(['other_tenant_id']).references(['tenant_id']).inTable('tenants').onDelete('CASCADE').onUpdate('CASCADE');
+		});
+	}
+
+	// Step 6: Setup user-defined functions on the groups table for traversing the tree, etc.
 	await knex.schema.withSchema('public').raw(
 `CREATE OR REPLACE FUNCTION public.fn_get_group_ancestors (IN groupid uuid)
 	RETURNS TABLE (level integer, tenant_id uuid,  group_id uuid,  parent_group_id uuid,  name text)
@@ -170,7 +192,73 @@ END;
 $$;`
 	);
 
-	// Step 6: Enforce rules for sanity using triggers.
+	await knex.schema.withSchema('public').raw(
+`CREATE OR REPLACE FUNCTION public.fn_get_tenant_template (IN tenantid uuid)
+	RETURNS TABLE (tenant_id uuid,  sub_domain text,  name text, path_to_index text)
+	LANGUAGE plpgsql
+	VOLATILE
+	CALLED ON NULL INPUT
+	SECURITY INVOKER
+	COST 1
+	AS $$
+DECLARE
+	tenant_uuid		UUID;
+	tenant_domain	TEXT;
+	tmpl_name		TEXT;
+	index_path		TEXT;
+BEGIN
+	tenant_uuid		:= NULL;
+	tenant_domain	:= NULL;
+	tmpl_name		:= NULL;
+	index_path		:= NULL;
+
+	SELECT
+		A.tenant_id,
+		A.sub_domain,
+		B.name,
+		B.relative_path_to_index
+	FROM
+		tenants A LEFT OUTER JOIN
+		tenant_templates B ON (B.tenant_id = A.tenant_id)
+	WHERE
+		A.enabled = true AND
+		B.default = true
+	INTO
+		tenant_uuid,
+		tenant_domain,
+		tmpl_name,
+		index_path;
+
+	IF tmpl_name IS NOT NULL
+	THEN
+		RETURN QUERY
+		SELECT tenant_uuid, tenant_domain, tmpl_name, index_path;
+	END IF;
+
+	IF tenant_domain IS NULL
+	THEN
+		RAISE SQLSTATE '2F003' USING MESSAGE = 'Incorrect Tenant Id';
+	END IF;
+
+	SELECT
+		A.tenant_id
+	FROM
+		tenants A
+	WHERE
+		A.sub_domain = (SELECT array_to_string(ARRAY(SELECT unnest(string_to_array(tenant_domain, '.')) OFFSET 1), '.'))
+	INTO
+		tenant_uuid;
+
+	RETURN QUERY
+	SELECT
+		*
+	FROM
+		fn_get_tenant_template(tenant_uuid);
+END;
+$$;`
+	);
+
+	// Step 7: Enforce rules for sanity using triggers.
 	await knex.schema.withSchema('public').raw(
 `CREATE OR REPLACE FUNCTION public.fn_assign_defaults_to_tenant ()
 	RETURNS trigger
@@ -251,7 +339,7 @@ END;
 $$;`
 	);
 
-	// Step 7: Finally, create the triggers...
+	// Finally, create the triggers...
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_assign_defaults_to_tenant AFTER INSERT ON public.tenants FOR EACH ROW EXECUTE PROCEDURE public.fn_assign_defaults_to_tenant();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_check_group_update_is_valid BEFORE UPDATE ON public.tenant_groups FOR EACH ROW EXECUTE PROCEDURE public.fn_check_group_update_is_valid();');
 };
@@ -260,13 +348,17 @@ exports.down = async function(knex) {
 	await knex.raw('DROP TRIGGER IF EXISTS trigger_check_group_update_is_valid ON public.tenant_groups CASCADE;');
 	await knex.raw('DROP TRIGGER IF EXISTS trigger_assign_defaults_to_tenant ON public.tenants CASCADE;');
 
+	await knex.raw(`DROP FUNCTION IF EXISTS public.fn_get_tenant_template (IN uuid)`);
 	await knex.raw(`DROP FUNCTION IF EXISTS public.fn_check_group_update_is_valid () CASCADE;`);
 	await knex.raw(`DROP FUNCTION IF EXISTS public.fn_assign_defaults_to_tenant () CASCADE;`);
 	await knex.raw(`DROP FUNCTION IF EXISTS public.fn_get_group_descendants (IN uuid) CASCADE;`);
 	await knex.raw(`DROP FUNCTION IF EXISTS public.fn_get_group_ancestors (IN uuid) CASCADE;`);
 
+	await knex.raw('DROP TABLE IF EXISTS public.tenant_relationships CASCADE;');
 	await knex.raw(`DROP TABLE IF EXISTS public.tenant_template_positions CASCADE;`);
 	await knex.raw(`DROP TABLE IF EXISTS public.tenant_templates CASCADE;`);
 	await knex.raw(`DROP TABLE IF EXISTS public.tenant_groups CASCADE;`);
 	await knex.raw(`DROP TABLE IF EXISTS public.tenants CASCADE;`);
+
+	await knex.raw(`DROP TYPE IF EXISTS public.tenant_relationship_type CASCADE;`);
 };

@@ -553,7 +553,7 @@ exports.down = async function(knex) {
 	await knex.raw(`DROP TABLE IF EXISTS public.modules CASCADE;`);
 
 	await knex.raw(`DROP TYPE IF EXISTS public.module_type CASCADE;`);
-	await knex.raw(`DROP TYPE IF EXISTS public.module_deploy_type;`);
+	await knex.raw(`DROP TYPE IF EXISTS public.module_deploy_type CASCADE;`);
 
 	await knex.raw('DROP EXTENSION IF EXISTS "uuid-ossp" CASCADE;');
 };
