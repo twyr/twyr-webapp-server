@@ -31,13 +31,47 @@ exports.up = async function(knex) {
 			groupTbl.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
 
 			groupTbl.primary(['tenant_id', 'group_id']);
-			groupTbl.foreign(['tenant_id', 'parent_group_id']).references(['tenant_id', 'group_id']).inTable('tenant_groups').onDelete('CASCADE').onUpdate('CASCADE')
+			groupTbl.foreign(['tenant_id', 'parent_group_id']).references(['tenant_id', 'group_id']).inTable('tenant_groups').onDelete('CASCADE').onUpdate('CASCADE');
 
 			groupTbl.unique(['parent_group_id', 'name']);
 		});
 	}
 
-	// Step 3: Setup user-defined functions on the groups table for traversing the tree, etc.
+	// Step 3: Create the "tenant_templates" table
+	exists = await knex.schema.withSchema('public').hasTable('tenant_templates');
+	if(!exists) {
+		await knex.schema.withSchema('public').createTable('tenant_templates', function(tmplTbl) {
+			tmplTbl.uuid('tenant_id').notNullable().references('tenant_id').inTable('tenants').onDelete('CASCADE').onUpdate('CASCADE');
+			tmplTbl.uuid('tenant_template_id').notNullable().defaultTo(knex.raw('uuid_generate_v4()'));
+			tmplTbl.text('name').notNullable();
+			tmplTbl.text('display_name').notNullable();
+			tmplTbl.text('description');
+			tmplTbl.boolean('default').notNullable().defaultTo(false);
+			tmplTbl.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
+			tmplTbl.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
+
+			tmplTbl.primary(['tenant_id', 'tenant_template_id']);
+		});
+	}
+
+	// Step 4: Create the "tenant_template_positions" table
+	exists = await knex.schema.withSchema('public').hasTable('tenant_template_positions');
+	if(!exists) {
+		await knex.schema.withSchema('public').createTable('tenant_template_positions', function(tmplPositionTbl) {
+			tmplPositionTbl.uuid('tenant_id').notNullable();
+			tmplPositionTbl.uuid('tenant_template_id').notNullable();
+			tmplPositionTbl.uuid('tenant_template_position_id').notNullable().defaultTo(knex.raw('uuid_generate_v4()'));
+			tmplPositionTbl.text('name').notNullable();
+			tmplPositionTbl.text('display_name').notNullable();
+			tmplPositionTbl.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
+			tmplPositionTbl.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
+
+			tmplPositionTbl.primary(['tenant_id', 'tenant_template_id', 'tenant_template_position_id']);
+			tmplPositionTbl.foreign(['tenant_id', 'tenant_template_id']).references(['tenant_id', 'tenant_template_id']).inTable('tenant_templates').onDelete('CASCADE').onUpdate('CASCADE');
+		});
+	}
+
+	// Step 5: Setup user-defined functions on the groups table for traversing the tree, etc.
 	await knex.schema.withSchema('public').raw(
 `CREATE OR REPLACE FUNCTION public.fn_get_group_ancestors (IN groupid uuid)
 	RETURNS TABLE (level integer, tenant_id uuid,  group_id uuid,  parent_group_id uuid,  name text)
@@ -136,7 +170,7 @@ END;
 $$;`
 	);
 
-	// Step 4: Enforce rules for sanity using triggers.
+	// Step 6: Enforce rules for sanity using triggers.
 	await knex.schema.withSchema('public').raw(
 `CREATE OR REPLACE FUNCTION public.fn_assign_defaults_to_tenant ()
 	RETURNS trigger
@@ -217,7 +251,7 @@ END;
 $$;`
 	);
 
-	// Step 5: Finally, create the triggers...
+	// Step 7: Finally, create the triggers...
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_assign_defaults_to_tenant AFTER INSERT ON public.tenants FOR EACH ROW EXECUTE PROCEDURE public.fn_assign_defaults_to_tenant();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_check_group_update_is_valid BEFORE UPDATE ON public.tenant_groups FOR EACH ROW EXECUTE PROCEDURE public.fn_check_group_update_is_valid();');
 };
@@ -231,6 +265,8 @@ exports.down = async function(knex) {
 	await knex.raw(`DROP FUNCTION IF EXISTS public.fn_get_group_descendants (IN uuid) CASCADE;`);
 	await knex.raw(`DROP FUNCTION IF EXISTS public.fn_get_group_ancestors (IN uuid) CASCADE;`);
 
+	await knex.raw(`DROP TABLE IF EXISTS public.tenant_template_positions CASCADE;`);
+	await knex.raw(`DROP TABLE IF EXISTS public.tenant_templates CASCADE;`);
 	await knex.raw(`DROP TABLE IF EXISTS public.tenant_groups CASCADE;`);
 	await knex.raw(`DROP TABLE IF EXISTS public.tenants CASCADE;`);
 };

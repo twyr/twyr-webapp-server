@@ -32,7 +32,6 @@ exports.up = async function(knex) {
 			tenantUserGroupTbl.foreign(['tenant_id', 'group_id']).references(['tenant_id', 'group_id']).inTable('tenant_groups').onDelete('CASCADE').onUpdate('CASCADE');
 
 			tenantUserGroupTbl.unique(['tenants_users_groups_id']);
-			tenantUserGroupTbl.unique(['tenant_id', 'user_id', 'group_id']);
 		});
 	}
 

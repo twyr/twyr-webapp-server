@@ -11,8 +11,8 @@ exports.up = async function(knex) {
 			tenantFeatureTbl.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
 			tenantFeatureTbl.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
 
-			tenantFeatureTbl.unique(['tenant_feature_id']);
 			tenantFeatureTbl.primary(['tenant_id', 'module_id']);
+			tenantFeatureTbl.unique(['tenant_feature_id']);
 		});
 	}
 
@@ -30,8 +30,8 @@ exports.up = async function(knex) {
 			groupPermissionTbl.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
 			groupPermissionTbl.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
 
-			groupPermissionTbl.unique(['tenant_group_permission_id']);
 			groupPermissionTbl.primary(['tenant_id', 'group_id', 'module_id', 'feature_permission_id']);
+			groupPermissionTbl.unique(['tenant_group_permission_id']);
 
 			groupPermissionTbl.foreign(['module_id', 'feature_permission_id']).references(['module_id', 'feature_permission_id']).inTable('feature_permissions').onDelete('CASCADE').onUpdate('CASCADE');
 			groupPermissionTbl.foreign(['tenant_id', 'group_id']).references(['tenant_id', 'group_id']).inTable('tenant_groups').onDelete('CASCADE').onUpdate('CASCADE');
@@ -40,7 +40,34 @@ exports.up = async function(knex) {
 		});
 	}
 
-	// Step 3: Enforce rules for sanity using triggers.
+	// Step 3: Create the "tenant_template_positions_feature_frontend_components" table
+	exists = await knex.schema.withSchema('public').hasTable('tenant_template_positions_feature_frontend_components');
+	if(!exists) {
+		await knex.schema.withSchema('public').createTable('tenant_template_positions_feature_frontend_components', function(positionFrontEndComponentTbl) {
+			positionFrontEndComponentTbl.uuid('tenant_id').notNullable();
+			positionFrontEndComponentTbl.uuid('tenant_template_id').notNullable();
+			positionFrontEndComponentTbl.uuid('tenant_template_position_id').notNullable();
+			positionFrontEndComponentTbl.uuid('tenant_template_positions_feature_frontend_component_id').notNullable().defaultTo(knex.raw('uuid_generate_v4()'));
+
+			positionFrontEndComponentTbl.uuid('module_id').notNullable();
+			positionFrontEndComponentTbl.uuid('feature_frontend_component_id').notNullable();
+			positionFrontEndComponentTbl.jsonb('configuration').notNullable().defaultTo('{}');
+			positionFrontEndComponentTbl.jsonb('visibility').notNullable().defaultTo(`{ "users": ["*"], "groups": ["*"], "paths": ["*"] }`);
+
+			positionFrontEndComponentTbl.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
+			positionFrontEndComponentTbl.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
+
+			positionFrontEndComponentTbl.primary(['tenant_id', 'tenant_template_id', 'tenant_template_position_id', 'module_id', 'feature_frontend_component_id']);
+			positionFrontEndComponentTbl.unique(['tenant_template_positions_feature_frontend_component_id']);
+
+			positionFrontEndComponentTbl.foreign(['module_id', 'feature_frontend_component_id']).references(['module_id', 'feature_frontend_component_id']).inTable('feature_frontend_components').onDelete('CASCADE').onUpdate('CASCADE');
+			positionFrontEndComponentTbl.foreign(['tenant_id', 'tenant_template_id', 'tenant_template_position_id']).references(['tenant_id', 'tenant_template_id', 'tenant_template_position_id']).inTable('tenant_template_positions').onDelete('CASCADE').onUpdate('CASCADE');
+		});
+
+		await knex.raw(`ALTER TABLE tenant_template_positions_feature_frontend_components ADD CONSTRAINT fk_tenant_features_for_frontend_components FOREIGN KEY (tenant_id, module_id) REFERENCES tenants_features(tenant_id, module_id) ON UPDATE CASCADE ON DELETE CASCADE;`);
+	}
+
+	// Step 4: Enforce rules for sanity using triggers.
 	await knex.schema.withSchema('public').raw(
 `CREATE OR REPLACE FUNCTION public.fn_check_tenant_feature_upsert_is_valid ()
 	RETURNS trigger
@@ -158,7 +185,7 @@ BEGIN
 		RETURN NEW;
 	END IF;
 
-	IF NEW.type = 'server' OR NEW.deploy = 'default'
+	IF NEW.type = 'server' OR (NEW.type = 'feature' AND NEW.deploy = 'default')
 	THEN
 		INSERT INTO tenants_features (
 			tenant_id,
@@ -210,7 +237,7 @@ BEGIN
 	FROM
 		modules
 	WHERE
-		type = 'server' OR deploy = 'default';
+		type = 'server' OR (type = 'feature' AND deploy = 'default');
 
 	RETURN NEW;
 END;
@@ -356,7 +383,7 @@ END;
 $$;`
 	);
 
-	// Step 4: Finally, create the triggers...
+	// Finally, create the triggers...
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_check_tenant_feature_upsert_is_valid BEFORE INSERT OR UPDATE ON public.tenants_features FOR EACH ROW EXECUTE PROCEDURE public.fn_check_tenant_feature_upsert_is_valid();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_assign_feature_to_tenant AFTER INSERT ON public.modules FOR EACH ROW EXECUTE PROCEDURE public.fn_assign_feature_to_tenant();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_assign_tenant_to_feature AFTER INSERT ON public.tenants FOR EACH ROW EXECUTE PROCEDURE public.fn_assign_tenant_to_feature();');
@@ -383,6 +410,7 @@ exports.down = async function(knex) {
 	await knex.raw('DROP FUNCTION IF EXISTS public.fn_assign_tenant_to_feature () CASCADE;');
 	await knex.raw('DROP FUNCTION IF EXISTS public.fn_assign_feature_to_tenant () CASCADE;');
 
+	await knex.raw('DROP TABLE IF EXISTS public.tenant_template_positions_feature_frontend_components CASCADE;');
 	await knex.raw('DROP TABLE IF EXISTS public.tenant_group_permissions CASCADE;');
 	await knex.raw('DROP TABLE IF EXISTS public.tenants_features CASCADE;');
 };

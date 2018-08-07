@@ -26,12 +26,11 @@ exports.up = async function(knex) {
 			modTbl.jsonb('metadata').notNullable().defaultTo('{}');
 			modTbl.jsonb('configuration').notNullable().defaultTo('{}');
 			modTbl.jsonb('configuration_schema').notNullable().defaultTo('{}');
-			modTbl.boolean('default').notNullable().defaultTo(false);
 			modTbl.boolean('enabled').notNullable().defaultTo(true);
 			modTbl.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
 			modTbl.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
 
-			modTbl.unique(['parent_module_id', 'type', 'name', 'default']);
+			modTbl.unique(['parent_module_id', 'type', 'name']);
 		});
 	}
 
@@ -53,7 +52,26 @@ exports.up = async function(knex) {
 		});
 	}
 
-	// Step 5: Setup user-defined functions on the modules table for traversing the tree, etc.
+	// Step 5: Setup feature front-end components table - self-contained ember components that can be embedded into any routes
+	exists = await knex.schema.withSchema('public').hasTable('feature_frontend_components');
+	if(!exists) {
+		await knex.schema.withSchema('public').createTable('feature_frontend_components', function(featureFrontendComponentTbl) {
+			featureFrontendComponentTbl.uuid('module_id').notNullable().references('module_id').inTable('modules').onDelete('CASCADE').onUpdate('CASCADE');
+			featureFrontendComponentTbl.uuid('feature_frontend_component_id').notNullable().defaultTo(knex.raw('uuid_generate_v4()'));
+			featureFrontendComponentTbl.text('name').notNullable();
+			featureFrontendComponentTbl.text('display_name').notNullable();
+			featureFrontendComponentTbl.jsonb('configuration_schema').notNullable().defaultTo('{}');
+			featureFrontendComponentTbl.jsonb('default_configuration').notNullable().defaultTo('{}');
+			featureFrontendComponentTbl.text('description').notNullable().defaultTo('A Random Ember Component');
+			featureFrontendComponentTbl.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
+			featureFrontendComponentTbl.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
+
+			featureFrontendComponentTbl.primary(['module_id', 'feature_frontend_component_id']);
+			featureFrontendComponentTbl.unique(['module_id', 'name']);
+		});
+	}
+
+	// Step 6: Setup user-defined functions on the modules table for traversing the tree, etc.
 	await knex.schema.withSchema('public').raw(
 `CREATE OR REPLACE FUNCTION public.fn_get_module_ancestors (IN moduleid uuid)
 	RETURNS TABLE (level integer,  module_id uuid,  parent_module_id uuid,  name text,  type public.module_type, enabled boolean)
@@ -186,7 +204,7 @@ END;
 $$;`
 	);
 
-	// Step 6: Enforce rules for sanity using triggers.
+	// Step 7: Enforce rules for sanity using triggers.
 	await knex.schema.withSchema('public').raw(
 `CREATE OR REPLACE FUNCTION public.fn_check_module_upsert_is_valid ()
 	RETURNS trigger
@@ -242,7 +260,14 @@ BEGIN
 		RETURN NULL;
 	END IF;
 
-	/* Rule #5: Templates cannot have sub-modules */
+	/* Rule #5: Modules cannot host other module types as parents - unless they are either Servers or Features */
+	IF parent_module_type <> 'server' AND parent_module_type <> 'feature' AND parent_module_type <> CAST(NEW.type AS TEXT)
+	THEN
+		RAISE SQLSTATE '2F003' USING MESSAGE = 'Sub-modules must be of the same type as the parent module - except in cases of servers and features' ;
+		RETURN NULL;
+	END IF;
+
+	/* Rule #6: Templates cannot have sub-modules */
 	parent_module_type := '';
 	SELECT
 		type
@@ -259,14 +284,14 @@ BEGIN
 		RETURN NULL;
 	END IF;
 
-	/* Rule #6: Modules cannot host other module types as parents - unless they are either Servers or Features */
-	IF parent_module_type <> 'server' AND parent_module_type <> 'feature' AND parent_module_type <> CAST(NEW.type AS TEXT)
+	/* Rule #7: Only Features can have templates */
+	IF NEW.type = 'template' AND parent_module_type <> 'feature'
 	THEN
-		RAISE SQLSTATE '2F003' USING MESSAGE = 'Sub-modules must be of the same type as the parent module - except in cases of servers and features' ;
+		RAISE SQLSTATE '2F003' USING MESSAGE = 'Only features can have templates';
 		RETURN NULL;
 	END IF;
 
-	/* Rule #7: No non-obvious infinite loops, either */
+	/* Rule #8: No non-obvious infinite loops, either */
 	is_module_in_tree := 0;
 	SELECT
 		COUNT(module_id)
@@ -355,7 +380,56 @@ END;
 $$;`
 	);
 
-	// Step 7: Update outside world of goings-on using triggers.
+	await knex.schema.withSchema('public').raw(
+`CREATE OR REPLACE FUNCTION public.fn_check_frontend_component_upsert_is_valid ()
+	RETURNS trigger
+	LANGUAGE plpgsql
+	VOLATILE
+	CALLED ON NULL INPUT
+	SECURITY INVOKER
+	COST 1
+	AS $$
+DECLARE
+	is_feature	INTEGER;
+BEGIN
+	IF TG_OP = 'UPDATE'
+	THEN
+		IF OLD.module_id <> NEW.module_id
+		THEN
+			RAISE SQLSTATE '2F003' USING MESSAGE = 'Module assigned to a frontend component is NOT mutable';
+			RETURN NULL;
+		END IF;
+
+		IF OLD.name <> NEW.name
+		THEN
+			RAISE SQLSTATE '2F003' USING MESSAGE = 'Frontend component name is NOT mutable';
+			RETURN NULL;
+		END IF;
+	END IF;
+
+	is_feature := 0;
+	SELECT
+		COUNT(module_id)
+	FROM
+		modules
+	WHERE
+		module_id = NEW.module_id AND
+		type = 'feature'
+	INTO
+		is_feature;
+
+	IF is_feature <= 0
+	THEN
+		RAISE SQLSTATE '2F003' USING MESSAGE = 'Only Features can own frontend components';
+		RETURN NULL;
+	END IF;
+
+	RETURN NEW;
+END;
+$$;`
+	);
+
+	// Step 8: Update outside world of goings-on using triggers.
 	await knex.schema.withSchema('public').raw(
 `CREATE OR REPLACE FUNCTION public.fn_notify_module_change ()
 	RETURNS trigger
@@ -452,18 +526,21 @@ END;
 $$;`
 	);
 
-	// Step 8: Finally, create the triggers...
+	// Finally, create the triggers...
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_check_module_upsert_is_valid BEFORE INSERT OR UPDATE ON public.modules FOR EACH ROW EXECUTE PROCEDURE public.fn_check_module_upsert_is_valid();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_check_permission_upsert_is_valid BEFORE INSERT OR UPDATE ON public.feature_permissions FOR EACH ROW EXECUTE PROCEDURE public.fn_check_permission_upsert_is_valid();');
+	await knex.schema.withSchema('public').raw(`CREATE TRIGGER trigger_check_frontend_component_upsert_is_valid BEFORE INSERT OR UPDATE ON public.feature_frontend_components FOR EACH ROW EXECUTE PROCEDURE public.fn_check_frontend_component_upsert_is_valid()`);
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_notify_module_change AFTER UPDATE ON public.modules FOR EACH ROW EXECUTE PROCEDURE public.fn_notify_module_change();');
 };
 
 exports.down = async function(knex) {
 	await knex.raw(`DROP TRIGGER IF EXISTS trigger_notify_module_change ON public.modules CASCADE;`);
+	await knex.raw(`DROP TRIGGER IF EXISTS trigger_check_frontend_component_upsert_is_valid ON public.feature_frontend_components CASCADE;`);
 	await knex.raw(`DROP TRIGGER IF EXISTS trigger_check_permission_upsert_is_valid ON public.feature_permissions CASCADE;`);
 	await knex.raw(`DROP TRIGGER IF EXISTS trigger_check_module_upsert_is_valid ON public.modules CASCADE;`);
 
 	await knex.raw(`DROP FUNCTION IF EXISTS public.fn_notify_module_change () CASCADE;`);
+	await knex.raw(`DROP FUNCTION IF EXISTS public.fn_check_frontend_component_upsert_is_valid() CASCADE;`);
 	await knex.raw(`DROP FUNCTION IF EXISTS public.fn_check_permission_upsert_is_valid () CASCADE;`);
 	await knex.raw(`DROP FUNCTION IF EXISTS public.fn_check_module_upsert_is_valid () CASCADE;`);
 
@@ -471,6 +548,7 @@ exports.down = async function(knex) {
 	await knex.raw(`DROP FUNCTION IF EXISTS public.fn_get_module_descendants (IN uuid) CASCADE;`);
 	await knex.raw(`DROP FUNCTION IF EXISTS public.fn_get_module_ancestors (IN uuid) CASCADE;`);
 
+	await knex.raw(`DROP TABLE IF EXISTS public.feature_frontend_components CASCADE;`);
 	await knex.raw(`DROP TABLE IF EXISTS public.feature_permissions CASCADE;`);
 	await knex.raw(`DROP TABLE IF EXISTS public.modules CASCADE;`);
 
