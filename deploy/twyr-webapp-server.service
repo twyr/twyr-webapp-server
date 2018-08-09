@@ -1,0 +1,26 @@
+[Unit]
+Description=Twyr Webapp Server, a highly opinionated but very flexible web application server
+After=network.target
+
+[Service]
+Type=simple
+PIDFile=/run/twy-webapp-server.pid
+Environment=NODE_ENV=development
+WorkingDirectory=/opt/twyr-webapp-server
+
+# Starter takes care of special cases mostly for containers
+ExecStart= /usr/bin/node ./server/index.js
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=full
+
+# Other stuff
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=twyr-webapp-server
+
+[Install]
+Alias=twyr-webapp-server.service
+WantedBy=multi-user.target

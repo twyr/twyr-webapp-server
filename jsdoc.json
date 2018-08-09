@@ -41,7 +41,8 @@
 		"referenceTitle": "Twyr Web Application Server",
 		"disableSort": false,
 		"default": {
-			"outputSourceFiles": true
+			"outputSourceFiles": true,
+			"includeDate": false
 		}
 	},
 	"docdash": {

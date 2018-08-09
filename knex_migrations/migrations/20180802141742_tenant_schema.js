@@ -194,7 +194,7 @@ $$;`
 
 	await knex.schema.withSchema('public').raw(
 `CREATE OR REPLACE FUNCTION public.fn_get_tenant_template (IN tenantid uuid)
-	RETURNS TABLE (tenant_id uuid,  sub_domain text,  name text, path_to_index text)
+	RETURNS TABLE (path_to_index text)
 	LANGUAGE plpgsql
 	VOLATILE
 	CALLED ON NULL INPUT
@@ -213,7 +213,6 @@ BEGIN
 	index_path		:= NULL;
 
 	SELECT
-		A.tenant_id,
 		A.sub_domain,
 		B.name,
 		B.relative_path_to_index
@@ -221,23 +220,23 @@ BEGIN
 		tenants A LEFT OUTER JOIN
 		tenant_templates B ON (B.tenant_id = A.tenant_id)
 	WHERE
+		A.tenant_id = tenantid AND
 		A.enabled = true AND
-		B.default = true
+		coalesce(B.default, true) = true
 	INTO
-		tenant_uuid,
 		tenant_domain,
 		tmpl_name,
 		index_path;
 
 	IF tmpl_name IS NOT NULL
 	THEN
-		RETURN QUERY
-		SELECT tenant_uuid, tenant_domain, tmpl_name, index_path;
+		RETURN QUERY SELECT tenant_domain || '/' || tmpl_name || '/' || index_path;
+		RETURN;
 	END IF;
 
 	IF tenant_domain IS NULL
 	THEN
-		RAISE SQLSTATE '2F003' USING MESSAGE = 'Incorrect Tenant Id';
+		tenant_domain := '.www';
 	END IF;
 
 	SELECT

@@ -391,6 +391,11 @@ class WebserverService extends TwyrBaseService {
 
 				tenant = tenant.rows.shift();
 
+				let template = await dbSrvc.raw(`SELECT * FROM fn_get_tenant_template(?)`, [tenant.tenant_id]);
+				template = template.rows.shift();
+
+				tenant['tenant_template'] = template['path_to_index'];
+
 				const cacheMulti = cacheSrvc.multi();
 				cacheMulti.setAsync(`twyr!webapp!tenant!${tenantSubDomain}`, JSON.stringify(tenant));
 				cacheMulti.expireAsync(`twyr!webapp!tenant!${tenantSubDomain}`, ((twyrEnv === 'development') ? 30 : 43200));

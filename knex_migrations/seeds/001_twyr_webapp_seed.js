@@ -356,7 +356,7 @@ exports.seed = async function(knex) {
 		'description': 'The Twyr Web Application Permissions for Super Administrators'
 	});
 
-	// Step 5: Insert the data for the only pre-defined tenant
+	// Step 5: Insert the data (basics + template) for the only pre-defined tenant
 	let tenantId = await knex.raw('SELECT tenant_id FROM tenants WHERE sub_domain =\'www\'');
 	if(!tenantId.rows.length) {
 		tenantId = await knex('tenants').insert({
@@ -369,6 +369,18 @@ exports.seed = async function(knex) {
 	}
 	else {
 		tenantId = tenantId.rows[0]['tenant_id'];
+	}
+
+	let templateId = await knex.raw(`SELECT tenant_template_id FROM tenant_templates WHERE tenant_id = ?`, [tenantId]);
+	if(!templateId.rows.length) {
+		await knex('tenant_templates').insert({
+			'tenant_id': tenantId,
+			'name': 'bhairavi',
+			'display_name': 'Bhairavi Template',
+			'relative_path_to_index': 'dist/index.html',
+			'description': 'The default template that ships with Twyr',
+			'default': true
+		});
 	}
 
 	// Step 6: Insert the data for the root user
