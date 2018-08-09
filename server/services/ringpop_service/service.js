@@ -169,12 +169,12 @@ class RingpopService extends TwyrBaseService {
 					});
 				}
 				catch(err) {
-					reject(new TwyrSrvcError(`${this.name}::_startup::inner error`, err));
+					reject(new TwyrSrvcError(`${this.name}::_setup::inner error`, err));
 				}
 			});
 		}
 		catch(err) {
-			throw new TwyrSrvcError(`${this.name}::_startup::outer error`, err);
+			throw new TwyrSrvcError(`${this.name}::_setup::outer error`, err);
 		}
 	}
 
@@ -240,7 +240,7 @@ class RingpopService extends TwyrBaseService {
 	}
 
 	async onRingpopError(error) {
-		if(!(error instanceof TwyrSrvcError)) error = new TwyrSrvcError(`${this.name}::_startup::ringpop bootstrap error`, error);
+		if(!(error instanceof TwyrSrvcError)) error = new TwyrSrvcError(`${this.name}::_setup::ringpop bootstrap error`, error);
 
 		const ringpop = this.$ringpop;
 		const leader = ringpop.lookup('LEADER');

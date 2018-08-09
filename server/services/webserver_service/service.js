@@ -41,7 +41,7 @@ class WebserverService extends TwyrBaseService {
 	 *
 	 * @returns  {null} Nothing.
 	 *
-	 * @summary  Sets up the Web Server using ExpressJS.
+	 * @summary  Sets up the Web Server using Koa.
 	 */
 	async _setup() {
 		try {
@@ -277,7 +277,7 @@ class WebserverService extends TwyrBaseService {
 			return null;
 		}
 		catch(err) {
-			throw new TwyrSrvcError(`${this.name}::_startup error`, err);
+			throw new TwyrSrvcError(`${this.name}::_setup error`, err);
 		}
 	}
 
@@ -291,7 +291,7 @@ class WebserverService extends TwyrBaseService {
 	 *
 	 * @returns  {undefined} Nothing.
 	 *
-	 * @summary  Destroys the ExpressJS Web Server.
+	 * @summary  Destroys the Koa Web Server.
 	 */
 	async _teardown() {
 		try {
@@ -345,7 +345,7 @@ class WebserverService extends TwyrBaseService {
 	}
 	// #endregion
 
-	// #region Express Middlewares
+	// #region Koa Middlewares
 	/**
 	 * @async
 	 * @function

@@ -67,7 +67,7 @@ class CassandraService extends TwyrBaseService {
 			return null;
 		}
 		catch(err) {
-			throw new TwyrSrvcError(`${this.name}::_startup error`, err);
+			throw new TwyrSrvcError(`${this.name}::_setup error`, err);
 		}
 	}
 

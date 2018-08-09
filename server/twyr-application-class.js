@@ -82,12 +82,7 @@ class TwyrApplication extends TwyrBaseModule {
 			allStatuses.push(`${process.title} start status: ${lifecycleStatuses ? JSON.stringify(lifecycleStatuses, null, 2) : true}\n`);
 			this.emit('server-started');
 
-			// TODO: Remove TEST STUFF!
-			this.on('server-online', async () => {
-				await this._setupWebserverRoutes();
-				await this._doDBSanityCheck();
-			});
-
+			await this._setupWebserverRoutes();
 			this.emit('server-online');
 		}
 		catch(err) {
