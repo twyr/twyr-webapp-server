@@ -38,6 +38,7 @@ class TwyrBaseService extends TwyrBaseModule {
 	// #region Properties
 	/**
 	 * @member   {Object} Interface
+	 * @override
 	 * @instance
 	 * @memberof TwyrBaseService
 	 *

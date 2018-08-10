@@ -13,11 +13,11 @@
 /**
  * @class TwyrBaseError
  * @extends {Error}
+ * @classdesc   The Twyr Server Base Class for all errors
  *
  * @param {string} message - The Error Message.
  * @param {Error} [inner] - Inner Error, if any.
  *
- * @summary   The Twyr Server Base Class for all errors
  *
  * @description
  * Extends the JS native "Error" object to make it easier for typing / stack tracing / etc. Based on
@@ -33,6 +33,9 @@ class TwyrBaseError extends Error {
 		Error.captureStackTrace(this, this.constructor);
 	}
 
+	/**
+	 * @override
+	 */
 	toString() {
 		const cleanStack = require('clean-stack');
 		const PgError = require('pg-error');

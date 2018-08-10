@@ -41,13 +41,14 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 	/**
 	 * @async
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof TwyrBaseTemplate
 	 * @name     _setup
 	 *
 	 * @returns  {undefined} Nothing.
 	 *
-	 * @summary  Sets up the Koa Router, and adds the routes.
+	 * @summary  Adds the Koa Router routes.
 	 */
 	async _setup() {
 		try {
@@ -87,13 +88,32 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 	// #endregion
 
 	// #region Protected methods - need to be overriden by derived classes
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrBaseTemplate
+	 * @name     _addRoutes
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Adds routes to the Koa Router.
+	 */
 	async _addRoutes() {
-		if(!this.$router)
-			return;
-
-		this.$router.get('/', this._serveTenantTemplate.bind(this));
+		return null;
 	}
 
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrBaseTemplate
+	 * @name     _deleteRoutes
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Removes all the routes from the Koa Router.
+	 */
 	async _deleteRoutes() {
 		// NOTICE: Undocumented koa-router data structure.
 		// Be careful upgrading :-)
@@ -128,6 +148,7 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 	// #region Properties
 	/**
 	 * @member   {Object} Router
+	 * @override
 	 * @instance
 	 * @memberof TwyrBaseTemplate
 	 *
@@ -135,6 +156,13 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 	 */
 	get Router() {
 		return this.$router;
+	}
+
+	/**
+	 * @override
+	 */
+	get dependencies() {
+		return ['ConfigurationService', 'LoggerService'].concat(super.dependencies);
 	}
 
 	/**

@@ -95,6 +95,12 @@ class WebsocketService extends TwyrBaseService {
 				const koaRequestHandler = self.$dependencies.WebserverService.App.callback();
 
 				const twyrPrimusMiddleware = async function(request, response, next) {
+					// const ringpop = this.$dependencies.RingpopService;
+					// if(ringpop.lookup(request.tenant.tenant_id) !== ringpop.whoami()) {
+					// 	await koaRequestHandler(request, response);
+					// 	return;
+					// }
+
 					const mockResponse = httpMocks.createResponse({
 						'locals': response.locals,
 						'req': request
@@ -237,7 +243,11 @@ class WebsocketService extends TwyrBaseService {
 	 * @override
 	 */
 	get dependencies() {
-		return ['AuditService', 'AuthService', 'ConfigurationService', 'CacheService', 'DatabaseService', 'LocalizationService', 'LoggerService', 'WebserverService'].concat(super.dependencies);
+		return [
+			'LoggerService',
+			'RingpopService',
+			'WebserverService'
+		].concat(super.dependencies);
 	}
 
 	/**

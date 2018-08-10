@@ -36,8 +36,8 @@ class ConfigurationService extends TwyrBaseService {
 	// #region Lifecycle hooks
 	/**
 	 * @async
-	 * @override
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof ConfigurationService
 	 * @name     load

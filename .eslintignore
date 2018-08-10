@@ -5,5 +5,5 @@ logs/
 node_modules/
 static_assets/
 tenant_applications/
-tenant_assets/
+tenant_templates/
 test/mocha.*

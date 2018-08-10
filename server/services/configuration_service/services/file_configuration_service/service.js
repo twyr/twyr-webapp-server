@@ -32,8 +32,8 @@ class FileConfigurationService extends TwyrBaseService {
 	// #region setup/teardown code
 	/**
 	 * @async
-	 * @override
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof FileConfigurationService
 	 * @name     _setup
@@ -69,8 +69,8 @@ class FileConfigurationService extends TwyrBaseService {
 
 	/**
 	 * @async
-	 * @override
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof FileConfigurationService
 	 * @name     _teardown
@@ -226,7 +226,9 @@ class FileConfigurationService extends TwyrBaseService {
 	async getModuleId() {
 		return null;
 	}
+	// #endregion
 
+	// #region Private Methods
 	/**
 	 * @async
 	 * @function
@@ -272,6 +274,7 @@ class FileConfigurationService extends TwyrBaseService {
 	 * @async
 	 * @function
 	 * @instance
+	 * @private
 	 * @memberof FileConfigurationService
 	 * @name     _processStateChange
 	 *
@@ -282,13 +285,12 @@ class FileConfigurationService extends TwyrBaseService {
 	async _processStateChange() {
 		return null;
 	}
-	// #endregion
 
-	// #region Private Methods
 	/**
 	 * @async
 	 * @function
 	 * @instance
+	 * @private
 	 * @memberof FileConfigurationService
 	 * @name     _onNewConfiguration
 	 *
@@ -317,6 +319,7 @@ class FileConfigurationService extends TwyrBaseService {
 	 * @async
 	 * @function
 	 * @instance
+	 * @private
 	 * @memberof FileConfigurationService
 	 * @name     _onUpdateConfiguration
 	 *
@@ -352,6 +355,7 @@ class FileConfigurationService extends TwyrBaseService {
 	 * @async
 	 * @function
 	 * @instance
+	 * @private
 	 * @memberof FileConfigurationService
 	 * @name     _onDeleteConfiguration
 	 *

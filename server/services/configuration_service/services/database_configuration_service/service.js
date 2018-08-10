@@ -32,8 +32,8 @@ class DatabaseConfigurationService extends TwyrBaseService {
 	// #region setup/teardown code
 	/**
 	 * @async
-	 * @override
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof DatabaseConfigurationService
 	 * @name     _setup
@@ -121,8 +121,8 @@ class DatabaseConfigurationService extends TwyrBaseService {
 
 	/**
 	 * @async
-	 * @override
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof DatabaseConfigurationService
 	 * @name     _teardown
@@ -306,6 +306,7 @@ class DatabaseConfigurationService extends TwyrBaseService {
 		}
 	}
 
+	// #region Private Methods
 	/**
 	 * @async
 	 * @function
@@ -344,6 +345,7 @@ class DatabaseConfigurationService extends TwyrBaseService {
 	 * @async
 	 * @function
 	 * @instance
+	 * @private
 	 * @memberof DatabaseConfigurationService
 	 * @name     _processStateChange
 	 *
@@ -371,9 +373,7 @@ class DatabaseConfigurationService extends TwyrBaseService {
 			console.error(`Process changed state to database error: ${err.message}\n${err.stack}`);
 		}
 	}
-	// #endregion
 
-	// #region Private Methods
 	async _reloadAllConfig() {
 		try {
 			let serverModule = this.$parent;

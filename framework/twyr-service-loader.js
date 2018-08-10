@@ -12,6 +12,21 @@
 const TwyrModuleLoader = require('./twyr-module-loader').TwyrModuleLoader,
 	TwyrServiceError = require('./twyr-service-error').TwyrServiceError;
 
+/**
+ * @class   TwyrServiceLoader
+ * @extends {TwyrModuleLoader}
+ * @classdesc The Twyr Server Base Class for all Service Loaders.
+ *
+ * @param   {TwyrBaseModule} [twyrModule] - The parent module, if any.
+ *
+ * @description
+ * Serves as the "base class" for all other service loaders in the Twyr Web Application Server.
+ *
+ * Responsible for invoking the standard "lifecycle" hooks on sub-modules of this module, if any - see {@link TwyrBaseModule#load},
+ * {@link TwyrBaseModule#initialize}, {@link TwyrBaseModule#start}, {@link TwyrBaseModule#stop}, {@link TwyrBaseModule#uninitialize},
+ * and {@link TwyrBaseModule#unload}.
+ *
+ */
 class TwyrServiceLoader extends TwyrModuleLoader {
 	// #region Constructor
 	constructor(twyrModule) {
@@ -22,8 +37,8 @@ class TwyrServiceLoader extends TwyrModuleLoader {
 	// #region Lifecycle hooks
 	/**
 	 * @async
-	 * @override
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof TwyrServiceLoader
 	 * @name     load
@@ -59,8 +74,8 @@ class TwyrServiceLoader extends TwyrModuleLoader {
 
 	/**
 	 * @async
-	 * @override
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof TwyrServiceLoader
 	 * @name     initialize
@@ -88,8 +103,8 @@ class TwyrServiceLoader extends TwyrModuleLoader {
 
 	/**
 	 * @async
-	 * @override
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof TwyrServiceLoader
 	 * @name     start
@@ -117,8 +132,8 @@ class TwyrServiceLoader extends TwyrModuleLoader {
 
 	/**
 	 * @async
-	 * @override
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof TwyrServiceLoader
 	 * @name     stop
@@ -146,8 +161,8 @@ class TwyrServiceLoader extends TwyrModuleLoader {
 
 	/**
 	 * @async
-	 * @override
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof TwyrServiceLoader
 	 * @name     uninitialize
@@ -175,8 +190,8 @@ class TwyrServiceLoader extends TwyrModuleLoader {
 
 	/**
 	 * @async
-	 * @override
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof TwyrServiceLoader
 	 * @name     unload

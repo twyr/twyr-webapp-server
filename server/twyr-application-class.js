@@ -157,15 +157,21 @@ class TwyrApplication extends TwyrBaseModule {
 
 	// #region Private Methods
 	async _setupWebserverRoutes() {
-		const koaRouter = this.$services.WebserverService.Interface.Router;
+		const appRouter = this.$services.WebserverService.Interface.Router;
 
-		koaRouter.all('/', async (ctxt) => {
-			const response = { 'message': `${this.name}::${ctxt.originalUrl}` };
-
-			ctxt.status = 200;
-			ctxt.type = 'application/json; charset=utf-8';
-			ctxt.body = response;
+		// Add in the templates at the end...
+		Object.keys(this.$templates).forEach((tmplName) => {
+			const tmplRouter = this.$templates[tmplName].Router;
+			appRouter.get('*', tmplRouter.routes());
 		});
+
+		// appRouter.all('*', async (ctxt) => {
+		// 	const response = { 'message': `${this.name}::${ctxt.originalUrl}` };
+
+		// 	ctxt.status = 200;
+		// 	ctxt.type = 'application/json; charset=utf-8';
+		// 	ctxt.body = response;
+		// });
 
 		return;
 	}

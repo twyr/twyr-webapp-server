@@ -326,6 +326,7 @@ class WebserverService extends TwyrBaseService {
 	/**
 	 * @async
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof WebserverService
 	 * @name     _reconfigure

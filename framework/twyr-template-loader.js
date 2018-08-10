@@ -12,6 +12,21 @@
 const TwyrModuleLoader = require('./twyr-module-loader').TwyrModuleLoader,
 	TwyrTemplateError = require('./twyr-template-error').TwyrTemplateError;
 
+/**
+ * @class   TwyrTemplateLoader
+ * @extends {TwyrModuleLoader}
+ * @classdesc The Twyr Server Base Class for all Template Loaders.
+ *
+ * @param   {TwyrBaseModule} [twyrModule] - The parent module, if any.
+ *
+ * @description
+ * Serves as the "base class" for all other template loaders in the Twyr Web Application Server.
+ *
+ * Responsible for invoking the standard "lifecycle" hooks on sub-modules of this module, if any - see {@link TwyrBaseModule#load},
+ * {@link TwyrBaseModule#initialize}, {@link TwyrBaseModule#start}, {@link TwyrBaseModule#stop}, {@link TwyrBaseModule#uninitialize},
+ * and {@link TwyrBaseModule#unload}.
+ *
+ */
 class TwyrTemplateLoader extends TwyrModuleLoader {
 	// #region Constructor
 	constructor(twyrModule) {
@@ -22,8 +37,8 @@ class TwyrTemplateLoader extends TwyrModuleLoader {
 	// #region Lifecycle hooks
 	/**
 	 * @async
-	 * @override
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof TwyrTemplateLoader
 	 * @name     load
@@ -53,8 +68,8 @@ class TwyrTemplateLoader extends TwyrModuleLoader {
 
 	/**
 	 * @async
-	 * @override
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof TwyrTemplateLoader
 	 * @name     initialize
@@ -75,8 +90,8 @@ class TwyrTemplateLoader extends TwyrModuleLoader {
 
 	/**
 	 * @async
-	 * @override
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof TwyrTemplateLoader
 	 * @name     start
@@ -97,8 +112,8 @@ class TwyrTemplateLoader extends TwyrModuleLoader {
 
 	/**
 	 * @async
-	 * @override
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof TwyrTemplateLoader
 	 * @name     stop
@@ -119,8 +134,8 @@ class TwyrTemplateLoader extends TwyrModuleLoader {
 
 	/**
 	 * @async
-	 * @override
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof TwyrTemplateLoader
 	 * @name     uninitialize
@@ -141,8 +156,8 @@ class TwyrTemplateLoader extends TwyrModuleLoader {
 
 	/**
 	 * @async
-	 * @override
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof TwyrTemplateLoader
 	 * @name     unload
