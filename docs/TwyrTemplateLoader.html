@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>TwyrModuleLoader - Twyr Web Application Server</title>
+    <title>TwyrTemplateLoader - Twyr Web Application Server</title>
     
     <meta name="description" content="Twyr Web Application Server" />
     
@@ -44,7 +44,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">TwyrModuleLoader</h1>
+    <h1 class="page-title">TwyrTemplateLoader</h1>
     
 
     
@@ -57,10 +57,10 @@
 <header>
     
         <h2>
-        TwyrModuleLoader
+        TwyrTemplateLoader
         </h2>
         
-            <div class="class-description"><p>The Twyr Server Base Class for all Module Loaders.</p></div>
+            <div class="class-description"><p>The Twyr Server Base Class for all Template Loaders.</p></div>
         
     
 </header>
@@ -74,11 +74,10 @@
     <h2>Constructor</h2>
     
 
-    <h4 class="name" id="TwyrModuleLoader"><span class="type-signature"></span>new TwyrModuleLoader<span class="signature">(twyrModule<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="TwyrTemplateLoader"><span class="type-signature"></span>new TwyrTemplateLoader<span class="signature">(twyrModule<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
-    <p class="summary"><p>Serves as the &quot;base class&quot; for all other loaders in the Twyr Web Application Server, including <code>TwyrComponentLoader</code>,
-<code>TwyrMiddlewareLoader</code>, <a href="TwyrServiceLoader.html"><code>TwyrServiceLoader</code></a>, and <a href="TwyrTemplateLoader.html"><code>TwyrTemplateLoader</code></a>.</p></p>
+    <p class="summary">Serves as the &quot;base class&quot; for all other template loaders in the Twyr Web Application Server.</p>
     
 
 
@@ -89,7 +88,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="framework_twyr-module-loader.js.html">framework/twyr-module-loader.js</a>, <a href="framework_twyr-module-loader.js.html#line17">line 17</a>
+        <a href="framework_twyr-template-loader.js.html">framework/twyr-template-loader.js</a>, <a href="framework_twyr-template-loader.js.html#line15">line 15</a>
     </li></ul></dd>
     
 
@@ -129,8 +128,7 @@
 
 
 <div class="description">
-    <p>Serves as the &quot;base class&quot; for all other loaders in the Twyr Web Application Server, including <code>TwyrComponentLoader</code>,
-<code>TwyrMiddlewareLoader</code>, <a href="TwyrServiceLoader.html"><code>TwyrServiceLoader</code></a>, and <a href="TwyrTemplateLoader.html"><code>TwyrTemplateLoader</code></a>.</p>
+    <p>Serves as the &quot;base class&quot; for all other template loaders in the Twyr Web Application Server.</p>
 <p>Responsible for invoking the standard &quot;lifecycle&quot; hooks on sub-modules of this module, if any - see <a href="TwyrBaseModule.html#load"><code>TwyrBaseModule#load</code></a>,
 <a href="TwyrBaseModule.html#initialize"><code>TwyrBaseModule#initialize</code></a>, <a href="TwyrBaseModule.html#start"><code>TwyrBaseModule#start</code></a>, <a href="TwyrBaseModule.html#stop"><code>TwyrBaseModule#stop</code></a>, <a href="TwyrBaseModule.html#uninitialize"><code>TwyrBaseModule#uninitialize</code></a>,
 and <a href="TwyrBaseModule.html#unload"><code>TwyrBaseModule#unload</code></a>.</p>
@@ -231,7 +229,7 @@ and <a href="TwyrBaseModule.html#unload"><code>TwyrBaseModule#unload</code></a>.
 
 
     <ul>
-        <li><a href="TwyrBaseClass.html">TwyrBaseClass</a></li>
+        <li><a href="TwyrModuleLoader.html">TwyrModuleLoader</a></li>
     </ul>
 
 
@@ -270,12 +268,12 @@ and <a href="TwyrBaseModule.html#unload"><code>TwyrBaseModule#unload</code></a>.
     
 
     
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
         <a href="TwyrBaseClass.html#basePath">TwyrBaseClass#basePath</a>
     </li></ul></dd>
+    
+
     
 
     
@@ -429,6 +427,11 @@ and <a href="TwyrBaseModule.html#unload"><code>TwyrBaseModule#unload</code></a>.
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_doLifecycleAction">TwyrModuleLoader#_doLifecycleAction</a>
+    </li></ul></dd>
     
 
     
@@ -629,6 +632,11 @@ and <a href="TwyrBaseModule.html#unload"><code>TwyrBaseModule#unload</code></a>.
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_exists">TwyrModuleLoader#_exists</a>
+    </li></ul></dd>
+    
 
     
 
@@ -805,6 +813,11 @@ and <a href="TwyrBaseModule.html#unload"><code>TwyrBaseModule#unload</code></a>.
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_filterStatus">TwyrModuleLoader#_filterStatus</a>
+    </li></ul></dd>
+    
 
     
 
@@ -957,6 +970,11 @@ and <a href="TwyrBaseModule.html#unload"><code>TwyrBaseModule#unload</code></a>.
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_findFiles">TwyrModuleLoader#_findFiles</a>
+    </li></ul></dd>
     
 
     
@@ -1133,6 +1151,11 @@ and <a href="TwyrBaseModule.html#unload"><code>TwyrBaseModule#unload</code></a>.
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_getDependencies">TwyrModuleLoader#_getDependencies</a>
+    </li></ul></dd>
     
 
     
@@ -1445,6 +1468,11 @@ and <a href="TwyrBaseModule.html#unload"><code>TwyrBaseModule#unload</code></a>.
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_initializeComponents">TwyrModuleLoader#_initializeComponents</a>
+    </li></ul></dd>
+    
 
     
 
@@ -1548,6 +1576,11 @@ and <a href="TwyrBaseModule.html#unload"><code>TwyrBaseModule#unload</code></a>.
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_initializeMiddlewares">TwyrModuleLoader#_initializeMiddlewares</a>
+    </li></ul></dd>
     
 
     
@@ -1653,6 +1686,11 @@ and <a href="TwyrBaseModule.html#unload"><code>TwyrBaseModule#unload</code></a>.
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_initializeServices">TwyrModuleLoader#_initializeServices</a>
+    </li></ul></dd>
+    
 
     
 
@@ -1757,6 +1795,11 @@ and <a href="TwyrBaseModule.html#unload"><code>TwyrBaseModule#unload</code></a>.
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_initializeTemplates">TwyrModuleLoader#_initializeTemplates</a>
+    </li></ul></dd>
+    
 
     
 
@@ -1860,6 +1903,11 @@ and <a href="TwyrBaseModule.html#unload"><code>TwyrBaseModule#unload</code></a>.
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_loadComponents">TwyrModuleLoader#_loadComponents</a>
+    </li></ul></dd>
     
 
     
@@ -2014,6 +2062,11 @@ and <a href="TwyrBaseModule.html#unload"><code>TwyrBaseModule#unload</code></a>.
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_loadMiddlewares">TwyrModuleLoader#_loadMiddlewares</a>
+    </li></ul></dd>
+    
 
     
 
@@ -2166,6 +2219,11 @@ and <a href="TwyrBaseModule.html#unload"><code>TwyrBaseModule#unload</code></a>.
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_loadServices">TwyrModuleLoader#_loadServices</a>
+    </li></ul></dd>
     
 
     
@@ -2327,6 +2385,11 @@ a fully functional configuration service by the time they load, allowing them to
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_loadTemplates">TwyrModuleLoader#_loadTemplates</a>
+    </li></ul></dd>
+    
 
     
 
@@ -2479,6 +2542,11 @@ a fully functional configuration service by the time they load, allowing them to
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_loadUtilities">TwyrModuleLoader#_loadUtilities</a>
+    </li></ul></dd>
     
 
     
@@ -2633,6 +2701,11 @@ a fully functional configuration service by the time they load, allowing them to
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_startComponents">TwyrModuleLoader#_startComponents</a>
+    </li></ul></dd>
+    
 
     
 
@@ -2736,6 +2809,11 @@ a fully functional configuration service by the time they load, allowing them to
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_startMiddlewares">TwyrModuleLoader#_startMiddlewares</a>
+    </li></ul></dd>
     
 
     
@@ -2841,6 +2919,11 @@ a fully functional configuration service by the time they load, allowing them to
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_startServices">TwyrModuleLoader#_startServices</a>
+    </li></ul></dd>
+    
 
     
 
@@ -2944,6 +3027,11 @@ a fully functional configuration service by the time they load, allowing them to
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_startTemplates">TwyrModuleLoader#_startTemplates</a>
+    </li></ul></dd>
     
 
     
@@ -3049,6 +3137,11 @@ a fully functional configuration service by the time they load, allowing them to
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_stopComponents">TwyrModuleLoader#_stopComponents</a>
+    </li></ul></dd>
+    
 
     
 
@@ -3152,6 +3245,11 @@ a fully functional configuration service by the time they load, allowing them to
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_stopMiddlewares">TwyrModuleLoader#_stopMiddlewares</a>
+    </li></ul></dd>
     
 
     
@@ -3257,6 +3355,11 @@ a fully functional configuration service by the time they load, allowing them to
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_stopServices">TwyrModuleLoader#_stopServices</a>
+    </li></ul></dd>
+    
 
     
 
@@ -3360,6 +3463,11 @@ a fully functional configuration service by the time they load, allowing them to
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_stopTemplates">TwyrModuleLoader#_stopTemplates</a>
+    </li></ul></dd>
     
 
     
@@ -3465,6 +3573,11 @@ a fully functional configuration service by the time they load, allowing them to
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_uninitializeComponents">TwyrModuleLoader#_uninitializeComponents</a>
+    </li></ul></dd>
+    
 
     
 
@@ -3568,6 +3681,11 @@ a fully functional configuration service by the time they load, allowing them to
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_uninitializeMiddlewares">TwyrModuleLoader#_uninitializeMiddlewares</a>
+    </li></ul></dd>
     
 
     
@@ -3673,6 +3791,11 @@ a fully functional configuration service by the time they load, allowing them to
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_uninitializeServices">TwyrModuleLoader#_uninitializeServices</a>
+    </li></ul></dd>
+    
 
     
 
@@ -3776,6 +3899,11 @@ a fully functional configuration service by the time they load, allowing them to
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_uninitializeTemplates">TwyrModuleLoader#_uninitializeTemplates</a>
+    </li></ul></dd>
     
 
     
@@ -3881,6 +4009,11 @@ a fully functional configuration service by the time they load, allowing them to
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_unloadComponents">TwyrModuleLoader#_unloadComponents</a>
+    </li></ul></dd>
+    
 
     
 
@@ -3984,6 +4117,11 @@ a fully functional configuration service by the time they load, allowing them to
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_unloadMiddlewares">TwyrModuleLoader#_unloadMiddlewares</a>
+    </li></ul></dd>
     
 
     
@@ -4089,6 +4227,11 @@ a fully functional configuration service by the time they load, allowing them to
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_unloadServices">TwyrModuleLoader#_unloadServices</a>
+    </li></ul></dd>
+    
 
     
 
@@ -4193,6 +4336,11 @@ a fully functional configuration service by the time they load, allowing them to
     
 
     
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_unloadTemplates">TwyrModuleLoader#_unloadTemplates</a>
+    </li></ul></dd>
+    
 
     
 
@@ -4296,6 +4444,11 @@ a fully functional configuration service by the time they load, allowing them to
 
     
 
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#_unloadUtilities">TwyrModuleLoader#_unloadUtilities</a>
+    </li></ul></dd>
     
 
     
@@ -4403,6 +4556,11 @@ a fully functional configuration service by the time they load, allowing them to
     
 
     
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#initialize">TwyrModuleLoader#initialize</a>
+    </li></ul></dd>
+    
 
     
 
@@ -4508,6 +4666,11 @@ a fully functional configuration service by the time they load, allowing them to
 
     
 
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#load">TwyrModuleLoader#load</a>
+    </li></ul></dd>
     
 
     
@@ -4664,6 +4827,11 @@ a fully functional configuration service by the time they load, allowing them to
     
 
     
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#start">TwyrModuleLoader#start</a>
+    </li></ul></dd>
+    
 
     
 
@@ -4769,6 +4937,11 @@ a fully functional configuration service by the time they load, allowing them to
 
     
 
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#stop">TwyrModuleLoader#stop</a>
+    </li></ul></dd>
     
 
     
@@ -4876,6 +5049,11 @@ a fully functional configuration service by the time they load, allowing them to
     
 
     
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#uninitialize">TwyrModuleLoader#uninitialize</a>
+    </li></ul></dd>
+    
 
     
 
@@ -4981,6 +5159,11 @@ a fully functional configuration service by the time they load, allowing them to
 
     
 
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="TwyrModuleLoader.html#unload">TwyrModuleLoader#unload</a>
+    </li></ul></dd>
     
 
     

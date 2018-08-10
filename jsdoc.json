@@ -16,7 +16,7 @@
 			"sql",
 			"static_assets",
 			"tenant_applications",
-			"tenant_assets",
+			"tenant_templates",
 			"test"
 		],
 		"includePattern": ".+\\.js(doc)?$",
