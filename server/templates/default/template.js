@@ -42,12 +42,10 @@ class DefaultTemplate extends TwyrBaseTemplate {
 	 * @summary  Adds routes to the Koa Router.
 	 */
 	async _addRoutes() {
-		const fs = require('fs');
-		const path = require('path');
-		const promises = require('bluebird');
-		const serveStatic = require('koa-static');
+		super._addRoutes();
 
-		const filesystem = promises.promisifyAll(fs);
+		const path = require('path');
+		const serveStatic = require('koa-static');
 
 		this.$router.get('*', async (ctxt, next) => {
 			try {
@@ -64,12 +62,7 @@ class DefaultTemplate extends TwyrBaseTemplate {
 
 		this.$router.get('/', async (ctxt, next) => {
 			try {
-				const tenantTemplateIndexPath = path.join(ctxt.state.tenant['tenant_template']['tenant_domain'], ctxt.state.tenant['tenant_template']['tmpl_name'], ctxt.state.tenant['tenant_template']['path_to_index']);
-				const tmplFilePath = path.join(path.dirname(path.dirname(require.main.filename)), 'tenant_templates', tenantTemplateIndexPath);
-
-				ctxt.status = 200;
-				ctxt.type = 'text/html; charset=utf-8';
-				ctxt.body = await filesystem.readFileAsync(tmplFilePath);
+				await this._serveTenantTemplate(ctxt);
 			}
 			catch(err) {
 				console.error(`${err.message}\n${err.stack}`);
