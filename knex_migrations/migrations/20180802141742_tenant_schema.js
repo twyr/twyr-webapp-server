@@ -194,7 +194,7 @@ $$;`
 
 	await knex.schema.withSchema('public').raw(
 `CREATE OR REPLACE FUNCTION public.fn_get_tenant_template (IN tenantid uuid)
-	RETURNS TABLE (path_to_index text)
+	RETURNS TABLE (tenant_domain text, tmpl_name text, path_to_index text)
 	LANGUAGE plpgsql
 	VOLATILE
 	CALLED ON NULL INPUT
@@ -230,7 +230,7 @@ BEGIN
 
 	IF tmpl_name IS NOT NULL
 	THEN
-		RETURN QUERY SELECT tenant_domain || '/' || tmpl_name || '/' || index_path;
+		RETURN QUERY SELECT tenant_domain, tmpl_name, index_path;
 		RETURN;
 	END IF;
 

@@ -377,7 +377,7 @@ exports.seed = async function(knex) {
 			'tenant_id': tenantId,
 			'name': 'bhairavi',
 			'display_name': 'Bhairavi Template',
-			'relative_path_to_index': 'dist/index.html',
+			'relative_path_to_index': 'index.html',
 			'description': 'The default template that ships with Twyr',
 			'default': true
 		});

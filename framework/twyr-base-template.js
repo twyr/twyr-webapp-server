@@ -88,22 +88,48 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 
 	// #region Protected methods - need to be overriden by derived classes
 	async _addRoutes() {
-		return null;
+		if(!this.$router)
+			return;
+
+		this.$router.get('/', this._serveTenantTemplate.bind(this));
 	}
 
 	async _deleteRoutes() {
-		// NOTICE: Undocumented koa-router data structure. Be careful upgrading :-)
+		// NOTICE: Undocumented koa-router data structure.
+		// Be careful upgrading :-)
 		if(this.$router) this.$router.stack.length = 0;
 		return null;
 	}
 	// #endregion
 
+	// #region The main render method
+	async _serveTenantTemplate(ctxt) {
+		try {
+			const fs = require('fs-extra');
+			const path = require('path');
+			const promises = require('bluebird');
+
+			const filesystem = promises.promisifyAll(fs);
+			const tmplPath = path.join(path.dirname(__dirname), 'tenant_assets', ctxt.state.tenant['tenant_template']['tenant_domain'], ctxt.state.tenant['tenant_template']['tmpl_name'], ctxt.state.tenant['tenant_template']['path_to_index']);
+
+			console.log(`Tmpl Path: ${tmplPath}`);
+			const indexHTML = await filesystem.readFileAsync(tmplPath);
+
+			ctxt.status = 200;
+			ctxt.type = 'text/html';
+			ctxt.body = indexHTML;
+		}
+		catch(err) {
+			throw new TwyrTmplError(`${this.name}::_serveTenantTemplate error`, err);
+		}
+	}
+	// #endregion
 
 	// #region Properties
 	/**
-	 * @member   {Object} Interface
+	 * @member   {Object} Router
 	 * @instance
-	 * @memberof TwyrBaseService
+	 * @memberof TwyrBaseTemplate
 	 *
 	 * @readonly
 	 */
