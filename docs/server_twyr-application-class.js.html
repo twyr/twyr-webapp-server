@@ -211,6 +211,15 @@ class TwyrApplication extends TwyrBaseModule {
 	}
 	// #endregion
 
+	// #region Re-configuration
+	async _subModuleReconfigure(subModule) {
+		await super._subModuleReconfigure(subModule);
+		if(subModule.name !== 'WebserverService') return;
+
+		await this._setupWebserverRoutes();
+	}
+	// #endregion
+
 	// #region Private Methods
 	async _setupWebserverRoutes() {
 		const appRouter = this.$services.WebserverService.Interface.Router;
