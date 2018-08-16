@@ -181,22 +181,22 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 	// #region The main render method
 	async _serveTenantTemplate(ctxt) {
 		try {
-			const fs = require('fs-extra');
+			const renderConfig = Object.assign({}, ctxt.state.tenant['template']['configuration']);
+			renderConfig['developmentMode'] = (twyrEnv === 'development') || (twyrEnv === 'test');
+
+			const ejs = require('ejs');
 			const path = require('path');
-			const promises = require('bluebird');
 
-			const filesystem = promises.promisifyAll(fs);
-			const tmplPath = path.join(path.dirname(__dirname), 'tenant_assets', ctxt.state.tenant['tenant_template']['tenant_domain'], ctxt.state.tenant['tenant_template']['tmpl_name'], ctxt.state.tenant['tenant_template']['path_to_index']);
-
-			console.log(`Tmpl Path: ${tmplPath}`);
-			const indexHTML = await filesystem.readFileAsync(tmplPath);
+			const tmplPath = path.join(path.dirname(__dirname), 'tenant_templates', ctxt.state.tenant['template']['tenant_domain'], ctxt.state.tenant['template']['tmpl_name'], ctxt.state.tenant['template']['path_to_index']);
+			const indexHTML = await ejs.renderFile(tmplPath, renderConfig, { 'async': true });
 
 			ctxt.status = 200;
 			ctxt.type = 'text/html';
 			ctxt.body = indexHTML;
 		}
 		catch(err) {
-			throw new TwyrTmplError(`${this.name}::_serveTenantTemplate error`, err);
+			const error = new TwyrTmplError(`${this.name}::_serveTenantTemplate error`, err);
+			throw error;
 		}
 	}
 	// #endregion

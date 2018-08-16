@@ -254,6 +254,18 @@ class TwyrApplication extends TwyrBaseModule {
 
 	// #region Properties
 	/**
+	 * @member   {string} name
+	 * @instance
+	 * @override
+	 * @memberof TwyrApplication
+	 *
+	 * @readonly
+	 */
+	get name() {
+		return this.$application || this.constructor.name;
+	}
+
+	/**
 	 * @override
 	 */
 	get basePath() {
