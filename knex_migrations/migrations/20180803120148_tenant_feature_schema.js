@@ -131,13 +131,13 @@ BEGIN
 	IF tenantid IS NULL
 	THEN
 		RAISE SQLSTATE '2F003' USING MESSAGE = 'Tenant ID is required';
-		RETURN NULL;
+		RETURN;
 	END IF;
 
 	IF moduleid IS NULL
 	THEN
 		RAISE SQLSTATE '2F003' USING MESSAGE = 'Server ID is required';
-		RETURN NULL;
+		RETURN;
 	END IF;
 
 	SELECT
