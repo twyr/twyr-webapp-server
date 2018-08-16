@@ -45,11 +45,15 @@ class DefaultTemplate extends TwyrBaseTemplate {
 		super._addRoutes();
 
 		const path = require('path');
+
 		const serveStatic = require('koa-static');
+
+		const dirPath = path.join(path.dirname(path.dirname(require.main.filename)), 'node_modules/ember-source/dist');
+		this.$router.use(serveStatic(dirPath));
 
 		this.$router.get('*', async (ctxt, next) => {
 			try {
-				const tenantTemplatePath = path.dirname(path.join(ctxt.state.tenant['tenant_template']['tenant_domain'], ctxt.state.tenant['tenant_template']['tmpl_name'], ctxt.state.tenant['tenant_template']['path_to_index']));
+				const tenantTemplatePath = path.dirname(path.join(ctxt.state.tenant['template']['tenant_domain'], ctxt.state.tenant['template']['tmpl_name'], ctxt.state.tenant['template']['path_to_index']));
 				const tmplStaticAssetPath = path.join(path.dirname(path.dirname(require.main.filename)), 'tenant_templates', tenantTemplatePath);
 
 				await serveStatic(tmplStaticAssetPath)(ctxt, next);
@@ -60,13 +64,13 @@ class DefaultTemplate extends TwyrBaseTemplate {
 			}
 		});
 
-		this.$router.get('/', async (ctxt, next) => {
+		this.$router.get('/', async (ctxt) => {
 			try {
 				await this._serveTenantTemplate(ctxt);
 			}
 			catch(err) {
 				console.error(`${err.message}\n${err.stack}`);
-				await next();
+				throw err;
 			}
 		});
 

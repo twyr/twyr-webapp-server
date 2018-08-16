@@ -387,15 +387,20 @@ class WebserverService extends TwyrBaseService {
 			}
 
 			if(!tenant) {
+				let parentModule = this.$parent;
+				while(parentModule.$parent) parentModule = parentModule.$parent;
+
+				const parentModuleId = await this.$dependencies.ConfigurationService.getModuleID(parentModule);
+
 				tenant = await dbSrvc.raw('SELECT tenant_id, name, sub_domain FROM tenants WHERE sub_domain = ?', [tenantSubDomain]);
 				if(!tenant.rows.length) throw new Error(`Invalid sub-domain: ${tenantSubDomain}`);
 
 				tenant = tenant.rows.shift();
 
-				let template = await dbSrvc.raw(`SELECT * FROM fn_get_tenant_template(?)`, [tenant.tenant_id]);
+				let template = await dbSrvc.raw(`SELECT * FROM fn_get_tenant_template(?, ?)`, [tenant.tenant_id, parentModuleId]);
 				template = template.rows.shift();
 
-				tenant['tenant_template'] = template;
+				tenant['template'] = template;
 
 				const cacheMulti = cacheSrvc.multi();
 				cacheMulti.setAsync(`twyr!webapp!tenant!${tenantSubDomain}`, JSON.stringify(tenant));

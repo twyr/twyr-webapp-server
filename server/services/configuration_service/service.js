@@ -421,6 +421,8 @@ class ConfigurationService extends TwyrBaseService {
 	 */
 	_getPathForModule(twyrModule) {
 		try {
+			if(!twyrModule.$parent) return 'server';
+
 			const inflection = require('inflection');
 			const path = require('path');
 
@@ -432,7 +434,7 @@ class ConfigurationService extends TwyrBaseService {
 			while(currentModule.$parent) {
 				const parentModule = currentModule.$parent;
 				// eslint-disable-next-line no-loop-func
-				['server', 'services', 'middlewares', 'components', 'templates'].forEach((twyrModuleType) => {
+				['components', 'features', 'middlewares', 'services', 'server', 'templates'].forEach((twyrModuleType) => {
 					if(Object.keys(parentModule[`$${twyrModuleType}`] || {}).indexOf(currentModule.name) < 0)
 						return;
 

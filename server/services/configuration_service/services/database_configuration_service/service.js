@@ -404,7 +404,7 @@ class DatabaseConfigurationService extends TwyrBaseService {
 		const inflection = require('inflection');
 
 		const filteredConfigs = moduleConfigs.filter((moduleConfig) => {
-			return (moduleConfig.parent === parent);
+			return (moduleConfig.parent_module_id === parent);
 		});
 
 		const tree = {};
@@ -423,13 +423,12 @@ class DatabaseConfigurationService extends TwyrBaseService {
 			});
 
 			if(filteredConfig.type === 'server') {
-				tree.server = relevantConfig;
+				tree['server'] = relevantConfig;
 			}
 			else {
 				if(!tree[`${filteredConfig.type}s`]) tree[`${filteredConfig.type}s`] = {};
 				tree[`${filteredConfig.type}s`][inflection.underscore(filteredConfig.name)] = relevantConfig;
 			}
-
 		});
 
 		return tree;
@@ -437,7 +436,7 @@ class DatabaseConfigurationService extends TwyrBaseService {
 
 	_convertTreeToPaths(cachedMap, prefix, configTree) {
 		const path = require('path');
-		const twyrModuleTypes = ['services', 'middlewares', 'components', 'templates'];
+		const twyrModuleTypes = ['components', 'features', 'middlewares', 'services', 'templates'];
 
 		Object.keys(configTree).forEach((key) => {
 			const currentPrefix = path.join(prefix, key);

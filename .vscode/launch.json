@@ -18,6 +18,18 @@
 		},
 		{
 			"type": "node",
+			"request": "launch",
+			"name": "Launch/Break via node",
+			"runtimeExecutable": "node",
+			"runtimeArgs": [
+				"--inspect-brk",
+				"server/index.js"
+			],
+			"port": 9229,
+			"autoAttachChildProcesses":true
+		},
+		{
+			"type": "node",
 			"request": "attach",
 			"name": "Attach",
 			"port": 9229
