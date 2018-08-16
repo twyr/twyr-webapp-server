@@ -3,358 +3,361 @@
 exports.seed = async function(knex) {
 	// Step 1: See if the seed file has already run. If yes, simply return
 	let parentId = await knex.raw(`SELECT module_id FROM modules WHERE name = ? AND type = 'server' AND parent_module_id IS NULL`, ['TwyrWebappServer']);
-	if(parentId.rows.length) return null;
-
-	// Step 2: Insert the data for the "server" into the modules table
-	parentId = await knex('modules').insert({
-		'name': 'TwyrWebappServer',
-		'type': 'server',
-		'deploy': 'default',
-		'display_name': 'Twyr Web Application',
-		'description': 'The Twyr Web Application Module - the "Application Class" for the Web Application',
-		'configuration': {
-			'title': 'Twyr Web Application'
-		},
-		'configuration_schema': {
-			'type': 'object',
-			'properties': {
-				'title': {
-					'type': 'string'
+	if(parentId.rows.length) {
+		parentId = parentId.rows[0]['module_id'];
+	}
+	else {
+		// Step 2: Insert the data for the "server" into the modules table
+		parentId = await knex('modules').insert({
+			'name': 'TwyrWebappServer',
+			'type': 'server',
+			'deploy': 'default',
+			'display_name': 'Twyr Web Application',
+			'description': 'The Twyr Web Application Module - the "Application Class" for the Web Application',
+			'configuration': {
+				'title': 'Twyr Web Application'
+			},
+			'configuration_schema': {
+				'type': 'object',
+				'properties': {
+					'title': {
+						'type': 'string'
+					}
 				}
+			},
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
 			}
-		},
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	})
-	.returning('module_id');
+		})
+		.returning('module_id');
 
-	parentId = parentId[0];
+		parentId = parentId[0];
 
-	// Step 3: Insert the data for all the standard services that ship with the codebase into the modules table
-	await knex('modules').insert({
-		'parent_module_id': parentId,
-		'type': 'service',
-		'deploy': 'admin',
-		'name': 'ApiService',
-		'display_name': 'API Service',
-		'description': 'The Twyr Web Application API Service - allows modules to expose interfaces for use by other modules without direct references to each other',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
+		// Step 3: Insert the data for all the standard services that ship with the codebase into the modules table
+		await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'service',
+			'deploy': 'admin',
+			'name': 'ApiService',
+			'display_name': 'API Service',
+			'description': 'The Twyr Web Application API Service - allows modules to expose interfaces for use by other modules without direct references to each other',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
 
-	await knex('modules').insert({
-		'parent_module_id': parentId,
-		'type': 'service',
-		'deploy': 'admin',
-		'name': 'AuditService',
-		'display_name': 'Audit Service',
-		'description': 'The Twyr Web Application Audit Service - automatically publishes an audit log of all incoming REST calls',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
+		await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'service',
+			'deploy': 'admin',
+			'name': 'AuditService',
+			'display_name': 'Audit Service',
+			'description': 'The Twyr Web Application Audit Service - automatically publishes an audit log of all incoming REST calls',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
 
-	await knex('modules').insert({
-		'parent_module_id': parentId,
-		'type': 'service',
-		'deploy': 'admin',
-		'name': 'AuthService',
-		'display_name': 'Authentication Service',
-		'description': 'The Twyr Web Application Authentication Service - based on Passport and its infinite strategies',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
+		await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'service',
+			'deploy': 'admin',
+			'name': 'AuthService',
+			'display_name': 'Authentication Service',
+			'description': 'The Twyr Web Application Authentication Service - based on Passport and its infinite strategies',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
 
-	await knex('modules').insert({
-		'parent_module_id': parentId,
-		'type': 'service',
-		'deploy': 'admin',
-		'name': 'AwsService',
-		'display_name': 'AWS Service',
-		'description': 'The Twyr Web Application base AWS Service - AWS feature-specific services (S3, for eg.) use this as a dependency for managing connections',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
+		await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'service',
+			'deploy': 'admin',
+			'name': 'AwsService',
+			'display_name': 'AWS Service',
+			'description': 'The Twyr Web Application base AWS Service - AWS feature-specific services (S3, for eg.) use this as a dependency for managing connections',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
 
-	await knex('modules').insert({
-		'parent_module_id': parentId,
-		'type': 'service',
-		'deploy': 'admin',
-		'name': 'CacheService',
-		'display_name': 'Cache Service',
-		'description': 'The Twyr Web Application Cache Service - based on Redis',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
+		await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'service',
+			'deploy': 'admin',
+			'name': 'CacheService',
+			'display_name': 'Cache Service',
+			'description': 'The Twyr Web Application Cache Service - based on Redis',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
 
-	await knex('modules').insert({
-		'parent_module_id': parentId,
-		'type': 'service',
-		'deploy': 'admin',
-		'name': 'CassandraService',
-		'display_name': 'Cassandra Service',
-		'description': 'The Twyr Web Application Cassandra Service - allows other modules to use a Cassandra cluster as a nosql storage',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
+		await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'service',
+			'deploy': 'admin',
+			'name': 'CassandraService',
+			'display_name': 'Cassandra Service',
+			'description': 'The Twyr Web Application Cassandra Service - allows other modules to use a Cassandra cluster as a nosql storage',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
 
-	let configSrvcId = await knex('modules').insert({
-		'parent_module_id': parentId,
-		'type': 'service',
-		'deploy': 'admin',
-		'name': 'ConfigurationService',
-		'display_name': 'Configuration Service',
-		'description': 'The Twyr Web Application Configuration Service',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	})
-	.returning('module_id');
+		let configSrvcId = await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'service',
+			'deploy': 'admin',
+			'name': 'ConfigurationService',
+			'display_name': 'Configuration Service',
+			'description': 'The Twyr Web Application Configuration Service',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		})
+		.returning('module_id');
 
-	configSrvcId = configSrvcId[0];
+		configSrvcId = configSrvcId[0];
 
-	await knex('modules').insert({
-		'parent_module_id': configSrvcId,
-		'type': 'service',
-		'deploy': 'admin',
-		'name': 'DatabaseConfigurationService',
-		'display_name': 'PostgreSQL Configuration Service',
-		'description': 'The Twyr Web Application PostgreSQL Configuration Service',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
+		await knex('modules').insert({
+			'parent_module_id': configSrvcId,
+			'type': 'service',
+			'deploy': 'admin',
+			'name': 'DatabaseConfigurationService',
+			'display_name': 'PostgreSQL Configuration Service',
+			'description': 'The Twyr Web Application PostgreSQL Configuration Service',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
 
-	await knex('modules').insert({
-		'parent_module_id': configSrvcId,
-		'type': 'service',
-		'deploy': 'admin',
-		'name': 'FileConfigurationService',
-		'display_name': 'File Configuration Service',
-		'description': 'The Twyr Web Application Filesystem-based Configuration Service',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
+		await knex('modules').insert({
+			'parent_module_id': configSrvcId,
+			'type': 'service',
+			'deploy': 'admin',
+			'name': 'FileConfigurationService',
+			'display_name': 'File Configuration Service',
+			'description': 'The Twyr Web Application Filesystem-based Configuration Service',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
 
-	await knex('modules').insert({
-		'parent_module_id': parentId,
-		'type': 'service',
-		'deploy': 'admin',
-		'name': 'DatabaseService',
-		'display_name': 'Database Service',
-		'description': 'The Twyr Web Application Database Service - built on top of Knex / Bookshelf',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
+		await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'service',
+			'deploy': 'admin',
+			'name': 'DatabaseService',
+			'display_name': 'Database Service',
+			'description': 'The Twyr Web Application Database Service - built on top of Knex / Bookshelf',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
 
-	await knex('modules').insert({
-		'parent_module_id': parentId,
-		'type': 'service',
-		'deploy': 'admin',
-		'name': 'LocalizationService',
-		'display_name': 'Localization Service',
-		'description': 'The Twyr Web Application Localization Service',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
+		await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'service',
+			'deploy': 'admin',
+			'name': 'LocalizationService',
+			'display_name': 'Localization Service',
+			'description': 'The Twyr Web Application Localization Service',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
 
-	await knex('modules').insert({
-		'parent_module_id': parentId,
-		'type': 'service',
-		'deploy': 'admin',
-		'name': 'LoggerService',
-		'display_name': 'Logger Service',
-		'description': 'The Twyr Web Application Logger Service',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
+		await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'service',
+			'deploy': 'admin',
+			'name': 'LoggerService',
+			'display_name': 'Logger Service',
+			'description': 'The Twyr Web Application Logger Service',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
 
-	await knex('modules').insert({
-		'parent_module_id': parentId,
-		'type': 'service',
-		'deploy': 'admin',
-		'name': 'MailerService',
-		'display_name': 'Mailer Service',
-		'description': 'The Twyr Web Application Mailer Service - based on nodemailer and node-smtp-transport',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
+		await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'service',
+			'deploy': 'admin',
+			'name': 'MailerService',
+			'display_name': 'Mailer Service',
+			'description': 'The Twyr Web Application Mailer Service - based on nodemailer and node-smtp-transport',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
 
-	await knex('modules').insert({
-		'parent_module_id': parentId,
-		'type': 'service',
-		'deploy': 'admin',
-		'name': 'PubsubService',
-		'display_name': 'Publish/Subscribe Service',
-		'description': 'The Twyr Web Application Publish/Subscribe Service - based on Ascoltatori',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
+		await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'service',
+			'deploy': 'admin',
+			'name': 'PubsubService',
+			'display_name': 'Publish/Subscribe Service',
+			'description': 'The Twyr Web Application Publish/Subscribe Service - based on Ascoltatori',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
 
-	await knex('modules').insert({
-		'parent_module_id': parentId,
-		'type': 'service',
-		'deploy': 'admin',
-		'name': 'RingpopService',
-		'display_name': 'Cluster Service',
-		'description': 'The Twyr Web Application Cluster Service - based on Ringpop by Uber',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
+		await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'service',
+			'deploy': 'admin',
+			'name': 'RingpopService',
+			'display_name': 'Cluster Service',
+			'description': 'The Twyr Web Application Cluster Service - based on Ringpop by Uber',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
 
-	await knex('modules').insert({
-		'parent_module_id': parentId,
-		'type': 'service',
-		'deploy': 'admin',
-		'name': 'StorageService',
-		'display_name': 'Storage Service',
-		'description': 'The Twyr Web Application Storage Service - depending on configuration, a wrapper around sandboxed-fs or s3fs',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
+		await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'service',
+			'deploy': 'admin',
+			'name': 'StorageService',
+			'display_name': 'Storage Service',
+			'description': 'The Twyr Web Application Storage Service - depending on configuration, a wrapper around sandboxed-fs or s3fs',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
 
-	await knex('modules').insert({
-		'parent_module_id': parentId,
-		'type': 'service',
-		'deploy': 'admin',
-		'name': 'WebserverService',
-		'display_name': 'Express Service',
-		'description': 'The Twyr Web Application Webserver Service - based on Koa',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
+		await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'service',
+			'deploy': 'admin',
+			'name': 'WebserverService',
+			'display_name': 'Express Service',
+			'description': 'The Twyr Web Application Webserver Service - based on Koa',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
 
-	await knex('modules').insert({
-		'parent_module_id': parentId,
-		'type': 'service',
-		'deploy': 'admin',
-		'name': 'WebsocketService',
-		'display_name': 'Websocket Service',
-		'description': 'The Twyr Web Application Websocket Service - based on Primus using WS Transformer',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	});
+		await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'service',
+			'deploy': 'admin',
+			'name': 'WebsocketService',
+			'display_name': 'Websocket Service',
+			'description': 'The Twyr Web Application Websocket Service - based on Primus using WS Transformer',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
 
-	// Step 4: Insert the data for the standard permissiones that this "server" defines
-	await knex('feature_permissions').insert({
-		'module_id': parentId,
-		'name': 'public',
-		'display_name': 'Public User Permissions',
-		'description': 'The Twyr Web Application Permissions for non-logged-in Users'
-	});
+		// Step 4: Insert the data for the standard permissions that this "server" defines
+		await knex('feature_permissions').insert({
+			'module_id': parentId,
+			'name': 'public',
+			'display_name': 'Public User Permissions',
+			'description': 'The Twyr Web Application Permissions for non-logged-in Users'
+		});
 
-	await knex('feature_permissions').insert({
-		'module_id': parentId,
-		'name': 'registered',
-		'display_name': 'Registered User Permissions',
-		'description': 'The Twyr Web Application Permissions for logged-in Users'
-	});
+		await knex('feature_permissions').insert({
+			'module_id': parentId,
+			'name': 'registered',
+			'display_name': 'Registered User Permissions',
+			'description': 'The Twyr Web Application Permissions for logged-in Users'
+		});
 
-	await knex('feature_permissions').insert({
-		'module_id': parentId,
-		'name': 'administrator',
-		'display_name': 'Administrator Permissions',
-		'description': 'The Twyr Web Application Permissions for Administrators'
-	});
+		await knex('feature_permissions').insert({
+			'module_id': parentId,
+			'name': 'administrator',
+			'display_name': 'Administrator Permissions',
+			'description': 'The Twyr Web Application Permissions for Administrators'
+		});
 
-	await knex('feature_permissions').insert({
-		'module_id': parentId,
-		'name': 'super-administrator',
-		'display_name': 'Super Administrator Permissions',
-		'description': 'The Twyr Web Application Permissions for Super Administrators'
-	});
+		await knex('feature_permissions').insert({
+			'module_id': parentId,
+			'name': 'super-administrator',
+			'display_name': 'Super Administrator Permissions',
+			'description': 'The Twyr Web Application Permissions for Super Administrators'
+		});
+	}
 
 	// Step 5: Insert the data (basics + template) for the only pre-defined tenant
 	let tenantId = await knex.raw('SELECT tenant_id FROM tenants WHERE sub_domain =\'www\'');
@@ -371,14 +374,16 @@ exports.seed = async function(knex) {
 		tenantId = tenantId.rows[0]['tenant_id'];
 	}
 
-	let templateId = await knex.raw(`SELECT tenant_template_id FROM tenant_templates WHERE tenant_id = ?`, [tenantId]);
+	let templateId = await knex.raw(`SELECT tenant_template_id FROM tenant_templates WHERE tenant_id = ? AND module_id = ?`, [tenantId, parentId]);
 	if(!templateId.rows.length) {
 		await knex('tenant_templates').insert({
 			'tenant_id': tenantId,
+			'module_id': parentId,
 			'name': 'bhairavi',
 			'display_name': 'Bhairavi Template',
-			'relative_path_to_index': 'index.html',
+			'relative_path_to_index': 'index.ejs',
 			'description': 'The default template that ships with Twyr',
+			'configuration': { 'title': 'Twyr Bhairavi Template' },
 			'default': true
 		});
 	}

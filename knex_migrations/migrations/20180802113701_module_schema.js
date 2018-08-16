@@ -9,7 +9,7 @@ exports.up = async function(knex) {
 	await knex.schema.raw('CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public');
 
 	// Step 2: Create the enums we need
-	await knex.schema.raw("CREATE TYPE public.module_type AS ENUM ('component', 'feature','middleware','service', 'server', 'template')");
+	await knex.schema.raw("CREATE TYPE public.module_type AS ENUM ('component', 'feature', 'middleware', 'service', 'server', 'template')");
 	await knex.schema.raw("CREATE TYPE public.module_deploy_type AS ENUM ('admin', 'custom', 'default')");
 
 	// Step 3: Create the basic "modules" table
