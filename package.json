@@ -67,6 +67,8 @@
 		"dependency-graph": "^0.7.1",
 		"device": "*",
 		"dotenv": "^6.0.0",
+		"ejs": "*",
+		"ember-source": "*",
 		"fs-extra": "^7.0.0",
 		"i18n": "*",
 		"inflection": "*",
