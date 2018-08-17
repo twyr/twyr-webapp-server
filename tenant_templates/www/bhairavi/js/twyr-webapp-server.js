@@ -6797,14 +6797,6 @@
   });
   exports.default = Ember.HTMLBars.template({ "id": "Le2PWR69", "block": "{\"symbols\":[\"&default\"],\"statements\":[[14,1],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "twyr-webapp-server/templates/components/transition-group.hbs" } });
 });
-;define("twyr-webapp-server/templates/head", ["exports"], function (exports) {
-  "use strict";
-
-  Object.defineProperty(exports, "__esModule", {
-    value: true
-  });
-  exports.default = Ember.HTMLBars.template({ "id": "pOphMAnv", "block": "{\"symbols\":[],\"statements\":[[7,\"title\"],[9],[1,[23,[\"model\",\"title\"]],false],[10],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "twyr-webapp-server/templates/head.hbs" } });
-});
 ;define('twyr-webapp-server/themes/bootstrap3', ['exports', 'ember-models-table/themes/bootstrap3'], function (exports, _bootstrap) {
   'use strict';
 
