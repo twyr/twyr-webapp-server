@@ -1398,7 +1398,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 		try {
 			args = args || [];
 
-			const modules = this.$twyrModule['$' + moduleType]; // eslint-disable-line prefer-template
+			const modules = this.$twyrModule[`$${moduleType}`]; // eslint-disable-line prefer-template
 			const moduleNames = Object.keys(modules || {});
 
 			const nameStatusPairs = {};

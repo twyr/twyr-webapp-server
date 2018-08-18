@@ -89,17 +89,16 @@ class TwyrApplication extends TwyrBaseModule {
 			bootupError = (err instanceof TwyrBaseError) ? err : new TwyrBaseError(`Bootup Error`, err);
 			allStatuses.push(`Bootup error: ${bootupError.toString()}`);
 		}
-		finally {
-			if(!bootupError && ((twyrEnv === 'development') || (twyrEnv === 'test')))
-				console.info(`\n\n${allStatuses.join('\n')}\n\n`);
 
-			if(bootupError) {
-				console.error(`\n\n${allStatuses.join('\n')}\n\n`);
-				throw bootupError;
-			}
+		if(!bootupError && ((twyrEnv === 'development') || (twyrEnv === 'test')))
+			console.info(`\n\n${allStatuses.join('\n')}\n\n`);
 
-			return null;
+		if(bootupError) {
+			console.error(`\n\n${allStatuses.join('\n')}\n\n`);
+			throw bootupError;
 		}
+
+		return null;
 	}
 
 	/**
@@ -141,17 +140,16 @@ class TwyrApplication extends TwyrBaseModule {
 			shutdownError = (err instanceof TwyrBaseError) ? err : new TwyrBaseError(`Shutdown Error`, err);
 			allStatuses.push(`Shutdown error: ${shutdownError.toString()}`);
 		}
-		finally {
-			if(!shutdownError && ((twyrEnv === 'development') || (twyrEnv === 'test')))
-				console.info(`\n\n${allStatuses.join('\n')}\n\n`);
 
-			if(shutdownError) {
-				console.error(`\n\n${allStatuses.join('\n')}\n\n`);
-				throw shutdownError;
-			}
+		if(!shutdownError && ((twyrEnv === 'development') || (twyrEnv === 'test')))
+			console.info(`\n\n${allStatuses.join('\n')}\n\n`);
 
-			return null;
+		if(shutdownError) {
+			console.error(`\n\n${allStatuses.join('\n')}\n\n`);
+			throw shutdownError;
 		}
+
+		return null;
 	}
 	// #endregion
 

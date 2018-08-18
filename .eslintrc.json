@@ -43,7 +43,14 @@
 	},
 
 	"plugins": [
-		"jsdoc"
+		"jsdoc",
+		"security"
+	],
+
+	"extends": [
+		"eslint:recommended",
+		"plugin:node/recommended",
+		"plugin:security/recommended"
 	],
 
 	"rules": {
@@ -217,6 +224,14 @@
 		"max-statements": 0,
 		"no-bitwise": 0,
 		"no-plusplus": 0,
+
+		"node/no-missing-require": ["error", {
+			"resolvePaths": ["./framework"]
+		}],
+
+		"security/detect-non-literal-require": 0,
+		"security/detect-object-injection": 0,
+		"security/detect-non-literal-fs-filename": 0,
 
 		"jsdoc/check-param-names": 1,
 		"jsdoc/check-tag-names": 0,

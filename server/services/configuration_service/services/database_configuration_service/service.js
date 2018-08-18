@@ -57,16 +57,9 @@ class DatabaseConfigurationService extends TwyrBaseService {
 			this.$config = this.$parent.$config.subservices[this.name];
 			const thisConfig = JSON.parse(JSON.stringify(this.$config));
 
-			thisConfig.client = thisConfig.client;
 			thisConfig.debug = (thisConfig.debug === true);
 
-			if(thisConfig.connection) {
-				thisConfig.connection.host = thisConfig.connection.host;
-				thisConfig.connection.port = Number(thisConfig.connection.port);
-				thisConfig.connection.user = thisConfig.connection.user;
-				thisConfig.connection.password = thisConfig.connection.password;
-				thisConfig.connection.database = thisConfig.connection.database;
-			}
+			if(thisConfig.connection) thisConfig.connection.port = Number(thisConfig.connection.port);
 
 			if(thisConfig.pool) {
 				thisConfig.pool.min = Number(thisConfig.pool.min);
@@ -94,7 +87,7 @@ class DatabaseConfigurationService extends TwyrBaseService {
 
 					promises.promisifyAll(rawConnection.connection);
 					done();
-			};
+				};
 			}
 
 			const pg = require('pg');

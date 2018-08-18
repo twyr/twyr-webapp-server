@@ -316,7 +316,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 			if(this.$parent) await this.$parent._subModuleReconfigure(this);
 
 			// Step 5: Let the sub-modules know about the change in configuration
-			for(const subModules of [this.$services, this.$middlewares, this.$components, this.$templates]) {
+			for(const subModules of [this.$components, this.$features, this.$middlewares, this.$services, this.$templates]) {
 				if(!subModules) continue;
 
 				const subModuleNames = Object.keys(subModules);
@@ -421,7 +421,7 @@ class TwyrBaseModule extends TwyrBaseClass {
 			if(this.$parent) await this.$parent._subModuleStateChange(this, newState);
 
 			// Step 2: Let the sub-modules know about the change in state
-			for(const subModules of [this.$services, this.$middlewares, this.$components, this.$templates]) {
+			for(const subModules of [this.$components, this.$features, this.$middlewares, this.$services, this.$templates]) {
 				if(!subModules) continue;
 
 				const subModuleNames = Object.keys(subModules);

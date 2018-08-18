@@ -1,4 +1,6 @@
+buildresults/
 config/
+docs/
 example.config/
 knex_migrations/
 logs/

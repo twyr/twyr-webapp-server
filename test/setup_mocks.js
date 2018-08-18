@@ -53,5 +53,5 @@ const _teardownFn = function(callback) {
 	});
 };
 
-const prepare = require('mocha-prepare');
+const prepare = require('mocha-prepare'); // eslint-disable-line node/no-unpublished-require
 prepare(_setupFn, _teardownFn);

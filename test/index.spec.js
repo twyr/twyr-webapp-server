@@ -1,7 +1,7 @@
 'use strict';
 
-const chai = require('chai');
-const chaiHttp = require('chai-http');
+const chai = require('chai'); // eslint-disable-line node/no-unpublished-require
+const chaiHttp = require('chai-http'); // eslint-disable-line node/no-unpublished-require
 
 chai.use(chaiHttp);
 

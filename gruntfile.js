@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = function(grunt) {
-	require('load-grunt-tasks')(grunt);
+	require('load-grunt-tasks')(grunt); // eslint-disable-line node/no-unpublished-require
 
 	grunt.initConfig({
 		'pkg': grunt.file.readJSON('package.json'),
