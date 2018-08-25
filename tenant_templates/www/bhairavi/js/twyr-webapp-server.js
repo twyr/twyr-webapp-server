@@ -6131,31 +6131,32 @@
   };
 });
 ;define('twyr-webapp-server/initializers/resize', ['exports', 'ember-resize/services/resize', 'twyr-webapp-server/config/environment'], function (exports, _resize, _environment) {
-  'use strict';
+    'use strict';
 
-  Object.defineProperty(exports, "__esModule", {
-    value: true
-  });
-  exports.initialize = initialize;
-  function initialize() {
-    let application = arguments[1] || arguments[0];
-
-    const { resizeServiceDefaults } = _environment.default;
-    const { injectionFactories } = resizeServiceDefaults;
-
-    application.register('config:resize-service', resizeServiceDefaults, { instantiate: false });
-    application.register('service:resize', _resize.default);
-    application.inject('service:resize', 'resizeServiceDefaults', 'config:resize-service');
-
-    injectionFactories.forEach(factory => {
-      application.inject(factory, 'resizeService', 'service:resize');
+    Object.defineProperty(exports, "__esModule", {
+        value: true
     });
-  }
-
-  exports.default = {
-    name: 'resize',
-    initialize: initialize
-  };
+    exports.initialize = initialize;
+    function initialize(application) {
+        const resizeServiceDefaults = Ember.getWithDefault(_environment.default, 'resizeServiceDefaults', {
+            debounceTimeout: 200,
+            heightSensitive: true,
+            widthSensitive: true
+        });
+        const injectionFactories = Ember.getWithDefault(resizeServiceDefaults, 'injectionFactories', ['view', 'component']) || [];
+        application.unregister('config:resize-service');
+        application.register('config:resize-service', resizeServiceDefaults, { instantiate: false });
+        application.register('service:resize', _resize.default);
+        const resizeService = application.resolveRegistration('service:resize');
+        resizeService.prototype.resizeServiceDefaults = resizeServiceDefaults;
+        injectionFactories.forEach(factory => {
+            application.inject(factory, 'resizeService', 'service:resize');
+        });
+    }
+    exports.default = {
+        initialize,
+        name: 'resize'
+    };
 });
 ;define('twyr-webapp-server/initializers/toastr', ['exports', 'ember-toastr/initializers/toastr', 'twyr-webapp-server/config/environment'], function (exports, _toastr, _environment) {
   'use strict';
@@ -7139,7 +7140,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","pageTitle":{"replace":false,"separator":" > "},"changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari"],"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component","component"]},"ember-paper":{"insertFontLinks":true},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{"Date":true}},"APP":{"LOG_RESOLVER":true,"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"twyr-webapp-server","version":"3.0.1"},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","pageTitle":{"replace":false,"separator":" > "},"changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari"],"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"ember-paper":{"insertFontLinks":true},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{"Date":true}},"APP":{"LOG_RESOLVER":true,"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"twyr-webapp-server","version":"3.0.1+af03f68a"},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;
