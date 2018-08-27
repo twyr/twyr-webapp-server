@@ -77,6 +77,10 @@ class TwyrModuleLoader extends TwyrBaseClass {
 
 			allStatuses.push(lifecycleStatuses);
 
+			// Special case.... if the server is loading, configSrvc will be null
+			// so re-look at the loaded services and set the configSrvc to the loaded one
+			if(!this.$twyrModule.$parent && !configSrvc) configSrvc = this.$twyrModule.$services['ConfigurationService'];
+
 			lifecycleStatuses = await this._loadMiddlewares(configSrvc);
 			if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
 				throw lifecycleStatuses.status;
@@ -1401,7 +1405,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 		try {
 			args = args || [];
 
-			const modules = this.$twyrModule[`$${moduleType}`]; // eslint-disable-line prefer-template
+			const modules = this.$twyrModule[`$${moduleType}`];
 			const moduleNames = Object.keys(modules || {});
 
 			const nameStatusPairs = {};

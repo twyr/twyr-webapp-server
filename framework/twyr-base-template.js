@@ -123,9 +123,14 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 	// #endregion
 
 	// #region The main render method
-	async _serveTenantTemplate(ctxt) {
+	async _serveTenantTemplate(ctxt, next) {
+		if(ctxt.state.tenant['template']['base_template'] !== this.name) {
+			await next();
+			return;
+		}
+
 		try {
-			const renderConfig = Object.assign({}, ctxt.state.tenant['template']['configuration']);
+			const renderConfig = Object.assign({}, ctxt.state.tenant['template']['base_template_configuration'], ctxt.state.tenant['template']['configuration']);
 			renderConfig['developmentMode'] = (twyrEnv === 'development') || (twyrEnv === 'test');
 
 			const ejs = require('ejs');
