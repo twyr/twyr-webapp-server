@@ -184,16 +184,6 @@ class TwyrApplication extends TwyrBaseModule {
 
 		return;
 	}
-
-	async _doDBSanityCheck() {
-		if(twyrEnv !== 'development')
-			return;
-
-		const dbSrvc = this.$services.DatabaseService.Interface;
-		const modules = await dbSrvc.knex.raw(`SELECT module_id, type, name FROM modules`);
-
-		console.table(modules.rows);
-	}
 	// #endregion
 
 	// #region Properties
