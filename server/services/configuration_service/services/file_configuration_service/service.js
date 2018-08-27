@@ -1,5 +1,9 @@
 'use strict';
 
+/* eslint-disable security/detect-object-injection */
+/* eslint-disable security/detect-non-literal-require */
+/* eslint-disable security/detect-non-literal-fs-filename */
+
 /**
  * Module dependencies, required for ALL Twyr modules
  * @ignore

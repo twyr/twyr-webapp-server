@@ -1,5 +1,7 @@
 'use strict';
 
+/* eslint-disable security/detect-object-injection */
+
 /**
  * Module dependencies, required for ALL Twyr' modules
  * @ignore
