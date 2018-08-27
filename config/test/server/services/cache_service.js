@@ -5,5 +5,6 @@ exports.config = {
 		"retry": "Yellow",
 		"dropBufferSupport": true
 	},
+
 	"monitorLogLevel": "silly"
 };

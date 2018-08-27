@@ -6,7 +6,9 @@ exports.config = {
 		"port": 6379,
 		"type": "redis",
 		"redis": "redis",
-		"options": {},
+		"options": {
+		},
+
 		"dropBufferSupport": true
 	}
 };
