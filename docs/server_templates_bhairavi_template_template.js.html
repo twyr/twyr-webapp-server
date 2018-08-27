@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>server/services/aws_service/service.js - Twyr Web Application Server</title>
+    <title>server/templates/bhairavi_template/template.js - Twyr Web Application Server</title>
     
     <meta name="description" content="Twyr Web Application Server" />
     
@@ -44,7 +44,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">server/services/aws_service/service.js</h1>
+    <h1 class="page-title">server/templates/bhairavi_template/template.js</h1>
     
 
     
@@ -65,91 +65,76 @@
  * Module dependencies, required for this module
  * @ignore
  */
-const TwyrBaseService = require('twyr-base-service').TwyrBaseService;
-const TwyrSrvcError = require('twyr-service-error').TwyrServiceError;
+const TwyrBaseTemplate = require('twyr-base-template').TwyrBaseTemplate;
+// const TwyrTmplError = require('twyr-template-error').TwyrTemplateError;
 
 /**
- * @class   AwsService
- * @extends {TwyrBaseService}
- * @classdesc The Twyr Web Application Server AWS Service.
+ * @class   BhairaviTemplate
+ * @extends {TwyrBaseTemplate}
+ * @classdesc The Twyr Web Application Server Default Template class.
  *
  * @description
- * Allows the rest of the Twyr Modules to use AWS SDK API.
+ * Renders the index file of the tenant's default template.
  *
  */
-class AwsService extends TwyrBaseService {
+class BhairaviTemplate extends TwyrBaseTemplate {
 	// #region Constructor
 	constructor(parent, loader) {
 		super(parent, loader);
 	}
 	// #endregion
 
-	// #region startup/teardown code
+	// #region Protected methods - need to be overriden by derived classes
 	/**
 	 * @async
 	 * @function
 	 * @override
 	 * @instance
-	 * @memberof AwsService
-	 * @name     _setup
-	 *
-	 * @returns  {null} Nothing.
-	 *
-	 * @summary  Sets up the connection to the AWS SDK.
-	 */
-	async _setup() {
-		try {
-			await super._setup();
-
-			this.$AWS = require('aws-sdk');
-			this.$AWS.config.update(this.$config);
-			return null;
-		}
-		catch(err) {
-			throw new TwyrSrvcError(`${this.name}::_setup error`, err);
-		}
-	}
-
-	/**
-	 * @async
-	 * @function
-	 * @override
-	 * @instance
-	 * @memberof AwsService
-	 * @name     _teardown
+	 * @memberof BhairaviTemplate
+	 * @name     _addRoutes
 	 *
 	 * @returns  {undefined} Nothing.
 	 *
-	 * @summary  Quits the connection to the AWS SDK.
+	 * @summary  Adds routes to the Koa Router.
 	 */
-	async _teardown() {
-		try {
-			if(this.$AWS) delete this.$AWS;
+	async _addRoutes() {
+		super._addRoutes();
 
-			await super._teardown();
-			return null;
-		}
-		catch(err) {
-			throw new TwyrSrvcError(`${this.name}::_teardown error`, err);
-		}
+		const path = require('path');
+
+		const serveStatic = require('koa-static');
+
+		const dirPath = path.join(path.dirname(path.dirname(require.main.filename)), 'node_modules/ember-source/dist');
+		this.$router.use(serveStatic(dirPath));
+
+		this.$router.get('*', async (ctxt, next) => {
+			try {
+				const tenantTemplatePath = path.dirname(path.join(ctxt.state.tenant['template']['tenant_domain'], ctxt.state.tenant['template']['tmpl_name'], ctxt.state.tenant['template']['path_to_index']));
+				const tmplStaticAssetPath = path.join(path.dirname(path.dirname(require.main.filename)), 'tenant_templates', tenantTemplatePath);
+
+				await serveStatic(tmplStaticAssetPath)(ctxt, next);
+			}
+			catch(err) {
+				console.error(`${err.message}\n${err.stack}`);
+				await next();
+			}
+		});
+
+		this.$router.get('/', async (ctxt, next) => {
+			try {
+				await this._serveTenantTemplate(ctxt, next);
+			}
+			catch(err) {
+				console.error(`${err.message}\n${err.stack}`);
+				throw err;
+			}
+		});
+
+		return null;
 	}
 	// #endregion
 
 	// #region Properties
-	/**
-	 * @override
-	 */
-	get Interface() {
-		return this.$AWS;
-	}
-
-	/**
-	 * @override
-	 */
-	get dependencies() {
-		return ['ConfigurationService', 'LoggerService'].concat(super.dependencies);
-	}
-
 	/**
 	 * @override
 	 */
@@ -159,7 +144,7 @@ class AwsService extends TwyrBaseService {
 	// #endregion
 }
 
-exports.service = AwsService;
+exports.template = BhairaviTemplate;
 </code></pre>
         </article>
     </section>
