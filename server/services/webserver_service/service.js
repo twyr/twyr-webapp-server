@@ -400,7 +400,7 @@ class WebserverService extends TwyrBaseService {
 
 				tenant = tenant.rows.shift();
 
-				let template = await dbSrvc.raw(`SELECT * FROM fn_get_tenant_template(?, ?)`, [tenant.tenant_id, parentModuleId]);
+				let template = await dbSrvc.raw(`SELECT * FROM fn_get_tenant_server_template(?, ?)`, [tenant.tenant_id, parentModuleId]);
 				template = template.rows.shift();
 
 				tenant['template'] = template;
