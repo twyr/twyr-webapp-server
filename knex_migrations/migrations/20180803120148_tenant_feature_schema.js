@@ -40,16 +40,17 @@ exports.up = async function(knex) {
 		});
 	}
 
-	// Step 3: Create the "tenant_templates" table
-	exists = await knex.schema.withSchema('public').hasTable('tenant_templates');
+	// Step 3: Create the "tenant_server_templates" table
+	exists = await knex.schema.withSchema('public').hasTable('tenant_server_templates');
 	if(!exists) {
-		await knex.schema.withSchema('public').createTable('tenant_templates', function(tmplTbl) {
-			tmplTbl.uuid('tenant_id').notNullable().references('tenant_id');
-			tmplTbl.uuid('module_id').notNullable().references('module_id');
-			tmplTbl.uuid('tenant_template_id').notNullable().defaultTo(knex.raw('uuid_generate_v4()'));
+		await knex.schema.withSchema('public').createTable('tenant_server_templates', function(tmplTbl) {
+			tmplTbl.uuid('tenant_id').notNullable();
+			tmplTbl.uuid('module_id').notNullable();
+			tmplTbl.uuid('tenant_server_template_id').notNullable().defaultTo(knex.raw('uuid_generate_v4()'));
+			tmplTbl.uuid('base_template_id').notNullable();
 			tmplTbl.text('name').notNullable();
 			tmplTbl.text('display_name').notNullable();
-			tmplTbl.text('relative_path_to_index').notNullable().defaultTo('dist/index.html');
+			tmplTbl.text('relative_path_to_index').notNullable().defaultTo('index.html');
 			tmplTbl.text('description');
 			tmplTbl.boolean('default').notNullable().defaultTo(false);
 			tmplTbl.jsonb('configuration').notNullable().defaultTo('{}');
@@ -57,58 +58,57 @@ exports.up = async function(knex) {
 			tmplTbl.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
 			tmplTbl.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
 
-			tmplTbl.primary(['tenant_id', 'module_id', 'tenant_template_id']);
+			tmplTbl.primary(['tenant_id', 'module_id', 'tenant_server_template_id']);
 			tmplTbl.foreign(['tenant_id', 'module_id']).references(['tenant_id', 'module_id']).inTable('tenants_features').onDelete('CASCADE').onUpdate('CASCADE');
 		});
 	}
 
-	// Step 4: Create the "tenant_template_positions" table
-	exists = await knex.schema.withSchema('public').hasTable('tenant_template_positions');
+	// Step 4: Create the "tenant_server_template_positions" table
+	exists = await knex.schema.withSchema('public').hasTable('tenant_server_template_positions');
 	if(!exists) {
-		await knex.schema.withSchema('public').createTable('tenant_template_positions', function(tmplPositionTbl) {
+		await knex.schema.withSchema('public').createTable('tenant_server_template_positions', function(tmplPositionTbl) {
 			tmplPositionTbl.uuid('tenant_id').notNullable();
-			tmplPositionTbl.uuid('module_id').notNullable().references('module_id');
-			tmplPositionTbl.uuid('tenant_template_id').notNullable();
-			tmplPositionTbl.uuid('tenant_template_position_id').notNullable().defaultTo(knex.raw('uuid_generate_v4()'));
+			tmplPositionTbl.uuid('module_id').notNullable();
+			tmplPositionTbl.uuid('tenant_server_template_id').notNullable();
+			tmplPositionTbl.uuid('tenant_server_template_position_id').notNullable().defaultTo(knex.raw('uuid_generate_v4()'));
 			tmplPositionTbl.text('name').notNullable();
 			tmplPositionTbl.text('display_name').notNullable();
 			tmplPositionTbl.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
 			tmplPositionTbl.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
 
-			tmplPositionTbl.primary(['tenant_id', 'module_id', 'tenant_template_id', 'tenant_template_position_id']);
-			tmplPositionTbl.foreign(['tenant_id', 'module_id', 'tenant_template_id']).references(['tenant_id', 'module_id', 'tenant_template_id']).inTable('tenant_templates').onDelete('CASCADE').onUpdate('CASCADE');
+			tmplPositionTbl.primary(['tenant_id', 'module_id', 'tenant_server_template_id', 'tenant_server_template_position_id']);
+			tmplPositionTbl.foreign(['tenant_id', 'module_id', 'tenant_server_template_id']).references(['tenant_id', 'module_id', 'tenant_server_template_id']).inTable('tenant_server_templates').onDelete('CASCADE').onUpdate('CASCADE');
 		});
 	}
 
-	// Step 5: Create the "tenant_template_positions_feature_frontend_components" table
-	exists = await knex.schema.withSchema('public').hasTable('tenant_template_positions_feature_frontend_components');
+	// Step 5: Create the "tenant_server_template_positions_feature_frontend_components" table
+	exists = await knex.schema.withSchema('public').hasTable('tenant_server_template_positions_feature_frontend_components');
 	if(!exists) {
-		await knex.schema.withSchema('public').createTable('tenant_template_positions_feature_frontend_components', function(positionFrontEndComponentTbl) {
+		await knex.schema.withSchema('public').createTable('tenant_server_template_positions_feature_frontend_components', function(positionFrontEndComponentTbl) {
 			positionFrontEndComponentTbl.uuid('tenant_id').notNullable();
 			positionFrontEndComponentTbl.uuid('module_id').notNullable();
-			positionFrontEndComponentTbl.uuid('tenant_template_id').notNullable();
-			positionFrontEndComponentTbl.uuid('tenant_template_position_id').notNullable();
+			positionFrontEndComponentTbl.uuid('tenant_server_template_id').notNullable();
+			positionFrontEndComponentTbl.uuid('tenant_server_template_position_id').notNullable();
 			positionFrontEndComponentTbl.uuid('feature_frontend_component_id').notNullable();
 
-			positionFrontEndComponentTbl.uuid('tenant_template_positions_feature_frontend_component_id').notNullable().defaultTo(knex.raw('uuid_generate_v4()'));
+			positionFrontEndComponentTbl.uuid('tenant_server_template_positions_feature_frontend_component_id').notNullable().defaultTo(knex.raw('uuid_generate_v4()'));
 			positionFrontEndComponentTbl.jsonb('configuration').notNullable().defaultTo('{}');
 			positionFrontEndComponentTbl.jsonb('visibility').notNullable().defaultTo(`{ "users": ["*"], "groups": ["*"], "paths": ["*"] }`);
 
 			positionFrontEndComponentTbl.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
 			positionFrontEndComponentTbl.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
 
-			positionFrontEndComponentTbl.primary(['tenant_id', 'module_id', 'tenant_template_id', 'tenant_template_position_id', 'feature_frontend_component_id']);
-			positionFrontEndComponentTbl.unique(['tenant_template_positions_feature_frontend_component_id']);
+			positionFrontEndComponentTbl.primary(['tenant_id', 'module_id', 'tenant_server_template_id', 'tenant_server_template_position_id', 'feature_frontend_component_id', 'tenant_server_template_positions_feature_frontend_component_id']);
 
 			positionFrontEndComponentTbl.foreign(['module_id', 'feature_frontend_component_id']).references(['module_id', 'feature_frontend_component_id']).inTable('feature_frontend_components').onDelete('CASCADE').onUpdate('CASCADE');
-			positionFrontEndComponentTbl.foreign(['tenant_id', 'module_id', 'tenant_template_id', 'tenant_template_position_id']).references(['tenant_id', 'module_id', 'tenant_template_id', 'tenant_template_position_id']).inTable('tenant_template_positions').onDelete('CASCADE').onUpdate('CASCADE');
+			positionFrontEndComponentTbl.foreign(['tenant_id', 'module_id', 'tenant_server_template_id', 'tenant_server_template_position_id']).references(['tenant_id', 'module_id', 'tenant_server_template_id', 'tenant_server_template_position_id']).inTable('tenant_server_template_positions').onDelete('CASCADE').onUpdate('CASCADE');
 		});
 	}
 
-	// Step 6: Setup user-defined functions on the tenant_templates table for getting the template for a tenant for a server
+	// Step 6: Setup user-defined functions on the tenant_server_templates table for getting the template for a tenant for a server
 	await knex.schema.withSchema('public').raw(
-`CREATE OR REPLACE FUNCTION public.fn_get_tenant_template (IN tenantid uuid, IN moduleid uuid)
-	RETURNS TABLE (tenant_domain text, tmpl_name text, path_to_index text, configuration jsonb)
+`CREATE OR REPLACE FUNCTION public.fn_get_tenant_server_template (IN tenantid uuid, IN moduleid uuid)
+	RETURNS TABLE (base_template text, base_template_configuration jsonb, tenant_domain text, tmpl_name text, path_to_index text, configuration jsonb)
 	LANGUAGE plpgsql
 	VOLATILE
 	CALLED ON NULL INPUT
@@ -116,17 +116,23 @@ exports.up = async function(knex) {
 	COST 1
 	AS $$
 DECLARE
-	tenant_uuid		UUID;
-	tenant_domain	TEXT;
-	tmpl_name		TEXT;
-	index_path		TEXT;
-	configuration	JSONB;
+	tenant_uuid			UUID;
+	base_tmpl_id		UUID;
+	base_template		TEXT;
+	base_tmpl_config	JSONB;
+	tenant_domain		TEXT;
+	tmpl_name			TEXT;
+	index_path			TEXT;
+	configuration		JSONB;
 BEGIN
-	tenant_uuid		:= NULL;
-	tenant_domain	:= NULL;
-	tmpl_name		:= NULL;
-	index_path		:= NULL;
-	configuration	:= NULL;
+	tenant_uuid			:= NULL;
+	base_tmpl_id		:= NULL;
+	base_template		:= NULL;
+	base_tmpl_config	:= NULL;
+	tenant_domain		:= NULL;
+	tmpl_name			:= NULL;
+	index_path			:= NULL;
+	configuration		:= NULL;
 
 	IF tenantid IS NULL
 	THEN
@@ -142,12 +148,13 @@ BEGIN
 
 	SELECT
 		A.sub_domain,
+		B.base_template_id,
 		B.name,
 		B.relative_path_to_index,
 		B.configuration
 	FROM
 		tenants A LEFT OUTER JOIN
-		tenant_templates B ON (B.tenant_id = A.tenant_id)
+		tenant_server_templates B ON (B.tenant_id = A.tenant_id)
 	WHERE
 		A.tenant_id = tenantid AND
 		A.enabled = true AND
@@ -155,13 +162,26 @@ BEGIN
 		coalesce(B.default, true) = true
 	INTO
 		tenant_domain,
+		base_tmpl_id,
 		tmpl_name,
 		index_path,
 		configuration;
 
 	IF tmpl_name IS NOT NULL
 	THEN
-		RETURN QUERY SELECT tenant_domain, tmpl_name, index_path, configuration;
+		SELECT
+			A.name,
+			A.configuration
+		FROM
+			modules A
+		WHERE
+			A.module_id = base_tmpl_id AND
+			A.type = 'template'
+		INTO
+			base_template,
+			base_tmpl_config;
+
+		RETURN QUERY SELECT base_template, base_tmpl_config, tenant_domain, tmpl_name, index_path, configuration;
 		RETURN;
 	END IF;
 
@@ -183,7 +203,7 @@ BEGIN
 	SELECT
 		*
 	FROM
-		fn_get_tenant_template(tenant_uuid, moduleid);
+		fn_get_tenant_server_template(tenant_uuid, moduleid);
 END;
 $$;`
 	);
@@ -505,7 +525,7 @@ $$;`
 	);
 
 	await knex.schema.withSchema('public').raw(
-`CREATE OR REPLACE FUNCTION public.fn_check_tenant_template_upsert_is_valid ()
+`CREATE OR REPLACE FUNCTION public.fn_check_tenant_server_template_upsert_is_valid ()
 	RETURNS trigger
 	LANGUAGE plpgsql
 	VOLATILE
@@ -546,11 +566,11 @@ $$;`
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_remove_descendant_feature_from_tenant AFTER DELETE ON public.tenants_features FOR EACH ROW EXECUTE PROCEDURE public.fn_remove_descendant_feature_from_tenant();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_remove_group_permission_from_descendants AFTER DELETE ON public.tenant_group_permissions FOR EACH ROW EXECUTE PROCEDURE public.fn_remove_group_permission_from_descendants();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_check_group_permission_upsert_is_valid BEFORE INSERT OR UPDATE ON public.tenant_group_permissions FOR EACH ROW EXECUTE PROCEDURE public.fn_check_group_permission_upsert_is_valid();');
-	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_check_tenant_template_upsert_is_valid BEFORE INSERT OR UPDATE ON public.tenant_templates FOR EACH ROW EXECUTE PROCEDURE public.fn_check_tenant_template_upsert_is_valid();');
+	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_check_tenant_server_template_upsert_is_valid BEFORE INSERT OR UPDATE ON public.tenant_server_templates FOR EACH ROW EXECUTE PROCEDURE public.fn_check_tenant_server_template_upsert_is_valid();');
 };
 
 exports.down = async function(knex) {
-	await knex.raw('DROP TRIGGER IF EXISTS trigger_check_tenant_template_upsert_is_valid ON public.tenant_templates CASCADE;');
+	await knex.raw('DROP TRIGGER IF EXISTS trigger_check_tenant_server_template_upsert_is_valid ON public.tenant_server_templates CASCADE;');
 	await knex.raw('DROP TRIGGER IF EXISTS trigger_check_group_permission_upsert_is_valid ON public.tenant_group_permissions CASCADE;');
 	await knex.raw('DROP TRIGGER IF EXISTS trigger_remove_group_permission_from_descendants ON public.tenant_group_permissions CASCADE;');
 	await knex.raw('DROP TRIGGER IF EXISTS trigger_remove_descendant_feature_from_tenant ON public.tenants_features CASCADE;');
@@ -559,7 +579,7 @@ exports.down = async function(knex) {
 	await knex.raw('DROP TRIGGER IF EXISTS trigger_assign_tenant_to_feature ON public.tenants CASCADE;');
 	await knex.raw('DROP TRIGGER IF EXISTS trigger_assign_feature_to_tenant ON public.modules CASCADE;');
 
-	await knex.raw('DROP FUNCTION IF EXISTS public.fn_check_tenant_template_upsert_is_valid () CASCADE;');
+	await knex.raw('DROP FUNCTION IF EXISTS public.fn_check_tenant_server_template_upsert_is_valid () CASCADE;');
 	await knex.raw('DROP FUNCTION IF EXISTS public.fn_check_group_permission_upsert_is_valid () CASCADE;');
 	await knex.raw('DROP FUNCTION IF EXISTS public.fn_remove_group_permission_from_descendants () CASCADE;');
 	await knex.raw('DROP FUNCTION IF EXISTS public.fn_remove_descendant_feature_from_tenant () CASCADE;');
@@ -567,11 +587,11 @@ exports.down = async function(knex) {
 	await knex.raw('DROP FUNCTION IF EXISTS public.fn_assign_feature_permissions_to_tenant () CASCADE;');
 	await knex.raw('DROP FUNCTION IF EXISTS public.fn_assign_tenant_to_feature () CASCADE;');
 	await knex.raw('DROP FUNCTION IF EXISTS public.fn_assign_feature_to_tenant () CASCADE;');
-	await knex.raw(`DROP FUNCTION IF EXISTS public.fn_get_tenant_template (IN uuid, IN uuid)`);
+	await knex.raw(`DROP FUNCTION IF EXISTS public.fn_get_tenant_server_template (IN uuid, IN uuid)`);
 
-	await knex.raw('DROP TABLE IF EXISTS public.tenant_template_positions_feature_frontend_components CASCADE;');
-	await knex.raw(`DROP TABLE IF EXISTS public.tenant_template_positions CASCADE;`);
-	await knex.raw(`DROP TABLE IF EXISTS public.tenant_templates CASCADE;`);
+	await knex.raw('DROP TABLE IF EXISTS public.tenant_server_template_positions_feature_frontend_components CASCADE;');
+	await knex.raw(`DROP TABLE IF EXISTS public.tenant_server_template_positions CASCADE;`);
+	await knex.raw(`DROP TABLE IF EXISTS public.tenant_server_templates CASCADE;`);
 	await knex.raw('DROP TABLE IF EXISTS public.tenant_group_permissions CASCADE;');
 	await knex.raw('DROP TABLE IF EXISTS public.tenants_features CASCADE;');
 };

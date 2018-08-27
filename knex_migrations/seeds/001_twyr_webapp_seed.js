@@ -1,6 +1,8 @@
 'use strict';
 
 exports.seed = async function(knex) {
+	let bhairaviTmplId = null;
+
 	// Step 1: See if the seed file has already run. If yes, simply return
 	let parentId = await knex.raw(`SELECT module_id FROM modules WHERE name = ? AND type = 'server' AND parent_module_id IS NULL`, ['TwyrWebappServer']);
 	if(parentId.rows.length) {
@@ -329,6 +331,38 @@ exports.seed = async function(knex) {
 			}
 		});
 
+		bhairaviTmplId = await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'template',
+			'deploy': 'default',
+			'name': 'BhairaviTemplate',
+			'display_name': 'Bhairavi Template',
+			'description': 'The Twyr Web Application Bhairavi template - based on Ember.js 3.4+',
+			'configuration': {
+				'title': 'Twyr Bhairavi Template'
+			},
+			'configuration_schema': {
+				'type': 'object',
+				'properties': {
+					'title': {
+						'type': 'string'
+					}
+				}
+			},
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com',
+				'jsFramework': 'ember',
+				'jsFrameworkVersion': '>= 3.3.2'
+			}
+		})
+		.returning('module_id');
+
+		bhairaviTmplId = bhairaviTmplId[0];
+
 		// Step 4: Insert the data for the standard permissions that this "server" defines
 		await knex('feature_permissions').insert({
 			'module_id': parentId,
@@ -374,16 +408,27 @@ exports.seed = async function(knex) {
 		tenantId = tenantId.rows[0]['tenant_id'];
 	}
 
-	let templateId = await knex.raw(`SELECT tenant_template_id FROM tenant_templates WHERE tenant_id = ? AND module_id = ?`, [tenantId, parentId]);
+	let templateId = await knex.raw(`SELECT tenant_server_template_id FROM tenant_server_templates WHERE tenant_id = ? AND module_id = ?`, [tenantId, parentId]);
 	if(!templateId.rows.length) {
-		await knex('tenant_templates').insert({
+		await knex('tenant_server_templates').insert({
 			'tenant_id': tenantId,
 			'module_id': parentId,
-			'name': 'bhairavi',
-			'display_name': 'Bhairavi Template',
+			'base_template_id': bhairaviTmplId,
+			'name': 'default',
+			'display_name': 'Default Template',
 			'relative_path_to_index': 'index.ejs',
-			'description': 'The default template that ships with Twyr',
-			'configuration': { 'title': 'Twyr Bhairavi Template' },
+			'description': 'The default template that ships with Twyr for the www tenant, based on the Bhairavi Ember.js template',
+			'configuration': {
+				'title': 'Default Template for the WWW Tenant - based on the Bhairavi Ember.js template'
+			},
+			'configuration_schema': {
+				'type': 'object',
+				'properties': {
+					'title': {
+						'type': 'string'
+					}
+				}
+			},
 			'default': true
 		});
 	}

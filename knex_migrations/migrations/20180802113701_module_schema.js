@@ -284,10 +284,10 @@ BEGIN
 		RETURN NULL;
 	END IF;
 
-	/* Rule #7: Only Features can have templates */
-	IF NEW.type = 'template' AND parent_module_type <> 'feature'
+	/* Rule #7: Only Servers/ Features can have templates */
+	IF NEW.type = 'template' AND (parent_module_type <> 'server' AND parent_module_type <> 'feature')
 	THEN
-		RAISE SQLSTATE '2F003' USING MESSAGE = 'Only features can have templates';
+		RAISE SQLSTATE '2F003' USING MESSAGE = 'Only servers or features can have templates';
 		RETURN NULL;
 	END IF;
 
