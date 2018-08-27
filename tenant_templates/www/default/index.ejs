@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head profile="http://www.w3.org/2005/10/profile">
+	<!-- Meta Stuff for the Browser to render correctly -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<!-- Title: Will change based on the actual slogan or whatever -->
+	<title><%- title %></title>
+
+	<!-- Mandatory favicon.ico link -->
+	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+	<!-- External fonts -->
+	<link href="https://fonts.googleapis.com/css?family=Noto+Sans:400,400i,700,700i|Noto+Serif:400,400i,700,700i&subset=devanagari" rel="stylesheet" type="text/css" media="all">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" type="text/css" media="all">
+
+	<!-- Application styles -->
+	<link integrity="" rel="stylesheet" href="/css/vendor.css">
+	<link integrity="" rel="stylesheet" href="/css/twyr-webapp-server.css">
+
+	<!-- Miscellaneous client-side data -->
+	<script type="application/javascript">
+		window.developmentMode = <%= developmentMode %>;
+	</script>
+</head>
+<body class="white-skin grey">
+	<!-- Ember stuff - imported vendor.js from the ember-addon project... -->
+	<script src="/js/vendor.js"></script>
+
+	<!-- App.js - script to init/start the Ember App -->
+	<script src="/js/twyr-webapp-server.js"></script>
+
+	<script type="application/javascript">
+	$.ajaxSetup({
+		'cache': <%= !developmentMode %>,
+		'xhrFields': {
+			'withCredentials': true
+		}
+	});
+	</script>
+
+	<!-- Primus - realtime websocket connection stuff -->
+	<script type="application/javascript" src="/websockets/primus.js"></script>
+
+	<!-- Ember template compiler - for dynamic compilation of templates, whenever we require it... -->
+	<script type="application/javascript" src="/ember-template-compiler.js"></script>
+
+	<!-- The Application Template -->
+	<script type="text/x-handlebars">
+		<!-- Configurable Page Title -->
+		{{head-layout}}
+		{{page-title "<%- title %>"}}
+
+		<!-- Main Area -->
+		<main class="grey lighten-2 p-4 layout-column layout-align-center-stretch">
+			<h2>Welcome to Twy&apos;r Web App Server</h2>
+			{{liquid-outlet class="flex"}}
+		</main>
+	</script>
+
+	<!-- The mandatory empty div elements for wormhole, paper, etc. -->
+	<div id="ember-bootstrap-wormhole"></div>
+	<div id="ember-basic-dropdown-wormhole"></div>
+	<div id="paper-wormhole"></div>
+	<div id="paper-toast-fab-wormhole"></div>
+
+	<!-- Finally, start the App -->
+	<script type="application/javascript">
+		require('twyr-webapp-server/app')['default'].create({
+			"LOG_RESOLVER": <%= developmentMode %>,
+			"LOG_ACTIVE_GENERATION": <%= developmentMode %>,
+			"LOG_TRANSITIONS": <%= developmentMode %>,
+			"LOG_TRANSITIONS_INTERNAL": <%= developmentMode %>,
+			"LOG_VIEW_LOOKUPS": <%= developmentMode %>,
+			"name": "twyr-webapp-server",
+			"version": "3.0.1"
+		});
+	</script>
+</body>
+</html>
