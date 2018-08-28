@@ -1,10 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head profile="http://www.w3.org/2005/10/profile">
 	<!-- Meta Stuff for the Browser to render correctly -->
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<!-- Other Meta Stuff for seo/kicks -->
+	<meta name="description" content="">
 
 	<!-- Title: Will change based on the actual slogan or whatever -->
 	<title><%- title %></title>
@@ -25,7 +28,7 @@
 		window.developmentMode = <%= developmentMode %>;
 	</script>
 </head>
-<body class="white-skin grey">
+<body class="white-skin grey lighten-3">
 	<!-- Ember stuff - imported vendor.js from the ember-addon project... -->
 	<script src="/js/vendor.js"></script>
 
@@ -47,17 +50,14 @@
 	<!-- Ember template compiler - for dynamic compilation of templates, whenever we require it... -->
 	<script type="application/javascript" src="/ember-template-compiler.js"></script>
 
-	<!-- The Application Template -->
-	<script type="text/x-handlebars">
+	<!-- The Index Template -->
+	<script type="text/x-handlebars" data-template-name="index">
 		<!-- Configurable Page Title -->
 		{{head-layout}}
 		{{page-title "<%- title %>"}}
 
 		<!-- Main Area -->
-		<main class="grey lighten-2 p-4 layout-column layout-align-center-stretch">
-			<h2>Welcome to Twy&apos;r Web App Server</h2>
-			{{liquid-outlet class="flex"}}
-		</main>
+		{{liquid-outlet class="flex"}}
 	</script>
 
 	<!-- The mandatory empty div elements for wormhole, paper, etc. -->

@@ -6206,14 +6206,14 @@
     }
   };
 });
-;define("twyr-webapp-server/instance-initializers/ember-data", ["exports", "ember-data/initialize-store-service"], function (exports, _initializeStoreService) {
-  "use strict";
+;define('twyr-webapp-server/instance-initializers/ember-data', ['exports', 'ember-data/initialize-store-service'], function (exports, _initializeStoreService) {
+  'use strict';
 
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
   exports.default = {
-    name: "ember-data",
+    name: 'ember-data',
     initialize: _initializeStoreService.default
   };
 });
@@ -6769,6 +6769,14 @@
 
   exports.default = Util;
 });
+;define("twyr-webapp-server/templates/application", ["exports"], function (exports) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.HTMLBars.template({ "id": "e3B3zkF+", "block": "{\"symbols\":[],\"statements\":[[2,\" Main Area \"],[0,\"\\n\"],[7,\"main\"],[11,\"class\",\"flex p-4\"],[9],[0,\"\\n\\t\"],[7,\"h2\"],[9],[0,\"Welcome to the Twy'r Web Application Server\"],[10],[0,\"\\n\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"flex\"]]],false],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "twyr-webapp-server/templates/application.hbs" } });
+});
 ;define("twyr-webapp-server/templates/components/ag-grid", ["exports"], function (exports) {
   "use strict";
 
@@ -6817,7 +6825,7 @@
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.default = Ember.HTMLBars.template({ "id": "m1Ak8PlK", "block": "{\"symbols\":[],\"statements\":[[2,\" `app/templates/head.hbs` \"],[0,\"\\n\"],[2,\" content from ember-page-title, injected by ember-cli-head \"],[0,\"\\n\"],[2,\" The 'model' available in this template can be populated by \"],[0,\"\\n\"],[2,\" setting values on the 'head-data' service. \"],[0,\"\\n\"],[7,\"title\"],[9],[1,[23,[\"model\",\"title\"]],false],[10],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "twyr-webapp-server/templates/head.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "pOphMAnv", "block": "{\"symbols\":[],\"statements\":[[7,\"title\"],[9],[1,[23,[\"model\",\"title\"]],false],[10],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "twyr-webapp-server/templates/head.hbs" } });
 });
 ;define('twyr-webapp-server/themes/bootstrap3', ['exports', 'ember-models-table/themes/bootstrap3'], function (exports, _bootstrap) {
   'use strict';
@@ -7146,13 +7154,13 @@
 ;
 
 ;define('twyr-webapp-server/config/environment', [], function() {
-  
+
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","pageTitle":{"replace":false,"separator":" > "},"changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari"],"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"ember-paper":{"insertFontLinks":true},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{"Date":true}},"APP":{"LOG_RESOLVER":true,"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"twyr-webapp-server","version":"3.0.1"},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","pageTitle":{"replace":false,"separator":" > "},"changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari"],"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{"Date":true}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+221379f2"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;
-        
+
 });
 
 ;
