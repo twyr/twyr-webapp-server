@@ -28,7 +28,7 @@
 		window.developmentMode = <%= developmentMode %>;
 	</script>
 </head>
-<body class="white-skin grey lighten-3">
+<body class="white-skin">
 	<!-- Ember stuff - imported vendor.js from the ember-addon project... -->
 	<script src="/js/vendor.js"></script>
 
@@ -50,14 +50,13 @@
 	<!-- Ember template compiler - for dynamic compilation of templates, whenever we require it... -->
 	<script type="application/javascript" src="/ember-template-compiler.js"></script>
 
-	<!-- The Index Template -->
+	<!-- The Application Template -->
 	<script type="text/x-handlebars">
 		<!-- Configurable Page Title -->
 		{{head-layout}}
 		{{page-title "<%- title %>"}}
 
 		<!-- Main Area -->
-		<h2>Twy&apos;r Web Application Server - Application HBS</h2>
 		{{liquid-outlet class="flex"}}
 	</script>
 
