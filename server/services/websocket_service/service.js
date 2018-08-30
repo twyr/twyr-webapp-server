@@ -115,9 +115,9 @@ class WebsocketService extends TwyrBaseService {
 					request.user = responseData.user;
 					request.tenant = responseData.tenant;
 
-					Object.keys(responseData['response-meta']['headers']).forEach((responseHeader) => {
-						response.setHeader(responseHeader, responseData['response-meta']['headers'][responseHeader]);
-					});
+					// Object.keys(responseData['response-meta']['headers']).forEach((responseHeader) => {
+					// 	response.setHeader(responseHeader, responseData['response-meta']['headers'][responseHeader]);
+					// });
 
 					next();
 				};
@@ -187,7 +187,7 @@ class WebsocketService extends TwyrBaseService {
 		if(callback) callback(!request.user);
 	}
 
-	async _websocketServerInitialised(transformer, parser, options) { // eslint-disable-line
+	async _websocketServerInitialised(transformer, parser, options) {
 		if((twyrEnv !== 'development') && (twyrEnv !== 'test'))
 			return;
 
@@ -208,7 +208,7 @@ class WebsocketService extends TwyrBaseService {
 	}
 
 	_websocketServerConnection(spark) {
-		const username = spark.request.user ? `${spark.request.user.first_name} ${spark.request.user.last_name}` : 'Anonymous';
+		const username = spark.request.user ? spark.request.user.name : 'Anonymous';
 
 		if(twyrEnv === 'development') {
 			const loggerSrvc = this.$dependencies.LoggerService;
