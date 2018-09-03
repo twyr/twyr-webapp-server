@@ -1,7 +1,9 @@
+/* eslint-disable security/detect-object-injection */
+
 'use strict';
 
 /**
- * Module dependencies, required for ALL PlantWorks modules
+ * Module dependencies, required for ALL Twyr modules
  * @ignore
  */
 
@@ -10,12 +12,12 @@
  * @ignore
  */
 const TwyrBaseModule = require('./twyr-base-module').TwyrBaseModule;
-const TwyrTmplError = require('twyr-template-error').TwyrTemplateError;
+const TwyrCompError = require('./twyr-component-error').TwyrComponentError;
 
 /**
- * @class   TwyrBaseTemplate
+ * @class   TwyrBaseService
  * @extends {TwyrBaseModule}
- * @classdesc The Twyr Web Application Server Base Class for all Templates.
+ * @classdesc The Twyr Web Application Server Base Class for all Services.
  *
  * @param   {TwyrBaseModule} [parent] - The parent module, if any.
  * @param   {TwyrModuleLoader} [loader] - The loader to be used for managing modules' lifecycle, if any.
@@ -24,13 +26,15 @@ const TwyrTmplError = require('twyr-template-error').TwyrTemplateError;
  * Serves as the "base class" for all other services in the Twyr Web Application Server.
  *
  */
-class TwyrBaseTemplate extends TwyrBaseModule {
+class TwyrBaseComponent extends TwyrBaseModule {
 	// #region Constructor
 	constructor(parent, loader) {
 		super(parent, null);
 
-		const TwyrTmplLoader = require('./twyr-template-loader').TwyrTemplateLoader;
-		this.$loader = (loader instanceof TwyrTmplLoader) ? loader : new TwyrTmplLoader(this);
+		const TwyrCompLoader = require('./twyr-component-loader').TwyrComponentLoader;
+		const actualLoader = (loader instanceof TwyrCompLoader) ? loader : new TwyrCompLoader(this);
+
+		this.$loader = actualLoader;
 
 		const Router = require('koa-router');
 		this.$router = new Router();
@@ -43,7 +47,7 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 	 * @function
 	 * @override
 	 * @instance
-	 * @memberof TwyrBaseTemplate
+	 * @memberof TwyrBaseComponent
 	 * @name     _setup
 	 *
 	 * @returns  {undefined} Nothing.
@@ -58,7 +62,7 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 			return null;
 		}
 		catch(err) {
-			throw new TwyrTmplError(`${this.name}::_setup error`, err);
+			throw new TwyrCompError(`${this.name}::_setup error`, err);
 		}
 	}
 
@@ -67,7 +71,7 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 	 * @function
 	 * @override
 	 * @instance
-	 * @memberof TwyrBaseTemplate
+	 * @memberof TwyrBaseComponent
 	 * @name     _teardown
 	 *
 	 * @returns  {undefined} Nothing.
@@ -82,17 +86,8 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 			return null;
 		}
 		catch(err) {
-			throw new TwyrTmplError(`${this.name}::_teardown error`, err);
+			throw new TwyrCompError(`${this.name}::_teardown error`, err);
 		}
-	}
-	// #endregion
-
-	// #region Re-configuration
-	async _dependencyReconfigure(dependency) {
-		await super._dependencyReconfigure(this.dependency);
-
-		if(dependency.name !== 'WebserverService') return;
-		await this._addRoutes();
 	}
 	// #endregion
 
@@ -101,7 +96,7 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 	 * @async
 	 * @function
 	 * @instance
-	 * @memberof TwyrBaseTemplate
+	 * @memberof TwyrBaseComponent
 	 * @name     _addRoutes
 	 *
 	 * @returns  {undefined} Nothing.
@@ -109,6 +104,12 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 	 * @summary  Adds routes to the Koa Router.
 	 */
 	async _addRoutes() {
+		// Add in the sub-components routes
+		Object.keys(this.$components || {}).forEach((componentName) => {
+			const componentRouter = this.$components[componentName].Router;
+			this.$router.use(`${componentName}`, componentRouter.routes());
+		});
+
 		return null;
 	}
 
@@ -116,7 +117,7 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 	 * @async
 	 * @function
 	 * @instance
-	 * @memberof TwyrBaseTemplate
+	 * @memberof TwyrBaseComponent
 	 * @name     _deleteRoutes
 	 *
 	 * @returns  {undefined} Nothing.
@@ -131,31 +132,12 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 	}
 	// #endregion
 
-	// #region The main render method
-	async _serveTenantTemplate(ctxt, next) {
-		if(ctxt.state.tenant['template']['base_template'] !== this.name) {
-			await next();
-			return;
-		}
+	// #region Re-configuration
+	async _dependencyReconfigure(dependency) {
+		await super._dependencyReconfigure(this.dependency);
 
-		try {
-			const renderConfig = Object.assign({}, ctxt.state.tenant['template']['base_template_configuration'], ctxt.state.tenant['template']['configuration']);
-			renderConfig['developmentMode'] = (twyrEnv === 'development') || (twyrEnv === 'test');
-
-			const ejs = require('ejs');
-			const path = require('path');
-
-			const tmplPath = path.join(path.dirname(__dirname), 'tenant_templates', ctxt.state.tenant['template']['tenant_domain'], ctxt.state.tenant['template']['tmpl_name'], ctxt.state.tenant['template']['path_to_index']);
-			const indexHTML = await ejs.renderFile(tmplPath, renderConfig, { 'async': true });
-
-			ctxt.status = 200;
-			ctxt.type = 'text/html';
-			ctxt.body = indexHTML;
-		}
-		catch(err) {
-			const error = new TwyrTmplError(`${this.name}::_serveTenantTemplate error`, err);
-			throw error;
-		}
+		if(dependency.name !== 'WebserverService') return;
+		await this._addRoutes();
 	}
 	// #endregion
 
@@ -164,7 +146,7 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 	 * @member   {Object} Router
 	 * @override
 	 * @instance
-	 * @memberof TwyrBaseTemplate
+	 * @memberof TwyrBaseComponent
 	 *
 	 * @readonly
 	 */
@@ -188,4 +170,4 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 	// #endregion
 }
 
-exports.TwyrBaseTemplate = TwyrBaseTemplate;
+exports.TwyrBaseComponent = TwyrBaseComponent;
