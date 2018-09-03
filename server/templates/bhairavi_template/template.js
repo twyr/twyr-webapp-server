@@ -42,7 +42,7 @@ class BhairaviTemplate extends TwyrBaseTemplate {
 	 * @summary  Adds routes to the Koa Router.
 	 */
 	async _addRoutes() {
-		super._addRoutes();
+		await super._addRoutes();
 
 		const path = require('path');
 

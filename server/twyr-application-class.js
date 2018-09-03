@@ -1,6 +1,6 @@
-'use strict';
-
 /* eslint-disable security/detect-object-injection */
+
+'use strict';
 
 /**
  * Module dependencies, required for ALL Twyr' modules
@@ -167,6 +167,18 @@ class TwyrApplication extends TwyrBaseModule {
 	// #region Private Methods
 	async _setupWebserverRoutes() {
 		const appRouter = this.$services.WebserverService.Interface.Router;
+
+		// Add in the components
+		Object.keys(this.$components || {}).forEach((componentName) => {
+			const componentRouter = this.$components[componentName].Router;
+			appRouter.use(`${componentName}`, componentRouter.routes());
+		});
+
+		// Add in the features
+		Object.keys(this.$features || {}).forEach((featureName) => {
+			const featureRouter = this.$features[featureName].Router;
+			appRouter.use(`${featureName}`, featureRouter.routes());
+		});
 
 		// Add in the templates at the end...
 		Object.keys(this.$templates).forEach((tmplName) => {

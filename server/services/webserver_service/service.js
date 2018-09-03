@@ -116,16 +116,30 @@ class WebserverService extends TwyrBaseService {
 			// But only in production - its a pain having to deal with these in development
 			if((twyrEnv !== 'development') && (twyrEnv !== 'test')) {
 				// Blacklisted IP? No chance...
-				const honeypot = promises.promisifyAll(require('project-honeypot')(this.$config.honeyPot.apiKey));
-				this.$koa.use(async (ctxt, next) => {
-					const honeyPayload = await honeypot.queryAsync(ctxt.ip);
-					if(!honeyPayload.found) {
-						await next();
-						return;
-					}
+				// const honeypot = require('nodejs-projecthoneypot');
+				// honeypot.setApiKey(this.$config.honeyPot.apiKey);
 
-					throw new URIError(`Blacklisted Request IP Address: ${ctxt.ip}`);
-				});
+				// this.$koa.use(async (ctxt, next) => {
+				// 	try {
+				// 		const honeyPayload = await honeypot.checkIP(ctxt.ip);
+				// 		if(!honeyPayload.found) {
+				// 			await next();
+				// 			return;
+				// 		}
+
+				// 		throw new URIError(`Blacklisted Request IP Address: ${ctxt.ip}`);
+				// 	}
+				// 	catch(err) {
+				// 		let error = err;
+
+				// 		// eslint-disable-next-line curly
+				// 		if(error && !(error instanceof TwyrSrvcError)) {
+				// 			error = new TwyrSrvcError(`${this.name}::_checkHoneypot`, error);
+				// 		}
+
+				// 		throw error;
+				// 	}
+				// });
 
 				// Not blacklisted but not whitelisted here? Forget it
 				const koaCors = require('@koa/cors');
