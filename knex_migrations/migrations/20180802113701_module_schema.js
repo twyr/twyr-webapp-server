@@ -42,7 +42,7 @@ exports.up = async function(knex) {
 			permTbl.uuid('feature_permission_id').notNullable().defaultTo(knex.raw('uuid_generate_v4()'));
 			permTbl.text('name').notNullable();
 			permTbl.text('display_name').notNullable();
-			permTbl.jsonb('depends_on').notNullable().defaultTo('[]');
+			permTbl.jsonb('implies_permissions').notNullable().defaultTo('[]');
 			permTbl.text('description').notNullable().defaultTo('Another Random Permission');
 			permTbl.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
 			permTbl.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());

@@ -374,6 +374,7 @@ exports.seed = async function(knex) {
 		await knex('feature_permissions').insert({
 			'module_id': parentId,
 			'name': 'registered',
+			'implies_permissions': '["public"]',
 			'display_name': 'Registered User Permissions',
 			'description': 'The Twyr Web Application Permissions for logged-in Users'
 		});
@@ -381,6 +382,7 @@ exports.seed = async function(knex) {
 		await knex('feature_permissions').insert({
 			'module_id': parentId,
 			'name': 'administrator',
+			'implies_permissions': '["registered"]',
 			'display_name': 'Administrator Permissions',
 			'description': 'The Twyr Web Application Permissions for Administrators'
 		});
@@ -388,6 +390,7 @@ exports.seed = async function(knex) {
 		await knex('feature_permissions').insert({
 			'module_id': parentId,
 			'name': 'super-administrator',
+			'implies_permissions': '["administrator"]',
 			'display_name': 'Super Administrator Permissions',
 			'description': 'The Twyr Web Application Permissions for Super Administrators'
 		});
