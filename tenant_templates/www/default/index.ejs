@@ -67,14 +67,31 @@
 	<div id="paper-wormhole"></div>
 	<div id="paper-toast-fab-wormhole"></div>
 
-	<!-- Finally, start the App -->
+	<!-- Finally, setup DEBUG flags, and start the App -->
 	<script type="application/javascript">
+		window.Ember.ENV.RAISE_ON_DEPRECATION = <%= developmentMode %>;
+		window.Ember.ENV.LOG_STACKTRACE_ON_DEPRECATION = <%= developmentMode %>;
+		window.Ember.run.backburner.DEBUG = <%= developmentMode %>;
+
+		window.Ember.onerror = function(error) {
+			console.error(`TODO: Send Ember Error to the server using the Beacon API. But, for now...\n`, error);
+		};
+
+		window.Ember.RSVP.on('error', function(error) {
+			console.error(`TODO: Send RSVP Error to the server using the Beacon API. But, for now...\n`, error);
+		});
+
 		require('twyr-webapp-server/app')['default'].create({
 			"LOG_RESOLVER": <%= developmentMode %>,
-			"LOG_ACTIVE_GENERATION": <%= developmentMode %>,
+
 			"LOG_TRANSITIONS": <%= developmentMode %>,
 			"LOG_TRANSITIONS_INTERNAL": <%= developmentMode %>,
+
+			"LOG_ACTIVE_GENERATION": <%= developmentMode %>,
 			"LOG_VIEW_LOOKUPS": <%= developmentMode %>,
+
+			"LOG_BINDINGS": <%= developmentMode %>,
+
 			"name": "twyr-webapp-server",
 			"version": "3.0.1"
 		});

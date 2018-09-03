@@ -3257,6 +3257,146 @@
     }
   });
 });
+;define("twyr-webapp-server/components/session/login-component", ["exports", "axios", "twyr-webapp-server/framework/base-component", "ember-concurrency"], function (_exports, _axios, _baseComponent, _emberConcurrency) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseComponent.default.extend({
+    permissions: null,
+    displayForm: 'loginForm',
+    username: '',
+    password: '',
+    confirmPassword: '',
+    firstName: '',
+    lastName: '',
+    mobileNumber: '',
+    onInit: (0, _emberConcurrency.task)(function* () {
+      yield this.set('permissions', ['registered']);
+    }).on('init').keepLatest(),
+    doLogin: (0, _emberConcurrency.task)(function* () {
+      const notification = this.get('notification');
+      notification.display({
+        'type': 'info',
+        'message': 'Logging you in...'
+      });
+
+      try {
+        const data = yield _axios.default.post('/session/login', {
+          'dataType': 'json',
+          'data': {
+            'username': this.get('username'),
+            'password': this.get('password')
+          }
+        });
+        notification.display({
+          'type': data.status ? 'success' : 'error',
+          'message': data.responseText
+        });
+        if (data.status) window.location.href = '/';
+      } catch (err) {
+        notification.display({
+          'type': 'error',
+          'error': err
+        });
+      }
+    }).drop(),
+    resetPassword: (0, _emberConcurrency.task)(function* () {
+      const notification = this.get('notification');
+      notification.display({
+        'type': 'info',
+        'message': 'Resetting your password...'
+      });
+
+      try {
+        let data = yield _axios.default.post('/session/resetPassword', {
+          'dataType': 'json',
+          'data': {
+            'username': this.get('username')
+          }
+        });
+
+        if (data.status) {
+          notification.display({
+            'type': 'success',
+            'message': data.responseText
+          });
+          return;
+        }
+
+        throw new Error(data.responseText);
+      } catch (err) {
+        notification.display({
+          'type': 'error',
+          'error': err
+        });
+      }
+    }).drop(),
+    registerAccount: (0, _emberConcurrency.task)(function* () {
+      const notification = this.get('notification');
+
+      if (this.get('password') !== this.get('confirmPassword')) {
+        notification.display({
+          'type': 'error',
+          'error': 'The passwords do not match'
+        });
+        return;
+      }
+
+      notification.display({
+        'type': 'info',
+        'message': 'Registering your account...'
+      });
+
+      try {
+        let data = yield _axios.default.post('/session/registerAccount', {
+          'dataType': 'json',
+          'data': {
+            'firstname': this.get('firstName'),
+            'lastname': this.get('lastName'),
+            'username': this.get('username'),
+            'mobileNumber': this.get('mobileNumber'),
+            'password': this.get('password')
+          }
+        });
+        notification.display({
+          'type': data.status ? 'success' : 'warning',
+          'message': data.responseText
+        });
+      } catch (err) {
+        notification.display({
+          'type': 'error',
+          'error': err
+        });
+      }
+    }).drop(),
+    setDisplayForm: function (formName) {
+      this.set('displayForm', formName);
+    }
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/components/session/logout-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency"], function (_exports, _baseComponent, _emberConcurrency) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseComponent.default.extend({
+    permissions: null,
+    onInit: (0, _emberConcurrency.task)(function* () {
+      yield this.set('permissions', ['registered']);
+    }).on('init').drop()
+  });
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/components/summernote-lite", ["exports", "ember-summernote-lite/components/summernote-lite"], function (_exports, _summernoteLite) {
   "use strict";
 
@@ -3297,7 +3437,7 @@
   var _default = _baseComponent.default.extend({
     'view': function (record) {
       if (this.get('callbacks.viewAction')) {
-        this.sendAction('controller-action', this.get('callbacks.viewAction'), record);
+        // this.sendAction('controller-action', this.get('callbacks.viewAction'), record);
         return true;
       }
 
@@ -3315,7 +3455,7 @@
       }
 
       if (this.get('callbacks.editAction')) {
-        this.sendAction('controller-action', this.get('callbacks.editAction'), record);
+        // this.sendAction('controller-action', this.get('callbacks.editAction'), record);
         return true;
       }
 
@@ -3332,7 +3472,7 @@
       }
 
       if (this.get('callbacks.saveAction')) {
-        this.sendAction('controller-action', this.get('callbacks.saveAction'), record);
+        // this.sendAction('controller-action', this.get('callbacks.saveAction'), record);
         return true;
       }
 
@@ -3349,7 +3489,7 @@
       }
 
       if (this.get('callbacks.cancelAction')) {
-        this.sendAction('controller-action', this.get('callbacks.cancelAction'), record);
+        // this.sendAction('controller-action', this.get('callbacks.cancelAction'), record);
         return true;
       }
 
@@ -3362,7 +3502,7 @@
     },
     'delete': function (record) {
       if (this.get('callbacks.deleteAction')) {
-        this.sendAction('controller-action', this.get('callbacks.deleteAction'), record);
+        // this.sendAction('controller-action', this.get('callbacks.deleteAction'), record);
         return true;
       }
 
@@ -3395,10 +3535,11 @@
 
   /* eslint-disable ember/avoid-leaking-state-in-ember-objects */
   var _default = _baseComponent.default.extend({
-    'actions': {
-      'toggleAllSelection': function () {
+    actions: {
+      toggleAllSelection() {
         this.get('toggleAllSelection')();
       }
+
     }
   });
 
@@ -3412,13 +3553,13 @@
   });
   _exports.default = void 0;
 
-  /* eslint-disable ember/avoid-leaking-state-in-ember-objects */
   var _default = _baseComponent.default.extend({
-    'actions': {
-      'clickOnRow': function (index, record, event) {
+    actions: {
+      clickOnRow(index, record, event) {
         this.get('clickOnRow')(index, record);
         event.stopPropagation();
       }
+
     }
   });
 
@@ -3440,12 +3581,12 @@
 
   /* eslint-disable ember/avoid-leaking-state-in-ember-objects */
   var _default = _baseComponent.default.extend({
-    'themeInstance': null,
-    '_messages': {
-      'searchLabel': 'Filter: ',
-      'tableSummary': 'Showing %@ - %@ of %@'
+    themeInstance: null,
+    _messages: {
+      searchLabel: 'Filter: ',
+      tableSummary: 'Showing %@ - %@ of %@'
     },
-    'onWillInsertElement': (0, _emberConcurrency.task)(function* () {
+    onWillInsertElement: (0, _emberConcurrency.task)(function* () {
       const mergedMessages = Object.assign({}, this.get('_messages'), this.get('messages') || {});
       this.set('themeInstance', _bootstrap.default.create({
         'table': 'm-0 p-0 table table-hover table-condensed',
@@ -3464,7 +3605,7 @@
         'editable': false
       });
     }).drop().on('willInsertElement'),
-    'onDidInsertElement': (0, _emberConcurrency.task)(function* () {
+    onDidInsertElement: (0, _emberConcurrency.task)(function* () {
       if (!this.get('createEnabled')) return;
       if (!(this.get('callbacks.addAction') || this.get('callbacks.addTask'))) return;
       const createButton = window.$('<button type="button" class="md-default-theme md-button md-primary md-raised"></button>');
@@ -3473,35 +3614,33 @@
 <span>Add</span>
 <div class="md-ripple-container" style=""></div>
 `);
-      createButton.on('click', () => {
-        if (this.get('callbacks.addAction')) {
-          this.sendAction('controller-action', this.get('callbacks.addAction'));
-          return;
-        }
-
-        if (this.get('callbacks.addTask')) {
-          this.get('callbacks.addTask').perform();
-        }
+      createButton.on('click', () => {// if(this.get('callbacks.addAction')) {
+        // 	this.sendAction('controller-action', this.get('callbacks.addAction'));
+        // 	return;
+        // }
+        // if(this.get('callbacks.addTask')) {
+        // 	this.get('callbacks.addTask').perform();
+        // }
       });
       const lastHeaderColumn = window.$(this.$('table thead tr:first-child th:last-child')[0]);
       lastHeaderColumn.addClass('text-right');
       lastHeaderColumn.html(createButton);
     }).drop().on('didInsertElement'),
-    'onWillDestroyElement': (0, _emberConcurrency.task)(function* () {
+    onWillDestroyElement: (0, _emberConcurrency.task)(function* () {
       const createButton = window.$(this.$('table thead tr:first-child th:last-child button.md-button.md-primary')[0]);
       createButton.off('click');
     }).drop().on('willDestroyElement'),
-    'displayDataChanged': function (displayChangedData) {
-      if (this.get('callbacks.displayDataChangedAction')) {
-        this.sendAction('controller-action', this.get('callbacks.displayDataChangedAction'), displayChangedData);
-        return true;
-      }
 
-      if (this.get('callbacks.displayDataChangedTask')) {
-        this.get('callbacks.displayDataChangedTask').perform(displayChangedData);
-        return true;
-      }
+    displayDataChanged(displayChangedData) {// if(this.get('callbacks.displayDataChangedAction')) {
+      // 	this.sendAction('controller-action', this.get('callbacks.displayDataChangedAction'), displayChangedData);
+      // 	return true;
+      // }
+      // if(this.get('callbacks.displayDataChangedTask')) {
+      // 	this.get('callbacks.displayDataChangedTask').perform(displayChangedData);
+      // 	return true;
+      // }
     }
+
   });
 
   _exports.default = _default;
@@ -3519,7 +3658,7 @@
     }
   });
 });
-;define("twyr-webapp-server/controllers/index", ["exports", "ember-concurrency", "twyr-webapp-server/framework/base-controller"], function (_exports, _emberConcurrency, _baseController) {
+;define("twyr-webapp-server/controllers/index", ["exports", "twyr-webapp-server/framework/base-controller"], function (_exports, _baseController) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -3533,54 +3672,26 @@
 
   /* eslint-disable ember/avoid-leaking-state-in-ember-objects */
   var _default = _baseController.default.extend({
-    'currentUser': Ember.inject.service('current-user'),
-    'realtimeData': Ember.inject.service('realtime-data'),
-    'modalData': null,
-    'showDialog': false,
-    'onInit': (0, _emberConcurrency.task)(function* () {
-      const onDisplayStatusMessage = this['display-status-message'].bind(this);
+    realtimeData: Ember.inject.service('realtime-data'),
+    modalData: null,
+    showDialog: false,
+
+    init() {
+      this._super(...arguments);
+
+      const notification = this.get('notification');
       this.get('realtimeData').on('websocket-data::display-status-message', data => {
-        onDisplayStatusMessage(data);
+        notification.display(data);
       });
       this.get('realtimeData').on('websocket-close', () => {
-        onDisplayStatusMessage('Realtime Data Connectivity lost! Will attempt reconnection!!');
+        notification.display('Realtime Data Connectivity lost! Will attempt reconnection!!');
       });
       this.get('realtimeData').on('websocket-disconnection', () => {
-        onDisplayStatusMessage('Realtime Data Connectivity lost!');
+        notification.display('Realtime Data Connectivity lost!');
       });
-    }).on('init'),
-    'display-status-message': function (data) {
-      const toast = this.get('toast');
-      const options = Object.assign({}, {
-        'positionClass': 'toast-top-right'
-      }, data.options);
-      if (data.type === 'danger') data.type = 'error';
-
-      if (data.type !== 'error') {
-        toast[data.type ? data.type : 'info'](data.message || data, data.title || (data.type ? data.type.capitalize() : ''), options);
-        return;
-      }
-
-      if (typeof data.error === 'string') {
-        toast.error(data.error.replace(/\\n/g, '\n').split('\n').splice(0, 2).join('\n'), 'Error', options);
-        return;
-      }
-
-      if (data.error.responseText) {
-        toast.error(data.error.responseText.replace(/\\n/g, '\n').split('\n').splice(0, 2).join('\n'), 'Error', options);
-        return;
-      }
-
-      if (data.error.errors && data.error.errors.length) {
-        data.error.errors.forEach(dataError => {
-          toast.error(dataError.detail.replace(/\\n/g, '\n').split('\n').splice(0, 2).join('\n'), dataError.title || 'Error', options);
-        });
-        return;
-      }
-
-      toast.error(data.error.message, 'Error', options);
     },
-    'display-modal': function (data) {
+
+    displayModal: function (data) {
       const defaultData = {
         'title': 'Twyr Modal',
         'content': `This is the default. Someone forgot to override it!`,
@@ -3604,7 +3715,7 @@
       this.set('modalData', modalData);
       this.set('showDialog', true);
     },
-    'closeDialog': function (proceed) {
+    closeDialog: function (proceed) {
       if (proceed && this.get('modalData.confirmButton.callback')) {
         this.get('modalData.confirmButton.callback')();
       }
@@ -3615,25 +3726,6 @@
 
       this.set('showDialog', false);
       this.set('modalData', null);
-    },
-    'actions': {
-      'controller-action': function (action, data) {
-        if (this.get('showDialog') && this.get('modalData') && this.get('modalData.actions')) {
-          const modalActions = this.get('modalData')['actions'][action];
-
-          if (modalActions) {
-            modalActions(data);
-            return;
-          }
-        }
-
-        if (this[action] && typeof this[action] === 'function') {
-          this[action](data);
-          return;
-        }
-
-        console.log(`TODO: Handle ${action} action with data: `, data);
-      }
     }
   });
 
@@ -3650,50 +3742,42 @@
   /* eslint-disable require-yield */
 
   /* eslint-disable no-console */
-
-  /* eslint-disable ember/avoid-leaking-state-in-ember-objects */
-
-  /* eslint-disable ember/closure-actions */
   var _default = Ember.Component.extend({
-    'store': Ember.inject.service('store'),
-    'currentUser': Ember.inject.service('current-user'),
-    'permissions': ['*'],
-    'hasPermission': false,
-    'onInit': (0, _emberConcurrency.task)(function* () {
+    store: Ember.inject.service('store'),
+    currentUser: Ember.inject.service('current-user'),
+    notification: Ember.inject.service('integrated-notification'),
+    permissions: null,
+    hasPermission: true,
+
+    init() {
+      this._super(...arguments);
+
+      this.set('permissions', ['*']);
       this.get('currentUser').on('userDataUpdated', () => {
         this.get('updatePermissions').perform();
       });
-    }).on('init'),
-    'updatePermissions': (0, _emberConcurrency.task)(function* () {
+    },
+
+    onPermissionChanges: Ember.observer('permissions', function () {
+      this.get('updatePermissions').perform();
+    }),
+    updatePermissions: (0, _emberConcurrency.task)(function* () {
       if (this.get('permissions').includes('*')) {
         this.set('hasPermission', true);
         return;
       }
 
-      let hasPermission = false;
+      let hasPerm = false;
       this.get('permissions').forEach(permission => {
-        hasPermission = hasPermission || this.get('currentUser').hasPermission(permission);
+        hasPerm = hasPerm || this.get('currentUser').hasPermission(permission);
       });
-      this.set('hasPermission', hasPermission);
-    }).keepLatest(),
-    'hasPermissionChanged': Ember.observer('hasPermission', function () {
-      console.log(`User Permissions changed: ${this.get('hasPermission')}`);
-    }),
-    'actions': {
-      'controller-action': function (action, data) {
-        if (this[action] && typeof this[action] === 'function') {
-          this[action](data);
-          return;
-        }
-
-        this.sendAction('controller-action', action, data);
-      }
-    }
+      this.set('hasPermission', hasPerm);
+    }).keepLatest()
   });
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/framework/base-controller", ["exports"], function (_exports) {
+;define("twyr-webapp-server/framework/base-controller", ["exports", "ember-concurrency"], function (_exports, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -3701,39 +3785,40 @@
   });
   _exports.default = void 0;
 
-  /* eslint-disable ember/avoid-leaking-state-in-ember-objects */
+  /* eslint-disable require-yield */
+
+  /* eslint-disable no-console */
   var _default = Ember.Controller.extend({
-    'store': Ember.inject.service('store'),
-    'actions': {
-      'controller-action': function (action, data) {
-        if (this[action] && typeof this[action] === 'function') {
-          this[action](data);
-          return;
-        }
+    store: Ember.inject.service('store'),
+    currentUser: Ember.inject.service('current-user'),
+    notification: Ember.inject.service('integrated-notification'),
+    permissions: null,
+    hasPermission: true,
 
-        return true;
+    init() {
+      this._super(...arguments);
+
+      this.set('permissions', ['*']);
+      this.get('currentUser').on('userDataUpdated', () => {
+        this.get('updatePermissions').perform();
+      });
+    },
+
+    onPermissionChanges: Ember.observer('permissions', function () {
+      this.get('updatePermissions').perform();
+    }),
+    updatePermissions: (0, _emberConcurrency.task)(function* () {
+      if (this.get('permissions').includes('*')) {
+        this.set('hasPermission', true);
+        return;
       }
-    }
-  });
 
-  _exports.default = _default;
-});
-;define("twyr-webapp-server/framework/base-route", ["exports"], function (_exports) {
-  "use strict";
-
-  Object.defineProperty(_exports, "__esModule", {
-    value: true
-  });
-  _exports.default = void 0;
-
-  /* eslint-disable ember/avoid-leaking-state-in-ember-objects */
-  var _default = Ember.Route.extend({
-    'actions': {
-      'controller-action': function (action, data) {
-        const controller = this.get('controller');
-        if (controller && controller[action]) return this.get('controller').send('controller-action', action, data);else return true;
-      }
-    }
+      let hasPerm = false;
+      this.get('permissions').forEach(permission => {
+        hasPerm = hasPerm || this.get('currentUser').hasPermission(permission);
+      });
+      this.set('hasPermission', hasPerm);
+    }).keepLatest()
   });
 
   _exports.default = _default;
@@ -6925,7 +7010,7 @@
   var _default = Router;
   _exports.default = _default;
 });
-;define("twyr-webapp-server/routes/index", ["exports", "twyr-webapp-server/framework/base-route"], function (_exports, _baseRoute) {
+;define("twyr-webapp-server/routes/index", ["exports"], function (_exports) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -6933,14 +7018,7 @@
   });
   _exports.default = void 0;
 
-  /* eslint-disable ember/avoid-leaking-state-in-ember-objects */
-  var _default = _baseRoute.default.extend({
-    'actions': {
-      'controller-action': function (action, data) {
-        this.get('controller').send('controller-action', action, data);
-      }
-    }
-  });
+  var _default = Ember.Route.extend({});
 
   _exports.default = _default;
 });
@@ -6953,15 +7031,18 @@
   _exports.default = void 0;
 
   var _default = _emberData.default.JSONAPISerializer.extend(_keepOnlyChanged.default, {
-    'keyForAttribute': function (attr) {
+    keyForAttribute(attr) {
       return Ember.underscore(attr);
     },
-    'keyForLink': function (attr) {
+
+    keyForLink(attr) {
       return Ember.underscore(attr);
     },
-    'keyForRelationship': function (attr) {
+
+    keyForRelationship(attr) {
       return Ember.underscore(attr);
     }
+
   });
 
   _exports.default = _default;
@@ -7053,7 +7134,7 @@
   var _default = _cookies.default;
   _exports.default = _default;
 });
-;define("twyr-webapp-server/services/current-user", ["exports", "ember-concurrency", "axios", "twyr-webapp-server/app"], function (_exports, _emberConcurrency, _axios, _app) {
+;define("twyr-webapp-server/services/current-user", ["exports", "axios", "ember-concurrency", "twyr-webapp-server/app"], function (_exports, _axios, _emberConcurrency, _app) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -7061,42 +7142,42 @@
   });
   _exports.default = void 0;
 
-  /* eslint-disable require-yield */
-
   /* eslint-disable no-console */
   var _default = Ember.Service.extend(Ember.Evented, {
-    'userData': null,
-    'onInit': (0, _emberConcurrency.task)(function* () {
+    notification: Ember.inject.service('integrated-notification'),
+    userData: null,
+    onInit: (0, _emberConcurrency.task)(function* () {
       const fetchUserData = this.get('fetchUserData');
-      yield fetchUserData.perform();
-
-      _app.default.on('userChanged', () => {
-        fetchUserData.perform();
-      });
-    }).on('init'),
-    'fetchUserData': (0, _emberConcurrency.task)(function* () {
+      yield fetchUserData.perform(); // App.on('userChanged', () => {
+      // 	fetchUserData.perform();
+      // });
+    }).on('init').drop(),
+    fetchUserData: (0, _emberConcurrency.task)(function* () {
       this.trigger('userDataUpdating');
-      const owner = Ember.getOwner(this);
-      const router = owner.lookup('router:main');
-      yield _axios.default.get('/session/user').then(userData => {
-        this.set('userData', userData);
-        this.trigger('userDataUpdated');
-      }).catch(err => {
-        // TODO: Use the Beacon API to send all this back to the server;
-        this.set('userData', null);
-        this.trigger('userDataUpdated');
-        router.send('controller-action', 'display-status-message', {
-          'type': 'error',
-          'error': err
-        });
-      });
+      this.trigger('userDataUpdated'); // yield axios.get('/session/user')
+      // .then((userData) => {
+      // 	this.set('userData', userData);
+      // 	this.trigger('userDataUpdated');
+      // })
+      // .catch((err) => {
+      // 	// TODO: Use the Beacon API to send all this back to the server;
+      // 	this.set('userData', null);
+      // 	this.trigger('userDataUpdated');
+      // 	this.get('notification').display({
+      // 		'type': 'error',
+      // 		'error': err
+      // 	});
+      // });
     }).keepLatest(),
-    'isLoggedIn': function () {
-      return !!this.get('userData');
+
+    isLoggedIn() {
+      return this.get('userData.loggedIn');
     },
-    'hasPermission': function (permission) {
-      return this.get('userData') && this.get('userData.permissions').includes(permission);
+
+    hasPermission(permission) {
+      return (this.get('userData.permissions') || []).includes(permission);
     }
+
   });
 
   _exports.default = _default;
@@ -7113,6 +7194,54 @@
       return _headData.default;
     }
   });
+});
+;define("twyr-webapp-server/services/integrated-notification", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = Ember.Service.extend({
+    toast: Ember.inject.service('toast'),
+
+    display(data) {
+      const toast = this.get('toast');
+      const options = Object.assign({}, {
+        'positionClass': 'toast-bottom-right',
+        'preventDuplicates': true
+      }, data.options);
+      if (data.type === 'danger') data.type = 'error';
+
+      if (data.type !== 'error') {
+        toast[data.type ? data.type : 'info'](data.message || data, data.title || (data.type ? data.type.capitalize() : ''), options);
+        return;
+      }
+
+      if (typeof data.error === 'string') {
+        toast.error(data.error.replace(/\\n/g, '\n').split('\n').splice(0, 2).join('\n'), 'Error', options);
+        return;
+      }
+
+      if (data.error.responseText) {
+        toast.error(data.error.responseText.replace(/\\n/g, '\n').split('\n').splice(0, 2).join('\n'), 'Error', options);
+        return;
+      }
+
+      if (data.error.errors && data.error.errors.length) {
+        data.error.errors.forEach(dataError => {
+          toast.error(dataError.detail.replace(/\\n/g, '\n').split('\n').splice(0, 2).join('\n'), dataError.title || 'Error', options);
+        });
+        return;
+      }
+
+      toast.error(data.error.message, 'Error', options);
+    }
+
+  });
+
+  _exports.default = _default;
 });
 ;define("twyr-webapp-server/services/liquid-fire-transitions", ["exports", "liquid-fire/transition-map"], function (_exports, _transitionMap) {
   "use strict";
@@ -7190,7 +7319,7 @@
     }
   });
 });
-;define("twyr-webapp-server/services/realtime-data", ["exports", "ember-concurrency"], function (_exports, _emberConcurrency) {
+;define("twyr-webapp-server/services/realtime-data", ["exports"], function (_exports) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -7202,7 +7331,9 @@
 
   /* eslint-disable no-console */
   var _default = Ember.Service.extend(Ember.Evented, {
-    'onInit': (0, _emberConcurrency.task)(function* () {
+    init() {
+      this._super(...arguments);
+
       const dataProcessor = this.get('_websocketDataProcessor').bind(this),
             streamer = window.Primus.connect('/', {
         'strategy': 'online, timeout, disconnect',
@@ -7212,53 +7343,55 @@
           'retries': 25
         }
       });
-      streamer.on('open', () => {
+      this.set('streamer', streamer);
+      this.get('streamer').on('open', () => {
         if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::open: ', arguments);
         this.get('streamer').on('data', dataProcessor);
         this.trigger('websocket-open');
       });
-      streamer.on('reconnect', () => {
+      this.get('streamer').on('reconnect', () => {
         if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnect: ', arguments);
         this.trigger('websocket-reconnect');
       });
-      streamer.on('reconnect scheduled', () => {
+      this.get('streamer').on('reconnect scheduled', () => {
         if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnect scheduled: ', arguments);
         this.trigger('websocket-reconnect-scheduled');
       });
-      streamer.on('reconnected', () => {
+      this.get('streamer').on('reconnected', () => {
         if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnected: ', arguments);
         this.get('streamer').on('data', dataProcessor);
         this.trigger('websocket-open');
       });
-      streamer.on('reconnect timeout', () => {
+      this.get('streamer').on('reconnect timeout', () => {
         if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnect timeout: ', arguments);
         this.trigger('websocket-reconnect-timeout');
       });
-      streamer.on('reconnect failed', () => {
+      this.get('streamer').on('reconnect failed', () => {
         if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnect failed: ', arguments);
         this.trigger('websocket-reconnect-failed');
       });
-      streamer.on('close', () => {
+      this.get('streamer').on('close', () => {
         if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::close: ', arguments);
         this.trigger('websocket-close');
         this.get('streamer').off('data', dataProcessor);
       });
-      streamer.on('end', () => {
+      this.get('streamer').on('end', () => {
         if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::end: ', arguments);
         this.trigger('websocket-end');
         this.get('streamer').off('data', dataProcessor);
       });
-      streamer.on('error', () => {
+      this.get('streamer').on('error', () => {
         if (window.developmentMode) console.error('twyr-webapp-server/services/websockets::streamer::on::error: ', arguments);
         this.trigger('websocket-error');
       });
-      this.set('streamer', streamer);
-    }).on('init'),
-    '_websocketDataProcessor': function (websocketData) {
+    },
+
+    _websocketDataProcessor(websocketData) {
       if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::data: ', websocketData);
       this.trigger(`websocket-data::${websocketData.channel}`, websocketData.data);
       this.trigger(`data`, websocketData.channel, websocketData.data);
     }
+
   });
 
   _exports.default = _default;
@@ -7580,6 +7713,42 @@
     }
   });
 });
+;define("twyr-webapp-server/templates/components/session/login-component", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = Ember.HTMLBars.template({
+    "id": "jYMxWPpC",
+    "block": "{\"symbols\":[\"card\",\"form\",\"header\",\"text\",\"form\",\"header\",\"text\",\"form\",\"header\",\"text\"],\"statements\":[[4,\"unless\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-card\",null,null,{\"statements\":[[4,\"liquid-if\",[[27,\"eq\",[[23,[\"displayForm\"]],\"loginForm\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,9,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,10,[\"title\"]]],null,{\"statements\":[[1,[27,\"fa-icon\",[\"sign-in\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[10]},null]],\"parameters\":[9]},null],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"paper-form\",null,[[\"onSubmit\"],[[27,\"perform\",[[23,[\"doLogin\"]]],null]]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column flex-100\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"email\",\"Login / Username\",[23,[\"username\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"username\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"Password\",[23,[\"password\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"password\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"resetPasswordForm\"]],[9],[0,\"Forgot Password\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"registerForm\"]],[9],[0,\"Register Account\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\"],[4,\"component\",[[22,8,[\"submit-button\"]]],[[\"primary\",\"raised\",\"disabled\"],[true,true,[27,\"or\",[[22,8,[\"isInvalid\"]],[23,[\"doLogin\",\"isRunning\"]]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"doLogin\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"sign-in\"],[[\"class\"],[\"mr-2\"]]],false],[7,\"span\"],[9],[0,\"Login\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[8]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"liquid-if\",[[27,\"eq\",[[23,[\"displayForm\"]],\"resetPasswordForm\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,6,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,7,[\"title\"]]],null,{\"statements\":[[1,[27,\"paper-icon\",[\"lock-outline\"],[[\"class\"],[\"mr-2 pb-1 white-text\"]]],false],[0,\"Reset Password\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[7]},null]],\"parameters\":[6]},null],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"paper-form\",null,[[\"onSubmit\"],[[27,\"perform\",[[23,[\"resetPassword\"]]],null]]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column flex-100\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"email\",\"Login / Username\",[23,[\"resetUsername\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"resetUsername\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"loginForm\"]],[9],[0,\"PlantWorks Login\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"registerForm\"]],[9],[0,\"Register Account\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\"],[4,\"component\",[[22,5,[\"submit-button\"]]],[[\"raised\",\"accent\",\"disabled\"],[true,true,[27,\"or\",[[22,5,[\"isInvalid\"]],[23,[\"resetPassword\",\"isRunning\"]]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"resetPassword\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"lock-outline\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Reset\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"liquid-if\",[[27,\"eq\",[[23,[\"displayForm\"]],\"registerForm\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,3,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,4,[\"title\"]]],null,{\"statements\":[[1,[27,\"paper-icon\",[\"person-add\"],[[\"class\"],[\"mr-2 pb-1 white-text\"]]],false],[0,\"Create Account\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[4]},null]],\"parameters\":[3]},null],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"paper-form\",null,[[\"onSubmit\"],[[27,\"perform\",[[23,[\"registerAccount\"]]],null]]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column flex-100\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"text\",\"First Name\",[23,[\"firstName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"firstName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"text\",\"Last Name\",[23,[\"lastName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"lastName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"email\",\"Email\",[23,[\"username\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"username\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"text\",\"Mobile\",[23,[\"mobileNumber\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"mobileNumber\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"password\",\"Password\",[23,[\"password\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"password\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"password\",\"Confirm\",[23,[\"confirmPassword\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"confirmPassword\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"loginForm\"]],[9],[0,\"PlantWorks Login\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"resetPasswordForm\"]],[9],[0,\"Reset Password\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\"],[4,\"component\",[[22,2,[\"submit-button\"]]],[[\"raised\",\"accent\",\"disabled\"],[true,true,[27,\"or\",[[22,2,[\"isInvalid\"]],[23,[\"registerAccount\",\"isRunning\"]]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"registerAccount\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"person-add\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Register\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "meta": {
+      "moduleName": "twyr-webapp-server/templates/components/session/login-component.hbs"
+    }
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/templates/components/session/logout-component", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = Ember.HTMLBars.template({
+    "id": "Jnz9Sbq2",
+    "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[0,\"\\t\"],[1,[27,\"fa-icon\",[\"sign-out-alt\"],[[\"class\"],[\"h4 mb-0\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "meta": {
+      "moduleName": "twyr-webapp-server/templates/components/session/logout-component.hbs"
+    }
+  });
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/templates/components/transition-group", ["exports"], function (_exports) {
   "use strict";
 
@@ -7607,8 +7776,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "BA+hqkP2",
-    "block": "{\"symbols\":[\"&default\"],\"statements\":[[7,\"div\"],[11,\"class\",\"w-100 text-right\"],[9],[0,\"\\n\"],[4,\"if\",[[27,\"or\",[[23,[\"record\",\"isLoading\"]],[23,[\"record\",\"isReloading\"]],[23,[\"record\",\"isSaving\"]]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"warn\",\"iconButton\",\"onClick\"],[\"m-0\",true,true,null]],{\"statements\":[[0,\"\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"if\",[[27,\"and\",[[27,\"or\",[[23,[\"callbacks\",\"viewAction\"]],[23,[\"callbacks\",\"viewTask\"]]],null],[27,\"not\",[[23,[\"record\",\"isNew\"]]],null]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"onClick\"],[true,[27,\"action\",[[22,0,[]],\"controller-action\",\"view\",[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"remove-red-eye\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"inlineEditEnabled\"]]],null,{\"statements\":[[4,\"unless\",[[23,[\"isEditRow\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"accent\",\"iconButton\",\"onClick\"],[true,true,[27,\"action\",[[22,0,[]],\"controller-action\",\"edit\",[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"edit\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"or\",[[23,[\"record\",\"isNew\"]],[23,[\"record\",\"hasDirtyAttributes\"]],[23,[\"record\",\"isDirty\"]],[23,[\"record\",\"content\",\"isDirty\"]]],null]],null,{\"statements\":[[4,\"if\",[[27,\"or\",[[23,[\"callbacks\",\"saveAction\"]],[23,[\"callbacks\",\"saveTask\"]]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"iconButton\",\"onClick\"],[true,true,[27,\"action\",[[22,0,[]],\"controller-action\",\"save\",[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"isEditRow\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"warn\",\"iconButton\",\"onClick\"],[true,true,[27,\"action\",[[22,0,[]],\"controller-action\",\"cancel\",[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"close\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"and\",[[27,\"or\",[[23,[\"callbacks\",\"deleteAction\"]],[23,[\"callbacks\",\"deleteTask\"]]],null],[27,\"not\",[[23,[\"record\",\"isNew\"]]],null]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"warn\",\"iconButton\",\"onClick\"],[true,true,[27,\"action\",[[22,0,[]],\"controller-action\",\"delete\",[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"if\",[[27,\"not\",[[27,\"not\",[[23,[\"expandedRowComponent\"]]],null]],null]],null,{\"statements\":[[4,\"if\",[[23,[\"isExpanded\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"accent\",\"iconButton\",\"onClick\"],[[23,[\"themeInstance\",\"collapseRow\"]],true,true,[27,\"action\",[[22,0,[]],\"collapseRow\",[23,[\"index\"]],[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"angle-double-up\"],[[\"size\"],[\"lg\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"accent\",\"iconButton\",\"onClick\"],[[23,[\"themeInstance\",\"expandRow\"]],true,true,[27,\"action\",[[22,0,[]],\"expandRow\",[23,[\"index\"]],[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"angle-double-down\"],[[\"size\"],[\"lg\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]},{\"statements\":[[4,\"if\",[[27,\"and\",[[27,\"or\",[[23,[\"callbacks\",\"editAction\"]],[23,[\"callbacks\",\"editTask\"]]],null],[27,\"not\",[[27,\"get\",[[23,[\"record\"]],[27,\"or\",[[23,[\"callbacks\",\"editCheckField\"]],\"isEditing\"],null]],null]],null]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"accent\",\"iconButton\",\"onClick\"],[true,true,[27,\"action\",[[22,0,[]],\"controller-action\",\"edit\",[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"open-in-new\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]}],[0,\"\\n\"],[4,\"if\",[[27,\"or\",[[23,[\"record\",\"isNew\"]],[23,[\"record\",\"hasDirtyAttributes\"]],[23,[\"record\",\"isDirty\"]],[23,[\"record\",\"content\",\"isDirty\"]]],null]],null,{\"statements\":[[4,\"if\",[[27,\"or\",[[23,[\"callbacks\",\"saveAction\"]],[23,[\"callbacks\",\"saveTask\"]]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"iconButton\",\"onClick\"],[true,true,[27,\"action\",[[22,0,[]],\"controller-action\",\"save\",[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[4,\"if\",[[27,\"or\",[[23,[\"callbacks\",\"cancelAction\"]],[23,[\"callbacks\",\"cancelTask\"]]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"warn\",\"iconButton\",\"onClick\"],[true,true,[27,\"action\",[[22,0,[]],\"controller-action\",\"cancel\",[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"close\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"and\",[[27,\"or\",[[23,[\"callbacks\",\"deleteAction\"]],[23,[\"callbacks\",\"deleteTask\"]]],null],[27,\"not\",[[23,[\"record\",\"isNew\"]]],null]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"warn\",\"iconButton\",\"onClick\"],[true,true,[27,\"action\",[[22,0,[]],\"controller-action\",\"delete\",[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]}],[10],[0,\"\\n\"],[14,1],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "bENhY9l+",
+    "block": "{\"symbols\":[\"&default\"],\"statements\":[[7,\"div\"],[11,\"class\",\"w-100 text-right\"],[9],[0,\"\\n\"],[4,\"if\",[[27,\"or\",[[23,[\"record\",\"isLoading\"]],[23,[\"record\",\"isReloading\"]],[23,[\"record\",\"isSaving\"]]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"warn\",\"iconButton\",\"onClick\"],[\"m-0\",true,true,null]],{\"statements\":[[0,\"\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"if\",[[27,\"and\",[[27,\"or\",[[23,[\"callbacks\",\"viewAction\"]],[23,[\"callbacks\",\"viewTask\"]]],null],[27,\"not\",[[23,[\"record\",\"isNew\"]]],null]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"onClick\"],[true,[27,\"action\",[[22,0,[]],\"view\",[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"remove-red-eye\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"inlineEditEnabled\"]]],null,{\"statements\":[[4,\"unless\",[[23,[\"isEditRow\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"accent\",\"iconButton\",\"onClick\"],[true,true,[27,\"action\",[[22,0,[]],\"edit\",[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"edit\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"or\",[[23,[\"record\",\"isNew\"]],[23,[\"record\",\"hasDirtyAttributes\"]],[23,[\"record\",\"isDirty\"]],[23,[\"record\",\"content\",\"isDirty\"]]],null]],null,{\"statements\":[[4,\"if\",[[27,\"or\",[[23,[\"callbacks\",\"saveAction\"]],[23,[\"callbacks\",\"saveTask\"]]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"iconButton\",\"onClick\"],[true,true,[27,\"action\",[[22,0,[]],\"save\",[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"isEditRow\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"warn\",\"iconButton\",\"onClick\"],[true,true,[27,\"action\",[[22,0,[]],\"cancel\",[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"close\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"and\",[[27,\"or\",[[23,[\"callbacks\",\"deleteAction\"]],[23,[\"callbacks\",\"deleteTask\"]]],null],[27,\"not\",[[23,[\"record\",\"isNew\"]]],null]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"warn\",\"iconButton\",\"onClick\"],[true,true,[27,\"action\",[[22,0,[]],\"delete\",[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"if\",[[27,\"not\",[[27,\"not\",[[23,[\"expandedRowComponent\"]]],null]],null]],null,{\"statements\":[[4,\"if\",[[23,[\"isExpanded\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"accent\",\"iconButton\",\"onClick\"],[[23,[\"themeInstance\",\"collapseRow\"]],true,true,[27,\"action\",[[22,0,[]],\"collapseRow\",[23,[\"index\"]],[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"angle-double-up\"],[[\"size\"],[\"lg\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"accent\",\"iconButton\",\"onClick\"],[[23,[\"themeInstance\",\"expandRow\"]],true,true,[27,\"action\",[[22,0,[]],\"expandRow\",[23,[\"index\"]],[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"angle-double-down\"],[[\"size\"],[\"lg\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]},{\"statements\":[[4,\"if\",[[27,\"and\",[[27,\"or\",[[23,[\"callbacks\",\"editAction\"]],[23,[\"callbacks\",\"editTask\"]]],null],[27,\"not\",[[27,\"get\",[[23,[\"record\"]],[27,\"or\",[[23,[\"callbacks\",\"editCheckField\"]],\"isEditing\"],null]],null]],null]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"accent\",\"iconButton\",\"onClick\"],[true,true,[27,\"action\",[[22,0,[]],\"edit\",[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"open-in-new\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]}],[0,\"\\n\"],[4,\"if\",[[27,\"or\",[[23,[\"record\",\"isNew\"]],[23,[\"record\",\"hasDirtyAttributes\"]],[23,[\"record\",\"isDirty\"]],[23,[\"record\",\"content\",\"isDirty\"]]],null]],null,{\"statements\":[[4,\"if\",[[27,\"or\",[[23,[\"callbacks\",\"saveAction\"]],[23,[\"callbacks\",\"saveTask\"]]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"iconButton\",\"onClick\"],[true,true,[27,\"action\",[[22,0,[]],\"save\",[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[4,\"if\",[[27,\"or\",[[23,[\"callbacks\",\"cancelAction\"]],[23,[\"callbacks\",\"cancelTask\"]]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"warn\",\"iconButton\",\"onClick\"],[true,true,[27,\"action\",[[22,0,[]],\"cancel\",[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"close\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"and\",[[27,\"or\",[[23,[\"callbacks\",\"deleteAction\"]],[23,[\"callbacks\",\"deleteTask\"]]],null],[27,\"not\",[[23,[\"record\",\"isNew\"]]],null]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"warn\",\"iconButton\",\"onClick\"],[true,true,[27,\"action\",[[22,0,[]],\"delete\",[23,[\"record\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]}],[10],[0,\"\\n\"],[14,1],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/twyr-model-table-actions.hbs"
     }
@@ -7661,8 +7830,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "K+Sm/h2G",
-    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"models-table\",null,[[\"data\",\"columns\",\"columnComponents\",\"themeInstance\",\"expandedItems\",\"expandedRowComponent\",\"multipleExpand\",\"selectedItems\",\"multipleSelect\",\"filteringIgnoreCase\",\"multipleColumnsSorting\",\"showComponentFooter\",\"showGlobalFilter\",\"showPageSize\",\"useFilteringByColumns\",\"useNumericPagination\",\"showColumnsDropdown\",\"displayDataChangedAction\",\"controller-action\"],[[23,[\"data\"]],[23,[\"columns\"]],[27,\"assign\",[[23,[\"columnComponents\"]],[27,\"hash\",null,[[\"twyrModelTableActions\"],[[27,\"component\",[\"twyr-model-table-actions\"],[[\"callbacks\",\"expandedRowComponent\",\"inlineEditEnabled\",\"controller-action\"],[[23,[\"callbacks\"]],[23,[\"expandedRowComponent\"]],[23,[\"inlineEditEnabled\"]],\"controller-action\"]]]]]]],null],[23,[\"themeInstance\"]],[23,[\"expandedItems\"]],[23,[\"expandedRowComponent\"]],[23,[\"multipleExpand\"]],[23,[\"selectedItems\"]],[23,[\"multipleSelect\"]],true,true,true,true,true,false,true,false,[27,\"action\",[[22,0,[]],\"controller-action\",\"displayDataChanged\"],null],\"controller-action\"]]],false],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "AK6fd+R8",
+    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"models-table\",null,[[\"data\",\"columns\",\"columnComponents\",\"themeInstance\",\"expandedItems\",\"expandedRowComponent\",\"multipleExpand\",\"selectedItems\",\"multipleSelect\",\"filteringIgnoreCase\",\"multipleColumnsSorting\",\"showComponentFooter\",\"showGlobalFilter\",\"showPageSize\",\"useFilteringByColumns\",\"useNumericPagination\",\"showColumnsDropdown\",\"displayDataChangedAction\"],[[23,[\"data\"]],[23,[\"columns\"]],[27,\"assign\",[[23,[\"columnComponents\"]],[27,\"hash\",null,[[\"twyrModelTableActions\"],[[27,\"component\",[\"twyr-model-table-actions\"],[[\"callbacks\",\"expandedRowComponent\",\"inlineEditEnabled\"],[[23,[\"callbacks\"]],[23,[\"expandedRowComponent\"]],[23,[\"inlineEditEnabled\"]]]]]]]]],null],[23,[\"themeInstance\"]],[23,[\"expandedItems\"]],[23,[\"expandedRowComponent\"]],[23,[\"multipleExpand\"]],[23,[\"selectedItems\"]],[23,[\"multipleSelect\"]],true,true,true,true,true,false,true,false,[27,\"action\",[[22,0,[]],\"displayDataChanged\"],null]]]],false],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/twyr-model-table.hbs"
     }
@@ -7697,8 +7866,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "ii2QQidg",
-    "block": "{\"symbols\":[\"navbar\",\"nav\"],\"statements\":[[2,\" Customizable Header \"],[0,\"\\n\"],[7,\"header\"],[9],[0,\"\\n\"],[4,\"bs-navbar\",null,[[\"class\",\"position\",\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"p-0 px-2 py-1\",\"sticky-top\",\"light\",\"twyr\",false,true]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"navbar-header\"],[9],[0,\"\\n\"],[4,\"link-to\",[\"index\"],[[\"class\"],[\"navbar-brand\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[7,\"span\"],[11,\"class\",\"h3 orange-text\"],[11,\"style\",\"font-family:Keania One;\"],[9],[0,\"Twy'r\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\"],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,1,[\"nav\"]]],[[\"class\"],[\"ml-auto orange-text nav-flex-icons\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,2,[\"item\"]]],null,{\"statements\":[[1,[27,\"fa-icon\",[\"sign-out-alt\"],[[\"class\"],[\"h4 mb-0\"]]],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null],[10],[0,\"\\n\\n\"],[2,\" Main Area \"],[0,\"\\n\"],[7,\"main\"],[11,\"class\",\"flex p-4\"],[9],[0,\"\\n\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"flex\"]]],false],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" Customizable Footer \"],[0,\"\\n\"],[7,\"footer\"],[11,\"class\",\"page-footer mt-4 bg-secondary\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"px-1 py-3 text-right\"],[9],[0,\"\\n\\t\\tCopyright© 2018 \"],[4,\"link-to\",[\"index\"],null,{\"statements\":[[0,\"Twy'r\"]],\"parameters\":[]},null],[0,\". All rights reserved.\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" Modal \"],[0,\"\\n\"],[4,\"liquid-if\",[[23,[\"showDialog\"]]],null,{\"statements\":[[4,\"paper-dialog\",null,[[\"class\",\"onClose\",\"parent\",\"origin\",\"clickOutsideToClose\",\"escapeToClose\"],[[23,[\"modalData\",\"dialogClass\"]],[27,\"action\",[[22,0,[]],\"controller-action\",\"closeDialog\",false],null],[23,[\"modalData\",\"parentElement\"]],[23,[\"modalData\",\"dialogOrigin\"]],false,false]],{\"statements\":[[4,\"paper-toolbar\",null,[[\"class\"],[\"stylish-color white-text\"]],{\"statements\":[[4,\"paper-toolbar-tools\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"h2\"],[9],[1,[23,[\"modalData\",\"title\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"componentName\"]]],null,{\"statements\":[[4,\"paper-dialog-content\",null,[[\"class\"],[\"flex m-0 p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"component\",[[23,[\"modalData\",\"componentName\"]]],[[\"state\",\"controller-action\"],[[23,[\"modalData\",\"componentState\"]],\"controller-action\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-dialog-content\",null,null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[23,[\"modalData\",\"content\"]],true],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}],[0,\"\\n\"],[4,\"if\",[[27,\"or\",[[23,[\"modalData\",\"confirmButton\"]],[23,[\"modalData\",\"cancelButton\"]]],null]],null,{\"statements\":[[0,\"\\t\\t\"],[1,[21,\"paper-divider\"],false],[0,\"\\n\"],[4,\"paper-dialog-actions\",null,[[\"class\"],[\"layout-row layout-align-end-center\"]],{\"statements\":[[4,\"if\",[[23,[\"modalData\",\"cancelButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"controller-action\",\"closeDialog\",false],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"cancelButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"cancelButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"confirmButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"controller-action\",\"closeDialog\",true],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"confirmButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"confirmButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "bMRT17V7",
+    "block": "{\"symbols\":[\"navbar\",\"nav\"],\"statements\":[[2,\" Customizable Header \"],[0,\"\\n\"],[7,\"header\"],[9],[0,\"\\n\"],[4,\"bs-navbar\",null,[[\"class\",\"position\",\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"p-0 px-2 py-1\",\"sticky-top\",\"light\",\"twyr\",false,true]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"navbar-header\"],[9],[0,\"\\n\"],[4,\"link-to\",[\"index\"],[[\"class\"],[\"navbar-brand\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[7,\"span\"],[11,\"class\",\"h3 orange-text\"],[11,\"style\",\"font-family:Keania One;\"],[9],[0,\"Twy'r\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\"],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,1,[\"nav\"]]],[[\"id\",\"class\"],[\"twyr-webapp-server-template-bhairavi-notification-area\",\"ml-auto orange-text nav-flex-icons\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,2,[\"item\"]]],null,{\"statements\":[[1,[27,\"component\",[\"session/logout-component\"],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null],[10],[0,\"\\n\\n\"],[2,\" Main Area \"],[0,\"\\n\"],[7,\"main\"],[11,\"class\",\"flex p-1\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-left-column\"],[11,\"class\",\"layout-column layout-align-start flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-outlet\"],[11,\"class\",\"layout-row layout-align-center-start flex\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"flex\"]]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-right-column\"],[11,\"class\",\"layout-column layout-align-start flex-initial\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[\"session/login-component\"],null],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" Customizable Footer \"],[0,\"\\n\"],[7,\"footer\"],[11,\"class\",\"page-footer mt-2 bg-secondary\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"px-1 py-3 text-right\"],[9],[0,\"\\n\\t\\tCopyright© 2018 \"],[4,\"link-to\",[\"index\"],null,{\"statements\":[[0,\"Twy'r\"]],\"parameters\":[]},null],[0,\". All rights reserved.\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" Modal \"],[0,\"\\n\"],[4,\"liquid-if\",[[23,[\"showDialog\"]]],null,{\"statements\":[[4,\"paper-dialog\",null,[[\"class\",\"onClose\",\"parent\",\"origin\",\"clickOutsideToClose\",\"escapeToClose\"],[[23,[\"modalData\",\"dialogClass\"]],[27,\"action\",[[22,0,[]],\"closeDialog\",false],null],[23,[\"modalData\",\"parentElement\"]],[23,[\"modalData\",\"dialogOrigin\"]],false,false]],{\"statements\":[[4,\"paper-toolbar\",null,[[\"class\"],[\"stylish-color white-text\"]],{\"statements\":[[4,\"paper-toolbar-tools\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"h2\"],[9],[1,[23,[\"modalData\",\"title\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"componentName\"]]],null,{\"statements\":[[4,\"paper-dialog-content\",null,[[\"class\"],[\"flex m-0 p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"component\",[[23,[\"modalData\",\"componentName\"]]],[[\"state\"],[[23,[\"modalData\",\"componentState\"]]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-dialog-content\",null,null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[23,[\"modalData\",\"content\"]],true],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}],[0,\"\\n\"],[4,\"if\",[[27,\"or\",[[23,[\"modalData\",\"confirmButton\"]],[23,[\"modalData\",\"cancelButton\"]]],null]],null,{\"statements\":[[0,\"\\t\\t\"],[1,[21,\"paper-divider\"],false],[0,\"\\n\"],[4,\"paper-dialog-actions\",null,[[\"class\"],[\"layout-row layout-align-end-center\"]],{\"statements\":[[4,\"if\",[[23,[\"modalData\",\"cancelButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"closeDialog\",false],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"cancelButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"cancelButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"confirmButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"closeDialog\",true],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"confirmButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"confirmButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/index.hbs"
     }
