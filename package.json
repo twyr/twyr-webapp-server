@@ -123,6 +123,7 @@
 		"autocannon": "*",
 		"chai": "*",
 		"chai-http": "^4.2.0",
+		"chai-json": "^1.0.0",
 		"clinic": "^1.2.0",
 		"docdash2": "*",
 		"eslint": "^5.5.0",
