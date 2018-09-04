@@ -24,6 +24,56 @@ describe('Session Component Test Cases', function() {
 			});
 	});
 
+	it('Should throw an error on Logout before Login', function(done) {
+		agent
+			.get('/session/logout')
+			.end((err, response) => {
+				expect(response).to.have.status(500);
+				done(err);
+			});
+	});
+
+	it('Should throw an error on Login without a password', function(done) {
+		agent
+			.post('/session/login')
+			.type('form')
+			.send({
+				'username': 'root@twyr.com'
+			})
+			.end((err, response) => {
+				expect(response).to.have.status(500);
+				done(err);
+			});
+	});
+
+	it('Should throw an error on Login with an invalid User', function(done) {
+		agent
+			.post('/session/login')
+			.type('form')
+			.send({
+				'username': 'root@something.com',
+				'password': 'plantworks'
+			})
+			.end((err, response) => {
+				expect(response).to.have.status(500);
+				done(err);
+			});
+	});
+
+	it('Should throw an error on Login with an invalid Password', function(done) {
+		agent
+			.post('/session/login')
+			.type('form')
+			.send({
+				'username': 'root@twyr.com',
+				'password': 'twyr'
+			})
+			.end((err, response) => {
+				expect(response).to.have.status(500);
+				done(err);
+			});
+	});
+
 	it('Should Login and Start a Session with a Cookie', function(done) {
 		agent
 			.post('/session/login')
