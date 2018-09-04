@@ -60,8 +60,8 @@ process.on('uncaughtException', (err) => {
 	process.exit(1); // eslint-disable-line no-process-exit
 });
 
-process.on('unhandledRejection', (reason) => {
-	console.error(`Unhandled Rejection: ${reason}`);
+process.on('unhandledRejection', (reason, location) => {
+	console.error(`Unhandled Rejection: ${reason} at:`, location);
 });
 
 /**

@@ -37,10 +37,10 @@ exports.config = {
 			"key": "twyr!webapp!server",
 			"maxAge": 86400000,
 			"overwrite": true,
-			"httpOnly": false,
+			"httpOnly": true,
 			"signed": true,
 			"rolling": false,
-			"renew": false
+			"renew": true
 		}
 	},
 	"subdomainMappings": {

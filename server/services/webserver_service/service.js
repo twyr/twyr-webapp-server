@@ -480,7 +480,7 @@ class WebserverService extends TwyrBaseService {
 
 				'user': {
 					'user_id': ctxt.state.user ? ctxt.state.user.user_id : 'ffffffff-ffff-4fff-ffff-ffffffffffff',
-					'name': ctxt.state.user ? `${ctxt.state.user.first_name} ${ctxt.state.user.last_name}` : 'Public'
+					'name': ctxt.state.user ? ctxt.state.user.name : 'Public'
 				},
 
 				'tenant': {
@@ -626,12 +626,13 @@ class WebserverService extends TwyrBaseService {
 			if(!this.$serveFavicons[ctxt.state.tenant.sub_domain]) { // eslint-disable-line curly
 				this.$serveFavicons[ctxt.state.tenant.sub_domain] = serveFavicon(tenantFaviconPath);
 			}
-
-			await this.$serveFavicons[ctxt.state.tenant.sub_domain](ctxt, next);
 		}
 		catch(err) {
 			await next();
+			return;
 		}
+
+		await this.$serveFavicons[ctxt.state.tenant.sub_domain](ctxt, next);
 	}
 
 	/**
@@ -657,12 +658,13 @@ class WebserverService extends TwyrBaseService {
 			if(!this.$serveStatics[ctxt.state.tenant.sub_domain]) { // eslint-disable-line curly
 				this.$serveStatics[ctxt.state.tenant.sub_domain] = serveStatic(tenantStaticAssetPath);
 			}
-
-			await this.$serveStatics[ctxt.state.tenant.sub_domain](ctxt, next);
 		}
 		catch(err) {
 			await next();
+			return;
 		}
+
+		await this.$serveStatics[ctxt.state.tenant.sub_domain](ctxt, next);
 	}
 
 	// #endregion

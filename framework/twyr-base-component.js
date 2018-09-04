@@ -104,6 +104,8 @@ class TwyrBaseComponent extends TwyrBaseModule {
 	 * @summary  Adds routes to the Koa Router.
 	 */
 	async _addRoutes() {
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::_addRoutes`);
+
 		// Add in the sub-components routes
 		Object.keys(this.$components || {}).forEach((componentName) => {
 			const componentRouter = this.$components[componentName].Router;
@@ -125,19 +127,12 @@ class TwyrBaseComponent extends TwyrBaseModule {
 	 * @summary  Removes all the routes from the Koa Router.
 	 */
 	async _deleteRoutes() {
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::_deleteRoutes`);
+
 		// NOTICE: Undocumented koa-router data structure.
 		// Be careful upgrading :-)
 		if(this.$router) this.$router.stack.length = 0;
 		return null;
-	}
-	// #endregion
-
-	// #region Re-configuration
-	async _dependencyReconfigure(dependency) {
-		await super._dependencyReconfigure(this.dependency);
-
-		if(dependency.name !== 'WebserverService') return;
-		await this._addRoutes();
 	}
 	// #endregion
 

@@ -97,7 +97,7 @@ class AuditService extends TwyrBaseService {
 			}
 
 			if(['password', 'image', 'random'].indexOf(key.toLowerCase()) >= 0) {
-				delete auditDetails[key];
+				auditDetails[key] = '****';
 				return;
 			}
 

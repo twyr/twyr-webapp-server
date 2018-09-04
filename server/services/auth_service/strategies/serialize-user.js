@@ -15,9 +15,11 @@ exports.strategy = function() {
 
 	auth.serializeUser(async (request, user, callback) => {
 		try {
-			const deserializedUser = await this.$utilities.userSessionCache(request.tenant.id, user.id);
-			if(callback) callback(null, deserializedUser.id);
+			const tenant = JSON.parse(request.headers['tenant']);
+			const deserializedUser = await this.$utilities.userSessionCache(tenant.tenant_id, user.user_id);
 
+			// console.log(`serializeUser::deserialized User: ${JSON.stringify(deserializedUser, null, '\t')}`);
+			if(callback) callback(null, deserializedUser.user_id);
 			return null;
 		}
 		catch(err) {
@@ -28,9 +30,11 @@ exports.strategy = function() {
 
 	auth.deserializeUser(async (request, userId, callback) => {
 		try {
-			const deserializedUser = await this.$utilities.userSessionCache(request.tenant.id, userId);
-			if(callback) callback(null, deserializedUser);
+			const tenant = JSON.parse(request.headers['tenant']);
+			const deserializedUser = await this.$utilities.userSessionCache(tenant.tenant_id, userId);
 
+			// console.log(`deserializeUser::deserialized User: ${JSON.stringify(deserializedUser, null, '\t')}`);
+			if(callback) callback(null, deserializedUser);
 			return null;
 		}
 		catch(err) {

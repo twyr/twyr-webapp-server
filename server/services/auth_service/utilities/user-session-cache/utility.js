@@ -28,24 +28,24 @@ const getUserDetails = async function(tenantId, userId) {
 		// Setup the models...
 		const User = databaseSrvc.Model.extend({
 			'tableName': 'users',
-			'idAttribute': 'id',
+			'idAttribute': 'user_id',
 
 			'social': function() {
 				// eslint-disable-next-line no-use-before-define
-				return this.hasMany(UserSocialLogins, 'login');
+				return this.hasMany(UserSocialLogins, 'user_id');
 			}
 		});
 
 		const UserSocialLogins = databaseSrvc.Model.extend({
 			'tableName': 'user_social_logins',
-			'idAttribute': 'id',
+			'idAttribute': 'user_social_login_id',
 
 			'user': function() {
-				return this.belongsTo(User, 'login');
+				return this.belongsTo(User, 'user_id');
 			}
 		});
 
-		let databaseUser = await User.forge({ 'id': userId }).fetch({ 'withRelated': ['social'] });
+		let databaseUser = await User.forge({ 'user_id': userId }).fetch({ 'withRelated': ['social'] });
 		if(!databaseUser) throw new Error(`User Not Found: ${userId}`);
 
 		databaseUser = databaseUser.toJSON();
@@ -76,9 +76,9 @@ const getTenantUserPermissions = async function(tenantId, userId) {
 			return cachedTenantUserPermissions;
 		}
 
-		const publicPermission = (await databaseSrvc.knex.raw(`SELECT id AS permission, name, depends_on FROM component_permissions WHERE name = ?`, ['public'])).rows;
+		const publicPermission = (await databaseSrvc.knex.raw(`SELECT feature_permission_id AS permission, name, implies_permissions FROM feature_permissions WHERE name = ?`, ['public'])).rows;
 		const userPermissions = (await databaseSrvc.knex.raw('SELECT * FROM fn_get_user_permissions(?, ?)', [tenantId, userId])).rows;
-		const defaultPermissions = (userId === 'ffffffff-ffff-4fff-ffff-ffffffffffff') ? [] : (await databaseSrvc.knex.raw('SELECT Z.id AS permission, Z.name, Z.depends_on FROM component_permissions Z WHERE Z.id IN (SELECT DISTINCT permission FROM tenant_group_permissions WHERE tenant_group = (SELECT id FROM tenant_groups WHERE tenant = ? AND default_for_new_user = true))', [tenantId])).rows;
+		const defaultPermissions = (userId === 'ffffffff-ffff-4fff-ffff-ffffffffffff') ? [] : (await databaseSrvc.knex.raw('SELECT Z.feature_permission_id AS permission, Z.name, Z.implies_permissions FROM feature_permissions Z WHERE Z.feature_permission_id IN (SELECT DISTINCT feature_permission_id FROM tenant_group_permissions WHERE group_id = (SELECT group_id FROM tenant_groups WHERE tenant_id = ? AND default_for_new_user = true))', [tenantId])).rows;
 
 		const combinedPermissions = {
 			[publicPermission[0].name]: publicPermission[0]
@@ -101,10 +101,13 @@ const getTenantUserPermissions = async function(tenantId, userId) {
 			if(tenantUserPermissions.indexOf(combinedPermissions[permissionName].permission) >= 0)
 				return;
 
-			const dependsOn = combinedPermissions[permissionName].depends_on;
-			if(dependsOn.length) return;
+			const impliedPermissions = combinedPermissions[permissionName]['implies_permissions'];
+			if(impliedPermissions.length) return;
 
-			tenantUserPermissions.push(combinedPermissions[permissionName].permission);
+			tenantUserPermissions.push({
+				'permission_id': combinedPermissions[permissionName].permission,
+				'name': permissionName
+			});
 		});
 
 		let currentPermissionLength = 0;
@@ -112,18 +115,22 @@ const getTenantUserPermissions = async function(tenantId, userId) {
 			currentPermissionLength = tenantUserPermissions.length;
 
 			for(const permissionName of permissionNames) {
-				if(tenantUserPermissions.indexOf(combinedPermissions[permissionName].permission) >= 0)
+				if(tenantUserPermissions.filter((tenantUserPermission) => { return tenantUserPermission.name === permissionName; }).length > 0)
 					continue;
 
-				const dependsOn = combinedPermissions[permissionName].depends_on;
-				if(!dependsOn.length) continue;
+				const impliedPermissions = combinedPermissions[permissionName]['implies_permissions'];
+				if(!impliedPermissions.length) continue;
 
 				let shouldAdd = true;
-				for(const dependOn of dependsOn) { // eslint-disable-line curly
-					shouldAdd = shouldAdd && (tenantUserPermissions.indexOf(dependOn) >= 0);
+				for(const impliedPermission of impliedPermissions) { // eslint-disable-line curly
+					shouldAdd = shouldAdd && (tenantUserPermissions.filter((tenantUserPermission) => { return tenantUserPermission.name === impliedPermission; }).length > 0);
 				}
 
-				if(shouldAdd) tenantUserPermissions.push(combinedPermissions[permissionName].permission);
+				if(!shouldAdd) continue;
+				tenantUserPermissions.push({
+					'permission_id': combinedPermissions[permissionName].permission,
+					'name': permissionName
+				});
 			}
 		}
 
@@ -196,7 +203,7 @@ exports.utility = {
 			const deserializedUser = await getDetails(tenantId, userId);
 			const tenantUserPermissions = await getPermissions(tenantId, userId);
 
-			deserializedUser.permissionList = tenantUserPermissions;
+			deserializedUser.permissions = tenantUserPermissions;
 			deserializedUser['default_application'] = null;
 
 			if(twyrEnv === 'development') {
@@ -204,7 +211,7 @@ exports.utility = {
 
 				const cacheMulti = cacheSrvc.multi();
 				cachedKeys.forEach((cachedKey) => {
-					cacheMulti.expireAsync(cachedKey, 30);
+					cacheMulti.expireAsync(cachedKey, 300);
 				});
 
 				await cacheMulti.execAsync();

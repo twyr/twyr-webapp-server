@@ -171,19 +171,19 @@ class TwyrApplication extends TwyrBaseModule {
 		// Add in the components
 		Object.keys(this.$components || {}).forEach((componentName) => {
 			const componentRouter = this.$components[componentName].Router;
-			appRouter.use(`${componentName}`, componentRouter.routes());
+			appRouter.use(`/${componentName}`, componentRouter.routes(), componentRouter.allowedMethods());
 		});
 
 		// Add in the features
 		Object.keys(this.$features || {}).forEach((featureName) => {
 			const featureRouter = this.$features[featureName].Router;
-			appRouter.use(`${featureName}`, featureRouter.routes());
+			appRouter.use(`/${featureName}`, featureRouter.routes(), featureRouter.allowedMethods());
 		});
 
 		// Add in the templates at the end...
 		Object.keys(this.$templates).forEach((tmplName) => {
 			const tmplRouter = this.$templates[tmplName].Router;
-			appRouter.get('*', tmplRouter.routes());
+			appRouter.get('*', tmplRouter.routes(), tmplRouter.allowedMethods());
 		});
 
 		// appRouter.all('*', async (ctxt) => {
@@ -193,6 +193,11 @@ class TwyrApplication extends TwyrBaseModule {
 		// 	ctxt.type = 'application/json; charset=utf-8';
 		// 	ctxt.body = response;
 		// });
+
+		if(twyrEnv === 'development' || twyrEnv === 'test')
+		console.log(`Routes: ${JSON.stringify(appRouter.stack.map((route) => {
+			return `[${route.methods.join(' / ')}] ${route.path}`;
+		}), null, '\t')}`);
 
 		return;
 	}

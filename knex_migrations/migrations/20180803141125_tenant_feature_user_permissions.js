@@ -1,7 +1,7 @@
 exports.up = async function(knex) {
 	await knex.schema.withSchema('public').raw(
 `CREATE OR REPLACE FUNCTION public.fn_get_user_permissions (IN tenantId uuid, IN userId uuid)
-	RETURNS TABLE (permission uuid, name text, depends_on jsonb)
+	RETURNS TABLE (permission uuid, name text, implies_permissions jsonb)
 	LANGUAGE plpgsql
 	VOLATILE
 	CALLED ON NULL INPUT
@@ -13,7 +13,7 @@ BEGIN
 	SELECT
 		Z.feature_permission_id,
 		Z.name,
-		Z.depends_on
+		Z.implies_permissions
 	FROM
 		feature_permissions Z
 	WHERE

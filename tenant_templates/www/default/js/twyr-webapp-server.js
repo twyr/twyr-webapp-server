@@ -965,6 +965,266 @@
     }
   });
 });
+;define("twyr-webapp-server/components/freestyle-annotation", ["exports", "ember-freestyle/components/freestyle-annotation"], function (_exports, _freestyleAnnotation) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleAnnotation.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-collection", ["exports", "ember-freestyle/components/freestyle-collection"], function (_exports, _freestyleCollection) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleCollection.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-dynamic-input-select-option", ["exports", "ember-freestyle/components/freestyle-dynamic-input-select-option"], function (_exports, _freestyleDynamicInputSelectOption) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleDynamicInputSelectOption.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-dynamic-input", ["exports", "ember-freestyle/components/freestyle-dynamic-input"], function (_exports, _freestyleDynamicInput) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleDynamicInput.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-dynamic", ["exports", "ember-freestyle/components/freestyle-dynamic"], function (_exports, _freestyleDynamic) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleDynamic.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-guide", ["exports", "ember-freestyle/components/freestyle-guide"], function (_exports, _freestyleGuide) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleGuide.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-menu", ["exports", "ember-freestyle/components/freestyle-menu"], function (_exports, _freestyleMenu) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleMenu.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-note", ["exports", "ember-freestyle/components/freestyle-note"], function (_exports, _freestyleNote) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleNote.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-notes", ["exports", "ember-freestyle/components/freestyle-notes"], function (_exports, _freestyleNotes) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleNotes.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-palette-item", ["exports", "ember-freestyle/components/freestyle-palette-item"], function (_exports, _freestylePaletteItem) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestylePaletteItem.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-palette", ["exports", "ember-freestyle/components/freestyle-palette"], function (_exports, _freestylePalette) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestylePalette.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-section", ["exports", "ember-freestyle/components/freestyle-section"], function (_exports, _freestyleSection) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleSection.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-showdown-content", ["exports", "ember-freestyle/components/freestyle-showdown-content"], function (_exports, _freestyleShowdownContent) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleShowdownContent.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-snippet", ["exports", "ember-freestyle/components/freestyle-snippet"], function (_exports, _freestyleSnippet) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleSnippet.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-subsection", ["exports", "ember-freestyle/components/freestyle-subsection"], function (_exports, _freestyleSubsection) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleSubsection.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-typeface", ["exports", "ember-freestyle/components/freestyle-typeface"], function (_exports, _freestyleTypeface) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleTypeface.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-usage-controls", ["exports", "ember-freestyle/components/freestyle-usage-controls"], function (_exports, _freestyleUsageControls) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleUsageControls.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-usage", ["exports", "ember-freestyle/components/freestyle-usage"], function (_exports, _freestyleUsage) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleUsage.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-variant-list", ["exports", "ember-freestyle/components/freestyle-variant-list"], function (_exports, _freestyleVariantList) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleVariantList.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/freestyle-variant", ["exports", "ember-freestyle/components/freestyle-variant"], function (_exports, _freestyleVariant) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleVariant.default;
+    }
+  });
+});
 ;define("twyr-webapp-server/components/grid-stack-item", ["exports", "ember-gridstack/components/grid-stack-item"], function (_exports, _gridStackItem) {
   "use strict";
 
@@ -1166,6 +1426,19 @@
     enumerable: true,
     get: function () {
       return _liquidVersions.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/markdown-to-html", ["exports", "ember-cli-showdown/components/markdown-to-html"], function (_exports, _markdownToHtml) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _markdownToHtml.default;
     }
   });
 });
@@ -3257,7 +3530,7 @@
     }
   });
 });
-;define("twyr-webapp-server/components/session/login-component", ["exports", "axios", "twyr-webapp-server/framework/base-component", "ember-concurrency"], function (_exports, _axios, _baseComponent, _emberConcurrency) {
+;define("twyr-webapp-server/components/session/login-component", ["exports", "axios", "twyr-webapp-server/framework/base-component", "ember-computed-style", "ember-concurrency"], function (_exports, _axios, _baseComponent, _emberComputedStyle, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -3265,7 +3538,10 @@
   });
   _exports.default = void 0;
 
+  /* eslint-disable ember/avoid-leaking-state-in-ember-objects */
   var _default = _baseComponent.default.extend({
+    attributeBindings: ['style'],
+    style: (0, _emberComputedStyle.default)('minWidth'),
     permissions: null,
     displayForm: 'loginForm',
     username: '',
@@ -3274,6 +3550,11 @@
     firstName: '',
     lastName: '',
     mobileNumber: '',
+    minWidth: Ember.computed('hasPermission', function () {
+      return {
+        'min-width': this.get('hasPermission') ? '0rem' : '20rem'
+      };
+    }),
     onInit: (0, _emberConcurrency.task)(function* () {
       yield this.set('permissions', ['registered']);
     }).on('init').keepLatest(),
@@ -3287,16 +3568,16 @@
       try {
         const data = yield _axios.default.post('/session/login', {
           'dataType': 'json',
-          'data': {
-            'username': this.get('username'),
-            'password': this.get('password')
-          }
+          'username': this.get('username'),
+          'password': this.get('password')
         });
+        const loginResult = data.data;
         notification.display({
-          'type': data.status ? 'success' : 'error',
-          'message': data.responseText
-        });
-        if (data.status) window.location.href = '/';
+          'type': loginResult.status < 400 ? 'success' : 'error',
+          'message': loginResult.info.message
+        }); // eslint-disable-next-line no-undef
+
+        TwyrApp.trigger('userChanged');
       } catch (err) {
         notification.display({
           'type': 'error',
@@ -3312,7 +3593,7 @@
       });
 
       try {
-        let data = yield _axios.default.post('/session/resetPassword', {
+        let data = yield _axios.default.post('/session/reset-password', {
           'dataType': 'json',
           'data': {
             'username': this.get('username')
@@ -3352,7 +3633,7 @@
       });
 
       try {
-        let data = yield _axios.default.post('/session/registerAccount', {
+        let data = yield _axios.default.post('/session/register-account', {
           'dataType': 'json',
           'data': {
             'firstname': this.get('firstName'),
@@ -3373,14 +3654,17 @@
         });
       }
     }).drop(),
-    setDisplayForm: function (formName) {
-      this.set('displayForm', formName);
+    actions: {
+      setDisplayForm(formName) {
+        this.set('displayForm', formName);
+      }
+
     }
   });
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/components/session/logout-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency"], function (_exports, _baseComponent, _emberConcurrency) {
+;define("twyr-webapp-server/components/session/logout-component", ["exports", "axios", "twyr-webapp-server/framework/base-component", "ember-concurrency"], function (_exports, _axios, _baseComponent, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -3392,7 +3676,35 @@
     permissions: null,
     onInit: (0, _emberConcurrency.task)(function* () {
       yield this.set('permissions', ['registered']);
-    }).on('init').drop()
+    }).on('init').drop(),
+    doLogout: (0, _emberConcurrency.task)(function* () {
+      const notification = this.get('notification');
+      notification.display({
+        'type': 'info',
+        'message': 'Logging you out...'
+      });
+
+      try {
+        const data = yield _axios.default.get('/session/logout');
+        const logoutResult = data.data;
+        notification.display({
+          'type': logoutResult.status < 400 ? 'success' : 'error',
+          'message': logoutResult.info.message
+        }); // eslint-disable-next-line no-undef
+
+        TwyrApp.trigger('userChanged');
+      } catch (err) {
+        notification.display({
+          'type': 'error',
+          'error': err
+        });
+      }
+    }).drop(),
+
+    click() {
+      this.get('doLogout').perform();
+    }
+
   });
 
   _exports.default = _default;
@@ -3658,6 +3970,70 @@
     }
   });
 });
+;define("twyr-webapp-server/controllers/freestyle", ["exports", "ember-freestyle/controllers/freestyle"], function (_exports, _freestyle) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+  const {
+    inject
+  } = Ember;
+
+  var _default = _freestyle.default.extend({
+    emberFreestyle: inject.service(),
+
+    /* BEGIN-FREESTYLE-USAGE fp--notes
+    ### A few notes regarding freestyle-palette
+    - Accepts a colorPalette POJO like the one found in the freestyle.js blueprint controller
+    - Looks very nice
+    And another thing...
+    ###### Markdown note demonstrating prettified code
+    ```
+    import Ember from 'ember';
+    export default Ember.Component.extend({
+    // ...
+    colorPalette: {
+      'primary': {
+        'name': 'cyan',
+        'base': '#00bcd4'
+      },
+      'accent': {
+        'name': 'amber',
+        'base': '#ffc107'
+      }
+    }
+    // ...
+    });
+    ```
+    END-FREESTYLE-USAGE */
+    colorPalette: {
+      'primary': {
+        'name': 'cyan',
+        'base': '#00bcd4'
+      },
+      'accent': {
+        'name': 'amber',
+        'base': '#ffc107'
+      },
+      'secondary': {
+        'name': 'greyish',
+        'base': '#b6b6b6'
+      },
+      'foreground': {
+        'name': 'blackish',
+        'base': '#212121'
+      },
+      'background': {
+        'name': 'white',
+        'base': '#ffffff'
+      }
+    }
+  });
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/controllers/index", ["exports", "twyr-webapp-server/framework/base-controller"], function (_exports, _baseController) {
   "use strict";
 
@@ -3672,6 +4048,7 @@
 
   /* eslint-disable ember/avoid-leaking-state-in-ember-objects */
   var _default = _baseController.default.extend({
+    notification: Ember.inject.service('integrated-notification'),
     realtimeData: Ember.inject.service('realtime-data'),
     modalData: null,
     showDialog: false,
@@ -3688,10 +4065,20 @@
       });
       this.get('realtimeData').on('websocket-disconnection', () => {
         notification.display('Realtime Data Connectivity lost!');
-      });
+      }); // eslint-disable-next-line no-undef
+
+      TwyrApp.on('showModal', this, this.displayModal);
     },
 
     displayModal: function (data) {
+      if (this.get('showDialog')) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': new Error('Multiple Modal Dialogs cannot be displayed simultaneously')
+        });
+        return;
+      }
+
       const defaultData = {
         'title': 'Twyr Modal',
         'content': `This is the default. Someone forgot to override it!`,
@@ -3821,6 +4208,21 @@
     }).keepLatest()
   });
 
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/freestyle-snippets", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+  var _default = {
+    "fp--notes.js": "### A few notes regarding freestyle-palette\n\n- Accepts a colorPalette POJO like the one found in the freestyle.js blueprint controller\n- Looks very nice\n\nAnd another thing...\n\n###### Markdown note demonstrating prettified code\n\n```\nimport Ember from 'ember';\n\nexport default Ember.Component.extend({\n  // ...\n  colorPalette: {\n    'primary': {\n      'name': 'cyan',\n      'base': '#00bcd4'\n    },\n    'accent': {\n      'name': 'amber',\n      'base': '#ffc107'\n    }\n  }\n  // ...\n});\n```",
+    "fp--usage.hbs": "        {{freestyle-palette\n        colorPalette=colorPalette\n        title='Dummy App Color Palette'\n        description='This component displays the color palette specified in freestyle/palette.json'\n        }}",
+    "typography-helvetica--usage.hbs": "        {{freestyle-typeface fontFamily='Helvetica'}}",
+    "typography-times--usage.hbs": "        {{freestyle-typeface fontFamily='Times New Roman'}}"
+  };
   _exports.default = _default;
 });
 ;define("twyr-webapp-server/helpers/-paper-underscore", ["exports", "ember-paper/helpers/underscore"], function (_exports, _underscore) {
@@ -6510,6 +6912,18 @@
     }
   });
 });
+;define("twyr-webapp-server/helpers/variant-eq", ["exports", "ember-freestyle/helpers/equal"], function (_exports, _equal) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = Ember.Helper.helper(_equal.equalHelper);
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/helpers/w", ["exports", "ember-cli-string-helpers/helpers/w"], function (_exports, _w) {
   "use strict";
 
@@ -6727,6 +7141,40 @@
   var _default = {
     name: 'ember-data',
     initialize: _setupContainer.default
+  };
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/initializers/ember-freestyle", ["exports", "twyr-webapp-server/config/environment"], function (_exports, _environment) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  /* global requirejs, require */
+  function initialize() {
+    const application = arguments[1] || arguments[0];
+    let prefix = _environment.default.modulePrefix;
+    let freestyleModuleRegExp = new RegExp(`^${prefix}/(freestyle-snippets)`);
+    Object.keys(requirejs.entries).filter(function (key) {
+      return freestyleModuleRegExp.test(key);
+    }).forEach(function (moduleName) {
+      let module = require(moduleName, null, null, true);
+
+      let freestyleModule = module['default'];
+      let moduleKey = moduleName.split('/').reverse()[0];
+      let registryKey = `config:ember-freestyle-${moduleKey}`;
+      application.register(registryKey, freestyleModule, {
+        instantiate: false
+      });
+      application.inject('service:ember-freestyle', moduleKey, registryKey);
+    });
+  }
+
+  var _default = {
+    name: 'ember-freestyle',
+    initialize: initialize
   };
   _exports.default = _default;
 });
@@ -7006,7 +7454,9 @@
     location: _environment.default.locationType,
     rootURL: _environment.default.rootURL
   });
-  Router.map(function () {});
+  Router.map(function () {
+    this.route('freestyle');
+  });
   var _default = Router;
   _exports.default = _default;
 });
@@ -7134,7 +7584,7 @@
   var _default = _cookies.default;
   _exports.default = _default;
 });
-;define("twyr-webapp-server/services/current-user", ["exports", "axios", "ember-concurrency", "twyr-webapp-server/app"], function (_exports, _axios, _emberConcurrency, _app) {
+;define("twyr-webapp-server/services/current-user", ["exports", "axios", "ember-concurrency"], function (_exports, _axios, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -7148,26 +7598,32 @@
     userData: null,
     onInit: (0, _emberConcurrency.task)(function* () {
       const fetchUserData = this.get('fetchUserData');
-      yield fetchUserData.perform(); // App.on('userChanged', () => {
-      // 	fetchUserData.perform();
-      // });
+      yield fetchUserData.perform(); // eslint-disable-next-line no-undef
+
+      TwyrApp.on('userChanged', this, this.onUserChanged);
     }).on('init').drop(),
+
+    onUserChanged() {
+      const fetchUserData = this.get('fetchUserData');
+      fetchUserData.perform();
+    },
+
     fetchUserData: (0, _emberConcurrency.task)(function* () {
       this.trigger('userDataUpdating');
-      this.trigger('userDataUpdated'); // yield axios.get('/session/user')
-      // .then((userData) => {
-      // 	this.set('userData', userData);
-      // 	this.trigger('userDataUpdated');
-      // })
-      // .catch((err) => {
-      // 	// TODO: Use the Beacon API to send all this back to the server;
-      // 	this.set('userData', null);
-      // 	this.trigger('userDataUpdated');
-      // 	this.get('notification').display({
-      // 		'type': 'error',
-      // 		'error': err
-      // 	});
-      // });
+
+      try {
+        const userData = yield _axios.default.get('/session/user');
+        this.set('userData', userData.data);
+        this.trigger('userDataUpdated');
+      } catch (err) {
+        // TODO: Use the Beacon API to send all this back to the server;
+        this.set('userData', null);
+        this.trigger('userDataUpdated');
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      }
     }).keepLatest(),
 
     isLoggedIn() {
@@ -7181,6 +7637,19 @@
   });
 
   _exports.default = _default;
+});
+;define("twyr-webapp-server/services/ember-freestyle", ["exports", "ember-freestyle/services/ember-freestyle"], function (_exports, _emberFreestyle) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _emberFreestyle.default;
+    }
+  });
 });
 ;define("twyr-webapp-server/services/head-data", ["exports", "ember-cli-head/services/head-data"], function (_exports, _headData) {
   "use strict";
@@ -7713,6 +8182,175 @@
     }
   });
 });
+;define("twyr-webapp-server/templates/components/freestyle-collection", ["exports", "ember-freestyle/templates/components/freestyle-collection"], function (_exports, _freestyleCollection) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleCollection.default;
+    }
+  });
+});
+;define("twyr-webapp-server/templates/components/freestyle-guide", ["exports", "ember-freestyle/templates/components/freestyle-guide"], function (_exports, _freestyleGuide) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleGuide.default;
+    }
+  });
+});
+;define("twyr-webapp-server/templates/components/freestyle-menu", ["exports", "ember-freestyle/templates/components/freestyle-menu"], function (_exports, _freestyleMenu) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleMenu.default;
+    }
+  });
+});
+;define("twyr-webapp-server/templates/components/freestyle-notes", ["exports", "ember-freestyle/templates/components/freestyle-notes"], function (_exports, _freestyleNotes) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleNotes.default;
+    }
+  });
+});
+;define("twyr-webapp-server/templates/components/freestyle-palette-item", ["exports", "ember-freestyle/templates/components/freestyle-palette-item"], function (_exports, _freestylePaletteItem) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestylePaletteItem.default;
+    }
+  });
+});
+;define("twyr-webapp-server/templates/components/freestyle-palette", ["exports", "ember-freestyle/templates/components/freestyle-palette"], function (_exports, _freestylePalette) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestylePalette.default;
+    }
+  });
+});
+;define("twyr-webapp-server/templates/components/freestyle-section", ["exports", "ember-freestyle/templates/components/freestyle-section"], function (_exports, _freestyleSection) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleSection.default;
+    }
+  });
+});
+;define("twyr-webapp-server/templates/components/freestyle-snippet", ["exports", "ember-freestyle/templates/components/freestyle-snippet"], function (_exports, _freestyleSnippet) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleSnippet.default;
+    }
+  });
+});
+;define("twyr-webapp-server/templates/components/freestyle-subsection", ["exports", "ember-freestyle/templates/components/freestyle-subsection"], function (_exports, _freestyleSubsection) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleSubsection.default;
+    }
+  });
+});
+;define("twyr-webapp-server/templates/components/freestyle-usage-controls", ["exports", "ember-freestyle/templates/components/freestyle-usage-controls"], function (_exports, _freestyleUsageControls) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleUsageControls.default;
+    }
+  });
+});
+;define("twyr-webapp-server/templates/components/freestyle-usage", ["exports", "ember-freestyle/templates/components/freestyle-usage"], function (_exports, _freestyleUsage) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleUsage.default;
+    }
+  });
+});
+;define("twyr-webapp-server/templates/components/freestyle-variant-list", ["exports", "ember-freestyle/templates/components/freestyle-variant-list"], function (_exports, _freestyleVariantList) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleVariantList.default;
+    }
+  });
+});
+;define("twyr-webapp-server/templates/components/freestyle-variant", ["exports", "ember-freestyle/templates/components/freestyle-variant"], function (_exports, _freestyleVariant) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _freestyleVariant.default;
+    }
+  });
+});
 ;define("twyr-webapp-server/templates/components/session/login-component", ["exports"], function (_exports) {
   "use strict";
 
@@ -7722,8 +8360,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "jYMxWPpC",
-    "block": "{\"symbols\":[\"card\",\"form\",\"header\",\"text\",\"form\",\"header\",\"text\",\"form\",\"header\",\"text\"],\"statements\":[[4,\"unless\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-card\",null,null,{\"statements\":[[4,\"liquid-if\",[[27,\"eq\",[[23,[\"displayForm\"]],\"loginForm\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,9,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,10,[\"title\"]]],null,{\"statements\":[[1,[27,\"fa-icon\",[\"sign-in\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[10]},null]],\"parameters\":[9]},null],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"paper-form\",null,[[\"onSubmit\"],[[27,\"perform\",[[23,[\"doLogin\"]]],null]]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column flex-100\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"email\",\"Login / Username\",[23,[\"username\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"username\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"Password\",[23,[\"password\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"password\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"resetPasswordForm\"]],[9],[0,\"Forgot Password\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"registerForm\"]],[9],[0,\"Register Account\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\"],[4,\"component\",[[22,8,[\"submit-button\"]]],[[\"primary\",\"raised\",\"disabled\"],[true,true,[27,\"or\",[[22,8,[\"isInvalid\"]],[23,[\"doLogin\",\"isRunning\"]]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"doLogin\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"sign-in\"],[[\"class\"],[\"mr-2\"]]],false],[7,\"span\"],[9],[0,\"Login\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[8]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"liquid-if\",[[27,\"eq\",[[23,[\"displayForm\"]],\"resetPasswordForm\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,6,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,7,[\"title\"]]],null,{\"statements\":[[1,[27,\"paper-icon\",[\"lock-outline\"],[[\"class\"],[\"mr-2 pb-1 white-text\"]]],false],[0,\"Reset Password\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[7]},null]],\"parameters\":[6]},null],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"paper-form\",null,[[\"onSubmit\"],[[27,\"perform\",[[23,[\"resetPassword\"]]],null]]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column flex-100\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"email\",\"Login / Username\",[23,[\"resetUsername\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"resetUsername\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"loginForm\"]],[9],[0,\"PlantWorks Login\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"registerForm\"]],[9],[0,\"Register Account\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\"],[4,\"component\",[[22,5,[\"submit-button\"]]],[[\"raised\",\"accent\",\"disabled\"],[true,true,[27,\"or\",[[22,5,[\"isInvalid\"]],[23,[\"resetPassword\",\"isRunning\"]]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"resetPassword\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"lock-outline\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Reset\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"liquid-if\",[[27,\"eq\",[[23,[\"displayForm\"]],\"registerForm\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,3,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,4,[\"title\"]]],null,{\"statements\":[[1,[27,\"paper-icon\",[\"person-add\"],[[\"class\"],[\"mr-2 pb-1 white-text\"]]],false],[0,\"Create Account\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[4]},null]],\"parameters\":[3]},null],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"paper-form\",null,[[\"onSubmit\"],[[27,\"perform\",[[23,[\"registerAccount\"]]],null]]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column flex-100\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"text\",\"First Name\",[23,[\"firstName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"firstName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"text\",\"Last Name\",[23,[\"lastName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"lastName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"email\",\"Email\",[23,[\"username\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"username\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"text\",\"Mobile\",[23,[\"mobileNumber\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"mobileNumber\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"password\",\"Password\",[23,[\"password\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"password\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"password\",\"Confirm\",[23,[\"confirmPassword\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"confirmPassword\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"loginForm\"]],[9],[0,\"PlantWorks Login\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"resetPasswordForm\"]],[9],[0,\"Reset Password\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\"],[4,\"component\",[[22,2,[\"submit-button\"]]],[[\"raised\",\"accent\",\"disabled\"],[true,true,[27,\"or\",[[22,2,[\"isInvalid\"]],[23,[\"registerAccount\",\"isRunning\"]]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"registerAccount\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"person-add\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Register\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "c9bF+nNh",
+    "block": "{\"symbols\":[\"card\",\"form\",\"header\",\"text\",\"form\",\"header\",\"text\",\"form\",\"header\",\"text\"],\"statements\":[[4,\"liquid-unless\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-card\",null,null,{\"statements\":[[4,\"liquid-if\",[[27,\"eq\",[[23,[\"displayForm\"]],\"loginForm\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],[[\"class\"],[\"orange lighten-3\"]],{\"statements\":[[4,\"component\",[[22,9,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,10,[\"title\"]]],null,{\"statements\":[[1,[27,\"fa-icon\",[\"sign-in-alt\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[10]},null]],\"parameters\":[9]},null],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"paper-form\",null,[[\"onSubmit\"],[[27,\"perform\",[[23,[\"doLogin\"]]],null]]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column flex-100\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"email\",\"Login / Username\",[23,[\"username\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"username\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"Password\",[23,[\"password\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"password\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"resetPasswordForm\"]],[9],[0,\"Forgot Password\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"registerForm\"]],[9],[0,\"Register Account\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\"],[4,\"component\",[[22,8,[\"submit-button\"]]],[[\"primary\",\"raised\",\"disabled\"],[true,true,[27,\"or\",[[22,8,[\"isInvalid\"]],[23,[\"doLogin\",\"isRunning\"]]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"doLogin\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"sign-in-alt\"],[[\"class\"],[\"mr-2\"]]],false],[7,\"span\"],[9],[0,\"Login\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[8]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"liquid-if\",[[27,\"eq\",[[23,[\"displayForm\"]],\"resetPasswordForm\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],[[\"class\"],[\"amber lighten-3\"]],{\"statements\":[[4,\"component\",[[22,6,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,7,[\"title\"]]],null,{\"statements\":[[1,[27,\"paper-icon\",[\"lock-outline\"],[[\"class\"],[\"mr-2 pb-1\"]]],false],[0,\"Reset Password\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[7]},null]],\"parameters\":[6]},null],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"paper-form\",null,[[\"onSubmit\"],[[27,\"perform\",[[23,[\"resetPassword\"]]],null]]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column flex-100\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"email\",\"Login / Username\",[23,[\"resetUsername\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"resetUsername\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"loginForm\"]],[9],[0,\"Twy'r Login\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"registerForm\"]],[9],[0,\"Register Account\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\"],[4,\"component\",[[22,5,[\"submit-button\"]]],[[\"raised\",\"accent\",\"disabled\"],[true,true,[27,\"or\",[[22,5,[\"isInvalid\"]],[23,[\"resetPassword\",\"isRunning\"]]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"resetPassword\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"lock-outline\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Reset\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"liquid-if\",[[27,\"eq\",[[23,[\"displayForm\"]],\"registerForm\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],[[\"class\"],[\"yellow lighten-3\"]],{\"statements\":[[4,\"component\",[[22,3,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,4,[\"title\"]]],null,{\"statements\":[[1,[27,\"paper-icon\",[\"person-add\"],[[\"class\"],[\"mr-2 pb-1\"]]],false],[0,\"Create Account\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[4]},null]],\"parameters\":[3]},null],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"paper-form\",null,[[\"onSubmit\"],[[27,\"perform\",[[23,[\"registerAccount\"]]],null]]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column flex-100\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"text\",\"First Name\",[23,[\"firstName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"firstName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"text\",\"Last Name\",[23,[\"lastName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"lastName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"email\",\"Email\",[23,[\"username\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"username\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"text\",\"Mobile\",[23,[\"mobileNumber\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"mobileNumber\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"password\",\"Password\",[23,[\"password\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"password\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"password\",\"Confirm\",[23,[\"confirmPassword\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"confirmPassword\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"loginForm\"]],[9],[0,\"Twy'r Login\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"resetPasswordForm\"]],[9],[0,\"Reset Password\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\"],[4,\"component\",[[22,2,[\"submit-button\"]]],[[\"raised\",\"accent\",\"disabled\"],[true,true,[27,\"or\",[[22,2,[\"isInvalid\"]],[23,[\"registerAccount\",\"isRunning\"]]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"registerAccount\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"person-add\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Register\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/session/login-component.hbs"
     }
@@ -7740,8 +8378,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "Jnz9Sbq2",
-    "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[0,\"\\t\"],[1,[27,\"fa-icon\",[\"sign-out-alt\"],[[\"class\"],[\"h4 mb-0\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "mErIB5gu",
+    "block": "{\"symbols\":[],\"statements\":[[4,\"liquid-if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[0,\"\\t\"],[7,\"span\"],[11,\"style\",\"cursor:pointer;\"],[9],[1,[27,\"fa-icon\",[\"sign-out-alt\"],[[\"class\"],[\"h4 mb-0\"]]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/session/logout-component.hbs"
     }
@@ -7839,6 +8477,24 @@
 
   _exports.default = _default;
 });
+;define("twyr-webapp-server/templates/freestyle", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = Ember.HTMLBars.template({
+    "id": "OJ8H6V+V",
+    "block": "{\"symbols\":[\"section\"],\"statements\":[[4,\"freestyle-guide\",null,[[\"title\",\"subtitle\"],[\"Ember Freestyle\",\"Living Style Guide\"]],{\"statements\":[[0,\"\\n\"],[4,\"freestyle-section\",null,[[\"name\"],[\"Visual Style\"]],{\"statements\":[[0,\"\\n\"],[4,\"component\",[[22,1,[\"subsection\"]]],[[\"name\"],[\"Typography\"]],{\"statements\":[[0,\"\\n\"],[4,\"freestyle-usage\",[\"typography-times\"],[[\"title\"],[\"Times New Roman\"]],{\"statements\":[[0,\"        \"],[1,[27,\"freestyle-typeface\",null,[[\"fontFamily\"],[\"Times New Roman\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"freestyle-usage\",[\"typography-helvetica\"],[[\"title\"],[\"Helvetica\"]],{\"statements\":[[0,\"        \"],[1,[27,\"freestyle-typeface\",null,[[\"fontFamily\"],[\"Helvetica\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,1,[\"subsection\"]]],[[\"name\"],[\"Color\"]],{\"statements\":[[0,\"\\n\"],[4,\"freestyle-usage\",[\"fp\"],[[\"title\",\"usageTitle\"],[\"Freestyle Palette\",\"Usage\"]],{\"statements\":[[0,\"        \"],[1,[27,\"freestyle-palette\",null,[[\"colorPalette\",\"title\",\"description\"],[[23,[\"colorPalette\"]],\"Dummy App Color Palette\",\"This component displays the color palette specified in freestyle/palette.json\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[1]},null],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "meta": {
+      "moduleName": "twyr-webapp-server/templates/freestyle.hbs"
+    }
+  });
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/templates/head", ["exports"], function (_exports) {
   "use strict";
 
@@ -7866,8 +8522,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "bMRT17V7",
-    "block": "{\"symbols\":[\"navbar\",\"nav\"],\"statements\":[[2,\" Customizable Header \"],[0,\"\\n\"],[7,\"header\"],[9],[0,\"\\n\"],[4,\"bs-navbar\",null,[[\"class\",\"position\",\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"p-0 px-2 py-1\",\"sticky-top\",\"light\",\"twyr\",false,true]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"navbar-header\"],[9],[0,\"\\n\"],[4,\"link-to\",[\"index\"],[[\"class\"],[\"navbar-brand\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[7,\"span\"],[11,\"class\",\"h3 orange-text\"],[11,\"style\",\"font-family:Keania One;\"],[9],[0,\"Twy'r\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\"],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,1,[\"nav\"]]],[[\"id\",\"class\"],[\"twyr-webapp-server-template-bhairavi-notification-area\",\"ml-auto orange-text nav-flex-icons\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,2,[\"item\"]]],null,{\"statements\":[[1,[27,\"component\",[\"session/logout-component\"],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null],[10],[0,\"\\n\\n\"],[2,\" Main Area \"],[0,\"\\n\"],[7,\"main\"],[11,\"class\",\"flex p-1\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-left-column\"],[11,\"class\",\"layout-column layout-align-start flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-outlet\"],[11,\"class\",\"layout-row layout-align-center-start flex\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"flex\"]]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-right-column\"],[11,\"class\",\"layout-column layout-align-start flex-initial\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[\"session/login-component\"],null],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" Customizable Footer \"],[0,\"\\n\"],[7,\"footer\"],[11,\"class\",\"page-footer mt-2 bg-secondary\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"px-1 py-3 text-right\"],[9],[0,\"\\n\\t\\tCopyright© 2018 \"],[4,\"link-to\",[\"index\"],null,{\"statements\":[[0,\"Twy'r\"]],\"parameters\":[]},null],[0,\". All rights reserved.\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" Modal \"],[0,\"\\n\"],[4,\"liquid-if\",[[23,[\"showDialog\"]]],null,{\"statements\":[[4,\"paper-dialog\",null,[[\"class\",\"onClose\",\"parent\",\"origin\",\"clickOutsideToClose\",\"escapeToClose\"],[[23,[\"modalData\",\"dialogClass\"]],[27,\"action\",[[22,0,[]],\"closeDialog\",false],null],[23,[\"modalData\",\"parentElement\"]],[23,[\"modalData\",\"dialogOrigin\"]],false,false]],{\"statements\":[[4,\"paper-toolbar\",null,[[\"class\"],[\"stylish-color white-text\"]],{\"statements\":[[4,\"paper-toolbar-tools\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"h2\"],[9],[1,[23,[\"modalData\",\"title\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"componentName\"]]],null,{\"statements\":[[4,\"paper-dialog-content\",null,[[\"class\"],[\"flex m-0 p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"component\",[[23,[\"modalData\",\"componentName\"]]],[[\"state\"],[[23,[\"modalData\",\"componentState\"]]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-dialog-content\",null,null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[23,[\"modalData\",\"content\"]],true],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}],[0,\"\\n\"],[4,\"if\",[[27,\"or\",[[23,[\"modalData\",\"confirmButton\"]],[23,[\"modalData\",\"cancelButton\"]]],null]],null,{\"statements\":[[0,\"\\t\\t\"],[1,[21,\"paper-divider\"],false],[0,\"\\n\"],[4,\"paper-dialog-actions\",null,[[\"class\"],[\"layout-row layout-align-end-center\"]],{\"statements\":[[4,\"if\",[[23,[\"modalData\",\"cancelButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"closeDialog\",false],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"cancelButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"cancelButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"confirmButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"closeDialog\",true],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"confirmButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"confirmButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "1lINUIOO",
+    "block": "{\"symbols\":[\"navbar\",\"nav\"],\"statements\":[[2,\" Customizable Header \"],[0,\"\\n\"],[7,\"header\"],[9],[0,\"\\n\"],[4,\"bs-navbar\",null,[[\"class\",\"position\",\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"p-0 px-2 py-1\",\"sticky-top\",\"light\",\"twyr\",false,true]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"navbar-header\"],[9],[0,\"\\n\"],[4,\"link-to\",[\"index\"],[[\"class\"],[\"navbar-brand\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[7,\"span\"],[11,\"class\",\"h3 orange-text\"],[11,\"style\",\"font-family:Keania One;\"],[9],[0,\"Twy'r\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\"],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,1,[\"nav\"]]],[[\"id\",\"class\"],[\"twyr-webapp-server-template-bhairavi-notification-area\",\"ml-auto orange-text nav-flex-icons\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,2,[\"item\"]]],null,{\"statements\":[[1,[27,\"component\",[\"session/logout-component\"],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null],[10],[0,\"\\n\\n\"],[2,\" Main Area \"],[0,\"\\n\"],[7,\"main\"],[11,\"class\",\"flex p-1\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-left-column\"],[11,\"class\",\"layout-column layout-align-start flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-outlet\"],[11,\"class\",\"layout-row layout-align-center-start flex\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"flex\"]]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-right-column\"],[11,\"class\",\"layout-column layout-align-start flex-initial\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[\"session/login-component\"],null],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" Customizable Footer \"],[0,\"\\n\"],[7,\"footer\"],[11,\"class\",\"page-footer mt-2 layout-row layout-align-space-between bg-secondary\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"flex px-1 py-3 text-right\"],[9],[0,\"\\n\\t\\tCopyright© 2018 \"],[4,\"link-to\",[\"index\"],null,{\"statements\":[[0,\"Twy'r\"]],\"parameters\":[]},null],[0,\". All rights reserved.\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" Modal \"],[0,\"\\n\"],[4,\"liquid-if\",[[23,[\"showDialog\"]]],null,{\"statements\":[[4,\"paper-dialog\",null,[[\"class\",\"onClose\",\"parent\",\"origin\",\"clickOutsideToClose\",\"escapeToClose\"],[[23,[\"modalData\",\"dialogClass\"]],[27,\"action\",[[22,0,[]],\"closeDialog\",false],null],[23,[\"modalData\",\"parentElement\"]],[23,[\"modalData\",\"dialogOrigin\"]],false,false]],{\"statements\":[[4,\"paper-toolbar\",null,[[\"class\"],[\"stylish-color white-text\"]],{\"statements\":[[4,\"paper-toolbar-tools\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"h2\"],[9],[1,[23,[\"modalData\",\"title\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"componentName\"]]],null,{\"statements\":[[4,\"paper-dialog-content\",null,[[\"class\"],[\"flex m-0 p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"component\",[[23,[\"modalData\",\"componentName\"]]],[[\"state\"],[[23,[\"modalData\",\"componentState\"]]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-dialog-content\",null,null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[23,[\"modalData\",\"content\"]],true],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}],[0,\"\\n\"],[4,\"if\",[[27,\"or\",[[23,[\"modalData\",\"confirmButton\"]],[23,[\"modalData\",\"cancelButton\"]]],null]],null,{\"statements\":[[0,\"\\t\\t\"],[1,[21,\"paper-divider\"],false],[0,\"\\n\"],[4,\"paper-dialog-actions\",null,[[\"class\"],[\"layout-row layout-align-end-center\"]],{\"statements\":[[4,\"if\",[[23,[\"modalData\",\"cancelButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"closeDialog\",false],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"cancelButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"cancelButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"confirmButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"closeDialog\",true],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"confirmButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"confirmButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/index.hbs"
     }

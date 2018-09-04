@@ -87,15 +87,6 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 	}
 	// #endregion
 
-	// #region Re-configuration
-	async _dependencyReconfigure(dependency) {
-		await super._dependencyReconfigure(this.dependency);
-
-		if(dependency.name !== 'WebserverService') return;
-		await this._addRoutes();
-	}
-	// #endregion
-
 	// #region Protected methods - need to be overriden by derived classes
 	/**
 	 * @async
