@@ -15,12 +15,12 @@ const TwyrComponentError = require('./twyr-component-error').TwyrComponentError;
 /**
  * @class   TwyrComponentLoader
  * @extends {TwyrModuleLoader}
- * @classdesc The Twyr Server Base Class for all Service Loaders.
+ * @classdesc The Twyr Server Base Class for all Component Loaders.
  *
  * @param   {TwyrBaseModule} [twyrModule] - The parent module, if any.
  *
  * @description
- * Serves as the "base class" for all other service loaders in the Twyr Web Application Server.
+ * Serves as the "base class" for all other component loaders in the Twyr Web Application Server.
  *
  * Responsible for invoking the standard "lifecycle" hooks on sub-modules of this module, if any - see {@link TwyrBaseModule#load},
  * {@link TwyrBaseModule#initialize}, {@link TwyrBaseModule#start}, {@link TwyrBaseModule#stop}, {@link TwyrBaseModule#uninitialize},

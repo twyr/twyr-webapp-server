@@ -15,15 +15,15 @@ const TwyrBaseModule = require('./twyr-base-module').TwyrBaseModule;
 const TwyrCompError = require('./twyr-component-error').TwyrComponentError;
 
 /**
- * @class   TwyrBaseService
+ * @class   TwyrBaseComponent
  * @extends {TwyrBaseModule}
- * @classdesc The Twyr Web Application Server Base Class for all Services.
+ * @classdesc The Twyr Web Application Server Base Class for all Components.
  *
  * @param   {TwyrBaseModule} [parent] - The parent module, if any.
  * @param   {TwyrModuleLoader} [loader] - The loader to be used for managing modules' lifecycle, if any.
  *
  * @description
- * Serves as the "base class" for all other services in the Twyr Web Application Server.
+ * Serves as the "base class" for all other components in the Twyr Web Application Server.
  *
  */
 class TwyrBaseComponent extends TwyrBaseModule {
