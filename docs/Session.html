@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>server/services/audit_service/service.js - Twyr Web Application Server</title>
+    <title>Session - Twyr Web Application Server</title>
     
     <meta name="description" content="Twyr Web Application Server" />
     
@@ -44,186 +44,791 @@
 
 <div id="main">
     
-    <h1 class="page-title">server/services/audit_service/service.js</h1>
+    <h1 class="page-title">Session</h1>
     
 
     
 
 
 
+
+<section>
+
+<header>
     
-    <section>
-        <article>
-            <pre class="prettyprint source linenums"><code>'use strict';
+        <h2>
+        Session
+        </h2>
+        
+            <div class="class-description"><p>The Twyr Web Application Server Session component - manages login/logout and related API.</p></div>
+        
+    
+</header>
 
-/* eslint-disable security/detect-object-injection */
+<article>
+    <div class="container-overview">
+    
+        
 
-/**
- * Module dependencies, required for ALL Twyr' modules
- * @ignore
- */
+    
+    <h2>Constructor</h2>
+    
 
-/**
- * Module dependencies, required for this module
- * @ignore
- */
-const TwyrBaseService = require('twyr-base-service').TwyrBaseService;
+    <h4 class="name" id="Session"><span class="type-signature"></span>new Session<span class="signature">()</span><span class="type-signature"></span></h4>
 
-const TwyrBaseError = require('twyr-base-error').TwyrBaseError;
-const TwyrSrvcError = require('twyr-service-error').TwyrServiceError;
+    
 
-/**
- * @class   AuditService
- * @extends {TwyrBaseService}
- * @classdesc The Twyr Web Application Server Auditing Service.
- *
- * @description
- * Allows the rest of the Twyr Modules to publish audit trails.
- *
- */
-class AuditService extends TwyrBaseService {
-	// #region Constructor
-	constructor(parent, loader) {
-		super(parent, loader);
-	}
-	// #endregion
 
-	// #region API
-	/**
-	 * @async
-	 * @function
-	 * @instance
-	 * @memberof AuditService
-	 * @name     publish
-	 *
-	 * @param    {Object} auditPayload - The payload to be cleaned and published to the message queue.
-	 *
-	 * @returns  {null} Nothing.
-	 *
-	 * @summary  Publishes the audit trail to the messaging queue, and then deletes the cached details.
-	 */
-	async publish(auditPayload) {
-		if(!auditPayload) return;
-		try {
-			this._cleanBeforePublish(auditPayload);
-			if(!auditPayload) return;
-			if(!Object.keys(auditPayload).length) return;
 
-			if(auditPayload.error) {
-				this.$dependencies.LoggerService.error(`Error Servicing Request ${auditPayload.id} - ${auditPayload['request-meta']['url']}:`, auditPayload);
-				await this.$dependencies.PubsubService.publish('twyr-audit', 'TWYR.AUDIT.ERROR', JSON.stringify(auditPayload));
-			}
-			else {
-				if(twyrEnv === 'development') this.$dependencies.LoggerService.debug(`Serviced Request ${auditPayload.id} - ${auditPayload['request-meta']['url']}:`, auditPayload);
-				await this.$dependencies.PubsubService.publish('twyr-audit', 'TWYR.AUDIT.LOG', JSON.stringify(auditPayload));
-			}
-		}
-		catch(err) {
-			throw new TwyrSrvcError(`${this.name}::_publishAudit error`, err);
-		}
-	}
-	// #endregion
 
-	// #region Private Methods
-	/**
-	 * @async
-	 * @function
-	 * @instance
-	 * @memberof AuditService
-	 * @name     _cleanBeforePublish
-	 *
-	 * @param    {Object} auditDetails - The data for the request/response cycle.
-	 * @param    {Object} [value] - The audit trail information.
-	 *
-	 * @returns  {null} Nothing.
-	 *
-	 * @summary  Deletes any empty keys in the audit trail data.
-	 */
-	_cleanBeforePublish(auditDetails, value) {
-		if(!auditDetails &amp;&amp; value) auditDetails = { 'payload': value };
-		if(!auditDetails) return null;
+<dl class="details">
 
-		if(!Object.keys(auditDetails).length)
-			return null;
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="server_components_session_component.js.html">server/components/session/component.js</a>, <a href="server_components_session_component.js.html#line15">line 15</a>
+    </li></ul></dd>
+    
 
-		Object.keys(auditDetails).forEach((key) => {
-			if(!auditDetails[key]) {
-				delete auditDetails[key];
-				return;
-			}
+    
 
-			if(['password', 'image', 'random'].indexOf(key.toLowerCase()) >= 0) {
-				auditDetails[key] = '****';
-				return;
-			}
+    
 
-			if(key.startsWith('_')) {
-				delete auditDetails[key];
-				return;
-			}
+    
 
-			if(auditDetails[key] instanceof TwyrBaseError) {
-				auditDetails[key] = auditDetails[key].toString();
-				return;
-			}
+    
 
-			if(auditDetails[key] instanceof Error) {
-				auditDetails[key] = new TwyrBaseError(`Wrapped for Auditing`, auditDetails[key]).toString();
-				return;
-			}
+    
 
-			if(typeof auditDetails[key] === 'object') {
-				auditDetails[key] = this._cleanBeforePublish(auditDetails[key]);
+    
 
-				if(!auditDetails[key]) {
-					delete auditDetails[key];
-					return;
-				}
+    
 
-				if(!Object.keys(auditDetails[key]).length) {
-					delete auditDetails[key];
-					return;
-				}
-			}
-		});
+    
 
-		if(!Object.keys(auditDetails).length)
-			return null;
+    
 
-		return auditDetails;
-	}
-	// #endregion
+    
 
-	// #region Properties
-	/**
-	 * @override
-	 */
-	get Interface() {
-		return {
-			'publish': this.publish.bind(this)
-		};
-	}
+    
 
-	/**
-	 * @override
-	 */
-	get dependencies() {
-		return ['ConfigurationService', 'LoggerService', 'PubsubService'].concat(super.dependencies);
-	}
+    
 
-	/**
-	 * @override
-	 */
-	get basePath() {
-		return __dirname;
-	}
-	// #endregion
-}
+    
 
-exports.service = AuditService;
-</code></pre>
-        </article>
-    </section>
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    </div>
+
+    
+        <h3 class="subsection-title">Extends</h3>
+
+        
+
+
+    <ul>
+        <li><a href="TwyrBaseComponent.html">TwyrBaseComponent</a></li>
+    </ul>
+
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id="basePath"><span class="type-signature"></span>basePath<span class="type-signature"></span></h4>
+
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-base-component.js.html">framework/twyr-base-component.js</a>, <a href="framework_twyr-base-component.js.html#line162">line 162</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="TwyrBaseComponent.html#basePath">TwyrBaseComponent#basePath</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="dependencies"><span class="type-signature"></span>dependencies<span class="type-signature"></span></h4>
+
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-base-component.js.html">framework/twyr-base-component.js</a>, <a href="framework_twyr-base-component.js.html#line155">line 155</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="TwyrBaseComponent.html#dependencies">TwyrBaseComponent#dependencies</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="Router"><span class="type-signature">(readonly) </span>Router<span class="type-signature"> :Object</span></h4>
+
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-base-component.js.html">framework/twyr-base-component.js</a>, <a href="framework_twyr-base-component.js.html#line140">line 140</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrBaseComponent.html#Router">TwyrBaseComponent#Router</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">Object</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+
+        
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id="_addRoutes"><span class="type-signature">(async) </span>_addRoutes<span class="signature">()</span><span class="type-signature"> &rarr; {undefined}</span></h4>
+
+    
+    <p class="summary"><p>Adds routes to the Koa Router.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-base-component.js.html">framework/twyr-base-component.js</a>, <a href="framework_twyr-base-component.js.html#line95">line 95</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="TwyrBaseComponent.html#_addRoutes">TwyrBaseComponent#_addRoutes</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Nothing.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">undefined</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_deleteRoutes"><span class="type-signature">(async) </span>_deleteRoutes<span class="signature">()</span><span class="type-signature"> &rarr; {undefined}</span></h4>
+
+    
+    <p class="summary"><p>Removes all the routes from the Koa Router.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-base-component.js.html">framework/twyr-base-component.js</a>, <a href="framework_twyr-base-component.js.html#line118">line 118</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrBaseComponent.html#_deleteRoutes">TwyrBaseComponent#_deleteRoutes</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Nothing.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">undefined</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_setup"><span class="type-signature">(async) </span>_setup<span class="signature">()</span><span class="type-signature"> &rarr; {undefined}</span></h4>
+
+    
+    <p class="summary"><p>Adds the Koa Router routes.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-base-component.js.html">framework/twyr-base-component.js</a>, <a href="framework_twyr-base-component.js.html#line45">line 45</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrBaseComponent.html#_setup">TwyrBaseComponent#_setup</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Nothing.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">undefined</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_teardown"><span class="type-signature">(async) </span>_teardown<span class="signature">()</span><span class="type-signature"> &rarr; {undefined}</span></h4>
+
+    
+    <p class="summary"><p>Destroys the Koa Router routes.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-base-component.js.html">framework/twyr-base-component.js</a>, <a href="framework_twyr-base-component.js.html#line69">line 69</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrBaseComponent.html#_teardown">TwyrBaseComponent#_teardown</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Nothing.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">undefined</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
 
 
 

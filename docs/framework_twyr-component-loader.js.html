@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>server/services/audit_service/service.js - Twyr Web Application Server</title>
+    <title>framework/twyr-component-loader.js - Twyr Web Application Server</title>
     
     <meta name="description" content="Twyr Web Application Server" />
     
@@ -44,7 +44,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">server/services/audit_service/service.js</h1>
+    <h1 class="page-title">framework/twyr-component-loader.js</h1>
     
 
     
@@ -56,10 +56,8 @@
         <article>
             <pre class="prettyprint source linenums"><code>'use strict';
 
-/* eslint-disable security/detect-object-injection */
-
 /**
- * Module dependencies, required for ALL Twyr' modules
+ * Module dependencies, required for ALL Twyr modules
  * @ignore
  */
 
@@ -67,160 +65,223 @@
  * Module dependencies, required for this module
  * @ignore
  */
-const TwyrBaseService = require('twyr-base-service').TwyrBaseService;
-
-const TwyrBaseError = require('twyr-base-error').TwyrBaseError;
-const TwyrSrvcError = require('twyr-service-error').TwyrServiceError;
+const TwyrModuleLoader = require('./twyr-module-loader').TwyrModuleLoader;
+const TwyrComponentError = require('./twyr-component-error').TwyrComponentError;
 
 /**
- * @class   AuditService
- * @extends {TwyrBaseService}
- * @classdesc The Twyr Web Application Server Auditing Service.
+ * @class   TwyrComponentLoader
+ * @extends {TwyrModuleLoader}
+ * @classdesc The Twyr Server Base Class for all Service Loaders.
+ *
+ * @param   {TwyrBaseModule} [twyrModule] - The parent module, if any.
  *
  * @description
- * Allows the rest of the Twyr Modules to publish audit trails.
+ * Serves as the "base class" for all other service loaders in the Twyr Web Application Server.
+ *
+ * Responsible for invoking the standard "lifecycle" hooks on sub-modules of this module, if any - see {@link TwyrBaseModule#load},
+ * {@link TwyrBaseModule#initialize}, {@link TwyrBaseModule#start}, {@link TwyrBaseModule#stop}, {@link TwyrBaseModule#uninitialize},
+ * and {@link TwyrBaseModule#unload}.
  *
  */
-class AuditService extends TwyrBaseService {
+class TwyrComponentLoader extends TwyrModuleLoader {
 	// #region Constructor
-	constructor(parent, loader) {
-		super(parent, loader);
+	constructor(twyrModule) {
+		super(twyrModule);
 	}
 	// #endregion
 
-	// #region API
+	// #region Lifecycle hooks
 	/**
 	 * @async
 	 * @function
+	 * @override
 	 * @instance
-	 * @memberof AuditService
-	 * @name     publish
+	 * @memberof TwyrComponentLoader
+	 * @name     load
 	 *
-	 * @param    {Object} auditPayload - The payload to be cleaned and published to the message queue.
+	 * @param    {ConfigurationService} configSrvc - Instance of the {@link ConfigurationService} that supplies configuration.
 	 *
-	 * @returns  {null} Nothing.
+	 * @returns  {Object} - The load status of $twyrModule's sub-modules.
 	 *
-	 * @summary  Publishes the audit trail to the messaging queue, and then deletes the cached details.
+	 * @summary  Loads sub-modules.
 	 */
-	async publish(auditPayload) {
-		if(!auditPayload) return;
+	async load(configSrvc) {
 		try {
-			this._cleanBeforePublish(auditPayload);
-			if(!auditPayload) return;
-			if(!Object.keys(auditPayload).length) return;
+			const allStatuses = [];
+			let lifecycleStatuses = null;
 
-			if(auditPayload.error) {
-				this.$dependencies.LoggerService.error(`Error Servicing Request ${auditPayload.id} - ${auditPayload['request-meta']['url']}:`, auditPayload);
-				await this.$dependencies.PubsubService.publish('twyr-audit', 'TWYR.AUDIT.ERROR', JSON.stringify(auditPayload));
-			}
-			else {
-				if(twyrEnv === 'development') this.$dependencies.LoggerService.debug(`Serviced Request ${auditPayload.id} - ${auditPayload['request-meta']['url']}:`, auditPayload);
-				await this.$dependencies.PubsubService.publish('twyr-audit', 'TWYR.AUDIT.LOG', JSON.stringify(auditPayload));
-			}
+			lifecycleStatuses = await this._loadUtilities(configSrvc);
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._loadComponents(configSrvc);
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+			return this._filterStatus(allStatuses);
 		}
 		catch(err) {
-			throw new TwyrSrvcError(`${this.name}::_publishAudit error`, err);
+			throw new TwyrComponentError(`${this.$twyrModule.name}::loader::load error`, err);
 		}
 	}
-	// #endregion
 
-	// #region Private Methods
 	/**
 	 * @async
 	 * @function
+	 * @override
 	 * @instance
-	 * @memberof AuditService
-	 * @name     _cleanBeforePublish
+	 * @memberof TwyrComponentLoader
+	 * @name     initialize
 	 *
-	 * @param    {Object} auditDetails - The data for the request/response cycle.
-	 * @param    {Object} [value] - The audit trail information.
+	 * @returns  {Object} - The initialization status of $twyrModule's sub-modules.
 	 *
-	 * @returns  {null} Nothing.
-	 *
-	 * @summary  Deletes any empty keys in the audit trail data.
+	 * @summary  Initializes sub-modules.
 	 */
-	_cleanBeforePublish(auditDetails, value) {
-		if(!auditDetails &amp;&amp; value) auditDetails = { 'payload': value };
-		if(!auditDetails) return null;
+	async initialize() {
+		try {
+			const allStatuses = [];
+			let lifecycleStatuses = null;
 
-		if(!Object.keys(auditDetails).length)
-			return null;
+			lifecycleStatuses = await this._initializeComponents();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
 
-		Object.keys(auditDetails).forEach((key) => {
-			if(!auditDetails[key]) {
-				delete auditDetails[key];
-				return;
-			}
-
-			if(['password', 'image', 'random'].indexOf(key.toLowerCase()) >= 0) {
-				auditDetails[key] = '****';
-				return;
-			}
-
-			if(key.startsWith('_')) {
-				delete auditDetails[key];
-				return;
-			}
-
-			if(auditDetails[key] instanceof TwyrBaseError) {
-				auditDetails[key] = auditDetails[key].toString();
-				return;
-			}
-
-			if(auditDetails[key] instanceof Error) {
-				auditDetails[key] = new TwyrBaseError(`Wrapped for Auditing`, auditDetails[key]).toString();
-				return;
-			}
-
-			if(typeof auditDetails[key] === 'object') {
-				auditDetails[key] = this._cleanBeforePublish(auditDetails[key]);
-
-				if(!auditDetails[key]) {
-					delete auditDetails[key];
-					return;
-				}
-
-				if(!Object.keys(auditDetails[key]).length) {
-					delete auditDetails[key];
-					return;
-				}
-			}
-		});
-
-		if(!Object.keys(auditDetails).length)
-			return null;
-
-		return auditDetails;
-	}
-	// #endregion
-
-	// #region Properties
-	/**
-	 * @override
-	 */
-	get Interface() {
-		return {
-			'publish': this.publish.bind(this)
-		};
+			allStatuses.push(lifecycleStatuses);
+			return this._filterStatus(allStatuses);
+		}
+		catch(err) {
+			throw new TwyrComponentError(`${this.$twyrModule.name}::loader::initialize error`, err);
+		}
 	}
 
 	/**
+	 * @async
+	 * @function
 	 * @override
+	 * @instance
+	 * @memberof TwyrComponentLoader
+	 * @name     start
+	 *
+	 * @returns  {Object} - The start status of $twyrModule's sub-modules.
+	 *
+	 * @summary  Starts sub-modules.
 	 */
-	get dependencies() {
-		return ['ConfigurationService', 'LoggerService', 'PubsubService'].concat(super.dependencies);
+	async start() {
+		try {
+			const allStatuses = [];
+			let lifecycleStatuses = null;
+
+			lifecycleStatuses = await this._startComponents();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+			return this._filterStatus(allStatuses);
+		}
+		catch(err) {
+			throw new TwyrComponentError(`${this.$twyrModule.name}::loader::start error`, err);
+		}
 	}
 
 	/**
+	 * @async
+	 * @function
 	 * @override
+	 * @instance
+	 * @memberof TwyrComponentLoader
+	 * @name     stop
+	 *
+	 * @returns  {Object} - The stop status of $twyrModule's sub-modules.
+	 *
+	 * @summary  Stops sub-modules.
 	 */
-	get basePath() {
-		return __dirname;
+	async stop() {
+		try {
+			const allStatuses = [];
+			let lifecycleStatuses = null;
+
+			lifecycleStatuses = await this._stopComponents();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+			return this._filterStatus(allStatuses);
+		}
+		catch(err) {
+			throw new TwyrComponentError(`${this.$twyrModule.name}::loader::stop error`, err);
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @override
+	 * @instance
+	 * @memberof TwyrComponentLoader
+	 * @name     uninitialize
+	 *
+	 * @returns  {Object} - The uninitialization status of $twyrModule's sub-modules.
+	 *
+	 * @summary  Un-initializes sub-modules.
+	 */
+	async uninitialize() {
+		try {
+			const allStatuses = [];
+			let lifecycleStatuses = null;
+
+			lifecycleStatuses = await this._uninitializeComponents();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+			return this._filterStatus(allStatuses);
+		}
+		catch(err) {
+			throw new TwyrComponentError(`${this.$twyrModule.name}::loader::uninitialize error`, err);
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @override
+	 * @instance
+	 * @memberof TwyrComponentLoader
+	 * @name     unload
+	 *
+	 * @returns  {Object} - The unloading status of $twyrModule's sub-modules.
+	 *
+	 * @summary  Unloads sub-modules.
+	 */
+	async unload() {
+		try {
+			const allStatuses = [];
+			let lifecycleStatuses = null;
+
+			lifecycleStatuses = await this._unloadComponents();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+
+			lifecycleStatuses = await this._unloadUtilities();
+			if(lifecycleStatuses &amp;&amp; lifecycleStatuses.status &amp;&amp; (lifecycleStatuses.status instanceof Error))
+				throw lifecycleStatuses.status;
+
+			allStatuses.push(lifecycleStatuses);
+			return this._filterStatus(allStatuses);
+		}
+		catch(err) {
+			throw new TwyrComponentError(`${this.$twyrModule.name}::loader::unload error`, err);
+		}
 	}
 	// #endregion
 }
 
-exports.service = AuditService;
+exports.TwyrComponentLoader = TwyrComponentLoader;
 </code></pre>
         </article>
     </section>

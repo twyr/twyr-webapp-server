@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>server/services/audit_service/service.js - Twyr Web Application Server</title>
+    <title>server/components/session/component.js - Twyr Web Application Server</title>
     
     <meta name="description" content="Twyr Web Application Server" />
     
@@ -44,7 +44,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">server/services/audit_service/service.js</h1>
+    <h1 class="page-title">server/components/session/component.js</h1>
     
 
     
@@ -56,8 +56,6 @@
         <article>
             <pre class="prettyprint source linenums"><code>'use strict';
 
-/* eslint-disable security/detect-object-injection */
-
 /**
  * Module dependencies, required for ALL Twyr' modules
  * @ignore
@@ -67,130 +65,88 @@
  * Module dependencies, required for this module
  * @ignore
  */
-const TwyrBaseService = require('twyr-base-service').TwyrBaseService;
-
-const TwyrBaseError = require('twyr-base-error').TwyrBaseError;
-const TwyrSrvcError = require('twyr-service-error').TwyrServiceError;
+const TwyrBaseComponent = require('twyr-base-component').TwyrBaseComponent;
+const TwyrCompError = require('twyr-component-error').TwyrComponentError;
 
 /**
- * @class   AuditService
- * @extends {TwyrBaseService}
- * @classdesc The Twyr Web Application Server Auditing Service.
+ * @class   Session
+ * @extends {TwyrBaseComponent}
+ * @classdesc The Twyr Web Application Server Session component - manages login/logout and related API.
  *
- * @description
- * Allows the rest of the Twyr Modules to publish audit trails.
  *
  */
-class AuditService extends TwyrBaseService {
+class Session extends TwyrBaseComponent {
 	// #region Constructor
 	constructor(parent, loader) {
 		super(parent, loader);
 	}
 	// #endregion
 
-	// #region API
+	// #region Protected methods - need to be overriden by derived classes
 	/**
 	 * @async
 	 * @function
+	 * @override
 	 * @instance
-	 * @memberof AuditService
-	 * @name     publish
+	 * @memberof Session
+	 * @name     _addRoutes
 	 *
-	 * @param    {Object} auditPayload - The payload to be cleaned and published to the message queue.
+	 * @returns  {undefined} Nothing.
 	 *
-	 * @returns  {null} Nothing.
-	 *
-	 * @summary  Publishes the audit trail to the messaging queue, and then deletes the cached details.
+	 * @summary  Adds routes to the Koa Router.
 	 */
-	async publish(auditPayload) {
-		if(!auditPayload) return;
+	async _addRoutes() {
 		try {
-			this._cleanBeforePublish(auditPayload);
-			if(!auditPayload) return;
-			if(!Object.keys(auditPayload).length) return;
+			this.$router.get('/user', this._getUser.bind(this));
+			this.$router.post('/login', this._login.bind(this));
+			this.$router.get('/logout', this._logout.bind(this));
 
-			if(auditPayload.error) {
-				this.$dependencies.LoggerService.error(`Error Servicing Request ${auditPayload.id} - ${auditPayload['request-meta']['url']}:`, auditPayload);
-				await this.$dependencies.PubsubService.publish('twyr-audit', 'TWYR.AUDIT.ERROR', JSON.stringify(auditPayload));
-			}
-			else {
-				if(twyrEnv === 'development') this.$dependencies.LoggerService.debug(`Serviced Request ${auditPayload.id} - ${auditPayload['request-meta']['url']}:`, auditPayload);
-				await this.$dependencies.PubsubService.publish('twyr-audit', 'TWYR.AUDIT.LOG', JSON.stringify(auditPayload));
-			}
+			await super._addRoutes();
+
+			return null;
 		}
 		catch(err) {
-			throw new TwyrSrvcError(`${this.name}::_publishAudit error`, err);
+			throw new TwyrCompError(`${this.name}::_addRoutes error`, err);
 		}
 	}
 	// #endregion
 
-	// #region Private Methods
-	/**
-	 * @async
-	 * @function
-	 * @instance
-	 * @memberof AuditService
-	 * @name     _cleanBeforePublish
-	 *
-	 * @param    {Object} auditDetails - The data for the request/response cycle.
-	 * @param    {Object} [value] - The audit trail information.
-	 *
-	 * @returns  {null} Nothing.
-	 *
-	 * @summary  Deletes any empty keys in the audit trail data.
-	 */
-	_cleanBeforePublish(auditDetails, value) {
-		if(!auditDetails &amp;&amp; value) auditDetails = { 'payload': value };
-		if(!auditDetails) return null;
+	// #region Route Handlers
+	async _getUser(ctxt) {
+		// console.log(`ctxt.state.user: ${JSON.stringify(ctxt.state.user, null, '\t')}`);
 
-		if(!Object.keys(auditDetails).length)
-			return null;
+		ctxt.body = {
+			'name': ctxt.state.user ? `${ctxt.state.user.first_name} ${ctxt.state.user.last_name}` : 'Public',
+			'loggedIn': !!ctxt.state.user,
+			'permissions': (ctxt.state.user ? ctxt.state.user.permissions.map((permission) => { return permission.name; }) : ['public'])
+		};
 
-		Object.keys(auditDetails).forEach((key) => {
-			if(!auditDetails[key]) {
-				delete auditDetails[key];
-				return;
-			}
+		return null;
+	}
 
-			if(['password', 'image', 'random'].indexOf(key.toLowerCase()) >= 0) {
-				auditDetails[key] = '****';
-				return;
-			}
+	async _login(ctxt) {
+		return this.$dependencies.AuthService.authenticate('twyr-local', async (err, user, info, status) => {
+			if(err) throw new TwyrCompError(`Login Error: `, err);
+			if(!user) throw new TwyrCompError(`User: ${ctxt.request.body.username} not found`);
 
-			if(key.startsWith('_')) {
-				delete auditDetails[key];
-				return;
-			}
+			await ctxt.login(user);
 
-			if(auditDetails[key] instanceof TwyrBaseError) {
-				auditDetails[key] = auditDetails[key].toString();
-				return;
-			}
+			ctxt.status = 200;
+			ctxt.body = { 'status': status || 200, 'info': info || { 'message': `Login for ${user.first_name} ${user.last_name} successful` } };
+		})(ctxt);
+	}
 
-			if(auditDetails[key] instanceof Error) {
-				auditDetails[key] = new TwyrBaseError(`Wrapped for Auditing`, auditDetails[key]).toString();
-				return;
-			}
+	async _logout(ctxt) {
+		if(ctxt.isAuthenticated()) {
+			await ctxt.logout();
 
-			if(typeof auditDetails[key] === 'object') {
-				auditDetails[key] = this._cleanBeforePublish(auditDetails[key]);
+			ctxt.status = 200;
+			ctxt.body = { 'status': 200, 'info': { 'message': `Logout successful` } };
 
-				if(!auditDetails[key]) {
-					delete auditDetails[key];
-					return;
-				}
+			return;
+		}
 
-				if(!Object.keys(auditDetails[key]).length) {
-					delete auditDetails[key];
-					return;
-				}
-			}
-		});
-
-		if(!Object.keys(auditDetails).length)
-			return null;
-
-		return auditDetails;
+		throw new TwyrCompError(`No active session`);
 	}
 	// #endregion
 
@@ -198,17 +154,8 @@ class AuditService extends TwyrBaseService {
 	/**
 	 * @override
 	 */
-	get Interface() {
-		return {
-			'publish': this.publish.bind(this)
-		};
-	}
-
-	/**
-	 * @override
-	 */
 	get dependencies() {
-		return ['ConfigurationService', 'LoggerService', 'PubsubService'].concat(super.dependencies);
+		return ['AuthService'].concat(super.dependencies);
 	}
 
 	/**
@@ -220,7 +167,7 @@ class AuditService extends TwyrBaseService {
 	// #endregion
 }
 
-exports.service = AuditService;
+exports.component = Session;
 </code></pre>
         </article>
     </section>
