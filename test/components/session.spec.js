@@ -1,0 +1,77 @@
+'use strict';
+
+const chai = require('chai'); // eslint-disable-line node/no-unpublished-require
+const chaiHttp = require('chai-http'); // eslint-disable-line node/no-unpublished-require
+
+chai.use(chaiHttp);
+
+describe('Session Component Test Cases', function() {
+	const agent = chai.request.agent('http://localhost:9100');
+	const expect = chai.expect;
+
+	chai.should();
+
+	it('Should return the Public User details', function(done) {
+		agent
+			.get('/session/user')
+			.end((err, response) => {
+				expect(response).to.have.status(200);
+				response.body.should.have.property('name').eql('Public');
+				response.body.should.have.property('loggedIn').eql(false);
+				response.body.should.have.property('permissions').eql(['public']);
+
+				done(err);
+			});
+	});
+
+	it('Should Login and Start a Session with a Cookie', function(done) {
+		agent
+			.post('/session/login')
+			.type('form')
+			.send({
+				'username': 'root@twyr.com',
+				'password': 'plantworks'
+			})
+			.end((err, response) => {
+				expect(response).to.have.status(200);
+				expect(response).to.have.cookie('twyr!webapp!server');
+
+				done(err);
+			});
+	});
+
+	it('Should return the Root User details', function(done) {
+		agent
+			.get('/session/user')
+			.end((err, response) => {
+				expect(response).to.have.status(200);
+				response.body.should.have.property('name').eql('Root Twyr');
+				response.body.should.have.property('loggedIn').eql(true);
+				response.body.should.have.property('permissions').with.lengthOf(4);
+
+				done(err);
+			});
+	});
+
+	it('Should logout', function(done) {
+		agent
+			.get('/session/logout')
+			.end((err, response) => {
+				expect(response).to.have.status(200);
+				done(err);
+			});
+	});
+
+	it('Should go back to returning the Public User details', function(done) {
+		agent
+			.get('/session/user')
+			.end((err, response) => {
+				expect(response).to.have.status(200);
+				response.body.should.have.property('name').eql('Public');
+				response.body.should.have.property('loggedIn').eql(false);
+				response.body.should.have.property('permissions').eql(['public']);
+
+				done(err);
+			});
+	});
+});
