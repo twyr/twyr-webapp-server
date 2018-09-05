@@ -7775,6 +7775,19 @@
     }
   });
 });
+;define("twyr-webapp-server/services/paper-theme", ["exports", "ember-paper/services/paper-theme"], function (_exports, _paperTheme) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _paperTheme.default;
+    }
+  });
+});
 ;define("twyr-webapp-server/services/paper-toaster", ["exports", "ember-paper/services/paper-toaster"], function (_exports, _paperToaster) {
   "use strict";
 
@@ -8860,7 +8873,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","pageTitle":{"replace":false,"separator":" > "},"changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{"Date":true}},"APP":{"name":"twyr-webapp-server","version":"3.0.1"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","pageTitle":{"replace":false,"separator":" > "},"changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1"},"sassOptions":{"implementation":{"info":"node-sass\t4.9.3\t(Wrapper)\t[JavaScript]\nlibsass  \t3.5.4\t(Sass Compiler)\t[C/C++]","types":{},"TRUE":{},"FALSE":{},"NULL":{}}},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;
