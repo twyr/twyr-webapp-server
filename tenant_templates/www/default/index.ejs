@@ -29,7 +29,7 @@
 		window.developmentMode = <%= developmentMode %>;
 	</script>
 </head>
-<body class="white-skin">
+<body class="grey">
 	<!-- Ember stuff - imported vendor.js from the ember-addon project... -->
 	<script src="/js/vendor.js"></script>
 
@@ -45,29 +45,7 @@
 	});
 	</script>
 
-	<!-- Primus - realtime websocket connection stuff -->
-	<script type="application/javascript" src="/websockets/primus.js"></script>
-
-	<!-- Ember template compiler - for dynamic compilation of templates, whenever we require it... -->
-	<script type="application/javascript" src="/ember-template-compiler.js"></script>
-
-	<!-- The Application Template -->
-	<script type="text/x-handlebars">
-		<!-- Configurable Page Title -->
-		{{head-layout}}
-		{{page-title "<%- title %>"}}
-
-		<!-- Main Area -->
-		{{liquid-outlet class="flex"}}
-	</script>
-
-	<!-- The mandatory empty div elements for wormhole, paper, etc. -->
-	<div id="ember-bootstrap-wormhole"></div>
-	<div id="ember-basic-dropdown-wormhole"></div>
-	<div id="paper-wormhole"></div>
-	<div id="paper-toast-fab-wormhole"></div>
-
-	<!-- Finally, setup DEBUG flags, and start the App -->
+	<!-- Setup DEBUG flags and global error handlers -->
 	<script type="application/javascript">
 		window.Ember.ENV.RAISE_ON_DEPRECATION = false; // <%= developmentMode %>;
 		window.Ember.ENV.LOG_STACKTRACE_ON_DEPRECATION = false; // <%= developmentMode %>;
@@ -80,7 +58,41 @@
 		window.Ember.RSVP.on('error', function(error) {
 			console.error(`TODO: Send RSVP Error to the server using the Beacon API. But, for now...\n`, error);
 		});
+	</script>
 
+	<!-- Primus - realtime websocket connection stuff -->
+	<script type="application/javascript" src="/websockets/primus.js"></script>
+
+	<!-- Ember template compiler - for dynamic compilation of templates, whenever we require it... -->
+	<script type="application/javascript" src="/ember-template-compiler.js"></script>
+
+	<!-- Setup the router -->
+	<script type="application/javascript">
+		define("twyr-webapp-server/router", ["exports", "twyr-webapp-server/config/environment"], function (_exports, _environment) {
+			"use strict";
+
+			Object.defineProperty(_exports, "__esModule", {
+				value: true
+			});
+
+			_exports.default = void 0;
+			const Router = Ember.Router.extend({
+				location: _environment.default.locationType,
+				rootURL: _environment.default.rootURL
+			});
+
+			Router.map(function () {
+				this.route("freestyle", { "path": "/freestyle" });
+				// Routes from Web Applications
+			});
+
+			var _default = Router;
+			_exports.default = _default;
+		});
+	</script>
+
+	<!-- Finally, start the App -->
+	<script type="application/javascript">
 		window.TwyrApp = require('twyr-webapp-server/app')['default'].create({
 			"LOG_RESOLVER": <%= developmentMode %>,
 
