@@ -3654,12 +3654,11 @@
         });
       }
     }).drop(),
-    actions: {
-      setDisplayForm(formName) {
-        this.set('displayForm', formName);
-      }
 
+    setDisplayForm(formName) {
+      this.set('displayForm', formName);
     }
+
   });
 
   _exports.default = _default;
@@ -3978,11 +3977,6 @@
   });
   _exports.default = void 0;
 
-  /* eslint-disable require-yield */
-
-  /* eslint-disable no-console */
-
-  /* eslint-disable ember/avoid-leaking-state-in-ember-objects */
   var _default = _baseController.default.extend({
     notification: Ember.inject.service('integrated-notification'),
     realtimeData: Ember.inject.service('realtime-data'),
@@ -4003,9 +3997,7 @@
       });
       this.get('realtimeData').on('websocket-disconnection', () => {
         notification.display('Realtime Data Connectivity lost!');
-      }); // eslint-disable-next-line no-undef
-
-      TwyrApp.on('showModal', this, this.displayModal);
+      });
     },
 
     displayModal: function (data) {
@@ -4051,6 +4043,25 @@
 
       this.set('showDialog', false);
       this.set('modalData', null);
+    },
+    actions: {
+      'controller-action': function (action, data) {
+        if (this.get('showDialog') && this.get('modalData') && this.get('modalData.actions')) {
+          const modalActions = this.get('modalData')['actions'][action];
+
+          if (modalActions) {
+            modalActions(data);
+            return;
+          }
+        }
+
+        if (this[action]) {
+          this[action](data);
+          return;
+        }
+
+        this.get('notification').display(`TODO: Handle ${action} action with data: `, data);
+      }
     }
   });
 
@@ -4122,7 +4133,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/framework/base-component", ["exports", "ember-concurrency"], function (_exports, _emberConcurrency) {
+;define("twyr-webapp-server/framework/base-component", ["exports", "ember-invoke-action", "ember-concurrency"], function (_exports, _emberInvokeAction, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4130,10 +4141,7 @@
   });
   _exports.default = void 0;
 
-  /* eslint-disable require-yield */
-
-  /* eslint-disable no-console */
-  var _default = Ember.Component.extend({
+  var _default = Ember.Component.extend(Ember.Evented, _emberInvokeAction.InvokeActionMixin, {
     store: Ember.inject.service('store'),
     currentUser: Ember.inject.service('current-user'),
     notification: Ember.inject.service('integrated-notification'),
@@ -4158,17 +4166,31 @@
         return;
       }
 
+      const requiredPermissions = this.get('permissions');
       let hasPerm = false;
-      this.get('permissions').forEach(permission => {
-        hasPerm = hasPerm || this.get('currentUser').hasPermission(permission);
-      });
+
+      for (let permIdx = 0; permIdx < requiredPermissions.length; permIdx++) {
+        let hasCurrentPermission = yield this.get('currentUser').hasPermission(requiredPermissions[permIdx]);
+        hasPerm = hasPerm || hasCurrentPermission;
+      }
+
       this.set('hasPermission', hasPerm);
-    }).keepLatest()
+    }).keepLatest(),
+    actions: {
+      'controller-action': function (action, data) {
+        if (this[action] && typeof this[action] === 'function') {
+          this[action](data);
+          return;
+        }
+
+        this.invokeAction('controller-action', action, data);
+      }
+    }
   });
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/framework/base-controller", ["exports", "ember-concurrency"], function (_exports, _emberConcurrency) {
+;define("twyr-webapp-server/framework/base-controller", ["exports", "ember-invoke-action", "ember-concurrency"], function (_exports, _emberInvokeAction, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4176,10 +4198,7 @@
   });
   _exports.default = void 0;
 
-  /* eslint-disable require-yield */
-
-  /* eslint-disable no-console */
-  var _default = Ember.Controller.extend({
+  var _default = Ember.Controller.extend(Ember.Evented, _emberInvokeAction.InvokeActionMixin, {
     store: Ember.inject.service('store'),
     currentUser: Ember.inject.service('current-user'),
     notification: Ember.inject.service('integrated-notification'),
@@ -4204,12 +4223,82 @@
         return;
       }
 
+      const requiredPermissions = this.get('permissions');
       let hasPerm = false;
-      this.get('permissions').forEach(permission => {
-        hasPerm = hasPerm || this.get('currentUser').hasPermission(permission);
-      });
+
+      for (let permIdx = 0; permIdx < requiredPermissions.length; permIdx++) {
+        let hasCurrentPermission = yield this.get('currentUser').hasPermission(requiredPermissions[permIdx]);
+        hasPerm = hasPerm || hasCurrentPermission;
+      }
+
       this.set('hasPermission', hasPerm);
-    }).keepLatest()
+    }).keepLatest(),
+    actions: {
+      'controller-action': function (action, data) {
+        if (this[action] && typeof this[action] === 'function') {
+          this[action](data);
+          return;
+        }
+
+        return true;
+      }
+    }
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/framework/base-model", ["exports", "ember-data"], function (_exports, _emberData) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _emberData.default.Model.extend({
+    createdAt: _emberData.default.attr('date', {
+      defaultValue() {
+        return new Date();
+      }
+
+    }),
+    updatedAt: _emberData.default.attr('date', {
+      defaultValue() {
+        return new Date();
+      }
+
+    }),
+    formattedCreatedAt: Ember.computed('createdAt', {
+      get() {
+        return window.moment(this.get('createdAt')).format('DD/MMM/YYYY hh:mm A');
+      }
+
+    }).readOnly(),
+    formattedUpdatedAt: Ember.computed('updatedAt', {
+      get() {
+        return window.moment(this.get('updatedAt')).format('DD/MMM/YYYY hh:mm A');
+      }
+
+    }).readOnly()
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/framework/base-route", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = Ember.Route.extend({
+    actions: {
+      'controller-action': function (action, data) {
+        const controller = this.get('controller');
+        if (controller && controller[action]) return this.get('controller').send('controller-action', action, data);else return true;
+      }
+    }
   });
 
   _exports.default = _default;
@@ -4614,12 +4703,6 @@
     enumerable: true,
     get: function () {
       return _cancelAll.default;
-    }
-  });
-  Object.defineProperty(_exports, "cancelAll", {
-    enumerable: true,
-    get: function () {
-      return _cancelAll.cancelAll;
     }
   });
 });
@@ -6210,12 +6293,6 @@
       return _perform.default;
     }
   });
-  Object.defineProperty(_exports, "perform", {
-    enumerable: true,
-    get: function () {
-      return _perform.perform;
-    }
-  });
 });
 ;define("twyr-webapp-server/helpers/pipe-action", ["exports", "ember-composable-helpers/helpers/pipe-action"], function (_exports, _pipeAction) {
   "use strict";
@@ -6712,12 +6789,6 @@
       return _task.default;
     }
   });
-  Object.defineProperty(_exports, "task", {
-    enumerable: true,
-    get: function () {
-      return _task.task;
-    }
-  });
 });
 ;define("twyr-webapp-server/helpers/titleize", ["exports", "ember-cli-string-helpers/helpers/titleize"], function (_exports, _titleize) {
   "use strict";
@@ -7073,12 +7144,6 @@
     enumerable: true,
     get: function () {
       return _emberConcurrency.default;
-    }
-  });
-  Object.defineProperty(_exports, "initialize", {
-    enumerable: true,
-    get: function () {
-      return _emberConcurrency.initialize;
     }
   });
 });
@@ -7447,7 +7512,7 @@
   var _default = _emberResolver.default;
   _exports.default = _default;
 });
-;define("twyr-webapp-server/routes/index", ["exports"], function (_exports) {
+;define("twyr-webapp-server/routes/application", ["exports", "twyr-webapp-server/framework/base-route"], function (_exports, _baseRoute) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -7455,7 +7520,13 @@
   });
   _exports.default = void 0;
 
-  var _default = Ember.Route.extend({});
+  var _default = _baseRoute.default.extend({
+    actions: {
+      'controller-action': function (action, data) {
+        this.get('controller').send('controller-action', action, data);
+      }
+    }
+  });
 
   _exports.default = _default;
 });
@@ -8378,8 +8449,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "c9bF+nNh",
-    "block": "{\"symbols\":[\"card\",\"form\",\"header\",\"text\",\"form\",\"header\",\"text\",\"form\",\"header\",\"text\"],\"statements\":[[4,\"liquid-unless\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-card\",null,null,{\"statements\":[[4,\"liquid-if\",[[27,\"eq\",[[23,[\"displayForm\"]],\"loginForm\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],[[\"class\"],[\"orange lighten-3\"]],{\"statements\":[[4,\"component\",[[22,9,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,10,[\"title\"]]],null,{\"statements\":[[1,[27,\"fa-icon\",[\"sign-in-alt\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[10]},null]],\"parameters\":[9]},null],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"paper-form\",null,[[\"onSubmit\"],[[27,\"perform\",[[23,[\"doLogin\"]]],null]]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column flex-100\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"email\",\"Login / Username\",[23,[\"username\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"username\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"Password\",[23,[\"password\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"password\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"resetPasswordForm\"]],[9],[0,\"Forgot Password\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"registerForm\"]],[9],[0,\"Register Account\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\"],[4,\"component\",[[22,8,[\"submit-button\"]]],[[\"primary\",\"raised\",\"disabled\"],[true,true,[27,\"or\",[[22,8,[\"isInvalid\"]],[23,[\"doLogin\",\"isRunning\"]]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"doLogin\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"sign-in-alt\"],[[\"class\"],[\"mr-2\"]]],false],[7,\"span\"],[9],[0,\"Login\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[8]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"liquid-if\",[[27,\"eq\",[[23,[\"displayForm\"]],\"resetPasswordForm\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],[[\"class\"],[\"amber lighten-3\"]],{\"statements\":[[4,\"component\",[[22,6,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,7,[\"title\"]]],null,{\"statements\":[[1,[27,\"paper-icon\",[\"lock-outline\"],[[\"class\"],[\"mr-2 pb-1\"]]],false],[0,\"Reset Password\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[7]},null]],\"parameters\":[6]},null],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"paper-form\",null,[[\"onSubmit\"],[[27,\"perform\",[[23,[\"resetPassword\"]]],null]]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column flex-100\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"email\",\"Login / Username\",[23,[\"resetUsername\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"resetUsername\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"loginForm\"]],[9],[0,\"Twy'r Login\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"registerForm\"]],[9],[0,\"Register Account\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\"],[4,\"component\",[[22,5,[\"submit-button\"]]],[[\"raised\",\"accent\",\"disabled\"],[true,true,[27,\"or\",[[22,5,[\"isInvalid\"]],[23,[\"resetPassword\",\"isRunning\"]]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"resetPassword\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"lock-outline\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Reset\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"liquid-if\",[[27,\"eq\",[[23,[\"displayForm\"]],\"registerForm\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],[[\"class\"],[\"yellow lighten-3\"]],{\"statements\":[[4,\"component\",[[22,3,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,4,[\"title\"]]],null,{\"statements\":[[1,[27,\"paper-icon\",[\"person-add\"],[[\"class\"],[\"mr-2 pb-1\"]]],false],[0,\"Create Account\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[4]},null]],\"parameters\":[3]},null],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"paper-form\",null,[[\"onSubmit\"],[[27,\"perform\",[[23,[\"registerAccount\"]]],null]]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column flex-100\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"text\",\"First Name\",[23,[\"firstName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"firstName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"text\",\"Last Name\",[23,[\"lastName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"lastName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"email\",\"Email\",[23,[\"username\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"username\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"text\",\"Mobile\",[23,[\"mobileNumber\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"mobileNumber\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"password\",\"Password\",[23,[\"password\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"password\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"password\",\"Confirm\",[23,[\"confirmPassword\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"confirmPassword\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"loginForm\"]],[9],[0,\"Twy'r Login\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"setDisplayForm\",\"resetPasswordForm\"]],[9],[0,\"Reset Password\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\"],[4,\"component\",[[22,2,[\"submit-button\"]]],[[\"raised\",\"accent\",\"disabled\"],[true,true,[27,\"or\",[[22,2,[\"isInvalid\"]],[23,[\"registerAccount\",\"isRunning\"]]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"registerAccount\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"person-add\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Register\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "XBX5R4QJ",
+    "block": "{\"symbols\":[\"card\",\"form\",\"header\",\"text\",\"form\",\"header\",\"text\",\"form\",\"header\",\"text\"],\"statements\":[[4,\"liquid-unless\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-card\",null,null,{\"statements\":[[4,\"liquid-if\",[[27,\"eq\",[[23,[\"displayForm\"]],\"loginForm\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],[[\"class\"],[\"orange lighten-3\"]],{\"statements\":[[4,\"component\",[[22,9,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,10,[\"title\"]]],null,{\"statements\":[[1,[27,\"fa-icon\",[\"sign-in-alt\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[10]},null]],\"parameters\":[9]},null],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"paper-form\",null,[[\"onSubmit\"],[[27,\"perform\",[[23,[\"doLogin\"]]],null]]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column flex-100\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"email\",\"Login / Username\",[23,[\"username\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"username\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"Password\",[23,[\"password\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"password\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"controller-action\",\"setDisplayForm\",\"resetPasswordForm\"]],[9],[0,\"Forgot Password\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"controller-action\",\"setDisplayForm\",\"registerForm\"]],[9],[0,\"Register Account\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\"],[4,\"component\",[[22,8,[\"submit-button\"]]],[[\"primary\",\"raised\",\"disabled\"],[true,true,[27,\"or\",[[22,8,[\"isInvalid\"]],[23,[\"doLogin\",\"isRunning\"]]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"doLogin\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"sign-in-alt\"],[[\"class\"],[\"mr-2\"]]],false],[7,\"span\"],[9],[0,\"Login\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[8]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"liquid-if\",[[27,\"eq\",[[23,[\"displayForm\"]],\"resetPasswordForm\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],[[\"class\"],[\"amber lighten-3\"]],{\"statements\":[[4,\"component\",[[22,6,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,7,[\"title\"]]],null,{\"statements\":[[1,[27,\"paper-icon\",[\"lock-outline\"],[[\"class\"],[\"mr-2 pb-1\"]]],false],[0,\"Reset Password\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[7]},null]],\"parameters\":[6]},null],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"paper-form\",null,[[\"onSubmit\"],[[27,\"perform\",[[23,[\"resetPassword\"]]],null]]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column flex-100\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"email\",\"Login / Username\",[23,[\"resetUsername\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"resetUsername\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"controller-action\",\"setDisplayForm\",\"loginForm\"]],[9],[0,\"Twy'r Login\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"controller-action\",\"setDisplayForm\",\"registerForm\"]],[9],[0,\"Register Account\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\"],[4,\"component\",[[22,5,[\"submit-button\"]]],[[\"raised\",\"accent\",\"disabled\"],[true,true,[27,\"or\",[[22,5,[\"isInvalid\"]],[23,[\"resetPassword\",\"isRunning\"]]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"resetPassword\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"lock-outline\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Reset\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"liquid-if\",[[27,\"eq\",[[23,[\"displayForm\"]],\"registerForm\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],[[\"class\"],[\"yellow lighten-3\"]],{\"statements\":[[4,\"component\",[[22,3,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,4,[\"title\"]]],null,{\"statements\":[[1,[27,\"paper-icon\",[\"person-add\"],[[\"class\"],[\"mr-2 pb-1\"]]],false],[0,\"Create Account\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[4]},null]],\"parameters\":[3]},null],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"paper-form\",null,[[\"onSubmit\"],[[27,\"perform\",[[23,[\"registerAccount\"]]],null]]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column flex-100\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"text\",\"First Name\",[23,[\"firstName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"firstName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"text\",\"Last Name\",[23,[\"lastName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"lastName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"email\",\"Email\",[23,[\"username\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"username\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"text\",\"Mobile\",[23,[\"mobileNumber\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"mobileNumber\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"password\",\"Password\",[23,[\"password\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"password\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"class\",\"type\",\"label\",\"value\",\"onChange\",\"required\"],[\"flex-45\",\"password\",\"Confirm\",[23,[\"confirmPassword\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"confirmPassword\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"controller-action\",\"setDisplayForm\",\"loginForm\"]],[9],[0,\"Twy'r Login\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"controller-action\",\"setDisplayForm\",\"resetPasswordForm\"]],[9],[0,\"Reset Password\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column\"],[9],[0,\"\\n\"],[4,\"component\",[[22,2,[\"submit-button\"]]],[[\"raised\",\"accent\",\"disabled\"],[true,true,[27,\"or\",[[22,2,[\"isInvalid\"]],[23,[\"registerAccount\",\"isRunning\"]]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"registerAccount\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"person-add\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Register\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/session/login-component.hbs"
     }
@@ -8860,7 +8931,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","pageTitle":{"replace":false,"separator":" > "},"changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1"},"sassOptions":{"implementation":{"info":"node-sass\t4.9.3\t(Wrapper)\t[JavaScript]\nlibsass  \t3.5.4\t(Sass Compiler)\t[C/C++]","types":{},"TRUE":{},"FALSE":{},"NULL":{}}},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","pageTitle":{"replace":false,"separator":" > "},"changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;

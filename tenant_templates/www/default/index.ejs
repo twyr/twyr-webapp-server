@@ -47,9 +47,9 @@
 
 	<!-- Setup DEBUG flags and global error handlers -->
 	<script type="application/javascript">
-		window.Ember.ENV.RAISE_ON_DEPRECATION = false; // <%= developmentMode %>;
-		window.Ember.ENV.LOG_STACKTRACE_ON_DEPRECATION = false; // <%= developmentMode %>;
-		window.Ember.run.backburner.DEBUG = false; // <%= developmentMode %>;
+		window.Ember.ENV.RAISE_ON_DEPRECATION = <%= developmentMode %>;
+		window.Ember.ENV.LOG_STACKTRACE_ON_DEPRECATION = <%= developmentMode %>;
+		window.Ember.run.backburner.DEBUG = <%= developmentMode %>;
 
 		window.Ember.onerror = function(error) {
 			console.error(`TODO: Send Ember Error to the server using the Beacon API. But, for now...\n`, error);
