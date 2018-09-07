@@ -220,8 +220,8 @@ $$;`
 	AS $$
 DECLARE
 	is_feature			INTEGER;
+	is_admin_only		INTEGER;
 	feature_parent		UUID;
-	is_admin_only		TEXT;
 	tenant_sub_domain	TEXT;
 BEGIN
 	is_feature := 0;
@@ -256,36 +256,35 @@ BEGIN
 		RETURN NEW;
 	END IF;
 
-	IF feature_parent IS NOT NULL
-	THEN
-		is_feature := 0;
-		SELECT
-			count(tenant_feature_id)
-		FROM
-			tenants_features
-		WHERE
-			tenant_id = NEW.tenant_id AND
-			module_id = feature_parent
-		INTO
-			is_feature;
+	is_feature := 0;
+	SELECT
+		count(tenant_feature_id)
+	FROM
+		tenants_features
+	WHERE
+		tenant_id = NEW.tenant_id AND
+		module_id = feature_parent
+	INTO
+		is_feature;
 
-		IF is_feature = 0
-		THEN
-			RAISE SQLSTATE '2F003' USING MESSAGE = 'Parent feature not mapped to this Tenant';
-		END IF;
+	IF is_feature = 0
+	THEN
+		RAISE SQLSTATE '2F003' USING MESSAGE = 'Parent feature not mapped to this Tenant';
 	END IF;
 
-	is_admin_only := '';
+	is_admin_only := 0;
 	SELECT
-		CAST(deploy AS TEXT)
+		COUNT(deploy)
 	FROM
 		modules
 	WHERE
-		module_id = NEW.module_id
+		module_id IN (SELECT module_id FROM fn_get_module_ancestors(NEW.module_id)) AND
+		type <> 'server' AND
+		deploy <> 'default'
 	INTO
 		is_admin_only;
 
-	IF is_admin_only <> 'admin'
+	IF is_admin_only = 0
 	THEN
 		RETURN NEW;
 	END IF;
@@ -302,7 +301,7 @@ BEGIN
 
 	IF tenant_sub_domain <> 'www'
 	THEN
-		RAISE SQLSTATE '2F003' USING MESSAGE = 'Admin only components can be mapped only to root tenant';
+		RAISE SQLSTATE '2F003' USING MESSAGE = 'Admin only features can be mapped only to root tenant';
 		RETURN NULL;
 	END IF;
 
@@ -312,7 +311,7 @@ $$;`
 	);
 
 	await knex.schema.withSchema('public').raw(
-`CREATE OR REPLACE FUNCTION public.fn_assign_feature_to_tenant ()
+`CREATE OR REPLACE FUNCTION public.fn_assign_new_feature_to_tenants ()
 	RETURNS trigger
 	LANGUAGE plpgsql
 	VOLATILE
@@ -320,13 +319,27 @@ $$;`
 	SECURITY INVOKER
 	COST 1
 	AS $$
+DECLARE
+	is_admin_feature	INTEGER;
 BEGIN
 	IF NEW.type <> 'feature' AND NEW.type <> 'server'
 	THEN
 		RETURN NEW;
 	END IF;
 
-	IF NEW.type = 'server' OR (NEW.type = 'feature' AND NEW.deploy = 'default')
+	is_admin_feature := 0;
+	SELECT
+		COUNT(deploy)
+	FROM
+		modules
+	WHERE
+		module_id IN (SELECT module_id FROM fn_get_module_ancestors(NEW.module_id)) AND
+		type <> 'server' AND
+		deploy <> 'default'
+	INTO
+		is_admin_feature;
+
+	IF NEW.type = 'server' OR (NEW.type = 'feature' AND is_admin_feature = 0)
 	THEN
 		INSERT INTO tenants_features (
 			tenant_id,
@@ -359,7 +372,7 @@ $$;`
 	);
 
 	await knex.schema.withSchema('public').raw(
-`CREATE OR REPLACE FUNCTION public.fn_assign_tenant_to_feature ()
+`CREATE OR REPLACE FUNCTION public.fn_assign_features_to_new_tenants ()
 	RETURNS trigger
 	LANGUAGE plpgsql
 	VOLATILE
@@ -367,19 +380,75 @@ $$;`
 	SECURITY INVOKER
 	COST 1
 	AS $$
-BEGIN
-	INSERT INTO tenants_features (
-		tenant_id,
-		module_id
-	)
-	SELECT
-		NEW.tenant_id,
-		module_id
-	FROM
-		modules
-	WHERE
-		type = 'server' OR (type = 'feature' AND deploy = 'default');
+DECLARE
+	server_record	RECORD;
+	server_cursor 	CURSOR FOR SELECT module_id FROM modules WHERE parent_module_id IS NULL AND type = 'server';
 
+	feature_record	RECORD;
+	feature_cursor	CURSOR (server_id UUID) FOR SELECT module_id FROM fn_get_module_descendants(server_id) WHERE level > 1 AND type = 'feature' ORDER BY level ASC;
+
+	is_admin_feature	INTEGER;
+BEGIN
+	OPEN server_cursor;
+	LOOP
+		FETCH server_cursor INTO server_record;
+		EXIT WHEN NOT FOUND;
+
+		INSERT INTO tenants_features (
+			tenant_id,
+			module_id
+		)
+		VALUES (
+			NEW.tenant_id,
+			server_record.module_id
+		);
+
+		OPEN feature_cursor(server_record.module_id);
+		LOOP
+			FETCH feature_cursor INTO feature_record;
+			EXIT WHEN NOT FOUND;
+
+			is_admin_feature := 0;
+			SELECT
+				COUNT(deploy)
+			FROM
+				modules
+			WHERE
+				module_id IN (SELECT module_id FROM fn_get_module_ancestors(feature_record.module_id)) AND
+				type <> 'server' AND
+				deploy <> 'default'
+			INTO
+				is_admin_feature;
+
+			IF is_admin_feature = 0
+			THEN
+				INSERT INTO tenants_features (
+					tenant_id,
+					module_id
+				)
+				VALUES (
+					NEW.tenant_id,
+					feature_record.module_id
+				);
+			END IF;
+
+			IF is_admin_feature = 1 AND NEW.sub_domain = 'www'
+			THEN
+				INSERT INTO tenants_features (
+					tenant_id,
+					module_id
+				)
+				VALUES (
+					NEW.tenant_id,
+					feature_record.module_id
+				);
+			END IF;
+		END LOOP;
+
+		CLOSE feature_cursor;
+	END LOOP;
+
+	CLOSE server_cursor;
 	RETURN NEW;
 END;
 $$;`
@@ -560,8 +629,8 @@ $$;`
 
 	// Finally, create the triggers...
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_check_tenant_feature_upsert_is_valid BEFORE INSERT OR UPDATE ON public.tenants_features FOR EACH ROW EXECUTE PROCEDURE public.fn_check_tenant_feature_upsert_is_valid();');
-	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_assign_feature_to_tenant AFTER INSERT ON public.modules FOR EACH ROW EXECUTE PROCEDURE public.fn_assign_feature_to_tenant();');
-	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_assign_tenant_to_feature AFTER INSERT ON public.tenants FOR EACH ROW EXECUTE PROCEDURE public.fn_assign_tenant_to_feature();');
+	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_assign_feature_to_tenant AFTER INSERT ON public.modules FOR EACH ROW EXECUTE PROCEDURE public.fn_assign_new_feature_to_tenants();');
+	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_assign_tenant_to_feature AFTER INSERT ON public.tenants FOR EACH ROW EXECUTE PROCEDURE public.fn_assign_features_to_new_tenants();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_assign_feature_permissions_to_tenant AFTER INSERT ON public.tenants_features FOR EACH ROW EXECUTE PROCEDURE public.fn_assign_feature_permissions_to_tenant();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_remove_descendant_feature_from_tenant AFTER DELETE ON public.tenants_features FOR EACH ROW EXECUTE PROCEDURE public.fn_remove_descendant_feature_from_tenant();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_remove_group_permission_from_descendants AFTER DELETE ON public.tenant_group_permissions FOR EACH ROW EXECUTE PROCEDURE public.fn_remove_group_permission_from_descendants();');
@@ -585,8 +654,8 @@ exports.down = async function(knex) {
 	await knex.raw('DROP FUNCTION IF EXISTS public.fn_remove_descendant_feature_from_tenant () CASCADE;');
 	await knex.raw('DROP FUNCTION IF EXISTS public.fn_check_tenant_feature_upsert_is_valid () CASCADE;');
 	await knex.raw('DROP FUNCTION IF EXISTS public.fn_assign_feature_permissions_to_tenant () CASCADE;');
-	await knex.raw('DROP FUNCTION IF EXISTS public.fn_assign_tenant_to_feature () CASCADE;');
-	await knex.raw('DROP FUNCTION IF EXISTS public.fn_assign_feature_to_tenant () CASCADE;');
+	await knex.raw('DROP FUNCTION IF EXISTS public.fn_assign_features_to_new_tenants () CASCADE;');
+	await knex.raw('DROP FUNCTION IF EXISTS public.fn_assign_new_feature_to_tenants () CASCADE;');
 	await knex.raw(`DROP FUNCTION IF EXISTS public.fn_get_tenant_server_template (IN uuid, IN uuid)`);
 
 	await knex.raw('DROP TABLE IF EXISTS public.tenant_server_template_positions_feature_frontend_components CASCADE;');

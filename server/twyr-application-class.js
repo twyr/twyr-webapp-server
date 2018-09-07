@@ -166,18 +166,23 @@ class TwyrApplication extends TwyrBaseModule {
 
 	// #region Private Methods
 	async _setupWebserverRoutes() {
+		const inflection = require('inflection');
 		const appRouter = this.$services.WebserverService.Interface.Router;
 
 		// Add in the components
 		Object.keys(this.$components || {}).forEach((componentName) => {
 			const componentRouter = this.$components[componentName].Router;
-			appRouter.use(`/${componentName}`, componentRouter.routes(), componentRouter.allowedMethods());
+			const inflectedComponentName = inflection.transform(componentName, ['foreign_key', 'dasherize']).replace('-id', '');
+
+			appRouter.use(`/${inflectedComponentName}`, componentRouter.routes(), componentRouter.allowedMethods());
 		});
 
 		// Add in the features
 		Object.keys(this.$features || {}).forEach((featureName) => {
 			const featureRouter = this.$features[featureName].Router;
-			appRouter.use(`/${featureName}`, featureRouter.routes(), featureRouter.allowedMethods());
+			const inflectedFeatureName = inflection.transform(featureName, ['foreign_key', 'dasherize']).replace('-id', '');
+
+			appRouter.use(`/${inflectedFeatureName}`, featureRouter.routes(), featureRouter.allowedMethods());
 		});
 
 		// Add in the templates at the end...
@@ -185,19 +190,6 @@ class TwyrApplication extends TwyrBaseModule {
 			const tmplRouter = this.$templates[tmplName].Router;
 			appRouter.get('*', tmplRouter.routes(), tmplRouter.allowedMethods());
 		});
-
-		// appRouter.all('*', async (ctxt) => {
-		// 	const response = { 'message': `${this.name}::${ctxt.originalUrl}` };
-
-		// 	ctxt.status = 200;
-		// 	ctxt.type = 'application/json; charset=utf-8';
-		// 	ctxt.body = response;
-		// });
-
-		if(twyrEnv === 'development' || twyrEnv === 'test')
-		console.log(`Routes: ${JSON.stringify(appRouter.stack.map((route) => {
-			return `[${route.methods.join(' / ')}] ${route.path}`;
-		}), null, '\t')}`);
 
 		return;
 	}

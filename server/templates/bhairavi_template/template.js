@@ -70,7 +70,7 @@ class BhairaviTemplate extends TwyrBaseTemplate {
 		// If it gets till here... must be a SPA asking for a client-side defined route
 		// Let the client-side router handle the transition. We'll treat it as if 'GET /'
 		// was requested
-		this.$router.use('*', async (ctxt, next) => {
+		this.$router.get('*', async (ctxt, next) => {
 			try {
 				await this._serveTenantTemplate(ctxt, next);
 			}

@@ -1,7 +1,8 @@
+/* eslint-disable security/detect-object-injection */
 'use strict';
 
 /**
- * Module dependencies, required for ALL PlantWorks modules
+ * Module dependencies, required for ALL Twy'r modules
  * @ignore
  */
 
@@ -9,6 +10,8 @@
  * Module dependencies, required for this module
  * @ignore
  */
+const inflection = require('inflection');
+
 const TwyrBaseModule = require('./twyr-base-module').TwyrBaseModule;
 const TwyrTmplError = require('twyr-template-error').TwyrTemplateError;
 
@@ -130,7 +133,36 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 		}
 
 		try {
-			const renderConfig = Object.assign({}, ctxt.state.tenant['template']['base_template_configuration'], ctxt.state.tenant['template']['configuration']);
+			let server = this.$parent;
+			while(server.$parent) server = server.$parent;
+
+			const clientsideAssets = {};
+			Object.keys(server.$features || {}).forEach((featureName) => {
+				const feature = server.$features[featureName];
+				const featureClientsideAssets = feature.getClientsideAssets(ctxt);
+				const inflectedFeatureName = inflection.transform(featureName, ['foreign_key', 'dasherize']).replace('-id', '');
+
+				Object.keys(featureClientsideAssets).forEach((featureClientsideAssetName) => {
+					if(!clientsideAssets[featureClientsideAssetName]) clientsideAssets[featureClientsideAssetName] = [];
+
+					if(featureClientsideAssetName === 'RouteMap') { // eslint-disable-line curly
+						clientsideAssets[featureClientsideAssetName] =
+`this.route(${inflectedFeatureName}, { "path": "/${inflectedFeatureName}" }, function() {
+${clientsideAssets[featureClientsideAssetName]}
+})`;
+					}
+
+					clientsideAssets[featureClientsideAssetName].push(featureClientsideAssets[featureClientsideAssetName]);
+				});
+			});
+
+			Object.keys(clientsideAssets).forEach((clientsideAssetName) => {
+				clientsideAssets[clientsideAssetName] = clientsideAssets[clientsideAssetName].join('\n');
+			});
+
+			if(!clientsideAssets['RouteMap']) clientsideAssets['RouteMap'] = '';
+
+			const renderConfig = Object.assign({}, ctxt.state.tenant['template']['base_template_configuration'], ctxt.state.tenant['template']['configuration'], clientsideAssets);
 			renderConfig['developmentMode'] = (twyrEnv === 'development') || (twyrEnv === 'test');
 
 			const ejs = require('ejs');

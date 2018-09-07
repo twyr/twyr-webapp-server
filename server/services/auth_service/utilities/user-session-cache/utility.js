@@ -3,7 +3,7 @@
 /* eslint-disable security/detect-object-injection */
 
 /**
- * Module dependencies, required for ALL PlantWorks modules
+ * Module dependencies, required for ALL Twy'r modules
  * @ignore
  */
 
