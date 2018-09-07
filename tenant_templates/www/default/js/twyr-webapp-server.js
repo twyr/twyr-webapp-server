@@ -26,7 +26,20 @@
   const App = Ember.Application.extend(Ember.Evented, {
     'modulePrefix': _environment.default.modulePrefix,
     'podModulePrefix': _environment.default.podModulePrefix,
-    'Resolver': _resolver.default
+    'Resolver': _resolver.default,
+
+    init() {
+      this._super(...arguments);
+
+      window.Ember.onerror = function (error) {
+        console.error(`TODO: Send Ember Error to the server using the Beacon API. But, for now...\n`, error);
+      };
+
+      Ember.RSVP.on('error', function (error) {
+        console.error(`TODO: Send RSVP Error to the server using the Beacon API. But, for now...\n`, error);
+      });
+    }
+
   });
   (0, _emberLoadInitializers.default)(App, _environment.default.modulePrefix);
   var _default = App;
@@ -3734,7 +3747,7 @@
     }
   });
 });
-;define("twyr-webapp-server/components/twyr-model-table-actions", ["exports", "twyr-webapp-server/framework/base-component"], function (_exports, _baseComponent) {
+;define("twyr-webapp-server/components/twyr-model-table-actions", ["exports", "twyr-webapp-server/framework/base-component", "ember-invoke-action"], function (_exports, _baseComponent, _emberInvokeAction) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -3742,13 +3755,10 @@
   });
   _exports.default = void 0;
 
-  /* eslint-disable ember/avoid-leaking-state-in-ember-objects */
-
-  /* eslint-disable ember/closure-actions */
-  var _default = _baseComponent.default.extend({
-    'view': function (record) {
+  var _default = _baseComponent.default.extend(_emberInvokeAction.InvokeActionMixin, {
+    view(record) {
       if (this.get('callbacks.viewAction')) {
-        // this.sendAction('controller-action', this.get('callbacks.viewAction'), record);
+        this.invokeAction('controller-action', this.get('callbacks.viewAction'), record);
         return true;
       }
 
@@ -3759,14 +3769,15 @@
 
       return false;
     },
-    'edit': function (record) {
+
+    edit(record) {
       if (this.get('inlineEditEnabled')) {
         this.get('editRow')();
         return true;
       }
 
       if (this.get('callbacks.editAction')) {
-        // this.sendAction('controller-action', this.get('callbacks.editAction'), record);
+        this.invokeAction('controller-action', this.get('callbacks.editAction'), record);
         return true;
       }
 
@@ -3777,13 +3788,14 @@
 
       return false;
     },
-    'save': function (record) {
+
+    save(record) {
       if (this.get('inlineEditEnabled')) {
         this.get('saveRow')();
       }
 
       if (this.get('callbacks.saveAction')) {
-        // this.sendAction('controller-action', this.get('callbacks.saveAction'), record);
+        this.invokeAction('controller-action', this.get('callbacks.saveAction'), record);
         return true;
       }
 
@@ -3794,13 +3806,14 @@
 
       return false;
     },
-    'cancel': function (record) {
+
+    cancel(record) {
       if (this.get('inlineEditEnabled')) {
         this.get('cancelEditRow')();
       }
 
       if (this.get('callbacks.cancelAction')) {
-        // this.sendAction('controller-action', this.get('callbacks.cancelAction'), record);
+        this.invokeAction('controller-action', this.get('callbacks.cancelAction'), record);
         return true;
       }
 
@@ -3811,9 +3824,10 @@
 
       return false;
     },
-    'delete': function (record) {
+
+    delete(record) {
       if (this.get('callbacks.deleteAction')) {
-        // this.sendAction('controller-action', this.get('callbacks.deleteAction'), record);
+        this.invokeAction('controller-action', this.get('callbacks.deleteAction'), record);
         return true;
       }
 
@@ -3824,13 +3838,16 @@
 
       return false;
     },
-    'actions': {
-      'collapseRow': function (index, record) {
+
+    actions: {
+      collapseRow(index, record) {
         this.get('collapseRow')(index, record);
       },
-      'expandRow': function (index, record) {
+
+      expandRow(index, record) {
         this.get('expandRow')(index, record);
       }
+
     }
   });
 
@@ -3844,7 +3861,6 @@
   });
   _exports.default = void 0;
 
-  /* eslint-disable ember/avoid-leaking-state-in-ember-objects */
   var _default = _baseComponent.default.extend({
     actions: {
       toggleAllSelection() {
@@ -3876,7 +3892,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/components/twyr-model-table", ["exports", "ember-concurrency", "twyr-webapp-server/themes/bootstrap4", "twyr-webapp-server/framework/base-component"], function (_exports, _emberConcurrency, _bootstrap, _baseComponent) {
+;define("twyr-webapp-server/components/twyr-model-table", ["exports", "twyr-webapp-server/framework/base-component", "twyr-webapp-server/themes/bootstrap4", "ember-invoke-action", "ember-concurrency"], function (_exports, _baseComponent, _bootstrap, _emberInvokeAction, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -3885,18 +3901,19 @@
   _exports.default = void 0;
 
   /* eslint-disable require-yield */
-
-  /* eslint-disable no-console */
-
-  /* eslint-disable ember/closure-actions */
-
-  /* eslint-disable ember/avoid-leaking-state-in-ember-objects */
-  var _default = _baseComponent.default.extend({
+  var _default = _baseComponent.default.extend(_emberInvokeAction.InvokeActionMixin, {
     themeInstance: null,
-    _messages: {
-      searchLabel: 'Filter: ',
-      tableSummary: 'Showing %@ - %@ of %@'
+    _messages: null,
+
+    init() {
+      this.set('_messages', {
+        searchLabel: 'Filter: ',
+        tableSummary: 'Showing %@ - %@ of %@'
+      });
+
+      this._super(...arguments);
     },
+
     onWillInsertElement: (0, _emberConcurrency.task)(function* () {
       const mergedMessages = Object.assign({}, this.get('_messages'), this.get('messages') || {});
       this.set('themeInstance', _bootstrap.default.create({
@@ -3925,13 +3942,15 @@
 <span>Add</span>
 <div class="md-ripple-container" style=""></div>
 `);
-      createButton.on('click', () => {// if(this.get('callbacks.addAction')) {
-        // 	this.sendAction('controller-action', this.get('callbacks.addAction'));
-        // 	return;
-        // }
-        // if(this.get('callbacks.addTask')) {
-        // 	this.get('callbacks.addTask').perform();
-        // }
+      createButton.on('click', () => {
+        if (this.get('callbacks.addAction')) {
+          this.invokeAction('controller-action', this.get('callbacks.addAction'));
+          return;
+        }
+
+        if (this.get('callbacks.addTask')) {
+          this.get('callbacks.addTask').perform();
+        }
       });
       const lastHeaderColumn = window.$(this.$('table thead tr:first-child th:last-child')[0]);
       lastHeaderColumn.addClass('text-right');
@@ -3942,14 +3961,16 @@
       createButton.off('click');
     }).drop().on('willDestroyElement'),
 
-    displayDataChanged(displayChangedData) {// if(this.get('callbacks.displayDataChangedAction')) {
-      // 	this.sendAction('controller-action', this.get('callbacks.displayDataChangedAction'), displayChangedData);
-      // 	return true;
-      // }
-      // if(this.get('callbacks.displayDataChangedTask')) {
-      // 	this.get('callbacks.displayDataChangedTask').perform(displayChangedData);
-      // 	return true;
-      // }
+    displayDataChanged(displayChangedData) {
+      if (this.get('callbacks.displayDataChangedAction')) {
+        this.invokeAction('controller-action', this.get('callbacks.displayDataChangedAction'), displayChangedData);
+        return true;
+      }
+
+      if (this.get('callbacks.displayDataChangedTask')) {
+        this.get('callbacks.displayDataChangedTask').perform(displayChangedData);
+        return true;
+      }
     }
 
   });
@@ -8218,8 +8239,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "bBNm+nsN",
-    "block": "{\"symbols\":[\"navbar\",\"nav\"],\"statements\":[[2,\" For the configurable Page Title \"],[0,\"\\n\"],[1,[21,\"head-layout\"],false],[0,\"\\n\"],[1,[27,\"page-title\",[[23,[\"mainTitle\"]]],null],false],[0,\"\\n\\n\"],[2,\" Customizable Header \"],[0,\"\\n\"],[7,\"header\"],[11,\"class\",\"sticky-top\"],[9],[0,\"\\n\"],[4,\"bs-navbar\",null,[[\"class\",\"position\",\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"p-0 px-2 py-1\",\"sticky-top\",\"light\",\"twyr\",false,true]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"navbar-header\"],[9],[0,\"\\n\"],[4,\"link-to\",[\"index\"],[[\"class\"],[\"navbar-brand white-text\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[7,\"span\"],[11,\"class\",\"h3\"],[11,\"style\",\"font-family:Keania One;\"],[9],[0,\"Twy'r\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\"],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,1,[\"nav\"]]],[[\"id\",\"class\"],[\"twyr-webapp-server-template-bhairavi-notification-area\",\"ml-auto nav-flex-icons white-text\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,2,[\"item\"]]],null,{\"statements\":[[1,[27,\"component\",[\"session/logout-component\"],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null],[10],[0,\"\\n\\n\"],[2,\" Main Area \"],[0,\"\\n\"],[7,\"main\"],[11,\"class\",\"bg-light flex p-2\"],[11,\"style\",\"box-shadow:0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-left-column\"],[11,\"class\",\"layout-column layout-align-start flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-outlet\"],[11,\"class\",\"layout-row layout-align-center-start flex\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"flex\"]]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-right-column\"],[11,\"class\",\"layout-column layout-align-start flex-initial\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[\"session/login-component\"],null],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" Customizable Footer \"],[0,\"\\n\"],[7,\"footer\"],[11,\"class\",\"page-footer mt-2 layout-row layout-align-space-between grey\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"flex p-3 text-left\"],[9],[0,\"\\n\\t\\t\"],[4,\"link-to\",[\"freestyle\"],null,{\"statements\":[[0,\"Styleguide\"]],\"parameters\":[]},null],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"flex p-3 text-right\"],[9],[0,\"\\n\\t\\tCopyright© 2018 \"],[4,\"link-to\",[\"index\"],null,{\"statements\":[[0,\"Twy'r\"]],\"parameters\":[]},null],[0,\". All rights reserved.\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" The mandatory empty div elements for wormhole, paper, etc. \"],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"ember-bootstrap-wormhole\"],[9],[10],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"ember-basic-dropdown-wormhole\"],[9],[10],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"paper-wormhole\"],[9],[10],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"paper-toast-fab-wormhole\"],[9],[10],[0,\"\\n\\n\\n\"],[2,\" Modal \"],[0,\"\\n\"],[4,\"liquid-if\",[[23,[\"showDialog\"]]],null,{\"statements\":[[4,\"paper-dialog\",null,[[\"class\",\"onClose\",\"parent\",\"origin\",\"clickOutsideToClose\",\"escapeToClose\"],[[23,[\"modalData\",\"dialogClass\"]],[27,\"action\",[[22,0,[]],\"closeDialog\",false],null],[23,[\"modalData\",\"parentElement\"]],[23,[\"modalData\",\"dialogOrigin\"]],false,false]],{\"statements\":[[4,\"paper-toolbar\",null,[[\"class\"],[\"stylish-color white-text\"]],{\"statements\":[[4,\"paper-toolbar-tools\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"h2\"],[9],[1,[23,[\"modalData\",\"title\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"componentName\"]]],null,{\"statements\":[[4,\"paper-dialog-content\",null,[[\"class\"],[\"flex m-0 p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"component\",[[23,[\"modalData\",\"componentName\"]]],[[\"state\"],[[23,[\"modalData\",\"componentState\"]]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-dialog-content\",null,null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[23,[\"modalData\",\"content\"]],true],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}],[0,\"\\n\"],[4,\"if\",[[27,\"or\",[[23,[\"modalData\",\"confirmButton\"]],[23,[\"modalData\",\"cancelButton\"]]],null]],null,{\"statements\":[[0,\"\\t\\t\"],[1,[21,\"paper-divider\"],false],[0,\"\\n\"],[4,\"paper-dialog-actions\",null,[[\"class\"],[\"layout-row layout-align-end-center\"]],{\"statements\":[[4,\"if\",[[23,[\"modalData\",\"cancelButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"closeDialog\",false],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"cancelButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"cancelButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"confirmButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"closeDialog\",true],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"confirmButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"confirmButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "lJ1ab5IQ",
+    "block": "{\"symbols\":[\"navbar\",\"nav\"],\"statements\":[[2,\" For the configurable Page Title \"],[0,\"\\n\"],[1,[21,\"head-layout\"],false],[0,\"\\n\"],[1,[27,\"page-title\",[[23,[\"mainTitle\"]]],null],false],[0,\"\\n\\n\"],[2,\" Customizable Header \"],[0,\"\\n\"],[7,\"header\"],[11,\"class\",\"sticky-top\"],[9],[0,\"\\n\"],[4,\"bs-navbar\",null,[[\"class\",\"position\",\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"p-0 px-2 py-1\",\"sticky-top\",\"light\",\"twyr\",false,true]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"navbar-header\"],[9],[0,\"\\n\"],[4,\"link-to\",[\"index\"],[[\"class\"],[\"navbar-brand white-text\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[7,\"span\"],[11,\"class\",\"h3\"],[11,\"style\",\"font-family:Keania One;\"],[9],[0,\"Twy'r\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\"],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,1,[\"nav\"]]],[[\"id\",\"class\"],[\"twyr-webapp-server-template-bhairavi-notification-area\",\"ml-auto nav-flex-icons white-text\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,2,[\"item\"]]],null,{\"statements\":[[1,[27,\"component\",[\"session/logout-component\"],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null],[10],[0,\"\\n\\n\"],[2,\" Main Area \"],[0,\"\\n\"],[7,\"main\"],[11,\"class\",\"bg-light flex p-2\"],[11,\"style\",\"box-shadow:0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-left-column\"],[11,\"class\",\"layout-column layout-align-start flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-outlet\"],[11,\"class\",\"layout-row layout-align-center-start flex\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"flex\"]]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-right-column\"],[11,\"class\",\"layout-column layout-align-start flex-initial\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[\"session/login-component\"],null],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" Customizable Footer \"],[0,\"\\n\"],[7,\"footer\"],[11,\"class\",\"page-footer mt-2 layout-row layout-align-space-between grey\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"flex p-3 text-left\"],[9],[0,\"\\n\\t\\t\"],[4,\"link-to\",[\"freestyle\"],null,{\"statements\":[[0,\"Styleguide\"]],\"parameters\":[]},null],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"flex p-3 text-right\"],[9],[0,\"\\n\\t\\tCopyright© 2018 \"],[4,\"link-to\",[\"index\"],null,{\"statements\":[[0,\"Twy'r\"]],\"parameters\":[]},null],[0,\". All rights reserved.\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" The mandatory empty div elements for wormhole, paper, bootstrap, etc. \"],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"ember-bootstrap-wormhole\"],[9],[10],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"ember-basic-dropdown-wormhole\"],[9],[10],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"paper-wormhole\"],[9],[10],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"paper-toast-fab-wormhole\"],[9],[10],[0,\"\\n\\n\\n\"],[2,\" Modal \"],[0,\"\\n\"],[4,\"liquid-if\",[[23,[\"showDialog\"]]],null,{\"statements\":[[4,\"paper-dialog\",null,[[\"class\",\"onClose\",\"parent\",\"origin\",\"clickOutsideToClose\",\"escapeToClose\"],[[23,[\"modalData\",\"dialogClass\"]],[27,\"action\",[[22,0,[]],\"closeDialog\",false],null],[23,[\"modalData\",\"parentElement\"]],[23,[\"modalData\",\"dialogOrigin\"]],false,false]],{\"statements\":[[4,\"paper-toolbar\",null,[[\"class\"],[\"stylish-color white-text\"]],{\"statements\":[[4,\"paper-toolbar-tools\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"h2\"],[9],[1,[23,[\"modalData\",\"title\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"componentName\"]]],null,{\"statements\":[[4,\"paper-dialog-content\",null,[[\"class\"],[\"flex m-0 p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"component\",[[23,[\"modalData\",\"componentName\"]]],[[\"state\"],[[23,[\"modalData\",\"componentState\"]]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-dialog-content\",null,null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[23,[\"modalData\",\"content\"]],true],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}],[0,\"\\n\"],[4,\"if\",[[27,\"or\",[[23,[\"modalData\",\"confirmButton\"]],[23,[\"modalData\",\"cancelButton\"]]],null]],null,{\"statements\":[[0,\"\\t\\t\"],[1,[21,\"paper-divider\"],false],[0,\"\\n\"],[4,\"paper-dialog-actions\",null,[[\"class\"],[\"layout-row layout-align-end-center\"]],{\"statements\":[[4,\"if\",[[23,[\"modalData\",\"cancelButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"closeDialog\",false],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"cancelButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"cancelButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"confirmButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"closeDialog\",true],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"confirmButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"confirmButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/application.hbs"
     }

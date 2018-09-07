@@ -33,9 +33,10 @@
 	<!-- Ember stuff - imported vendor.js from the ember-addon project... -->
 	<script src="/js/vendor.js"></script>
 
-	<!-- App.js - script to init/start the Ember App -->
-	<script src="/js/twyr-webapp-server.js"></script>
+	<!-- Ember template compiler - for dynamic compilation of templates, whenever we require it... -->
+	<script type="application/javascript" src="/ember-template-compiler.js"></script>
 
+	<!-- Setup global stuff, DEBUG flags and global error handlers -->
 	<script type="application/javascript">
 	$.ajaxSetup({
 		'cache': <%= !developmentMode %>,
@@ -43,30 +44,19 @@
 			'withCredentials': true
 		}
 	});
-	</script>
 
-	<!-- Setup DEBUG flags and global error handlers -->
-	<script type="application/javascript">
-		window.Ember.ENV.RAISE_ON_DEPRECATION = <%= developmentMode %>;
-		window.Ember.ENV.LOG_STACKTRACE_ON_DEPRECATION = <%= developmentMode %>;
-		window.Ember.run.backburner.DEBUG = <%= developmentMode %>;
-
-		window.Ember.onerror = function(error) {
-			console.error(`TODO: Send Ember Error to the server using the Beacon API. But, for now...\n`, error);
-		};
-
-		window.Ember.RSVP.on('error', function(error) {
-			console.error(`TODO: Send RSVP Error to the server using the Beacon API. But, for now...\n`, error);
-		});
+	Ember.ENV.RAISE_ON_DEPRECATION = <%= developmentMode %>;
+	Ember.ENV.LOG_STACKTRACE_ON_DEPRECATION = <%= developmentMode %>;
+	Ember.run.backburner.DEBUG = <%= developmentMode %>;
 	</script>
 
 	<!-- Primus - realtime websocket connection stuff -->
 	<script type="application/javascript" src="/websockets/primus.js"></script>
 
-	<!-- Ember template compiler - for dynamic compilation of templates, whenever we require it... -->
-	<script type="application/javascript" src="/ember-template-compiler.js"></script>
+	<!-- App.js - The Ember App Definitions -->
+	<script src="/js/twyr-webapp-server.js"></script>
 
-	<!-- Setup the router -->
+	<!-- Setup the ember routes, and start the App -->
 	<script type="application/javascript">
 		define("twyr-webapp-server/router", ["exports", "twyr-webapp-server/config/environment"], function (_exports, _environment) {
 			"use strict";
@@ -83,16 +73,13 @@
 
 			Router.map(function () {
 				this.route("freestyle", { "path": "/freestyle" });
-				// Routes from Web Applications
+				<%- RouteMap %>
 			});
 
 			var _default = Router;
 			_exports.default = _default;
 		});
-	</script>
 
-	<!-- Finally, start the App -->
-	<script type="application/javascript">
 		window.TwyrApp = require('twyr-webapp-server/app')['default'].create({
 			"LOG_RESOLVER": <%= developmentMode %>,
 
