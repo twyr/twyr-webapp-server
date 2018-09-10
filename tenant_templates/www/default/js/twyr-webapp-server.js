@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 
 
@@ -8614,8 +8614,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "pOphMAnv",
-    "block": "{\"symbols\":[],\"statements\":[[7,\"title\"],[9],[1,[23,[\"model\",\"title\"]],false],[10],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "m1Ak8PlK",
+    "block": "{\"symbols\":[],\"statements\":[[2,\" `app/templates/head.hbs` \"],[0,\"\\n\"],[2,\" content from ember-page-title, injected by ember-cli-head \"],[0,\"\\n\"],[2,\" The 'model' available in this template can be populated by \"],[0,\"\\n\"],[2,\" setting values on the 'head-data' service. \"],[0,\"\\n\"],[7,\"title\"],[9],[1,[23,[\"model\",\"title\"]],false],[10],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/head.hbs"
     }
