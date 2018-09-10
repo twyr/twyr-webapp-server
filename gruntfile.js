@@ -46,6 +46,9 @@ module.exports = function(grunt) {
 			},
 			'setup-test-db': {
 				'command': 'cd ./knex_migrations && NODE_ENV=test ./../node_modules/.bin/knex migrate:latest && NODE_ENV=test ./../node_modules/.bin/knex seed:run && cd ..'
+			},
+			'undo-test-db': {
+				'command': 'cd ./knex_migrations && NODE_ENV=test ./../node_modules/.bin/knex migrate:rollback && cd .. && redis-cli flushall'
 			}
 		},
 
@@ -156,5 +159,5 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-mocha-istanbul');
 	grunt.loadNpmTasks('grunt-xmlstoke');
 
-	grunt.registerTask('default', ['exec:clean', 'env', 'eslint', 'xmlstoke:deleteESLintBugs', 'xmlstoke:deleteEmptyTestcases', 'xmlstoke:deleteEmptyTestsuites', 'xmlstoke:prettify', 'exec:setup-test-db', 'mochaTest', 'mocha_istanbul:coverage', 'exec:docs', 'exec:rename-docs', 'exec:doctor', 'clean', 'jsbeautifier', 'exec:clinic-upload', 'exec:organize_build_results', 'exec:clinic-clean', 'coveralls']);
+	grunt.registerTask('default', ['exec:clean', 'env', 'eslint', 'xmlstoke:deleteESLintBugs', 'xmlstoke:deleteEmptyTestcases', 'xmlstoke:deleteEmptyTestsuites', 'xmlstoke:prettify', 'exec:undo-test-db', 'exec:setup-test-db', 'mochaTest', 'exec:undo-test-db', 'exec:setup-test-db', 'mocha_istanbul:coverage', 'exec:docs', 'exec:rename-docs', 'exec:doctor', 'clean', 'jsbeautifier', 'exec:organize_build_results', 'exec:clinic-clean', 'coveralls']);
 };

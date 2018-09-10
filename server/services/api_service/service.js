@@ -158,18 +158,27 @@ class ApiService extends TwyrBaseService {
 			if(!Array.isArray(data))
 				data = [data];
 
+			const apis = this.$patrun.find(pattern);
 			const results = [];
-			for(const api of pattern) { // eslint-disable-line curly
+
+			let errors = null;
+			for(const api of apis) { // eslint-disable-line curly
 				try {
 					const result = await api(...data);
 					results.push(result);
 				}
 				catch(execErr) {
-					results.push(execErr);
+					if(!errors)
+						errors = new TwyrSrvcError(execErr);
+					else
+						errors = new TwyrSrvcError(execErr, errors);
 				}
 			}
 
-			return results;
+			if(!errors)
+				return results;
+			else
+				throw errors;
 		}
 		catch(err) {
 			throw new TwyrSrvcError(`${this.name}::execute error`, err);

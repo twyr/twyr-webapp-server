@@ -42,8 +42,11 @@ class Session extends TwyrBaseComponent {
 	async _addRoutes() {
 		try {
 			this.$router.get('/user', this._getUser.bind(this));
+
 			this.$router.post('/login', this._login.bind(this));
 			this.$router.get('/logout', this._logout.bind(this));
+
+			this.$router.post('/reset-password', this._resetPassword.bind(this));
 
 			await super._addRoutes();
 
@@ -69,6 +72,8 @@ class Session extends TwyrBaseComponent {
 	}
 
 	async _login(ctxt) {
+		if(ctxt.isAuthenticated()) throw new TwyrCompError(`Already logged in`);
+
 		return this.$dependencies.AuthService.authenticate('twyr-local', async (err, user, info, status) => {
 			if(err) throw new TwyrCompError(`Login Error: `, err);
 			if(!user) throw new TwyrCompError(`User: ${ctxt.request.body.username} not found`);
@@ -91,6 +96,15 @@ class Session extends TwyrBaseComponent {
 		}
 
 		throw new TwyrCompError(`No active session`);
+	}
+
+	async _resetPassword(ctxt) {
+		await this.$dependencies.ApiService.execute('SessionMiddleware::resetPassword', ctxt);
+
+		ctxt.status = 200;
+		ctxt.body = { 'status': 200, 'message': `Password reset successful. Please check your email for the new password` };
+
+		return;
 	}
 	// #endregion
 

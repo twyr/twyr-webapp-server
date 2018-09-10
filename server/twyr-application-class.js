@@ -11,6 +11,9 @@
  * Module dependencies, required for this module
  * @ignore
  */
+const upash = require('upash');
+upash.install('pbkdf2', require('@phc/pbkdf2'));
+
 const TwyrBaseModule = require('twyr-base-module').TwyrBaseModule;
 const TwyrBaseError = require('twyr-base-error').TwyrBaseError;
 

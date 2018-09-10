@@ -52,7 +52,7 @@ describe('Session Component Test Cases', function() {
 			.type('form')
 			.send({
 				'username': 'root@something.com',
-				'password': 'plantworks'
+				'password': 'twyr'
 			})
 			.end((err, response) => {
 				expect(response).to.have.status(500);
@@ -66,7 +66,7 @@ describe('Session Component Test Cases', function() {
 			.type('form')
 			.send({
 				'username': 'root@twyr.com',
-				'password': 'twyr'
+				'password': 'twyr2'
 			})
 			.end((err, response) => {
 				expect(response).to.have.status(500);
@@ -80,12 +80,26 @@ describe('Session Component Test Cases', function() {
 			.type('form')
 			.send({
 				'username': 'root@twyr.com',
-				'password': 'plantworks'
+				'password': 'twyr'
 			})
 			.end((err, response) => {
 				expect(response).to.have.status(200);
 				expect(response).to.have.cookie('twyr!webapp!server');
 
+				done(err);
+			});
+	});
+
+	it('Should throw an error on Login for an authenticated session', function(done) {
+		agent
+			.post('/session/login')
+			.type('form')
+			.send({
+				'username': 'root@twyr.com',
+				'password': 'twyr'
+			})
+			.end((err, response) => {
+				expect(response).to.have.status(500);
 				done(err);
 			});
 	});
@@ -112,6 +126,15 @@ describe('Session Component Test Cases', function() {
 			});
 	});
 
+	it('Should throw an error on Logout after a Logout', function(done) {
+		agent
+			.get('/session/logout')
+			.end((err, response) => {
+				expect(response).to.have.status(500);
+				done(err);
+			});
+	});
+
 	it('Should go back to returning the Public User details', function(done) {
 		agent
 			.get('/session/user')
@@ -121,6 +144,46 @@ describe('Session Component Test Cases', function() {
 				response.body.should.have.property('loggedIn').eql(false);
 				response.body.should.have.property('permissions').eql(['public']);
 
+				done(err);
+			});
+	});
+
+	it('Should throw a reset password error if User is not registered', function(done) {
+		agent
+			.post('/session/reset-password')
+			.type('form')
+			.send({
+				'username': 'unknown-user@twyr.com'
+			})
+			.end((err, response) => {
+				expect(response).to.have.status(500);
+				done(err);
+			});
+	});
+
+	it('Should reset password if User is registered', function(done) {
+		agent
+			.post('/session/reset-password')
+			.type('form')
+			.send({
+				'username': 'root@twyr.com'
+			})
+			.end((err, response) => {
+				expect(response).to.have.status(200);
+				done(err);
+			});
+	});
+
+	it('Login with old password should not work anymore', function(done) {
+		agent
+			.post('/session/login')
+			.type('form')
+			.send({
+				'username': 'root@twyr.com',
+				'password': 'twyr'
+			})
+			.end((err, response) => {
+				expect(response).to.have.status(500);
 				done(err);
 			});
 	});

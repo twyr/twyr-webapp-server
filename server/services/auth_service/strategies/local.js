@@ -11,8 +11,9 @@
  */
 
 exports.strategy = function() {
-	const credential = require('credential-plus');
-	credential.install(require('credential-plus-pbkdf2'));
+	const upash = require('upash');
+	// Not required here - apparently, once installed anywhere, we're good to go
+	// upash.install('pbkdf2', require('@phc/pbkdf2'));
 
 	const databaseSrvc = this.$dependencies.DatabaseService;
 	const User = databaseSrvc.Model.extend({
@@ -31,7 +32,7 @@ exports.strategy = function() {
 			const userRecord = await new User({ 'email': username }).fetch();
 			if(!userRecord) throw new Error('Invalid Credentials - please try again');
 
-			const credentialMatch = await credential.verify(userRecord.get('password'), password);
+			const credentialMatch = await upash.verify(userRecord.get('password'), password);
 			if(!credentialMatch) throw new Error('Invalid Credentials - please try again');
 
 			if(callback) callback(null, userRecord.toJSON());

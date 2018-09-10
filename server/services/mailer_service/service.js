@@ -48,32 +48,80 @@ class MailerService extends TwyrBaseService {
 			const self = this; // eslint-disable-line consistent-this
 			const loggerProxy = {
 				'log': function() {
+					if(!self.$dependencies.LoggerService)
+						return;
+
+					if(!self.$dependencies.LoggerService.log)
+						return;
+
 					self.$dependencies.LoggerService.log(...arguments);
 				},
 				'trace': function() {
+					if(!self.$dependencies.LoggerService)
+						return;
+
+					if(!self.$dependencies.LoggerService.silly)
+						return;
+
 					self.$dependencies.LoggerService.silly(...arguments);
 				},
 				'silly': function() {
+					if(!self.$dependencies.LoggerService)
+						return;
+
+					if(!self.$dependencies.LoggerService.silly)
+						return;
+
 					self.$dependencies.LoggerService.silly(...arguments);
 				},
 
 				'debug': function() {
+					if(!self.$dependencies.LoggerService)
+						return;
+
+					if(!self.$dependencies.LoggerService.debug)
+						return;
+
 					self.$dependencies.LoggerService.debug(...arguments);
 				},
 
 				'verbose': function() {
+					if(!self.$dependencies.LoggerService)
+						return;
+
+					if(!self.$dependencies.LoggerService.verbose)
+						return;
+
 					self.$dependencies.LoggerService.verbose(...arguments);
 				},
 
 				'info': function() {
+					if(!self.$dependencies.LoggerService)
+						return;
+
+					if(!self.$dependencies.LoggerService.info)
+						return;
+
 					self.$dependencies.LoggerService.info(...arguments);
 				},
 
 				'warn': function() {
+					if(!self.$dependencies.LoggerService)
+						return;
+
+					if(!self.$dependencies.LoggerService.warn)
+						return;
+
 					self.$dependencies.LoggerService.warn(...arguments);
 				},
 
 				'error': function() {
+					if(!self.$dependencies.LoggerService)
+						return;
+
+					if(!self.$dependencies.LoggerService.error)
+						return;
+
 					self.$dependencies.LoggerService.error(...arguments);
 				}
 			};
@@ -81,19 +129,17 @@ class MailerService extends TwyrBaseService {
 			const promises = require('bluebird');
 			const mailer = promises.promisifyAll(require('nodemailer'));
 
-			const account = (this.$config.test) ? await mailer.createTestAccountAsync() : null;
-			const transporter = promises.promisifyAll(mailer.createTransport({
-				'debug': (twyrEnv === 'development'),
-				'logger': loggerProxy,
+			this.$config.transporter.debug = (twyrEnv === 'development') || (twyrEnv === 'test');
+			this.$config.transporter.logger = loggerProxy;
 
-				'host': this.$config.host,
-				'port': this.$config.port,
-				'secure': this.$config.secure,
-				'auth': {
-					'user': account.user,
-					'pass': account.pass
-				}
-			}));
+			if(this.$config.test) {
+				const account = await mailer.createTestAccountAsync();
+
+				this.$config.transporter.auth.user = account.user;
+				this.$config.transporter.auth.pass = account.pass;
+			}
+
+			const transporter = promises.promisifyAll(mailer.createTransport(this.$config.transporter));
 
 			this.$smtpTransporter = transporter;
 			await this.$smtpTransporter.verifyAsync();
