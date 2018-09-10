@@ -441,7 +441,7 @@ exports.seed = async function(knex) {
 	if(!userId.rows.length) {
 		userId = await  knex('users').insert({
 			'email': 'root@twyr.com',
-			'password': '{"hash":"{\\"secret\\":\\"b3XlvUf6bcKNvUIKuQ7GNGHQX5t+m3/x/8/jTVOIyHR4Nu0S7YUNnkx+YTzE/FyW2mNHLI1ESenRukBjUlDnP+U5ykoNKbq7Jlflq88PMhKhE7iZNOiUgdlhELNKHEyiXB5zerpBLxo0gCgP/RmyJquwI1TluuL+I6fUFUNylX0=\\",\\"salt\\":\\"Ev4McCjb0qLjGTnMRVPis0i7zpwk+c3y763fYyXCxk5MtLaVCwouTB6chl8WC6HY5bezdsCNTprh9qmcqNVMnYnFB1TdHL8Uhped/7ZWPaGRE1+t0PgXGIxd5vj3bU5guvCEiEsraZLWtfSLUOrRXOabQ9UMYma3xnyDi63Tw+Y=\\",\\"iterations\\":10000,\\"keylen\\":128,\\"digest\\":\\"sha512\\"}","func":"pbkdf2"}',
+			'password': '$pbkdf2-sha512$i=25000$NDk0rCTjcPWj8fM7qnnAqw$x3mNwNveDsLfCYyZzGJ4vWDYa9b4yqaTaWx9U+7wPrumOTmKBlFPHKwJL1W/42P2zn5VoDTaoM+qK+OPdx+G1w',
 			'first_name': 'Root',
 			'last_name': 'Twyr',
 			'nickname': 'root',
