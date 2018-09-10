@@ -14533,7 +14533,7 @@ table.table-sm td {
 
 .bg-twyr {
   background-color: #80d8ff;
-  background-image: linear-gradient(60deg, #ff9800, #80d8ff, #1976d2); }
+  background-image: linear-gradient(60deg, #ff9800, #e0e0e0, #80d8ff, #1976d2); }
 
 /* Material Design Icons Font */
 .mdi-icon {

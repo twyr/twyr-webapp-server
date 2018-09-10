@@ -7741,7 +7741,7 @@
     }
   });
 });
-;define("twyr-webapp-server/services/integrated-notification", ["exports"], function (_exports) {
+;define("twyr-webapp-server/services/integrated-notification", ["exports", "notifyjs"], function (_exports, _notifyjs) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -7751,8 +7751,43 @@
 
   var _default = Ember.Service.extend({
     toast: Ember.inject.service('toast'),
+    notifyEnabled: false,
+
+    init() {
+      this._super(...arguments);
+
+      if (!_notifyjs.default.needsPermission) {
+        this.set('notifyEnabled', true);
+        return;
+      }
+
+      if (!_notifyjs.default.isSupported()) {
+        this.set('notifyEnabled', false);
+        return;
+      }
+
+      const self = this;
+
+      _notifyjs.default.requestPermission(function () {
+        self.set('notifyEnabled', true);
+        return;
+      }, function () {
+        self.set('notifyEnabled', false);
+        return;
+      });
+    },
 
     display(data) {
+      if (this.get('notifyEnabled') && ((data.type || 'info') === 'success' || (data.type || 'info') === 'error')) {
+        const thisNotification = new _notifyjs.default(data.title || (data.type ? data.type.capitalize() : ''), {
+          'body': data.type !== 'error' ? data.message || data : data.error.responseText || data.error.message || data.error,
+          'closeOnClick': true,
+          'timeout': 4000
+        });
+        thisNotification.show();
+        return;
+      }
+
       const toast = this.get('toast');
       const options = Object.assign({}, {
         'positionClass': 'toast-bottom-right',
