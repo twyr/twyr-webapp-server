@@ -28,6 +28,9 @@ jobs:
     steps:
       - checkout
 
+      # Install redis-tools
+      - run: apt-get install -y redis-tools
+
       # Download cached dependencies
       - restore_cache:
           keys:
