@@ -153,7 +153,7 @@ class TwyrBaseComponent extends TwyrBaseModule {
 	 * @override
 	 */
 	get dependencies() {
-		return ['ConfigurationService', 'LoggerService', 'WebserverService'].concat(super.dependencies);
+		return ['ApiService', 'ConfigurationService', 'LoggerService', 'WebserverService'].concat(super.dependencies);
 	}
 
 	/**
