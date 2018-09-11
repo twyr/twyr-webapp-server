@@ -194,6 +194,13 @@ class TwyrApplication extends TwyrBaseModule {
 			appRouter.get('*', tmplRouter.routes(), tmplRouter.allowedMethods());
 		});
 
+		// Browser Error Data via the Beacon API / XHR Post
+		appRouter.post('/collectClientErrorData', (ctxt) => {
+			const beaconData = ctxt.request.body;
+			// TODO: Do something more sophisticated - like storing it into Cassandra, and running analysis
+			console.error(`Client Error Data: ${JSON.stringify(beaconData, null, '\t')}`);
+		});
+
 		return;
 	}
 	// #endregion

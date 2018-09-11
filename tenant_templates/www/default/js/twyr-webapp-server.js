@@ -16,7 +16,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/app", ["exports", "twyr-webapp-server/resolver", "ember-load-initializers", "twyr-webapp-server/config/environment"], function (_exports, _resolver, _emberLoadInitializers, _environment) {
+;define("twyr-webapp-server/app", ["exports", "twyr-webapp-server/resolver", "axios", "ember-load-initializers", "twyr-webapp-server/config/environment"], function (_exports, _resolver, _axios, _emberLoadInitializers, _environment) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -27,16 +27,41 @@
     'modulePrefix': _environment.default.modulePrefix,
     'podModulePrefix': _environment.default.podModulePrefix,
     'Resolver': _resolver.default,
+    currentUser: Ember.inject.service('current-user'),
 
     init() {
       this._super(...arguments);
 
       window.Ember.onerror = function (error) {
-        console.error(`TODO: Send Ember Error to the server using the Beacon API. But, for now...\n`, error);
+        const beaconData = {
+          'dataType': 'json',
+          'user': this.get('currentUser').getUser(),
+          'urlPath': location.href,
+          'error': error.message,
+          'stack': error.stack
+        };
+
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon('/collectClientErrorData', beaconData);
+        } else {
+          _axios.default.post('/collectClientErrorData', beaconData);
+        }
       };
 
       Ember.RSVP.on('error', function (error) {
-        console.error(`TODO: Send RSVP Error to the server using the Beacon API. But, for now...\n`, error);
+        const beaconData = {
+          'dataType': 'json',
+          'user': this.get('currentUser').getUser(),
+          'urlPath': location.href,
+          'error': error.message,
+          'stack': error.stack
+        };
+
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon('/collectClientErrorData', beaconData);
+        } else {
+          _axios.default.post('/collectClientErrorData', beaconData);
+        }
       });
     }
 
@@ -3543,7 +3568,7 @@
     }
   });
 });
-;define("twyr-webapp-server/components/session/login-component", ["exports", "axios", "twyr-webapp-server/framework/base-component", "ember-computed-style", "ember-concurrency"], function (_exports, _axios, _baseComponent, _emberComputedStyle, _emberConcurrency) {
+;define("twyr-webapp-server/components/session/login-component", ["exports", "axios", "twyr-webapp-server/framework/base-component", "twyr-webapp-server/config/environment", "ember-computed-style", "ember-concurrency"], function (_exports, _axios, _baseComponent, _environment, _emberComputedStyle, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -3588,9 +3613,27 @@
         notification.display({
           'type': loginResult.status < 400 ? 'success' : 'error',
           'message': loginResult.info.message
-        }); // eslint-disable-next-line no-undef
+        });
 
-        TwyrApp.trigger('userChanged');
+        if (loginResult.nextAction === 'proceed') {
+          window.TwyrApp.trigger('userChanged');
+          return;
+        }
+
+        if (loginResult.nextAction === 'redirect') {
+          const currentSubDomain = window.location.hostname.replace(_environment.default.twyr.domain, '');
+          const newHref = window.location.href.replace(currentSubDomain, loginResult.redirectDomain);
+          window.location.href = newHref;
+          return;
+        }
+
+        if (loginResult.nextAction === 'choose') {
+          notification.display({
+            'type': 'info',
+            'message': 'TBD: Allow user to choose tenant'
+          });
+          return;
+        }
       } catch (err) {
         notification.display({
           'type': 'error',
@@ -3988,7 +4031,7 @@
     }
   });
 });
-;define("twyr-webapp-server/controllers/application", ["exports", "twyr-webapp-server/framework/base-controller"], function (_exports, _baseController) {
+;define("twyr-webapp-server/controllers/application", ["exports", "twyr-webapp-server/framework/base-controller", "twyr-webapp-server/config/environment"], function (_exports, _baseController, _environment) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4002,11 +4045,17 @@
     modalData: null,
     showDialog: false,
     mainTitle: '',
+    displayCurrentYear: false,
+    startYear: _environment.default.twyr.startYear,
+    currentYear: _environment.default.twyr.startYear,
 
     init() {
       this._super(...arguments);
 
       this.set('mainTitle', document.title);
+      const currentYear = new Date().getFullYear();
+      this.set('currentYear', currentYear);
+      this.set('displayCurrentYear', currentYear > this.get('startYear'));
       const notification = this.get('notification');
       this.get('realtimeData').on('websocket-data::display-status-message', data => {
         notification.display(data);
@@ -7709,6 +7758,10 @@
 
     hasPermission(permission) {
       return (this.get('userData.permissions') || []).includes(permission);
+    },
+
+    getUser() {
+      return this.get('userData');
     }
 
   });
@@ -7789,6 +7842,7 @@
       }
 
       const toast = this.get('toast');
+      toast.clear();
       const options = Object.assign({}, {
         'positionClass': 'toast-bottom-right',
         'preventDuplicates': true
@@ -8272,8 +8326,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "lJ1ab5IQ",
-    "block": "{\"symbols\":[\"navbar\",\"nav\"],\"statements\":[[2,\" For the configurable Page Title \"],[0,\"\\n\"],[1,[21,\"head-layout\"],false],[0,\"\\n\"],[1,[27,\"page-title\",[[23,[\"mainTitle\"]]],null],false],[0,\"\\n\\n\"],[2,\" Customizable Header \"],[0,\"\\n\"],[7,\"header\"],[11,\"class\",\"sticky-top\"],[9],[0,\"\\n\"],[4,\"bs-navbar\",null,[[\"class\",\"position\",\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"p-0 px-2 py-1\",\"sticky-top\",\"light\",\"twyr\",false,true]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"navbar-header\"],[9],[0,\"\\n\"],[4,\"link-to\",[\"index\"],[[\"class\"],[\"navbar-brand white-text\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[7,\"span\"],[11,\"class\",\"h3\"],[11,\"style\",\"font-family:Keania One;\"],[9],[0,\"Twy'r\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\"],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,1,[\"nav\"]]],[[\"id\",\"class\"],[\"twyr-webapp-server-template-bhairavi-notification-area\",\"ml-auto nav-flex-icons white-text\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,2,[\"item\"]]],null,{\"statements\":[[1,[27,\"component\",[\"session/logout-component\"],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null],[10],[0,\"\\n\\n\"],[2,\" Main Area \"],[0,\"\\n\"],[7,\"main\"],[11,\"class\",\"bg-light flex p-2\"],[11,\"style\",\"box-shadow:0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-left-column\"],[11,\"class\",\"layout-column layout-align-start flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-outlet\"],[11,\"class\",\"layout-row layout-align-center-start flex\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"flex\"]]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-right-column\"],[11,\"class\",\"layout-column layout-align-start flex-initial\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[\"session/login-component\"],null],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" Customizable Footer \"],[0,\"\\n\"],[7,\"footer\"],[11,\"class\",\"page-footer mt-2 layout-row layout-align-space-between grey\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"flex p-3 text-left\"],[9],[0,\"\\n\\t\\t\"],[4,\"link-to\",[\"freestyle\"],null,{\"statements\":[[0,\"Styleguide\"]],\"parameters\":[]},null],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"flex p-3 text-right\"],[9],[0,\"\\n\\t\\tCopyright© 2018 \"],[4,\"link-to\",[\"index\"],null,{\"statements\":[[0,\"Twy'r\"]],\"parameters\":[]},null],[0,\". All rights reserved.\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" The mandatory empty div elements for wormhole, paper, bootstrap, etc. \"],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"ember-bootstrap-wormhole\"],[9],[10],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"ember-basic-dropdown-wormhole\"],[9],[10],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"paper-wormhole\"],[9],[10],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"paper-toast-fab-wormhole\"],[9],[10],[0,\"\\n\\n\\n\"],[2,\" Modal \"],[0,\"\\n\"],[4,\"liquid-if\",[[23,[\"showDialog\"]]],null,{\"statements\":[[4,\"paper-dialog\",null,[[\"class\",\"onClose\",\"parent\",\"origin\",\"clickOutsideToClose\",\"escapeToClose\"],[[23,[\"modalData\",\"dialogClass\"]],[27,\"action\",[[22,0,[]],\"closeDialog\",false],null],[23,[\"modalData\",\"parentElement\"]],[23,[\"modalData\",\"dialogOrigin\"]],false,false]],{\"statements\":[[4,\"paper-toolbar\",null,[[\"class\"],[\"stylish-color white-text\"]],{\"statements\":[[4,\"paper-toolbar-tools\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"h2\"],[9],[1,[23,[\"modalData\",\"title\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"componentName\"]]],null,{\"statements\":[[4,\"paper-dialog-content\",null,[[\"class\"],[\"flex m-0 p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"component\",[[23,[\"modalData\",\"componentName\"]]],[[\"state\"],[[23,[\"modalData\",\"componentState\"]]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-dialog-content\",null,null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[23,[\"modalData\",\"content\"]],true],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}],[0,\"\\n\"],[4,\"if\",[[27,\"or\",[[23,[\"modalData\",\"confirmButton\"]],[23,[\"modalData\",\"cancelButton\"]]],null]],null,{\"statements\":[[0,\"\\t\\t\"],[1,[21,\"paper-divider\"],false],[0,\"\\n\"],[4,\"paper-dialog-actions\",null,[[\"class\"],[\"layout-row layout-align-end-center\"]],{\"statements\":[[4,\"if\",[[23,[\"modalData\",\"cancelButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"closeDialog\",false],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"cancelButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"cancelButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"confirmButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"closeDialog\",true],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"confirmButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"confirmButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "86gMJcyS",
+    "block": "{\"symbols\":[\"navbar\",\"nav\"],\"statements\":[[2,\" For the configurable Page Title \"],[0,\"\\n\"],[1,[21,\"head-layout\"],false],[0,\"\\n\"],[1,[27,\"page-title\",[[23,[\"mainTitle\"]]],null],false],[0,\"\\n\\n\"],[2,\" Customizable Header \"],[0,\"\\n\"],[7,\"header\"],[11,\"class\",\"sticky-top\"],[9],[0,\"\\n\"],[4,\"bs-navbar\",null,[[\"class\",\"position\",\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"p-0 px-2 py-1\",\"sticky-top\",\"light\",\"twyr\",false,true]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"navbar-header\"],[9],[0,\"\\n\"],[4,\"link-to\",[\"index\"],[[\"class\"],[\"navbar-brand white-text\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[7,\"span\"],[11,\"class\",\"h3\"],[11,\"style\",\"font-family:Keania One;\"],[9],[0,\"Twy'r\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\"],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,1,[\"nav\"]]],[[\"id\",\"class\"],[\"twyr-webapp-server-template-bhairavi-notification-area\",\"ml-auto nav-flex-icons white-text\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,2,[\"item\"]]],null,{\"statements\":[[1,[27,\"component\",[\"session/logout-component\"],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null],[10],[0,\"\\n\\n\"],[2,\" Main Area \"],[0,\"\\n\"],[7,\"main\"],[11,\"class\",\"bg-light flex p-2\"],[11,\"style\",\"box-shadow:0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-left-column\"],[11,\"class\",\"layout-column layout-align-start flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-outlet\"],[11,\"class\",\"layout-row layout-align-center-start flex\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"flex\"]]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-right-column\"],[11,\"class\",\"layout-column layout-align-start flex-initial\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[\"session/login-component\"],null],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" Customizable Footer \"],[0,\"\\n\"],[7,\"footer\"],[11,\"class\",\"page-footer mt-2 layout-row layout-align-space-between grey\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"flex p-3 text-left\"],[9],[0,\"\\n\\t\\t\"],[4,\"link-to\",[\"freestyle\"],null,{\"statements\":[[0,\"Styleguide\"]],\"parameters\":[]},null],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"flex p-3 text-right\"],[9],[0,\"\\n\\t\\tCopyright© 2016 \"],[4,\"if\",[[23,[\"displayCurrentYear\"]]],null,{\"statements\":[[0,\"- \"],[1,[21,\"currentYear\"],false],[0,\" \"]],\"parameters\":[]},null],[4,\"link-to\",[\"index\"],null,{\"statements\":[[0,\"Twy'r\"]],\"parameters\":[]},null],[0,\". All rights reserved.\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" The mandatory empty div elements for wormhole, paper, bootstrap, etc. \"],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"ember-bootstrap-wormhole\"],[9],[10],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"ember-basic-dropdown-wormhole\"],[9],[10],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"paper-wormhole\"],[9],[10],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"paper-toast-fab-wormhole\"],[9],[10],[0,\"\\n\\n\\n\"],[2,\" Modal \"],[0,\"\\n\"],[4,\"liquid-if\",[[23,[\"showDialog\"]]],null,{\"statements\":[[4,\"paper-dialog\",null,[[\"class\",\"onClose\",\"parent\",\"origin\",\"clickOutsideToClose\",\"escapeToClose\"],[[23,[\"modalData\",\"dialogClass\"]],[27,\"action\",[[22,0,[]],\"closeDialog\",false],null],[23,[\"modalData\",\"parentElement\"]],[23,[\"modalData\",\"dialogOrigin\"]],false,false]],{\"statements\":[[4,\"paper-toolbar\",null,[[\"class\"],[\"stylish-color white-text\"]],{\"statements\":[[4,\"paper-toolbar-tools\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"h2\"],[9],[1,[23,[\"modalData\",\"title\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"componentName\"]]],null,{\"statements\":[[4,\"paper-dialog-content\",null,[[\"class\"],[\"flex m-0 p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"component\",[[23,[\"modalData\",\"componentName\"]]],[[\"state\"],[[23,[\"modalData\",\"componentState\"]]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-dialog-content\",null,null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[23,[\"modalData\",\"content\"]],true],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}],[0,\"\\n\"],[4,\"if\",[[27,\"or\",[[23,[\"modalData\",\"confirmButton\"]],[23,[\"modalData\",\"cancelButton\"]]],null]],null,{\"statements\":[[0,\"\\t\\t\"],[1,[21,\"paper-divider\"],false],[0,\"\\n\"],[4,\"paper-dialog-actions\",null,[[\"class\"],[\"layout-row layout-align-end-center\"]],{\"statements\":[[4,\"if\",[[23,[\"modalData\",\"cancelButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"closeDialog\",false],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"cancelButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"cancelButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"confirmButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"closeDialog\",true],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"confirmButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"confirmButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/application.hbs"
     }
@@ -8985,7 +9039,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","pageTitle":{"replace":false,"separator":" > "},"changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+464fc311"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;

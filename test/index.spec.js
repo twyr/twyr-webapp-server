@@ -16,4 +16,15 @@ describe('Web Server Test Cases', function() {
 				done(err);
 			});
 	});
+
+	it('Should return the favicon for the www tenant', function(done) {
+		const expect = chai.expect;
+
+		chai.request('http://localhost:9100')
+			.get('/favicon.ico')
+			.end((err, response) => {
+				expect(response).to.have.status(200);
+				done(err);
+			});
+	});
 });

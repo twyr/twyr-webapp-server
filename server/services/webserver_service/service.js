@@ -383,8 +383,9 @@ class WebserverService extends TwyrBaseService {
 			const cacheSrvc = this.$dependencies.CacheService,
 				dbSrvc = this.$dependencies.DatabaseService.knex;
 
-			let tenantSubDomain = 'www';
-			if(ctxt.subdomains.length) {
+			let tenantSubDomain = (ctxt.subdomains.length === 1) ? ctxt.subdomains[0] : 'www';
+
+			if(ctxt.subdomains.length > 1) {
 				ctxt.subdomains.reverse();
 				tenantSubDomain = ctxt.subdomains.join('.');
 				ctxt.subdomains.reverse();
@@ -410,7 +411,12 @@ class WebserverService extends TwyrBaseService {
 				const parentModuleId = await this.$dependencies.ConfigurationService.getModuleID(parentModule);
 
 				tenant = await dbSrvc.raw('SELECT tenant_id, name, sub_domain FROM tenants WHERE sub_domain = ?', [tenantSubDomain]);
-				if(!tenant.rows.length) throw new Error(`Invalid sub-domain: ${tenantSubDomain}`);
+				if(!tenant.rows.length) {
+					const redirectDomain = `${this.$config.protocol}://www.${this.$config.domain}:${this.$config.port}`;
+					ctxt.redirect(redirectDomain);
+
+					return;
+				}
 
 				tenant = tenant.rows.shift();
 
