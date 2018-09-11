@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>server/middlewares/session_middleware/middleware.js - Twyr Web Application Server</title>
+    <title>server/middlewares/session/middleware.js - Twyr Web Application Server</title>
     
     <meta name="description" content="Twyr Web Application Server" />
     
@@ -44,7 +44,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">server/middlewares/session_middleware/middleware.js</h1>
+    <h1 class="page-title">server/middlewares/session/middleware.js</h1>
     
 
     
@@ -75,7 +75,7 @@ const TwyrMiddlewareError = require('twyr-middleware-error').TwyrMiddlewareError
  *
  *
  */
-class SessionMiddleware extends TwyrBaseMiddleware {
+class Session extends TwyrBaseMiddleware {
 	// #region Constructor
 	constructor(parent, loader) {
 		super(parent, loader);
@@ -114,6 +114,7 @@ class SessionMiddleware extends TwyrBaseMiddleware {
 
 	// #region API
 	async _resetPassword(ctxt) {
+		const uuid = require('uuid/v4');
 		const upash = require('upash');
 		// Not required here - apparently, once installed anywhere, we're good to go
 		// upash.install('pbkdf2', require('@phc/pbkdf2'));
@@ -124,11 +125,18 @@ class SessionMiddleware extends TwyrBaseMiddleware {
 		const userId = await dbSrvc.knex.raw(`SELECT user_id FROM users WHERE email = ?`, [username]);
 		if(!userId.rows.length) throw new TwyrMiddlewareError(`Invalid Email: ${username}`);
 
-		const RandomOrg = require('random-org');
-		const random = new RandomOrg(this.$config.randomServer);
+		let rawPassword = '';
+		try {
+			const RandomOrg = require('random-org');
+			const random = new RandomOrg(this.$config.randomServer);
 
-		const randomPasswordResponse = await random.generateStrings(this.$config.passwordFormat);
-		const rawPassword = randomPasswordResponse.random.data.pop();
+			const randomPasswordResponse = await random.generateStrings(this.$config.passwordFormat);
+			rawPassword = randomPasswordResponse.random.data.pop();
+		}
+		catch(err) {
+			rawPassword = uuid().toString();
+		}
+
 		const hashedPassword = await upash.hash(rawPassword);
 
 		await dbSrvc.knex.raw(`UPDATE users SET password = ? WHERE email = ?`, [hashedPassword, username]);
@@ -140,12 +148,13 @@ class SessionMiddleware extends TwyrBaseMiddleware {
 		const mailerSrvc = this.$dependencies.MailerService;
 		const sendMailResult = await mailerSrvc.sendMail(messageOptions);
 
-		const auditSrvc = this.$dependencies.AuditService;
-		await auditSrvc.publish({
-			'id': ctxt.state.id,
-			'messageId': sendMailResult.messageId
-		});
+		// const auditSrvc = this.$dependencies.AuditService;
+		// await auditSrvc.publish({
+		// 	'id': ctxt.state.id,
+		// 	'messageId': sendMailResult.messageId
+		// });
 
+		console.log(`Send Mail Result: ${JSON.stringify(sendMailResult, null, '\t')}`);
 		return true;
 	}
 	// #endregion
@@ -166,7 +175,7 @@ class SessionMiddleware extends TwyrBaseMiddleware {
 	// #endregion
 }
 
-exports.middleware = SessionMiddleware;
+exports.middleware = Session;
 </code></pre>
         </article>
     </section>
