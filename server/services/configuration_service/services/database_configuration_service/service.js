@@ -434,8 +434,8 @@ class DatabaseConfigurationService extends TwyrBaseService {
 		const twyrModuleTypes = ['components', 'features', 'middlewares', 'services', 'templates'];
 
 		Object.keys(configTree).forEach((key) => {
-			const currentPrefix = path.join(prefix, key);
-			if(currentPrefix.startsWith('/')) currentPrefix.substring(1);
+			let currentPrefix = path.join(prefix, key);
+			if(currentPrefix.startsWith('/')) currentPrefix = currentPrefix.substring(1);
 
 			if(cachedMap[currentPrefix])
 				return;

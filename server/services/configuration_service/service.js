@@ -414,7 +414,7 @@ class ConfigurationService extends TwyrBaseService {
 	 * @instance
 	 * @private
 	 * @memberof ConfigurationService
-	 * @name     _getModuleFromPath
+	 * @name     _getPathForModule
 	 *
 	 * @param    {TwyrBaseModule} twyrModule - The module for which to generate the path.
 	 *
@@ -435,14 +435,11 @@ class ConfigurationService extends TwyrBaseService {
 			pathSegments.push(inflection.underscore(currentModule.name));
 
 			while(currentModule.$parent) {
+				const modulePrototype = Object.getPrototypeOf(Object.getPrototypeOf(currentModule)).name;
 				const parentModule = currentModule.$parent;
-				// eslint-disable-next-line no-loop-func
-				['components', 'features', 'middlewares', 'services', 'server', 'templates'].forEach((twyrModuleType) => {
-					if(Object.keys(parentModule[`$${twyrModuleType}`] || {}).indexOf(currentModule.name) < 0)
-						return;
 
-					pathSegments.unshift(twyrModuleType);
-				});
+				const twyrModuleType = `${modulePrototype.replace('TwyrBase', '').toLowerCase()}s`;
+				pathSegments.unshift(twyrModuleType);
 
 				currentModule = parentModule;
 				if(currentModule && currentModule.$parent) pathSegments.unshift(inflection.underscore(currentModule.name));
