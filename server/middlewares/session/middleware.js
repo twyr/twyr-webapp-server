@@ -19,7 +19,7 @@ const TwyrMiddlewareError = require('twyr-middleware-error').TwyrMiddlewareError
  *
  *
  */
-class SessionMiddleware extends TwyrBaseMiddleware {
+class Session extends TwyrBaseMiddleware {
 	// #region Constructor
 	constructor(parent, loader) {
 		super(parent, loader);
@@ -110,4 +110,4 @@ class SessionMiddleware extends TwyrBaseMiddleware {
 	// #endregion
 }
 
-exports.middleware = SessionMiddleware;
+exports.middleware = Session;

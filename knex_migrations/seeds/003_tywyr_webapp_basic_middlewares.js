@@ -7,7 +7,7 @@ exports.seed = async function(knex) {
 
 	parentId = parentId.rows[0]['module_id'];
 
-	let componentId = await knex.raw(`SELECT module_id FROM fn_get_module_descendants(?) WHERE name = ? AND type = 'middleware'`, [parentId, 'SessionMiddleware']);
+	let componentId = await knex.raw(`SELECT module_id FROM fn_get_module_descendants(?) WHERE name = ? AND type = 'middleware'`, [parentId, 'Session']);
 	if(componentId.rows.length)
 		return null;
 
@@ -15,7 +15,7 @@ exports.seed = async function(knex) {
 		'parent_module_id': parentId,
 		'type': 'middleware',
 		'deploy': 'default',
-		'name': 'SessionMiddleware',
+		'name': 'Session',
 		'display_name': 'Session Middleware',
 		'description': 'The Twyr Web Application Session Middleware - executes reset password and similar operations',
 		'metadata': {

@@ -1,6 +1,6 @@
 exports.config = {
 	"randomServer": {
-		"apiKey": "e20ac8ec-9748-4736-a61c-d234ac6ac619"
+		"apiKey": "YOUR_API_KEY"
 	},
 	"passwordFormat": {
 		"n": 1,
