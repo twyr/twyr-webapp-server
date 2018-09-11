@@ -1,7 +1,8 @@
 exports.config = {
 	"domain": "twyr.com",
 	"protocol": "http",
-	"port": 9100,
+	"internalPort": 9100,
+	"externalPort": 9100,
 	"version": "3.0.1",
 	"poweredBy": "Twyr Portal",
 	"connectionTimeout": 120,
