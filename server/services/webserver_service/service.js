@@ -235,7 +235,7 @@ class WebserverService extends TwyrBaseService {
 
 			// Step 1.13: Add in the router
 			const Router = require('koa-router');
-			this.$router = new Router();
+			this.$router = new Router({ 'prefix': '' });
 
 			this.$koa.use(this.$router.routes());
 			this.$koa.use(this.$router.allowedMethods());
@@ -412,9 +412,10 @@ class WebserverService extends TwyrBaseService {
 
 				tenant = await dbSrvc.raw('SELECT tenant_id, name, sub_domain FROM tenants WHERE sub_domain = ?', [tenantSubDomain]);
 				if(!tenant.rows.length) {
-					const redirectDomain = `${this.$config.protocol}://www.${this.$config.domain}:${this.$config.port}`;
-					ctxt.redirect(redirectDomain);
+					let redirectDomain = `${this.$config.protocol}://www.${this.$config.domain}`;
+					if(this.$config.externalPort) redirectDomain = `${redirectDomain}:${this.$config.externalPort}`;
 
+					ctxt.redirect(redirectDomain);
 					return;
 				}
 
@@ -572,8 +573,8 @@ class WebserverService extends TwyrBaseService {
 
 			const hostPort = [];
 			hostPort.push(ringpop.lookup(ctxt.state.tenant.tenant_id).split(':').shift());
-			hostPort.push(this.$config.port || 9100);
-			// hostPort.push(this.$config.port === 9100 ? 9101 : 9100);
+			hostPort.push(this.$config.internalPort || 9100);
+			// hostPort.push(this.$config.internalPort === 9100 ? 9101 : 9100);
 
 			const dest = `${this.$config.protocol}://${hostPort.join(':')}${ctxt.path}`;
 
@@ -724,7 +725,7 @@ class WebserverService extends TwyrBaseService {
 
 	async _listenAndPrintNetworkInterfaces() {
 		await snooze(1000);
-		await this.$server.listenAsync(this.$config.port || 9090);
+		await this.$server.listenAsync(this.$config.internalPort || 9090);
 
 		if(twyrEnv !== 'development' && twyrEnv !== 'test')
 			return;
@@ -740,7 +741,7 @@ class WebserverService extends TwyrBaseService {
 					'Interface': networkInterfaceName,
 					'Protocol': address.family,
 					'Address': address.address,
-					'Port': this.$config.port || 9090
+					'Port': this.$config.internalPort || 9100
 				});
 		});
 

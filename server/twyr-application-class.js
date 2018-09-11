@@ -161,44 +161,50 @@ class TwyrApplication extends TwyrBaseModule {
 	// #region Re-configuration
 	async _subModuleReconfigure(subModule) {
 		await super._subModuleReconfigure(subModule);
-		if(subModule.name !== 'WebserverService') return;
+		if(subModule.name === 'WebserverService') {
+			await this._setupWebserverRoutes();
+			return;
+		}
 
-		await this._setupWebserverRoutes();
+		const subModuleType = Object.getPrototypeOf(Object.getPrototypeOf(subModule)).name;
+		if((subModuleType !== 'TwyrBaseComponent') && (subModuleType !== 'TwyrBaseFeature'))
+			return;
+
+		const configService = this.$services.ConfigurationService;
+		const webserverService = this.$services.WebserverService;
+
+		const webserverConfig = await configService.loadConfiguration(webserverService);
+		await webserverService._reconfigure(webserverConfig.configuration);
 	}
 	// #endregion
 
 	// #region Private Methods
 	async _setupWebserverRoutes() {
-		const inflection = require('inflection');
 		const appRouter = this.$services.WebserverService.Interface.Router;
-
-		// Add in the components
-		Object.keys(this.$components || {}).forEach((componentName) => {
-			const componentRouter = this.$components[componentName].Router;
-			const inflectedComponentName = inflection.transform(componentName, ['foreign_key', 'dasherize']).replace('-id', '');
-
-			appRouter.use(`/${inflectedComponentName}`, componentRouter.routes(), componentRouter.allowedMethods());
-		});
-
-		// Add in the features
-		Object.keys(this.$features || {}).forEach((featureName) => {
-			const featureRouter = this.$features[featureName].Router;
-			const inflectedFeatureName = inflection.transform(featureName, ['foreign_key', 'dasherize']).replace('-id', '');
-
-			appRouter.use(`/${inflectedFeatureName}`, featureRouter.routes(), featureRouter.allowedMethods());
-		});
-
-		// Add in the templates at the end...
-		Object.keys(this.$templates).forEach((tmplName) => {
-			const tmplRouter = this.$templates[tmplName].Router;
-			appRouter.get('*', tmplRouter.routes(), tmplRouter.allowedMethods());
-		});
 
 		// Browser Error Data via the Beacon API / XHR Post
 		appRouter.post('/collectClientErrorData', (ctxt) => {
 			const beaconData = ctxt.request.body;
 			// TODO: Do something more sophisticated - like storing it into Cassandra, and running analysis
 			console.error(`Client Error Data: ${JSON.stringify(beaconData, null, '\t')}`);
+		});
+
+		// Add in the components
+		Object.keys(this.$components || {}).forEach((componentName) => {
+			const componentRouter = this.$components[componentName].Router;
+			appRouter.use(componentRouter.routes(), componentRouter.allowedMethods());
+		});
+
+		// Add in the features
+		Object.keys(this.$features || {}).forEach((featureName) => {
+			const featureRouter = this.$features[featureName].Router;
+			appRouter.use(featureRouter.routes(), featureRouter.allowedMethods());
+		});
+
+		// Add in the templates at the end...
+		Object.keys(this.$templates).forEach((tmplName) => {
+			const tmplRouter = this.$templates[tmplName].Router;
+			appRouter.get('*', tmplRouter.routes(), tmplRouter.allowedMethods());
 		});
 
 		return;

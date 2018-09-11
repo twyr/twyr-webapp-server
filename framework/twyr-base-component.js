@@ -36,8 +36,11 @@ class TwyrBaseComponent extends TwyrBaseModule {
 
 		this.$loader = actualLoader;
 
+		const inflection = require('inflection');
 		const Router = require('koa-router');
-		this.$router = new Router();
+
+		const inflectedName = inflection.transform(this.name, ['foreign_key', 'dasherize']).replace('-id', '');
+		this.$router = new Router({ 'prefix': `/${inflectedName}` });
 	}
 	// #endregion
 
@@ -89,6 +92,29 @@ class TwyrBaseComponent extends TwyrBaseModule {
 			throw new TwyrCompError(`${this.name}::_teardown error`, err);
 		}
 	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrBaseComponent
+	 * @name     _subModuleReconfigure
+	 *
+	 * @param    {TwyrBaseModule} subModule - The sub-module that changed configuration.
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Lets the module know that one of its subModules changed configuration.
+	 */
+	async _subModuleReconfigure(subModule) {
+		await super._subModuleReconfigure(subModule);
+
+		await this._deleteRoutes();
+		await this._addRoutes();
+
+		await this.$parent._subModuleReconfigure(this);
+		return null;
+	}
 	// #endregion
 
 	// #region Protected methods - need to be overriden by derived classes
@@ -109,7 +135,7 @@ class TwyrBaseComponent extends TwyrBaseModule {
 		// Add in the sub-components routes
 		Object.keys(this.$components || {}).forEach((componentName) => {
 			const componentRouter = this.$components[componentName].Router;
-			this.$router.use(`${componentName}`, componentRouter.routes());
+			this.$router.use(componentRouter.routes(), componentRouter.allowedMethods());
 		});
 
 		return null;
