@@ -146,10 +146,13 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 					if(!clientsideAssets[featureClientsideAssetName]) clientsideAssets[featureClientsideAssetName] = [];
 
 					if(featureClientsideAssetName === 'RouteMap') { // eslint-disable-line curly
-						clientsideAssets[featureClientsideAssetName] =
+						clientsideAssets['RouteMap'].push(
 `this.route(${inflectedFeatureName}, { "path": "/${inflectedFeatureName}" }, function() {
-${clientsideAssets[featureClientsideAssetName]}
-})`;
+${featureClientsideAssets['RouteMap']}
+})`
+						);
+
+						return;
 					}
 
 					clientsideAssets[featureClientsideAssetName].push(featureClientsideAssets[featureClientsideAssetName]);
