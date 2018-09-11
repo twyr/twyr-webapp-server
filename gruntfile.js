@@ -68,7 +68,7 @@ module.exports = function(grunt) {
 					'timeout': 5000
 				},
 
-				'src': ['./test/**/*.js']
+				'src': ['./test/**/*.spec.js']
 			}
 		},
 
