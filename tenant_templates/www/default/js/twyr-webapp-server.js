@@ -2,7 +2,7 @@
 
 
 
-;define("twyr-webapp-server/adapters/application", ["exports", "ember-data", "ember-fetch/mixins/adapter-fetch"], function (_exports, _emberData, _adapterFetch) {
+;define("twyr-webapp-server/adapters/application", ["exports", "ember-data", "ember-ajax/mixins/ajax-support"], function (_exports, _emberData, _ajaxSupport) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -10,13 +10,13 @@
   });
   _exports.default = void 0;
 
-  var _default = _emberData.default.JSONAPIAdapter.extend(_adapterFetch.default, {
+  var _default = _emberData.default.JSONAPIAdapter.extend(_ajaxSupport.default, {
     'host': '/'
   });
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/app", ["exports", "twyr-webapp-server/resolver", "axios", "ember-load-initializers", "twyr-webapp-server/config/environment"], function (_exports, _resolver, _axios, _emberLoadInitializers, _environment) {
+;define("twyr-webapp-server/app", ["exports", "twyr-webapp-server/resolver", "ember-load-initializers", "twyr-webapp-server/config/environment"], function (_exports, _resolver, _emberLoadInitializers, _environment) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -27,6 +27,7 @@
     'modulePrefix': _environment.default.modulePrefix,
     'podModulePrefix': _environment.default.podModulePrefix,
     'Resolver': _resolver.default,
+    ajax: Ember.inject.service('ajax'),
     currentUser: Ember.inject.service('current-user'),
 
     init() {
@@ -35,32 +36,36 @@
       window.Ember.onerror = function (error) {
         const beaconData = {
           'dataType': 'json',
-          'user': this.get('currentUser').getUser(),
-          'urlPath': location.href,
-          'error': error.message,
-          'stack': error.stack
+          'data': {
+            'user': this.get('currentUser').getUser(),
+            'urlPath': location.href,
+            'error': error.message,
+            'stack': error.stack
+          }
         };
 
         if (navigator.sendBeacon) {
           navigator.sendBeacon('/collectClientErrorData', beaconData);
         } else {
-          _axios.default.post('/collectClientErrorData', beaconData);
+          this.get('ajax').post('/collectClientErrorData', beaconData);
         }
       };
 
       Ember.RSVP.on('error', function (error) {
         const beaconData = {
           'dataType': 'json',
-          'user': this.get('currentUser').getUser(),
-          'urlPath': location.href,
-          'error': error.message,
-          'stack': error.stack
+          'data': {
+            'user': this.get('currentUser').getUser(),
+            'urlPath': location.href,
+            'error': error.message,
+            'stack': error.stack
+          }
         };
 
         if (navigator.sendBeacon) {
           navigator.sendBeacon('/collectClientErrorData', beaconData);
         } else {
-          _axios.default.post('/collectClientErrorData', beaconData);
+          this.get('ajax').post('/collectClientErrorData', beaconData);
         }
       });
     }
@@ -3568,7 +3573,7 @@
     }
   });
 });
-;define("twyr-webapp-server/components/session/login-component", ["exports", "axios", "twyr-webapp-server/framework/base-component", "twyr-webapp-server/config/environment", "ember-computed-style", "ember-concurrency"], function (_exports, _axios, _baseComponent, _environment, _emberComputedStyle, _emberConcurrency) {
+;define("twyr-webapp-server/components/session/login-component", ["exports", "twyr-webapp-server/framework/base-component", "twyr-webapp-server/config/environment", "ember-computed-style", "ember-concurrency"], function (_exports, _baseComponent, _environment, _emberComputedStyle, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -3604,12 +3609,13 @@
       });
 
       try {
-        const data = yield _axios.default.post('/session/login', {
+        const loginResult = yield this.get('ajax').post('/session/login', {
           'dataType': 'json',
-          'username': this.get('username'),
-          'password': this.get('password')
+          'data': {
+            'username': this.get('username'),
+            'password': this.get('password')
+          }
         });
-        const loginResult = data.data;
         notification.display({
           'type': loginResult.status < 400 ? 'success' : 'error',
           'message': loginResult.info.message
@@ -3649,21 +3655,16 @@
       });
 
       try {
-        const data = yield _axios.default.post('/session/reset-password', {
+        const resetPassResult = yield this.get('ajax').post('/session/reset-password', {
           'dataType': 'json',
-          'username': this.get('username')
+          'data': {
+            'username': this.get('username')
+          }
         });
-        const resetPassResult = data.data;
-
-        if (data.status < 400) {
-          notification.display({
-            'type': resetPassResult.status < 400 ? 'success' : 'error',
-            'message': resetPassResult.message
-          });
-          return;
-        }
-
-        throw new Error(data.message);
+        notification.display({
+          'type': resetPassResult.status < 400 ? 'success' : 'error',
+          'message': resetPassResult.message
+        });
       } catch (err) {
         notification.display({
           'type': 'error',
@@ -3688,15 +3689,16 @@
       });
 
       try {
-        const data = yield _axios.default.post('/session/register-account', {
+        const registerResult = yield this.get('ajax').post('/session/register-account', {
           'dataType': 'json',
-          'firstname': this.get('firstName'),
-          'lastname': this.get('lastName'),
-          'username': this.get('username'),
-          'mobileNumber': this.get('mobileNumber'),
-          'password': this.get('password')
+          'data': {
+            'firstname': this.get('firstName'),
+            'lastname': this.get('lastName'),
+            'username': this.get('username'),
+            'mobileNumber': this.get('mobileNumber'),
+            'password': this.get('password')
+          }
         });
-        const registerResult = data.data;
         notification.display({
           'type': registerResult.status < 400 ? 'success' : 'error',
           'message': registerResult.message
@@ -3717,7 +3719,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/components/session/logout-component", ["exports", "axios", "twyr-webapp-server/framework/base-component", "ember-concurrency"], function (_exports, _axios, _baseComponent, _emberConcurrency) {
+;define("twyr-webapp-server/components/session/logout-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency"], function (_exports, _baseComponent, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -3738,8 +3740,9 @@
       });
 
       try {
-        const data = yield _axios.default.get('/session/logout');
-        const logoutResult = data.data;
+        const logoutResult = yield this.get('ajax').request('/session/logout', {
+          'method': 'GET'
+        });
         notification.display({
           'type': logoutResult.status < 400 ? 'success' : 'error',
           'message': logoutResult.info.message
@@ -4210,6 +4213,7 @@
   _exports.default = void 0;
 
   var _default = Ember.Component.extend(Ember.Evented, _emberInvokeAction.InvokeActionMixin, {
+    ajax: Ember.inject.service('ajax'),
     store: Ember.inject.service('store'),
     currentUser: Ember.inject.service('current-user'),
     notification: Ember.inject.service('integrated-notification'),
@@ -4267,6 +4271,7 @@
   _exports.default = void 0;
 
   var _default = Ember.Controller.extend(Ember.Evented, _emberInvokeAction.InvokeActionMixin, {
+    ajax: Ember.inject.service('ajax'),
     store: Ember.inject.service('store'),
     currentUser: Ember.inject.service('current-user'),
     notification: Ember.inject.service('integrated-notification'),
@@ -7710,7 +7715,7 @@
   var _default = _cookies.default;
   _exports.default = _default;
 });
-;define("twyr-webapp-server/services/current-user", ["exports", "axios", "ember-concurrency"], function (_exports, _axios, _emberConcurrency) {
+;define("twyr-webapp-server/services/current-user", ["exports", "ember-concurrency"], function (_exports, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -7720,6 +7725,7 @@
 
   /* eslint-disable no-console */
   var _default = Ember.Service.extend(Ember.Evented, {
+    ajax: Ember.inject.service('ajax'),
     notification: Ember.inject.service('integrated-notification'),
     userData: null,
     onInit: (0, _emberConcurrency.task)(function* () {
@@ -7738,8 +7744,10 @@
       this.trigger('userDataUpdating');
 
       try {
-        const userData = yield _axios.default.get('/session/user');
-        this.set('userData', userData.data);
+        const userData = yield this.get('ajax').request('/session/user', {
+          'method': 'GET'
+        });
+        this.set('userData', userData);
         this.trigger('userDataUpdated');
       } catch (err) {
         // TODO: Use the Beacon API to send all this back to the server;
@@ -9039,7 +9047,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+464fc311"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+08871c3e"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;
