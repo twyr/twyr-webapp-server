@@ -135,7 +135,7 @@ class Session extends TwyrBaseComponent {
 	}
 
 	async _resetPassword(ctxt) {
-		await this.$dependencies.ApiService.execute('SessionMiddleware::resetPassword', ctxt);
+		await this.$dependencies.ApiService.execute('Session::resetPassword', ctxt);
 
 		ctxt.status = 200;
 		ctxt.body = { 'status': 200, 'message': `Password reset successful. Please check your email for the new password` };

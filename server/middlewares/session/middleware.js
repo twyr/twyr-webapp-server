@@ -58,6 +58,7 @@ class Session extends TwyrBaseMiddleware {
 
 	// #region API
 	async _resetPassword(ctxt) {
+		const uuid = require('uuid/v4');
 		const upash = require('upash');
 		// Not required here - apparently, once installed anywhere, we're good to go
 		// upash.install('pbkdf2', require('@phc/pbkdf2'));
@@ -68,11 +69,18 @@ class Session extends TwyrBaseMiddleware {
 		const userId = await dbSrvc.knex.raw(`SELECT user_id FROM users WHERE email = ?`, [username]);
 		if(!userId.rows.length) throw new TwyrMiddlewareError(`Invalid Email: ${username}`);
 
-		const RandomOrg = require('random-org');
-		const random = new RandomOrg(this.$config.randomServer);
+		let rawPassword = '';
+		try {
+			const RandomOrg = require('random-org');
+			const random = new RandomOrg(this.$config.randomServer);
 
-		const randomPasswordResponse = await random.generateStrings(this.$config.passwordFormat);
-		const rawPassword = randomPasswordResponse.random.data.pop();
+			const randomPasswordResponse = await random.generateStrings(this.$config.passwordFormat);
+			rawPassword = randomPasswordResponse.random.data.pop();
+		}
+		catch(err) {
+			rawPassword = uuid().toString();
+		}
+
 		const hashedPassword = await upash.hash(rawPassword);
 
 		await dbSrvc.knex.raw(`UPDATE users SET password = ? WHERE email = ?`, [hashedPassword, username]);
@@ -84,12 +92,13 @@ class Session extends TwyrBaseMiddleware {
 		const mailerSrvc = this.$dependencies.MailerService;
 		const sendMailResult = await mailerSrvc.sendMail(messageOptions);
 
-		const auditSrvc = this.$dependencies.AuditService;
-		await auditSrvc.publish({
-			'id': ctxt.state.id,
-			'messageId': sendMailResult.messageId
-		});
+		// const auditSrvc = this.$dependencies.AuditService;
+		// await auditSrvc.publish({
+		// 	'id': ctxt.state.id,
+		// 	'messageId': sendMailResult.messageId
+		// });
 
+		console.log(`Send Mail Result: ${JSON.stringify(sendMailResult, null, '\t')}`);
 		return true;
 	}
 	// #endregion
