@@ -1,7 +1,6 @@
 buildresults/
 config/
 docs/
-example.config/
 knex_migrations/
 logs/
 node_modules/
@@ -9,3 +8,4 @@ static_assets/
 tenant_applications/
 tenant_templates/
 test/mocha.*
+gruntfile.js

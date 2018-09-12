@@ -35,15 +35,15 @@ module.exports = function(grunt) {
 			'docs': {
 				'command': 'npm run-script docs'
 			},
-			'doctor': {
-				'command': 'npm run-script clinic-doctor && npm run-script clinic-flame && npm run-script clinic-profile'
-			},
 			'organize_build_results': {
-				// 'command': 'mkdir ./buildresults/mocha && mkdir ./buildresults/eslint && mkdir ./buildresults/istanbul && mkdir ./buildresults/performance && mv ./*.clinic-* ./buildresults/performance && mv ./buildresults/lint.xml ./buildresults/eslint/results.xml && mv ./buildresults/tests.xml ./buildresults/mocha/results.xml && mv ./buildresults/cobertura-coverage.xml ./buildresults/istanbul/results.xml && mv ./buildresults/lcov.info ./buildresults/istanbul/lcov.info'
-				'command': 'mkdir ./buildresults/mocha && mkdir ./buildresults/eslint && mkdir ./buildresults/istanbul && mv ./buildresults/lint.xml ./buildresults/eslint/results.xml && mv ./buildresults/tests.xml ./buildresults/mocha/results.xml && mv ./buildresults/cobertura-coverage.xml ./buildresults/istanbul/results.xml && mv ./buildresults/lcov.info ./buildresults/istanbul/lcov.info'
+				'command': 'mkdir ./buildresults/mocha && mkdir ./buildresults/eslint && mkdir ./buildresults/istanbul && mkdir ./buildresults/performance && mv ./*.clinic-* ./buildresults/performance && mv ./buildresults/lint.xml ./buildresults/eslint/results.xml && mv ./buildresults/tests.xml ./buildresults/mocha/results.xml && mv ./buildresults/cobertura-coverage.xml ./buildresults/istanbul/results.xml && mv ./buildresults/lcov.info ./buildresults/istanbul/lcov.info'
+				// 'command': 'mkdir ./buildresults/mocha && mkdir ./buildresults/eslint && mkdir ./buildresults/istanbul && mv ./buildresults/lint.xml ./buildresults/eslint/results.xml && mv ./buildresults/tests.xml ./buildresults/mocha/results.xml && mv ./buildresults/cobertura-coverage.xml ./buildresults/istanbul/results.xml && mv ./buildresults/lcov.info ./buildresults/istanbul/lcov.info'
 			},
 			'rename-docs': {
 				'command': 'mv ./jsdoc_default/twyr-webapp-server/<%= pkg.version %> ./docs && rm -r ./jsdoc_default'
+			},
+			'run-clinic': {
+				'command': 'npm run-script clinic-doctor && npm run-script clinic-flame && npm run-script clinic-profile'
 			},
 			'setup-test-db': {
 				'command': 'cd ./knex_migrations && NODE_ENV=test ./../node_modules/.bin/knex migrate:latest && NODE_ENV=test ./../node_modules/.bin/knex seed:run && cd ..'
@@ -160,5 +160,5 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-mocha-istanbul');
 	grunt.loadNpmTasks('grunt-xmlstoke');
 
-	grunt.registerTask('default', ['exec:clean', 'env', 'eslint', 'xmlstoke:deleteESLintBugs', 'xmlstoke:deleteEmptyTestcases', 'xmlstoke:deleteEmptyTestsuites', 'xmlstoke:prettify', 'exec:undo-test-db', 'exec:setup-test-db', 'mochaTest', 'exec:undo-test-db', 'exec:setup-test-db', 'mocha_istanbul:coverage', 'exec:docs', 'exec:rename-docs'/*, 'exec:doctor'*/, 'clean', 'jsbeautifier', 'exec:organize_build_results'/*, 'exec:clinic-clean'*/, 'coveralls', 'exec:undo-test-db', 'exec:setup-test-db']);
+	grunt.registerTask('default', ['exec:clean', 'env', 'eslint', 'xmlstoke:deleteESLintBugs', 'xmlstoke:deleteEmptyTestcases', 'xmlstoke:deleteEmptyTestsuites', 'xmlstoke:prettify', 'exec:undo-test-db', 'exec:setup-test-db', 'mochaTest', 'exec:undo-test-db', 'exec:setup-test-db', 'mocha_istanbul:coverage', 'exec:docs', 'exec:rename-docs', 'exec:run-clinic', 'clean', 'jsbeautifier', 'exec:organize_build_results', 'exec:clinic-clean', 'coveralls', 'exec:undo-test-db', 'exec:setup-test-db']);
 };
