@@ -176,6 +176,11 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 						'index': {
 							'path': '/',
 							'routes': ''
+						// },
+
+						// 'user-home': {
+						// 	'path': '/',
+						// 	'routes': ''
 						}
 					};
 
@@ -203,6 +208,11 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 			'index': {
 				'path': '/',
 				'routes': ''
+			// },
+
+			// 'user-home': {
+			// 	'path': '/',
+			// 	'routes': ''
 			}
 		};
 
