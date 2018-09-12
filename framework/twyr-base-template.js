@@ -133,37 +133,7 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 		}
 
 		try {
-			let server = this.$parent;
-			while(server.$parent) server = server.$parent;
-
-			const clientsideAssets = {};
-			Object.keys(server.$features || {}).forEach((featureName) => {
-				const feature = server.$features[featureName];
-				const featureClientsideAssets = feature.getClientsideAssets(ctxt);
-				const inflectedFeatureName = inflection.transform(featureName, ['foreign_key', 'dasherize']).replace('-id', '');
-
-				Object.keys(featureClientsideAssets).forEach((featureClientsideAssetName) => {
-					if(!clientsideAssets[featureClientsideAssetName]) clientsideAssets[featureClientsideAssetName] = [];
-
-					if(featureClientsideAssetName === 'RouteMap') { // eslint-disable-line curly
-						clientsideAssets['RouteMap'].push(
-`this.route(${inflectedFeatureName}, { "path": "/${inflectedFeatureName}" }, function() {
-${featureClientsideAssets['RouteMap']}
-})`
-						);
-
-						return;
-					}
-
-					clientsideAssets[featureClientsideAssetName].push(featureClientsideAssets[featureClientsideAssetName]);
-				});
-			});
-
-			Object.keys(clientsideAssets).forEach((clientsideAssetName) => {
-				clientsideAssets[clientsideAssetName] = clientsideAssets[clientsideAssetName].join('\n');
-			});
-
-			if(!clientsideAssets['RouteMap']) clientsideAssets['RouteMap'] = '';
+			const clientsideAssets = await this._getClientsideAssets(ctxt);
 
 			const renderConfig = Object.assign({}, ctxt.state.tenant['template']['base_template_configuration'], ctxt.state.tenant['template']['configuration'], clientsideAssets);
 			renderConfig['developmentMode'] = (twyrEnv === 'development') || (twyrEnv === 'test');
@@ -182,6 +152,89 @@ ${featureClientsideAssets['RouteMap']}
 			const error = new TwyrTmplError(`${this.name}::_serveTenantTemplate error`, err);
 			throw error;
 		}
+	}
+	// #endregion
+
+	// #region Private Methods
+	async _getClientsideAssets(ctxt) {
+		let server = this.$parent;
+		while(server.$parent) server = server.$parent;
+
+		const featureNames = Object.keys(ctxt.state.tenant.features || {});
+		const clientsideAssets = {};
+
+		for(let idx = 0; idx < featureNames.length; idx++) {
+			const featureName = featureNames[idx];
+			const feature = server.$features[featureName];
+
+			const featureClientsideAssets = await feature.getClientsideAssets(ctxt, ctxt.state.tenant.features[featureName]);
+			if(!featureClientsideAssets) continue;
+
+			Object.keys(featureClientsideAssets).forEach((featureClientsideAssetName) => {
+				if(featureClientsideAssetName === 'RouteMap') {
+					if(!clientsideAssets['RouteMap']) clientsideAssets['RouteMap'] = {
+						'index': {
+							'path': '/',
+							'routes': ''
+						}
+					};
+
+					const inflectedFeatureName = inflection.transform(featureName, ['foreign_key', 'dasherize']).replace('-id', '');
+					clientsideAssets['RouteMap'][inflectedFeatureName] = {
+						'path': `/${inflectedFeatureName}`,
+						'routes': featureClientsideAssets['RouteMap']
+					};
+
+					return;
+				}
+
+				if(!clientsideAssets[featureClientsideAssetName]) clientsideAssets[featureClientsideAssetName] = [];
+				clientsideAssets[featureClientsideAssetName].push(featureClientsideAssets[featureClientsideAssetName]);
+			});
+		}
+
+		Object.keys(clientsideAssets).forEach((clientsideAssetName) => {
+			if(clientsideAssetName === 'RouteMap') return;
+			clientsideAssets[clientsideAssetName] = clientsideAssets[clientsideAssetName].join('\n');
+		});
+
+		if(!clientsideAssets['RouteMap'])
+		clientsideAssets['RouteMap'] = {
+			'index': {
+				'path': '/',
+				'routes': ''
+			}
+		};
+
+		// Just for kicks - to make it look good when someone views the HTML in the Browser Developer tools.
+		clientsideAssets['RouteMap'] = this._generateEmberRouteMap(clientsideAssets['RouteMap']).replace(/\n/g, '\n\t\t\t\t');
+		return clientsideAssets;
+	}
+
+	_generateEmberRouteMap(featureRoutes) {
+		let routeStr = '';
+		Object.keys(featureRoutes).forEach((routeName, idx) => {
+			if(!featureRoutes[routeName]['path'].startsWith('/')) featureRoutes[routeName]['path'] = `$/${featureRoutes[routeName]['path']}`;
+
+			let thisFeatureRouteMap = '';
+
+			if(!featureRoutes[routeName]['routes'] || ((typeof featureRoutes[routeName]['routes'] == 'string') && (featureRoutes[routeName]['routes'].trim() === '')))
+				thisFeatureRouteMap = `this.route("${routeName}", { "path": "${featureRoutes[routeName]['path']}" });`;
+			else
+				thisFeatureRouteMap =
+`this.route("${routeName}", { "path": "${featureRoutes[routeName]['path']}" }, function() {
+	${this._generateEmberRouteMap(featureRoutes[routeName]['routes'])}
+});`;
+
+			if(idx < (Object.keys(featureRoutes).length - 1)) {
+				thisFeatureRouteMap = `${thisFeatureRouteMap}\n\n`;
+			}
+
+			thisFeatureRouteMap = thisFeatureRouteMap.replace('/\n/g', '\n\t');
+			routeStr += thisFeatureRouteMap;
+		});
+
+		return routeStr;
 	}
 	// #endregion
 

@@ -150,14 +150,13 @@ class TwyrBaseModule extends TwyrBaseClass {
 			const actualState = this.$enabled;
 			this.$enabled = true;
 
-			await this._setup();
-
 			// Do the same for all of the sub-modules
 			const subModuleStatus = await this.$loader.start();
 
 			// Now, set the actual state, if required
 			if(!actualState) await this._changeState(actualState);
 
+			await this._setup();
 			return subModuleStatus;
 		}
 		catch(err) {
@@ -183,9 +182,9 @@ class TwyrBaseModule extends TwyrBaseClass {
 		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::stop`);
 
 		try {
-			const subModuleStatus = await this.$loader.stop();
 			await this._teardown();
 
+			const subModuleStatus = await this.$loader.stop();
 			return subModuleStatus;
 		}
 		catch(err) {

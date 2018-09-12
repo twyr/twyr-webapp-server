@@ -426,9 +426,12 @@ class WebserverService extends TwyrBaseService {
 
 				tenant['template'] = template;
 
+				const tenantFeatures = await dbSrvc.raw(`SELECT * FROM fn_get_module_descendants(?) WHERE type = 'feature' AND module_id IN (SELECT module_id FROM tenants_features WHERE tenant_id = ?)`, [parentModuleId, tenant.tenant_id]);
+				tenant['features'] = this._setupTenantFeatureTree(tenantFeatures.rows, parentModuleId);
+
 				const cacheMulti = cacheSrvc.multi();
 				cacheMulti.setAsync(`twyr!webapp!tenant!${tenantSubDomain}`, JSON.stringify(tenant));
-				cacheMulti.expireAsync(`twyr!webapp!tenant!${tenantSubDomain}`, ((twyrEnv === 'development') ? 30 : 43200));
+				cacheMulti.expireAsync(`twyr!webapp!tenant!${tenantSubDomain}`, ((twyrEnv === 'development') ? 300 : 86400));
 
 				await cacheMulti.execAsync();
 			}
@@ -692,6 +695,32 @@ class WebserverService extends TwyrBaseService {
 	 */
 	_processRequestFromAnotherNode(request, response) {
 		response.end();
+	}
+
+	// #region Miscellaneous
+	/**
+	 * @function
+	 * @instance
+	 * @memberof WebserverService
+	 * @name     _setupTenantFeatureTree
+	 *
+	 * @param    {Array} tenantFeatures - List of features this tenant has access to in the database.
+	 * @param    {string} parentModuleId - Parent Feature to be considered.
+	 *
+	 * @returns  {Object} Tree structure.
+	 *
+	 * @summary  Returns a sree structure of the features / sub-features that the tenant has access to.
+	 */
+	_setupTenantFeatureTree(tenantFeatures, parentModuleId) {
+		const thisParentFeatures = {};
+		tenantFeatures.forEach((tenantFeature) => {
+			if(tenantFeature['parent_module_id'] !== parentModuleId)
+				return;
+
+			thisParentFeatures[tenantFeature.name] = this._setupTenantFeatureTree(tenantFeatures, tenantFeature['module_id']);
+		});
+
+		return thisParentFeatures;
 	}
 	// #endregion
 

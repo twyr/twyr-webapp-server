@@ -40,13 +40,14 @@ class TwyrBaseFeature extends TwyrBaseModule {
 		const Router = require('koa-router');
 
 		const inflectedName = inflection.transform(this.name, ['foreign_key', 'dasherize']).replace('-id', '');
-		this.$router = new Router({ 'prefix': `/${inflectedName}` });
+		// this.$router = new Router({ 'prefix': `/${inflectedName}` });
+		this.$router = new Router();
 
 		// The RBAC Koa middleware
-		this.$router.use(this._doesUserHavePermission.bind(this));
+		this.$router.use(`/${inflectedName}`, this._doesUserHavePermission.bind(this));
 
 		// The ABAC Koa middleware
-		this.$router.use(this._canUserAccessThisResource.bind(this));
+		this.$router.use(`/${inflectedName}`, this._canUserAccessThisResource.bind(this));
 	}
 	// #endregion
 
@@ -135,14 +136,75 @@ class TwyrBaseFeature extends TwyrBaseModule {
 	 * @memberof TwyrBaseFeature
 	 * @name     getClientsideAssets
 	 *
+	 * @param    {Object} ctxt - Koa context.
+	 * @param    {Object} tenantFeatures - Sub-features allowed for this Tenant.
+	 *
 	 * @returns  {Object} Containing the compiled Ember.js client-side assets (specifically the route map, but could be others, as well).
 	 *
 	 * @summary  Returns the route map that is used by the Ember.js Router on the browser.
 	 */
-	async getClientsideAssets() {
-		return {
-			'RouteMap': `this.route('index', { 'path': '/' });`
-		};
+	async getClientsideAssets(ctxt, tenantFeatures) {
+		const assets = this.EmberAssets;
+		if(!assets) return null;
+
+		const inflection = require('inflection');
+
+		const featureNames = Object.keys(tenantFeatures || {});
+		const clientsideAssets = {};
+
+		for(let idx = 0; idx < featureNames.length; idx++) {
+			const featureName = featureNames[idx];
+			const feature = this.$features[featureName];
+
+			const featureClientsideAssets = await feature.getClientsideAssets(ctxt, tenantFeatures[featureName]);
+			if(!featureClientsideAssets) continue;
+
+			Object.keys(featureClientsideAssets).forEach((featureClientsideAssetName) => {
+				if(featureClientsideAssetName === 'RouteMap') {
+					if(!clientsideAssets['RouteMap']) clientsideAssets['RouteMap'] = {
+						'index': {
+							'path': '/',
+							'routes': {}
+						}
+					};
+
+					const inflectedFeatureName = inflection.transform(featureName, ['foreign_key', 'dasherize']).replace('-id', '');
+					clientsideAssets['RouteMap']['index']['routes'][inflectedFeatureName] = {
+						'path': `/${inflectedFeatureName}`,
+						'routes': featureClientsideAssets['RouteMap']
+					};
+
+					return;
+				}
+
+				if(!clientsideAssets[featureClientsideAssetName]) clientsideAssets[featureClientsideAssetName] = [];
+				clientsideAssets[featureClientsideAssetName].push(featureClientsideAssets[featureClientsideAssetName]);
+			});
+		}
+
+		Object.keys(clientsideAssets).forEach((clientsideAssetName) => {
+			if(clientsideAssetName === 'RouteMap') return;
+			clientsideAssets[clientsideAssetName] = clientsideAssets[clientsideAssetName].join('\n');
+		});
+
+		Object.keys(assets).forEach((assetName) => {
+			if(assetName === 'RouteMap') {
+				if(!assets['RouteMap']) assets['RouteMap'] = {
+					'index': {
+						'path': '/',
+						'routes': ''
+					}
+				};
+
+				assets['RouteMap']['index']['routes'] = clientsideAssets['RouteMap'] || '';
+				return;
+			}
+
+			if(!assets[assetName]) assets[assetName] = [];
+			assets[assetName].push(clientsideAssets[assetName]);
+		});
+
+		return assets;
 	}
 	// #endregion
 
@@ -236,7 +298,6 @@ class TwyrBaseFeature extends TwyrBaseModule {
 	// #region Properties
 	/**
 	 * @member   {Object} Router
-	 * @override
 	 * @instance
 	 * @memberof TwyrBaseFeature
 	 *
@@ -247,10 +308,28 @@ class TwyrBaseFeature extends TwyrBaseModule {
 	}
 
 	/**
+	 * @member   {Object} EmberAssets
+	 * @instance
+	 * @memberof TwyrBaseFeature
+	 *
+	 * @readonly
+	 */
+	get EmberAssets() {
+		return {
+			'RouteMap': {
+				'index': {
+					'path': '/',
+					'routes': ''
+				}
+			}
+		};
+	}
+
+	/**
 	 * @override
 	 */
 	get dependencies() {
-		return ['ApiService', 'ConfigurationService', 'LoggerService', 'WebserverService'].concat(super.dependencies);
+		return ['*'].concat(super.dependencies);
 	}
 
 	/**

@@ -93,11 +93,24 @@ class TwyrModuleLoader extends TwyrBaseClass {
 
 			allStatuses.push(lifecycleStatuses);
 
-			lifecycleStatuses = await this._loadTemplates(configSrvc);
-			if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
-				throw lifecycleStatuses.status;
+			// Templates are loaded only for servers, and not for features...
+			if(!this.$twyrModule.$parent) {
+				lifecycleStatuses = await this._loadTemplates(configSrvc);
+				if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
+					throw lifecycleStatuses.status;
 
-			allStatuses.push(lifecycleStatuses);
+				allStatuses.push(lifecycleStatuses);
+			}
+
+			// Features are loaded only for servers or templates, and not for services, middlewares, etc....
+			if(!this.$twyrModule.$parent || (Object.getPrototypeOf(Object.getPrototypeOf(this.$twyrModule)).name === 'TwyrBaseFeature')) {
+				lifecycleStatuses = await this._loadFeatures(configSrvc);
+				if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
+					throw lifecycleStatuses.status;
+
+				allStatuses.push(lifecycleStatuses);
+			}
+
 			return this._filterStatus(allStatuses);
 		}
 		catch(err) {
@@ -139,11 +152,22 @@ class TwyrModuleLoader extends TwyrBaseClass {
 
 			allStatuses.push(lifecycleStatuses);
 
-			lifecycleStatuses = await this._initializeTemplates();
-			if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
-				throw lifecycleStatuses.status;
+			if(!this.$twyrModule.$parent) {
+				lifecycleStatuses = await this._initializeTemplates();
+				if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
+					throw lifecycleStatuses.status;
 
-			allStatuses.push(lifecycleStatuses);
+				allStatuses.push(lifecycleStatuses);
+			}
+
+			if(!this.$twyrModule.$parent || (Object.getPrototypeOf(Object.getPrototypeOf(this.$twyrModule)).name === 'TwyrBaseFeature')) {
+				lifecycleStatuses = await this._initializeFeatures();
+				if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
+					throw lifecycleStatuses.status;
+
+				allStatuses.push(lifecycleStatuses);
+			}
+
 			return this._filterStatus(allStatuses);
 		}
 		catch(err) {
@@ -185,11 +209,22 @@ class TwyrModuleLoader extends TwyrBaseClass {
 
 			allStatuses.push(lifecycleStatuses);
 
-			lifecycleStatuses = await this._startTemplates();
-			if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
-				throw lifecycleStatuses.status;
+			if(!this.$twyrModule.$parent) {
+				lifecycleStatuses = await this._startTemplates();
+				if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
+					throw lifecycleStatuses.status;
 
-			allStatuses.push(lifecycleStatuses);
+				allStatuses.push(lifecycleStatuses);
+			}
+
+			if(!this.$twyrModule.$parent || (Object.getPrototypeOf(Object.getPrototypeOf(this.$twyrModule)).name === 'TwyrBaseFeature')) {
+				lifecycleStatuses = await this._startFeatures();
+				if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
+					throw lifecycleStatuses.status;
+
+				allStatuses.push(lifecycleStatuses);
+			}
+
 			return this._filterStatus(allStatuses);
 		}
 		catch(err) {
@@ -213,11 +248,21 @@ class TwyrModuleLoader extends TwyrBaseClass {
 			const allStatuses = [];
 			let lifecycleStatuses = null;
 
-			lifecycleStatuses = await this._stopTemplates();
-			if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
-				throw lifecycleStatuses.status;
+			if(!this.$twyrModule.$parent || (Object.getPrototypeOf(Object.getPrototypeOf(this.$twyrModule)).name === 'TwyrBaseFeature')) {
+				lifecycleStatuses = await this._stopFeatures();
+				if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
+					throw lifecycleStatuses.status;
 
-			allStatuses.push(lifecycleStatuses);
+				allStatuses.push(lifecycleStatuses);
+			}
+
+			if(!this.$twyrModule.$parent) {
+				lifecycleStatuses = await this._stopTemplates();
+				if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
+					throw lifecycleStatuses.status;
+
+				allStatuses.push(lifecycleStatuses);
+			}
 
 			lifecycleStatuses = await this._stopComponents();
 			if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
@@ -259,11 +304,21 @@ class TwyrModuleLoader extends TwyrBaseClass {
 			const allStatuses = [];
 			let lifecycleStatuses = null;
 
-			lifecycleStatuses = await this._uninitializeTemplates();
-			if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
-				throw lifecycleStatuses.status;
+			if(!this.$twyrModule.$parent || (Object.getPrototypeOf(Object.getPrototypeOf(this.$twyrModule)).name === 'TwyrBaseFeature')) {
+				lifecycleStatuses = await this._uninitializeFeatures();
+				if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
+					throw lifecycleStatuses.status;
 
-			allStatuses.push(lifecycleStatuses);
+				allStatuses.push(lifecycleStatuses);
+			}
+
+			if(!this.$twyrModule.$parent) {
+				lifecycleStatuses = await this._uninitializeTemplates();
+				if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
+					throw lifecycleStatuses.status;
+
+				allStatuses.push(lifecycleStatuses);
+			}
 
 			lifecycleStatuses = await this._uninitializeComponents();
 			if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
@@ -305,11 +360,21 @@ class TwyrModuleLoader extends TwyrBaseClass {
 			const allStatuses = [];
 			let lifecycleStatuses = null;
 
-			lifecycleStatuses = await this._unloadTemplates();
-			if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
-				throw lifecycleStatuses.status;
+			if(!this.$twyrModule.$parent || (Object.getPrototypeOf(Object.getPrototypeOf(this.$twyrModule)).name === 'TwyrBaseFeature')) {
+				lifecycleStatuses = await this._unloadFeatures();
+				if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
+					throw lifecycleStatuses.status;
 
-			allStatuses.push(lifecycleStatuses);
+				allStatuses.push(lifecycleStatuses);
+			}
+
+			if(!this.$twyrModule.$parent) {
+				lifecycleStatuses = await this._unloadTemplates();
+				if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
+					throw lifecycleStatuses.status;
+
+				allStatuses.push(lifecycleStatuses);
+			}
 
 			lifecycleStatuses = await this._unloadComponents();
 			if(lifecycleStatuses && lifecycleStatuses.status && (lifecycleStatuses.status instanceof Error))
@@ -1277,6 +1342,194 @@ class TwyrModuleLoader extends TwyrBaseClass {
 	}
 	// #endregion
 
+	// #region Features Lifecycle hooks
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _loadFeatures
+	 *
+	 * @param    {ConfigurationService} configSrvc - Instance of the {@link ConfigurationService} that supplies configuration.
+	 *
+	 * @returns  {Object} Object containing the load status of each of the $twyrModule features.
+	 *
+	 * @summary  Load features defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _loadFeatures(configSrvc) {
+		const path = require('path');
+
+		try {
+			if(!this.$twyrModule.$features) this.$twyrModule.$features = {};
+
+			const definedFeatures = await this._findFiles(path.join(this.$twyrModule.basePath, 'features'), 'feature.js');
+			for(const definedFeature of definedFeatures) {
+				// Check validity of the definition...
+				const Feature = require(definedFeature).feature;
+				if(!Feature) continue;
+
+				// Construct the service
+				const featureInstance = new Feature(this.$twyrModule);
+
+				// Check to see valid typeof
+				// if(!(serviceInstance instanceof TwyrBaseService))
+				// 	throw new TwyrBaseError(`${definedService} does not contain a valid TwyrBaseService definition`);
+
+				this.$twyrModule.$features[featureInstance.name] = featureInstance;
+			}
+
+			const nameStatusPairs = await this._doLifecycleAction('features', 'load', [configSrvc]);
+			return { 'type': 'features', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'features',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_loadFeatures error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _initializeFeatures
+	 *
+	 * @returns  {Object} Object containing the initialization status of each of the $twyrModule features.
+	 *
+	 * @summary  Initialize Features defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _initializeFeatures() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('features', 'initialize');
+			return { 'type': 'features', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'features',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_initializeFeatures error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _startFeatures
+	 *
+	 * @returns  {Object} Object containing the start status of each of the $twyrModule features.
+	 *
+	 * @summary  Start Features defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _startFeatures() {
+		try {
+			const featureNames = Object.keys(this.$twyrModule.$features || {}),
+				nameStatusPairs = {};
+
+			for(const featureName of featureNames) {
+				let lifecycleStatus = null;
+				try {
+					const moduleInstance = this.$twyrModule.$features[featureName];
+					const dependencies = this._getDependencies(moduleInstance);
+
+					lifecycleStatus = await moduleInstance.start(dependencies);
+				}
+				catch(err) {
+					lifecycleStatus = new TwyrBaseError(`${this.$twyrModule.name}::loader::_doLifecycleAction (${featureName} / start) error`, err);
+				}
+
+				nameStatusPairs[featureName] = lifecycleStatus;
+			}
+
+			return {
+				'type': 'features',
+				'status': nameStatusPairs
+			};
+		}
+		catch(err) {
+			return {
+				'type': 'features',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_startFeatures error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _stopFeatures
+	 *
+	 * @returns  {Object} Object containing the stop status of each of the $twyrModule features.
+	 *
+	 * @summary  Stop Features defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _stopFeatures() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('features', 'stop');
+			return { 'type': 'features', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'features',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_stopFeatures error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _uninitializeFeatures
+	 *
+	 * @returns  {Object} Object containing the uninit status of each of the $twyrModule features.
+	 *
+	 * @summary  Uninitialize Features defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _uninitializeFeatures() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('features', 'uninitialize');
+			return { 'type': 'features', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'features',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_uninitializeFeatures error`, err)
+			};
+		}
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrModuleLoader
+	 * @name     _unloadFeatures
+	 *
+	 * @returns  {Object} Object containing the unload status of each of the $twyrModule features.
+	 *
+	 * @summary  Unload Features defined as part of this {@link TwyrBaseModule}.
+	 */
+	async _unloadFeatures() {
+		try {
+			const nameStatusPairs = await this._doLifecycleAction('features', 'unload');
+			return { 'type': 'features', 'status': nameStatusPairs };
+		}
+		catch(err) {
+			return {
+				'type': 'features',
+				'status': new TwyrBaseError(`${this.$twyrModule.name}::loader::_unloadFeatures error`, err)
+			};
+		}
+	}
+	// #endregion
+
 	// #region Utilities
 	/**
 	 * @async
@@ -1347,19 +1600,36 @@ class TwyrModuleLoader extends TwyrBaseClass {
 	_getDependencies(moduleInstance) {
 		try {
 			const moduleDependencies = {};
+			let requiredDependencies = moduleInstance.dependencies.slice(0);
 
-			moduleInstance.dependencies.forEach((thisDependency) => {
+			if((requiredDependencies.length === 1) && (requiredDependencies[0] === '*')) {
+				requiredDependencies.length = 0;
+
+				let currentModule = this.$twyrModule;
+				while(!!currentModule) {
+					requiredDependencies = requiredDependencies.concat(...currentModule.dependencies, ...Object.keys(currentModule.$services || {}));
+					currentModule = currentModule.$parent;
+				}
+
+				const uniqueRequiredDependencies = new Set(requiredDependencies);
+				requiredDependencies = [...uniqueRequiredDependencies];
+			}
+
+			requiredDependencies.forEach((thisDependency) => {
+				if(thisDependency === '*')
+					return;
+
 				let currentDependency = null,
 					currentModule = this.$twyrModule;
 
 				while(!!currentModule && !currentDependency) {
-					if(!currentModule.$services) {
-						currentModule = currentModule.$parent;
-						continue;
-					}
+					currentDependency = currentModule.$services ? currentModule.$services[thisDependency] : null;
+					if(!currentDependency) currentDependency = currentModule.$dependencies ? currentModule.$dependencies[thisDependency] : null;
 
-					currentDependency = currentModule.$services[thisDependency];
-					if(!currentDependency) currentModule = currentModule.$parent;
+					if(!currentDependency)
+						currentModule = currentModule.$parent;
+					else
+						break;
 				}
 
 				if(!currentDependency) throw new Error(`${moduleInstance.name}::dependency::${thisDependency} not found!`);
