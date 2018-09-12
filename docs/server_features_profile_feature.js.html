@@ -99,7 +99,11 @@ class Profile extends TwyrBaseFeature {
 	 * @summary  Derived classes should call next, or throw a {TwyrFeatureError} - depending on whether the user has the required permission(s).
 	 */
 	async _doesUserHavePermission(ctxt, next) {
-		if(ctxt.state.user) await next();
+		if(ctxt.state.user) {
+			await next();
+			return;
+		}
+
 		throw new TwyrFeatureError('No active seesion');
 	}
 
@@ -118,7 +122,11 @@ class Profile extends TwyrBaseFeature {
 	 * @summary  Derived classes should call next, or throw a {TwyrFeatureError} - depending on whether the user can access this particular resource.
 	 */
 	async _canUserAccessThisResource(ctxt, next) {
-		if(ctxt.state.user) await next();
+		if(ctxt.state.user) {
+			await next();
+			return;
+		}
+
 		throw new TwyrFeatureError('No active seesion');
 	}
 	// #endregion

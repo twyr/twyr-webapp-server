@@ -232,6 +232,11 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 						'index': {
 							'path': '/',
 							'routes': ''
+						// },
+
+						// 'user-home': {
+						// 	'path': '/',
+						// 	'routes': ''
 						}
 					};
 
@@ -259,6 +264,11 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 			'index': {
 				'path': '/',
 				'routes': ''
+			// },
+
+			// 'user-home': {
+			// 	'path': '/',
+			// 	'routes': ''
 			}
 		};
 
@@ -274,7 +284,7 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 
 			let thisFeatureRouteMap = '';
 
-			if(!featureRoutes[routeName]['routes'] || ((typeof featureRoutes[routeName]['routes'] == 'string') &amp;&amp; (featureRoutes[routeName]['routes'].trim() === '')))
+			if(!featureRoutes[routeName]['routes'] || ((typeof featureRoutes[routeName]['routes'] === 'string') &amp;&amp; (featureRoutes[routeName]['routes'].trim() === '')))
 				thisFeatureRouteMap = `this.route("${routeName}", { "path": "${featureRoutes[routeName]['path']}" });`;
 			else
 				thisFeatureRouteMap =
@@ -282,9 +292,8 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 	${this._generateEmberRouteMap(featureRoutes[routeName]['routes'])}
 });`;
 
-			if(idx &lt; (Object.keys(featureRoutes).length - 1)) {
+			if(idx &lt; (Object.keys(featureRoutes).length - 1))
 				thisFeatureRouteMap = `${thisFeatureRouteMap}\n\n`;
-			}
 
 			thisFeatureRouteMap = thisFeatureRouteMap.replace('/\n/g', '\n\t');
 			routeStr += thisFeatureRouteMap;
