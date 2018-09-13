@@ -52,7 +52,7 @@
 		"amqplib": "*",
 		"app-module-path": "*",
 		"ascoltatori": "^4.3.0",
-		"aws-sdk": "^2.313.0",
+		"aws-sdk": "^2.314.0",
 		"axios": "^0.18.0",
 		"bluebird": "^3.5.2",
 		"bookshelf": "*",
