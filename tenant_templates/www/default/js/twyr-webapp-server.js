@@ -27,45 +27,63 @@
     'modulePrefix': _environment.default.modulePrefix,
     'podModulePrefix': _environment.default.podModulePrefix,
     'Resolver': _resolver.default,
-    ajax: Ember.inject.service('ajax'),
-    currentUser: Ember.inject.service('current-user'),
 
     init() {
       this._super(...arguments);
 
       window.Ember.onerror = function (error) {
         const beaconData = {
-          'dataType': 'json',
           'data': {
-            'user': this.get('currentUser').getUser(),
+            'user': window.twyrUserId,
+            'tenant': window.twyrTenantId,
             'urlPath': location.href,
             'error': error.message,
             'stack': error.stack
           }
         };
+        let beaconStatus = false;
 
         if (navigator.sendBeacon) {
-          navigator.sendBeacon('/collectClientErrorData', beaconData);
-        } else {
-          this.get('ajax').post('/collectClientErrorData', beaconData);
+          const formData = new FormData();
+          Object.keys(beaconData.data).forEach(key => {
+            formData.append(key, beaconData.data[key]);
+          }); // beaconStatus = navigator.sendBeacon('/collectClientErrorData?source=onerror&method=beacon', formData);
+        }
+
+        if (!beaconStatus) {
+          beaconData.dataType = 'json';
+          beaconData.method = 'post';
+          beaconData.type = 'post';
+          beaconData.url = '/collectClientErrorData?source=onerror&method=ajax';
+          window.$.ajax(beaconData);
         }
       };
 
       Ember.RSVP.on('error', function (error) {
         const beaconData = {
-          'dataType': 'json',
           'data': {
-            'user': this.get('currentUser').getUser(),
+            'user': window.twyrUserId,
+            'tenant': window.twyrTenantId,
             'urlPath': location.href,
             'error': error.message,
             'stack': error.stack
           }
         };
+        let beaconStatus = false;
 
         if (navigator.sendBeacon) {
-          navigator.sendBeacon('/collectClientErrorData', beaconData);
-        } else {
-          this.get('ajax').post('/collectClientErrorData', beaconData);
+          const formData = new FormData();
+          Object.keys(beaconData.data).forEach(key => {
+            formData.append(key, beaconData.data[key]);
+          }); // beaconStatus = navigator.sendBeacon('/collectClientErrorData?source=rsvperror&method=beacon', formData);
+        }
+
+        if (!beaconStatus) {
+          beaconData.dataType = 'json';
+          beaconData.method = 'post';
+          beaconData.type = 'post';
+          beaconData.url = '/collectClientErrorData?source=rsvperror&method=ajax';
+          window.$.ajax(beaconData);
         }
       });
     }
@@ -3573,7 +3591,7 @@
     }
   });
 });
-;define("twyr-webapp-server/components/profile/notification-area", ["exports", "twyr-webapp-server/framework/base-component", "ember-computed-style", "ember-concurrency"], function (_exports, _baseComponent, _emberComputedStyle, _emberConcurrency) {
+;define("twyr-webapp-server/components/profile/notification-area", ["exports", "twyr-webapp-server/framework/base-component", "ember-computed-style"], function (_exports, _baseComponent, _emberComputedStyle) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -3591,10 +3609,15 @@
         'display': this.get('hasPermission') ? 'unset' : 'none'
       };
     }),
-    onInit: (0, _emberConcurrency.task)(function* () {
-      yield this.set('permissions', ['registered']);
-    }).on('init').keepLatest(),
+
+    init() {
+      this._super(...arguments);
+
+      this.set('permissions', ['registered']);
+    },
+
     onHasPermissionChange: Ember.observer('hasPermission', function () {
+      if (!this.get('hasPermission')) return;
       const userDetails = this.get('currentUser').getUser();
       this.set('displayName', userDetails ? userDetails['name'] : '');
     })
@@ -3627,9 +3650,13 @@
         'min-width': this.get('hasPermission') ? '0rem' : '20rem'
       };
     }),
-    onInit: (0, _emberConcurrency.task)(function* () {
-      yield this.set('permissions', ['registered']);
-    }).on('init').keepLatest(),
+
+    init() {
+      this._super(...arguments);
+
+      this.set('permissions', ['registered']);
+    },
+
     doLogin: (0, _emberConcurrency.task)(function* () {
       const notification = this.get('notification');
       notification.display({
@@ -3651,8 +3678,11 @@
         });
 
         if (loginResult.nextAction === 'proceed') {
-          window.TwyrApp.trigger('userChanged'); // this.get('router').transitionTo('user-home');
-
+          this.get('currentUser').one('userDataUpdated', () => {
+            const userData = this.get('currentUser').getUser();
+            this.get('router').transitionTo(userData.defaultApplication);
+          });
+          window.TwyrApp.trigger('userChanged');
           return;
         }
 
@@ -3760,9 +3790,13 @@
   var _default = _baseComponent.default.extend({
     router: Ember.inject.service('router'),
     permissions: null,
-    onInit: (0, _emberConcurrency.task)(function* () {
-      yield this.set('permissions', ['registered']);
-    }).on('init').drop(),
+
+    init() {
+      this._super(...arguments);
+
+      this.set('permissions', ['registered']);
+    },
+
     doLogout: (0, _emberConcurrency.task)(function* () {
       const notification = this.get('notification');
       notification.display({
@@ -3777,10 +3811,11 @@
         notification.display({
           'type': logoutResult.status < 400 ? 'success' : 'error',
           'message': logoutResult.info.message
-        }); // eslint-disable-next-line no-undef
-
+        });
+        this.get('currentUser').one('userDataUpdated', () => {
+          this.get('router').transitionTo('index');
+        });
         window.TwyrApp.trigger('userChanged');
-        this.get('router').transitionTo('index');
       } catch (err) {
         notification.display({
           'type': 'error',
@@ -4091,16 +4126,32 @@
       const currentYear = new Date().getFullYear();
       this.set('currentYear', currentYear);
       this.set('displayCurrentYear', currentYear > this.get('startYear'));
+      this.get('realtimeData').on('websocket-data::display-status-message', this, this.onDisplayWebsocketStatusMessage);
+      this.get('realtimeData').on('websocket-close', this, this.onWebsocketClose);
+      this.get('realtimeData').on('websocket-disconnection', this, this.onWebsocketDisconnect);
+    },
+
+    destroy() {
+      this.get('realtimeData').off('websocket-disconnection', this, this.onWebsocketDisconnect);
+      this.get('realtimeData').off('websocket-close', this, this.onWebsocketClose);
+      this.get('realtimeData').off('websocket-data::display-status-message', this, this.onDisplayWebsocketStatusMessage);
+
+      this._super(...arguments);
+    },
+
+    onDisplayWebsocketStatusMessage(data) {
       const notification = this.get('notification');
-      this.get('realtimeData').on('websocket-data::display-status-message', data => {
-        notification.display(data);
-      });
-      this.get('realtimeData').on('websocket-close', () => {
-        notification.display('Realtime Data Connectivity lost! Will attempt reconnection!!');
-      });
-      this.get('realtimeData').on('websocket-disconnection', () => {
-        notification.display('Realtime Data Connectivity lost!');
-      });
+      notification.display(data);
+    },
+
+    onWebsocketClose() {
+      const notification = this.get('notification');
+      notification.display('Realtime Data Connectivity lost! Will attempt reconnection!!');
+    },
+
+    onWebsocketDisconnect() {
+      const notification = this.get('notification');
+      notification.display('Realtime Data Connectivity lost!');
     },
 
     displayModal: function (data) {
@@ -4256,14 +4307,23 @@
       this._super(...arguments);
 
       this.set('permissions', ['*']);
-      this.get('currentUser').on('userDataUpdated', () => {
-        this.get('updatePermissions').perform();
-      });
+      this.get('currentUser').on('userDataUpdated', this, this.onUserDataUpdated);
+    },
+
+    destroy() {
+      this.get('currentUser').off('userDataUpdated', this, this.onUserDataUpdated);
+
+      this._super(...arguments);
     },
 
     onPermissionChanges: Ember.observer('permissions', function () {
       this.get('updatePermissions').perform();
     }),
+
+    onUserDataUpdated() {
+      this.get('updatePermissions').perform();
+    },
+
     updatePermissions: (0, _emberConcurrency.task)(function* () {
       if (this.get('permissions').includes('*')) {
         this.set('hasPermission', true);
@@ -4314,14 +4374,23 @@
       this._super(...arguments);
 
       this.set('permissions', ['*']);
-      this.get('currentUser').on('userDataUpdated', () => {
-        this.get('updatePermissions').perform();
-      });
+      this.get('currentUser').on('userDataUpdated', this, this.onUserDataUpdated);
+    },
+
+    destroy() {
+      this.get('currentUser').off('userDataUpdated', this, this.onUserDataUpdated);
+
+      this._super(...arguments);
     },
 
     onPermissionChanges: Ember.observer('permissions', function () {
       this.get('updatePermissions').perform();
     }),
+
+    onUserDataUpdated() {
+      this.get('updatePermissions').perform();
+    },
+
     updatePermissions: (0, _emberConcurrency.task)(function* () {
       if (this.get('permissions').includes('*')) {
         this.set('hasPermission', true);
@@ -7635,6 +7704,50 @@
 
   _exports.default = _default;
 });
+;define("twyr-webapp-server/routes/index", ["exports", "twyr-webapp-server/framework/base-route"], function (_exports, _baseRoute) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseRoute.default.extend({
+    currentUser: Ember.inject.service('current-user'),
+    router: Ember.inject.service('router'),
+
+    init() {
+      this._super(...arguments);
+
+      this.get('currentUser').on('userDataUpdated', this, this.onUserDataUpdated);
+    },
+
+    destroy() {
+      this.get('currentUser').off('userDataUpdated', this, this.onUserDataUpdated);
+
+      this._super(...arguments);
+    },
+
+    redirect() {
+      const userData = this.get('currentUser').getUser();
+      if (!userData) return;
+      if (userData.defaultApplication === '' || userData.defaultApplication === 'index') return;
+      this.transitionTo(userData.defaultApplication);
+    },
+
+    onUserDataUpdated() {
+      const isIndexActive = this.get('router').isActive('index');
+      if (!isIndexActive) return;
+      const userData = this.get('currentUser').getUser();
+      if (!userData) return;
+      if (userData.defaultApplication === '' || userData.defaultApplication === 'index') return;
+      this.transitionTo(userData.defaultApplication);
+    }
+
+  });
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/routes/profile", ["exports", "twyr-webapp-server/framework/base-route"], function (_exports, _baseRoute) {
   "use strict";
 
@@ -7774,10 +7887,15 @@
     userData: null,
     onInit: (0, _emberConcurrency.task)(function* () {
       const fetchUserData = this.get('fetchUserData');
-      yield fetchUserData.perform(); // eslint-disable-next-line no-undef
-
-      TwyrApp.on('userChanged', this, this.onUserChanged);
+      yield fetchUserData.perform();
+      window.TwyrApp.on('userChanged', this, this.onUserChanged);
     }).on('init').drop(),
+
+    destroy() {
+      window.TwyrApp.off('userchanged', this, this.onUserChanged);
+
+      this._super(...arguments);
+    },
 
     onUserChanged() {
       const fetchUserData = this.get('fetchUserData');
@@ -7792,10 +7910,14 @@
           'method': 'GET'
         });
         this.set('userData', userData);
+        window.twyrUserId = userData['user_id'];
+        window.twyrTenantId = userData['tenant_id'];
         this.trigger('userDataUpdated');
       } catch (err) {
         // TODO: Use the Beacon API to send all this back to the server;
         this.set('userData', null);
+        window.twyrUserId = '';
+        window.twyrTenantId = '';
         this.trigger('userDataUpdated');
         this.get('notification').display({
           'type': 'error',
@@ -8034,8 +8156,7 @@
     init() {
       this._super(...arguments);
 
-      const dataProcessor = this.get('_websocketDataProcessor').bind(this),
-            streamer = window.Primus.connect('/', {
+      const streamer = window.Primus.connect('/', {
         'strategy': 'online, timeout, disconnect',
         'reconnect': {
           'min': 1000,
@@ -8043,47 +8164,67 @@
           'retries': 25
         }
       });
+      streamer.on('open', this.onStreamerOpen.bind(this)); // streamer.on('reconnect', () => {
+      // 	if(window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnect: ', arguments);
+      // 	this.trigger('websocket-reconnect');
+      // });
+      // streamer.on('reconnect scheduled', () => {
+      // 	if(window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnect scheduled: ', arguments);
+      // 	this.trigger('websocket-reconnect-scheduled');
+      // });
+
+      streamer.on('reconnected', this.onStreamerReconnected.bind(this)); // streamer.on('reconnect timeout', () => {
+      // 	if(window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnect timeout: ', arguments);
+      // 	this.trigger('websocket-reconnect-timeout');
+      // });
+      // streamer.on('reconnect failed', () => {
+      // 	if(window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnect failed: ', arguments);
+      // 	this.trigger('websocket-reconnect-failed');
+      // });
+
+      streamer.on('close', this.onStreamerClose.bind(this));
+      streamer.on('end', this.onStreamerEnd.bind(this));
+      streamer.on('error', this.onStreamerError.bind(this));
       this.set('streamer', streamer);
-      this.get('streamer').on('open', () => {
-        if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::open: ', arguments);
-        this.get('streamer').on('data', dataProcessor);
-        this.trigger('websocket-open');
-      });
-      this.get('streamer').on('reconnect', () => {
-        if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnect: ', arguments);
-        this.trigger('websocket-reconnect');
-      });
-      this.get('streamer').on('reconnect scheduled', () => {
-        if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnect scheduled: ', arguments);
-        this.trigger('websocket-reconnect-scheduled');
-      });
-      this.get('streamer').on('reconnected', () => {
-        if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnected: ', arguments);
-        this.get('streamer').on('data', dataProcessor);
-        this.trigger('websocket-open');
-      });
-      this.get('streamer').on('reconnect timeout', () => {
-        if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnect timeout: ', arguments);
-        this.trigger('websocket-reconnect-timeout');
-      });
-      this.get('streamer').on('reconnect failed', () => {
-        if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnect failed: ', arguments);
-        this.trigger('websocket-reconnect-failed');
-      });
-      this.get('streamer').on('close', () => {
-        if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::close: ', arguments);
-        this.trigger('websocket-close');
-        this.get('streamer').off('data', dataProcessor);
-      });
-      this.get('streamer').on('end', () => {
-        if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::end: ', arguments);
-        this.trigger('websocket-end');
-        this.get('streamer').off('data', dataProcessor);
-      });
-      this.get('streamer').on('error', () => {
-        if (window.developmentMode) console.error('twyr-webapp-server/services/websockets::streamer::on::error: ', arguments);
-        this.trigger('websocket-error');
-      });
+    },
+
+    destroy() {
+      this.get('streamer').off('error', this.onStreamerError.bind(this));
+      this.get('streamer').off('end', this.onStreamerEnd.bind(this));
+      this.get('streamer').off('close', this.onStreamerClose.bind(this));
+      this.get('streamer').off('reconnected', this.onStreamerReconnected.bind(this));
+      this.get('streamer').off('open', this.onStreamerOpen.bind(this));
+
+      this._super(...arguments);
+    },
+
+    onStreamerOpen() {
+      if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::open: ', arguments);
+      this.get('streamer').on('data', this._websocketDataProcessor.bind(this));
+      this.trigger('websocket-open');
+    },
+
+    onStreamerReconnected() {
+      if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnected: ', arguments);
+      this.get('streamer').on('data', this._websocketDataProcessor.bind(this));
+      this.trigger('websocket-open');
+    },
+
+    onStreamerClose() {
+      if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::close: ', arguments);
+      this.get('streamer').off('data', this._websocketDataProcessor.bind(this));
+      this.trigger('websocket-close');
+    },
+
+    onStreamerEnd() {
+      if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::end: ', arguments);
+      this.get('streamer').off('data', this._websocketDataProcessor.bind(this));
+      this.trigger('websocket-end');
+    },
+
+    onStreamerError() {
+      if (window.developmentMode) console.error('twyr-webapp-server/services/websockets::streamer::on::error: ', arguments);
+      this.trigger('websocket-error');
     },
 
     _websocketDataProcessor(websocketData) {
