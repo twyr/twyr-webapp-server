@@ -516,6 +516,14 @@ BEGIN
 		tenant_id = OLD.tenant_id AND
 		module_id IN (SELECT module_id FROM fn_get_module_descendants(OLD.module_id) WHERE level = 2);
 
+	UPDATE
+		tenants_users
+	SET
+		default_application = NULL
+	WHERE
+		tenant_id = OLD.tenant_id AND
+		default_application = OLD.module_id;
+
 	RETURN OLD;
 END;
 $$;`

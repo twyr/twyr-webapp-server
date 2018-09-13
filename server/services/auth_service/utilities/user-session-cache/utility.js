@@ -143,47 +143,61 @@ const getTenantUserPermissions = async function(tenantId, userId) {
 	}
 };
 
-/*
-const getTenantUserDefaultApplication = function(tenant, userId, callback) {
+
+const getTenantUserAttributes = async function(tenantId, userId) {
+	const inflection = require('inflection');
+
 	const cacheSrvc = this.$dependencies.CacheService,
 		databaseSrvc = this.$dependencies.DatabaseService,
 		loggerSrvc = this.$dependencies.LoggerService;
 
-	this._dummyAsync()
-	.then(() => {
-		return cacheSrvc.getAsync(`twyr!webapp!user!${userId}!${tenant}!default!application`);
-	})
-	.then((cachedTenantUserDefaultApplication) => {
-		if(cachedTenantUserDefaultApplication)
-			return promises.all([cachedTenantUserDefaultApplication, false]);
-
-		return promises.all([databaseSrvc.knex.raw('SELECT default_tenant_application FROM tenants_users WHERE login = ? AND tenant = (SELECT id FROM tenants WHERE sub_domain = ?)', [userId, tenant]), true]);
-	})
-	.then((results) => {
-		let tenantUserDefaultApplication = results.shift();
-		const shouldCache = results.shift();
-
-		if(tenantUserDefaultApplication.rows)
-			tenantUserDefaultApplication = tenantUserDefaultApplication.rows[0].default_tenant_application;
-
-		const promiseResolutions = [tenantUserDefaultApplication];
-		if(shouldCache) { // eslint-disable-line curly
-			promiseResolutions.push(cacheSrvc.setAsync(`twyr!webapp!user!${userId}!${tenant}!default!application`, tenantUserDefaultApplication || 'NULL'));
+	try {
+		let cachedTenantUserAttributes = await cacheSrvc.getAsync(`twyr!webapp!user!${userId}!${tenantId}!attributes`);
+		if(cachedTenantUserAttributes) {
+			cachedTenantUserAttributes = JSON.parse(cachedTenantUserAttributes);
+			return cachedTenantUserAttributes;
 		}
 
-		return promises.all(promiseResolutions);
-	})
-	.then((results) => {
-		if(results[0] === 'NULL') results[0] = null;
-		if(callback) callback(null, results.shift());
-		return null;
-	})
-	.catch((err) => {
-		loggerSrvc.error(`userSessionCache::getTenantUserDefaultApplication Error:\nUser Id: ${userId}\nTenant: ${tenant}\nError: `, err);
-		if(callback) callback(err);
-	});
+		// Setup the models...
+		const databaseTenantUser = await databaseSrvc.knex.raw(`SELECT A.tenant_id, A.name, A.sub_domain, B.designation, B.default_application FROM tenants A INNER JOIN tenants_users B ON (A.tenant_id = B.tenant_id) WHERE A.enabled= true AND B.user_id = ?`, [userId]);
+
+		const tenantUserAttributes = {
+			'designation': '',
+			'default_application': '',
+			'default_route': '',
+			'allowed_tenants': []
+		};
+
+		databaseTenantUser.rows.forEach((tenantUserRecord) => {
+			if(tenantUserRecord['tenant_id'] === tenantId) {
+				tenantUserAttributes['designation'] = tenantUserRecord['designation'];
+				tenantUserAttributes['default_application'] = tenantUserRecord['default_application'];
+			}
+
+			tenantUserAttributes['allowed_tenants'].push({
+				'tenant_id': tenantUserRecord['tenant_id'],
+				'name': tenantUserRecord['name'],
+				'sub_domain': tenantUserRecord['sub_domain']
+			});
+		});
+
+		if(tenantUserAttributes.default_application && (tenantUserAttributes.default_application !== '')) {
+			let defaultAppAncestors = await databaseSrvc.knex.raw(`SELECT name FROM fn_get_module_ancestors(?) ORDER BY level DESC OFFSET 1`, [tenantUserAttributes.default_application]);
+			defaultAppAncestors = defaultAppAncestors.rows.map((defaultAppAncestor) => { return inflection.transform(defaultAppAncestor.name, ['foreign_key', 'dasherize']).replace('-id', ''); });
+			defaultAppAncestors = defaultAppAncestors.join('.');
+
+			tenantUserAttributes['default_route'] = defaultAppAncestors;
+		}
+
+		await cacheSrvc.setAsync(`twyr!webapp!user!${userId}!${tenantId}!attributes`, JSON.stringify(tenantUserAttributes));
+		return tenantUserAttributes;
+	}
+	catch(err) {
+		loggerSrvc.error(`userSessionCache::getTenantUserAttributes Error:\nUser Id: ${userId}\nTenant Id: ${tenantId}\nError: `, err);
+		throw (err);
+	}
 };
-*/
+
 
 exports.utility = {
 	'name': 'userSessionCache',
@@ -196,15 +210,17 @@ exports.utility = {
 			if(!tenantId) throw (new Error('No tenant id found in the request!'));
 			if(!userId) throw (new Error('No user id found in the request!'));
 
-			// const getTenantUserDefaultApplicationAsync = promises.promisify(getTenantUserDefaultApplication.bind(this));
+			const getTenantAttributes = getTenantUserAttributes.bind(this);
 			const getPermissions = getTenantUserPermissions.bind(this);
 			const getDetails = getUserDetails.bind(this);
 
 			const deserializedUser = await getDetails(tenantId, userId);
 			const tenantUserPermissions = await getPermissions(tenantId, userId);
+			const tenantUserAttributes = await getTenantAttributes(tenantId, userId);
 
+			deserializedUser.tenantId = tenantId;
 			deserializedUser.permissions = tenantUserPermissions;
-			deserializedUser['default_application'] = null;
+			deserializedUser.tenantAttributes = tenantUserAttributes;
 
 			if(twyrEnv === 'development') {
 				const cachedKeys = await cacheSrvc.keysAsync(`twyr!webapp!user!${userId}*`);

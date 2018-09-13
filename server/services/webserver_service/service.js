@@ -235,7 +235,7 @@ class WebserverService extends TwyrBaseService {
 
 			// Step 1.13: Add in the router
 			const Router = require('koa-router');
-			this.$router = new Router({ 'prefix': '' });
+			this.$router = new Router();
 
 			this.$koa.use(this.$router.routes());
 			this.$koa.use(this.$router.allowedMethods());
@@ -697,7 +697,6 @@ class WebserverService extends TwyrBaseService {
 		response.end();
 	}
 
-	// #region Miscellaneous
 	/**
 	 * @function
 	 * @instance

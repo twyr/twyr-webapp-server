@@ -49,7 +49,6 @@ class Session extends TwyrBaseComponent {
 			this.$router.post('/reset-password', this._resetPassword.bind(this));
 
 			await super._addRoutes();
-
 			return null;
 		}
 		catch(err) {
@@ -65,9 +64,13 @@ class Session extends TwyrBaseComponent {
 		ctxt.status = 200;
 		ctxt.body = {
 			'user_id': ctxt.state.user ? ctxt.state.user.user_id : 'ffffffff-ffff-4fff-ffff-ffffffffffff',
+			'tenant_id': ctxt.state.user ? ctxt.state.user.tenantId : 'ffffffff-ffff-4fff-ffff-ffffffffffff',
 			'name': ctxt.state.user ? `${ctxt.state.user.first_name} ${ctxt.state.user.last_name}` : 'Public',
 			'loggedIn': !!ctxt.state.user,
-			'permissions': (ctxt.state.user ? ctxt.state.user.permissions.map((permission) => { return permission.name; }) : ['public'])
+			'permissions': (ctxt.state.user ? ctxt.state.user.permissions.map((permission) => { return permission.name; }) : ['public']),
+			'designation': ctxt.state.user ? ctxt.state.user.tenantAttributes.designation : '',
+			'defaultApplication': ctxt.state.user ? ctxt.state.user.tenantAttributes.default_route : '',
+			'otherTenants': ctxt.state.user ? ctxt.state.user.tenantAttributes.allowed_tenants : []
 		};
 
 		if(ctxt.state.user && !ctxt.body.permissions.includes('registered'))
@@ -122,16 +125,21 @@ class Session extends TwyrBaseComponent {
 	}
 
 	async _logout(ctxt) {
-		if(ctxt.isAuthenticated()) {
-			await ctxt.logout();
+		if(!ctxt.isAuthenticated()) throw new TwyrCompError(`No active session`);
 
-			ctxt.status = 200;
-			ctxt.body = { 'status': 200, 'info': { 'message': `Logout successful` } };
+		const cacheSrvc = this.$dependencies['CacheService'];
+		const cachedKeys = await cacheSrvc.keysAsync(`twyr!webapp!user!${ctxt.state.user.user_id}!*`);
 
-			return;
-		}
+		const cacheMulti = cacheSrvc.multi();
+		cachedKeys.forEach((cachedKey) => {
+			cacheMulti.delAsync(cachedKey, 300);
+		});
 
-		throw new TwyrCompError(`No active session`);
+		await cacheMulti.execAsync();
+		await ctxt.logout();
+
+		ctxt.status = 200;
+		ctxt.body = { 'status': 200, 'info': { 'message': `Logout successful` } };
 	}
 
 	async _resetPassword(ctxt) {

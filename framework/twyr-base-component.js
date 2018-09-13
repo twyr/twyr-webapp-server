@@ -143,7 +143,7 @@ class TwyrBaseComponent extends TwyrBaseModule {
 		// Add in the sub-components routes
 		Object.keys(this.$components || {}).forEach((componentName) => {
 			const componentRouter = this.$components[componentName].Router;
-			this.$router.use(componentRouter.routes(), componentRouter.allowedMethods());
+			this.$router.use(componentRouter.routes());
 		});
 
 		return null;
@@ -187,7 +187,7 @@ class TwyrBaseComponent extends TwyrBaseModule {
 	 * @override
 	 */
 	get dependencies() {
-		return ['ApiService', 'ConfigurationService', 'LoggerService', 'WebserverService'].concat(super.dependencies);
+		return ['ApiService', 'CacheService', 'ConfigurationService', 'LoggerService', 'WebserverService'].concat(super.dependencies);
 	}
 
 	/**

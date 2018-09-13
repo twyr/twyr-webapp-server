@@ -41,9 +41,9 @@ class Main extends TwyrBaseComponent {
 	 */
 	async _addRoutes() {
 		try {
-			this.$router.get('/', this._getProfile.bind(this));
-			this.$router.put('/', this._updateProfile.bind(this));
-			this.$router.del('/', this._deleteProfile.bind(this));
+			// this.$router.get('/', this._getProfile.bind(this));
+			// this.$router.put('/', this._updateProfile.bind(this));
+			// this.$router.del('/', this._deleteProfile.bind(this));
 
 			await super._addRoutes();
 			return null;

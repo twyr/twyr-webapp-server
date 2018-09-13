@@ -8,6 +8,8 @@ exports.up = async function(knex) {
 			tenantUserTbl.uuid('tenant_id').notNullable().references('tenant_id').inTable('tenants').onDelete('CASCADE').onUpdate('CASCADE');
 			tenantUserTbl.uuid('user_id').notNullable().references('user_id').inTable('users').onDelete('CASCADE').onUpdate('CASCADE');
 			tenantUserTbl.uuid('tenant_user_id').notNullable().defaultTo(knex.raw('uuid_generate_v4()')); // For front-end, browser-based state management libraries (for e.g. ember-data)
+			tenantUserTbl.text('designation');
+			tenantUserTbl.uuid('default_application');
 			tenantUserTbl.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
 			tenantUserTbl.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
 
@@ -45,6 +47,8 @@ exports.up = async function(knex) {
 	SECURITY INVOKER
 	COST 1
 	AS $$
+DECLARE
+	is_valid_feature	INTEGER;
 BEGIN
 	IF TG_OP = 'UPDATE'
 	THEN
@@ -59,6 +63,29 @@ BEGIN
 			RAISE SQLSTATE '2F003' USING MESSAGE ='User is NOT mutable';
 			RETURN NULL;
 		END IF;
+	END IF;
+
+	IF NEW.default_application IS NULL
+	THEN
+		RETURN NEW;
+	END IF;
+
+	is_valid_feature := 0;
+	SELECT
+		COUNT(module_id)
+	FROM
+		tenants_features
+	WHERE
+		tenant_id = NEW.tenant_id AND
+		module_id = NEW.default_application
+	INTO
+		is_valid_feature;
+
+
+	IF is_valid_feature = 0
+	THEN
+		RAISE SQLSTATE '2F003' USING MESSAGE ='This feature is not available for this Tenant';
+		RETURN NULL;
 	END IF;
 
 	RETURN NEW;

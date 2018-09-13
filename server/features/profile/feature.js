@@ -26,7 +26,6 @@ class Profile extends TwyrBaseFeature {
 	}
 	// #endregion
 
-
 	// #region Protected methods - need to be overriden by derived classes
 	/**
 	 * @async
@@ -48,7 +47,7 @@ class Profile extends TwyrBaseFeature {
 			return;
 		}
 
-		throw new TwyrFeatureError('No active seesion');
+		throw new TwyrFeatureError('No active session');
 	}
 
 	/**
@@ -71,7 +70,7 @@ class Profile extends TwyrBaseFeature {
 			return;
 		}
 
-		throw new TwyrFeatureError('No active seesion');
+		throw new TwyrFeatureError('No active session');
 	}
 	// #endregion
 

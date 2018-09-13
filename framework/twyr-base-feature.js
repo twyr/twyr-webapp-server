@@ -128,7 +128,7 @@ class TwyrBaseFeature extends TwyrBaseModule {
 	}
 	// #endregion
 
-	// #region API - need to be overriden by derived classes
+	// #region API - to be overriden by derived classes, only if required
 	/**
 	 * @async
 	 * @function
@@ -262,13 +262,13 @@ class TwyrBaseFeature extends TwyrBaseModule {
 		// Add in the sub-components routes
 		Object.keys(this.$components || {}).forEach((componentName) => {
 			const componentRouter = this.$components[componentName].Router;
-			this.$router.use(componentRouter.routes(), componentRouter.allowedMethods());
+			this.$router.use(componentRouter.routes());
 		});
 
 		// Add in the sub-features routes
 		Object.keys(this.$features || {}).forEach((featureName) => {
 			const featureRouter = this.$features[featureName].Router;
-			this.$router.use(featureRouter.routes(), featureRouter.allowedMethods());
+			this.$router.use(featureRouter.routes());
 		});
 
 		return null;

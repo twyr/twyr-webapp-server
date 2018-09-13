@@ -11,7 +11,7 @@ exports.seed = async function(knex) {
 	if(componentId.rows.length)
 		return null;
 
-	await knex('modules').insert({
+	let profileFeatureId = await knex('modules').insert({
 		'parent_module_id': parentId,
 		'type': 'feature',
 		'deploy': 'default',
@@ -25,5 +25,9 @@ exports.seed = async function(knex) {
 			'demo': 'https://twyr.com',
 			'documentation': 'https://twyr.com'
 		}
-	});
+	})
+	.returning('module_id');
+
+	profileFeatureId = profileFeatureId[0];
+	await knex.raw(`UPDATE tenants_users SET default_application = ? WHERE user_id = (SELECT user_id FROM users WHERE email = 'root@twyr.com')`, [profileFeatureId]);
 };
