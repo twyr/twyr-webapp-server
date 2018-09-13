@@ -184,27 +184,35 @@ class TwyrApplication extends TwyrBaseModule {
 
 		// Browser Error Data via the Beacon API / XHR Post
 		appRouter.post('/collectClientErrorData', (ctxt) => {
-			const beaconData = ctxt.request.body;
+			const query = ctxt.query;
+			const beaconData = Object.assign({}, query, ctxt.request.body);
+
+			ctxt.status = 200;
+			ctxt.body = { 'status': true };
+
 			// TODO: Do something more sophisticated - like storing it into Cassandra, and running analysis
+			if(beaconData.error === 'TransitionAborted')
+				return;
+
 			console.error(`Client Error Data: ${JSON.stringify(beaconData, null, '\t')}`);
 		});
 
 		// Add in the components
 		Object.keys(this.$components || {}).forEach((componentName) => {
 			const componentRouter = this.$components[componentName].Router;
-			appRouter.use(componentRouter.routes(), componentRouter.allowedMethods());
+			appRouter.use(componentRouter.routes());
 		});
 
 		// Add in the features
 		Object.keys(this.$features || {}).forEach((featureName) => {
 			const featureRouter = this.$features[featureName].Router;
-			appRouter.use(featureRouter.routes(), featureRouter.allowedMethods());
+			appRouter.use(featureRouter.routes());
 		});
 
 		// Add in the templates at the end...
 		Object.keys(this.$templates).forEach((tmplName) => {
 			const tmplRouter = this.$templates[tmplName].Router;
-			appRouter.get('*', tmplRouter.routes(), tmplRouter.allowedMethods());
+			appRouter.get('*', tmplRouter.routes());
 		});
 
 		return;
