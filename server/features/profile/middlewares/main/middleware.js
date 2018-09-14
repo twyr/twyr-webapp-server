@@ -116,6 +116,7 @@ class Main extends TwyrBaseMiddleware {
 
 			await super._registerApis();
 			await ApiService.add(`${this.name}::getProfile`, this._getProfile.bind(this));
+			await ApiService.add(`${this.name}::updateProfile`, this._updateProfile.bind(this));
 
 			return null;
 		}
@@ -128,13 +129,14 @@ class Main extends TwyrBaseMiddleware {
 		try {
 			const ApiService = this.$dependencies.ApiService;
 
+			await ApiService.remove(`${this.name}::updateProfile`, this._updateProfile.bind(this));
 			await ApiService.remove(`${this.name}::getProfile`, this._getProfile.bind(this));
 			await super._deregisterApis();
 
 			return null;
 		}
 		catch(err) {
-			throw new TwyrMiddlewareError(`${this.name}::_registerApis`, err);
+			throw new TwyrMiddlewareError(`${this.name}::_deregisterApis`, err);
 		}
 	}
 	// #endregion
@@ -159,10 +161,46 @@ class Main extends TwyrBaseMiddleware {
 			});
 
 			delete profileData.data.attributes.password;
+			profileData.data.attributes['middle_names'] = profileData.data.attributes['middle_names'] || '';
+
 			return profileData;
 		}
 		catch(err) {
 			throw new TwyrMiddlewareError(`${this.name}::_getProfile`, err);
+		}
+	}
+
+	async _updateProfile(ctxt) {
+		try {
+			const user = ctxt.request.body;
+
+			delete user.data.relationships;
+			delete user.included;
+
+			const jsonDeserializedData = await this.$jsonApiDeserializer.deserializeAsync(user);
+			jsonDeserializedData['user_id'] = jsonDeserializedData.id;
+
+			delete jsonDeserializedData.id;
+			delete jsonDeserializedData.email;
+			delete jsonDeserializedData.created_at;
+			delete jsonDeserializedData.updated_at;
+
+			const savedRecord = await this.$UserModel
+				.forge()
+				.save(jsonDeserializedData, {
+					'method': 'update',
+					'patch': true
+				});
+
+			return {
+				'data': {
+					'type': user.data.type,
+					'id': savedRecord.get('user_id')
+				}
+			};
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_updateProfile`, err);
 		}
 	}
 	// #endregion

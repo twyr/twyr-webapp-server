@@ -141,8 +141,12 @@ class TwyrBaseMiddleware extends TwyrBaseModule {
 			let serverModule = this.$parent;
 			while(serverModule.$parent) serverModule = serverModule.$parent;
 
+			const protocol = serverModule.$services['WebserverService']['$config']['protocol'];
 			const domain = serverModule.$services['WebserverService']['$config']['domain'];
-			this.$jsonApiMapper = new JsonApiMapper.Bookshelf(domain, {
+			const externalPort = serverModule.$services['WebserverService']['$config']['externalPort'];
+
+
+			this.$jsonApiMapper = new JsonApiMapper.Bookshelf(`${protocol}://${domain}:${externalPort}`, {
 				'keyForAttribute': 'underscore_case',
 				'included': false,
 				'relations': true,

@@ -14533,7 +14533,11 @@ table.table-sm td {
 
 .bg-twyr {
   background-color: #80d8ff;
-  background-image: linear-gradient(60deg, #ff9800, #e0e0e0, #80d8ff, #1976d2); }
+  background: linear-gradient(40deg, #ff9800, #e0e0e0, #80d8ff, #1976d2); }
+
+.bg-twyr-component {
+  background-color: #80d8ff;
+  background: linear-gradient(40deg, #2096ff, #05ffa3); }
 
 /* Material Design Icons Font */
 .mdi-icon {
@@ -39094,7 +39098,7 @@ a.md-button.paper-link.md-raised.active[disabled] {
 
 /* Bug-fix :-( */
 md-input-container {
-  margin-bottom: 0 !important; }
+  margin-bottom: 0.5rem !important; }
 
 md-input-container .md-input {
   height: unset !important; }

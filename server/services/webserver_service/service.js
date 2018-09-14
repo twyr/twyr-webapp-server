@@ -490,7 +490,7 @@ class WebserverService extends TwyrBaseService {
 
 				'user': {
 					'user_id': ctxt.state.user ? ctxt.state.user.user_id : 'ffffffff-ffff-4fff-ffff-ffffffffffff',
-					'name': ctxt.state.user ? ctxt.state.user.name : 'Public'
+					'name': ctxt.state.user ? `${ctxt.state.user.first_name} ${ctxt.state.user.last_name}` : 'Public'
 				},
 
 				'tenant': {
