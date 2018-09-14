@@ -16,7 +16,7 @@ exports.config = {
 		},
 		"Console": {
 			"name": "Console",
-			"level": "warn",
+			"level": "info",
 			"format": [
 				"prettyPrint",
 				{
