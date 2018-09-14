@@ -1013,19 +1013,6 @@
     }
   });
 });
-;define("twyr-webapp-server/components/fontawesome-node", ["exports", "@fortawesome/ember-fontawesome/components/fontawesome-node"], function (_exports, _fontawesomeNode) {
-  "use strict";
-
-  Object.defineProperty(_exports, "__esModule", {
-    value: true
-  });
-  Object.defineProperty(_exports, "default", {
-    enumerable: true,
-    get: function () {
-      return _fontawesomeNode.default;
-    }
-  });
-});
 ;define("twyr-webapp-server/components/freestyle-annotation", ["exports", "ember-freestyle/components/freestyle-annotation"], function (_exports, _freestyleAnnotation) {
   "use strict";
 
@@ -4421,7 +4408,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/framework/base-model", ["exports", "ember-data"], function (_exports, _emberData) {
+;define("twyr-webapp-server/framework/base-model", ["exports", "ember-data", "ember-moment/computeds/moment", "ember-moment/computeds/format", "ember-moment/computeds/locale"], function (_exports, _emberData, _moment2, _format, _locale) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4430,6 +4417,7 @@
   _exports.default = void 0;
 
   var _default = _emberData.default.Model.extend({
+    moment: Ember.inject.service('moment'),
     createdAt: _emberData.default.attr('date', {
       defaultValue() {
         return new Date();
@@ -4442,18 +4430,8 @@
       }
 
     }),
-    formattedCreatedAt: Ember.computed('createdAt', {
-      get() {
-        return window.moment(this.get('createdAt')).format('DD/MMM/YYYY hh:mm A');
-      }
-
-    }).readOnly(),
-    formattedUpdatedAt: Ember.computed('updatedAt', {
-      get() {
-        return window.moment(this.get('updatedAt')).format('DD/MMM/YYYY hh:mm A');
-      }
-
-    }).readOnly()
+    formattedCreatedAt: (0, _format.default)((0, _locale.default)((0, _moment2.default)('createdAt'), 'moment.locale'), 'DD/MMM/YYYY hh:mm A'),
+    formattedUpdatedAt: (0, _format.default)((0, _locale.default)((0, _moment2.default)('updatedAt'), 'moment.locale'), 'DD/MMM/YYYY hh:mm A')
   });
 
   _exports.default = _default;
@@ -7676,6 +7654,57 @@
     }
   });
 });
+;define("twyr-webapp-server/models/profile/user-contact", ["exports", "twyr-webapp-server/framework/base-model", "ember-data"], function (_exports, _baseModel, _emberData) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseModel.default.extend({
+    'user': _emberData.default.belongsTo('profile/user', {
+      'inverse': 'contacts'
+    }),
+    'type': _emberData.default.attr('string', {
+      'defaultValue': 'mobile'
+    }),
+    'contact': _emberData.default.attr('string'),
+    'verified': _emberData.default.attr('boolean', {
+      'defaultValue': false
+    })
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/models/profile/user", ["exports", "twyr-webapp-server/framework/base-model", "ember-data"], function (_exports, _baseModel, _emberData) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseModel.default.extend({
+    'firstName': _emberData.default.attr('string'),
+    'middleNames': _emberData.default.attr('string'),
+    'lastName': _emberData.default.attr('string'),
+    'nickname': _emberData.default.attr('string'),
+    'email': _emberData.default.attr('string'),
+    'profileImage': _emberData.default.attr('string'),
+    'profileImageMetadata': _emberData.default.attr(),
+    'contacts': _emberData.default.hasMany('profile/user-contact', {
+      'inverse': 'user'
+    }),
+    'fullName': Ember.computed('firstName', 'lastName', {
+      'get': function () {
+        return this.get('firstName') + ' ' + this.get('lastName');
+      }
+    })
+  });
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/resolver", ["exports", "ember-resolver"], function (_exports, _emberResolver) {
   "use strict";
 
@@ -7756,7 +7785,19 @@
   });
   _exports.default = void 0;
 
-  var _default = _baseRoute.default.extend({});
+  var _default = _baseRoute.default.extend({
+    model() {
+      if (!window.twyrUserId) return;
+      const profileData = this.store.peekRecord('profile/user', window.twyrUserId, {
+        'include': 'contacts'
+      });
+      if (profileData) return profileData;
+      return this.store.findRecord('profile/user', window.twyrUserId, {
+        'include': 'contacts'
+      });
+    }
+
+  });
 
   _exports.default = _default;
 });
@@ -7770,15 +7811,15 @@
 
   var _default = _emberData.default.JSONAPISerializer.extend(_keepOnlyChanged.default, {
     keyForAttribute(attr) {
-      return Ember.underscore(attr);
+      return Ember.String.underscore(attr);
     },
 
     keyForLink(attr) {
-      return Ember.underscore(attr);
+      return Ember.String.underscore(attr);
     },
 
     keyForRelationship(attr) {
-      return Ember.underscore(attr);
+      return Ember.String.underscore(attr);
     }
 
   });
@@ -7916,8 +7957,8 @@
       } catch (err) {
         // TODO: Use the Beacon API to send all this back to the server;
         this.set('userData', null);
-        window.twyrUserId = '';
-        window.twyrTenantId = '';
+        window.twyrUserId = null;
+        window.twyrTenantId = null;
         this.trigger('userDataUpdated');
         this.get('notification').display({
           'type': 'error',
@@ -9268,7 +9309,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+7ee5ad89"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+5585af6d"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;
