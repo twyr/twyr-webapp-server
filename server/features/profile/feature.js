@@ -78,13 +78,6 @@ class Profile extends TwyrBaseFeature {
 	/**
 	 * @override
 	 */
-	get dependencies() {
-		return ['DatabaseService'].concat(super.dependencies);
-	}
-
-	/**
-	 * @override
-	 */
 	get basePath() {
 		return __dirname;
 	}

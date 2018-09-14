@@ -41,9 +41,9 @@ class Main extends TwyrBaseComponent {
 	 */
 	async _addRoutes() {
 		try {
-			// this.$router.get('/', this._getProfile.bind(this));
-			// this.$router.put('/', this._updateProfile.bind(this));
-			// this.$router.del('/', this._deleteProfile.bind(this));
+			this.$router.get('/users/:user_id', this._getProfile.bind(this));
+			this.$router.put('/users/:user_id', this._updateProfile.bind(this));
+			this.$router.del('/users/:user_id', this._deleteProfile.bind(this));
 
 			await super._addRoutes();
 			return null;
@@ -56,10 +56,18 @@ class Main extends TwyrBaseComponent {
 
 	// #region Route Handlers
 	async _getProfile(ctxt) {
-		ctxt.status = 200;
-		ctxt.body = ctxt.state.user;
+		try {
+			const apiSrvc = this.$dependencies.ApiService;
+			const userData = await apiSrvc.execute('Main::getProfile', ctxt);
 
-		return null;
+			ctxt.status = 200;
+			ctxt.body = userData.shift();
+
+			return null;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error retrieving profile data`, err);
+		}
 	}
 
 	async _updateProfile(ctxt) {
