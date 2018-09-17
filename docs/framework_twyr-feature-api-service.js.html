@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>server/services/pubsub_service/service.js - Twyr Web Application Server</title>
+    <title>framework/twyr-feature-api-service.js - Twyr Web Application Server</title>
     
     <meta name="description" content="Twyr Web Application Server" />
     
@@ -44,7 +44,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">server/services/pubsub_service/service.js</h1>
+    <h1 class="page-title">framework/twyr-feature-api-service.js</h1>
     
 
     
@@ -57,7 +57,6 @@
             <pre class="prettyprint source linenums"><code>'use strict';
 
 /* eslint-disable security/detect-object-injection */
-/* eslint-disable security/detect-non-literal-require */
 
 /**
  * Module dependencies, required for ALL Twyr' modules
@@ -72,15 +71,16 @@ const TwyrBaseService = require('twyr-base-service').TwyrBaseService;
 const TwyrSrvcError = require('twyr-service-error').TwyrServiceError;
 
 /**
- * @class   PubsubService
+ * @class   FeatureApiService
  * @extends {TwyrBaseService}
- * @classdesc The Twyr Web Application Server Publish/Subscribe Service.
+ * @classdesc The Twyr Web Application Server API Service.
  *
  * @description
- * Allows the rest of the Twyr Modules to use publish / subscribe to topics.
+ * Allows the modules in a single feature to communicate with each other by allowing registration / invocation of API.
+ * If the requested for API cannot be found, it bubbles up to the next level, till it gets to the server
  *
  */
-class PubsubService extends TwyrBaseService {
+class FeatureApiService extends TwyrBaseService {
 	// #region Constructor
 	constructor(parent, loader) {
 		super(parent, loader);
@@ -93,38 +93,37 @@ class PubsubService extends TwyrBaseService {
 	 * @function
 	 * @override
 	 * @instance
-	 * @memberof PubsubService
+	 * @memberof FeatureApiService
 	 * @name     _setup
 	 *
 	 * @returns  {null} Nothing.
 	 *
-	 * @summary  Sets up connections to the messaging servers.
+	 * @summary  Sets up the broker to manage API exposed by other modules.
 	 */
 	async _setup() {
 		try {
 			await super._setup();
 
-			this.$listeners = {};
+			const customMatch = function(pattern, data) {
+				const items = this.find(pattern, true) || [];
+				items.push(data);
 
-			const promises = require('bluebird');
-			const ascoltatori = promises.promisifyAll(require('ascoltatori'));
+				return {
+					'find': function() {
+						return items.length ? items : [];
+					},
 
-			const pubsubStrategies = Object.keys(this.$config);
-			for(const pubsubStrategy of pubsubStrategies) {
-				const buildSettings = JSON.parse(JSON.stringify(this.$config[pubsubStrategy]));
+					'remove': function(search, api) {
+						const apiIdx = items.indexOf(api);
+						if(apiIdx &lt; 0) return false;
 
-				if(buildSettings.type === 'amqplib') {
-					buildSettings['amqp'] = require(buildSettings[buildSettings.type]);
-					delete buildSettings[buildSettings.type];
-				}
-				else {
-					buildSettings[buildSettings.type] = require(buildSettings[buildSettings.type]);
-				}
+						items.splice(apiIdx, 1);
+						return true;
+					}
+				};
+			};
 
-				const connection = await ascoltatori.buildAsync(buildSettings);
-				this.$listeners[pubsubStrategy] = promises.promisifyAll(connection);
-			}
-
+			this.$patrun = require('patrun')(customMatch);
 			return null;
 		}
 		catch(err) {
@@ -137,24 +136,16 @@ class PubsubService extends TwyrBaseService {
 	 * @function
 	 * @override
 	 * @instance
-	 * @memberof PubsubService
+	 * @memberof FeatureApiService
 	 * @name     _teardown
 	 *
 	 * @returns  {undefined} Nothing.
 	 *
-	 * @summary  Quits the connection to the messaging servers.
+	 * @summary  Deletes the broker that manages API.
 	 */
 	async _teardown() {
 		try {
-			const pubsubStrategies = Object.keys(this.$config);
-
-			// eslint-disable-next-line curly
-			for(const pubsubStrategy of pubsubStrategies) {
-				await this.$listeners[pubsubStrategy].closeAsync();
-			}
-
-			this.$listeners = null;
-			delete this.$listeners;
+			if(this.$patrun) delete this.$patrun;
 
 			await super._teardown();
 			return null;
@@ -170,39 +161,33 @@ class PubsubService extends TwyrBaseService {
 	 * @async
 	 * @function
 	 * @instance
-	 * @memberof PubsubService
-	 * @name     publish
+	 * @memberof FeatureApiService
+	 * @name     add
 	 *
-	 * @param    {string} strategy - The messaging server/exchange to connect to.
-	 * @param    {string} topic - The topic to publish on.
-	 * @param    {Object} data - The data to publish.
-	 * @param    {Object} [options] - Additional options, if any.
+	 * @param    {string} pattern - The pattern to which this api will respond.
+	 * @param    {Function} api - The api to be invoked against the pattern.
 	 *
-	 * @returns  {undefined} Nothing.
+	 * @returns  {boolean} Boolean true/false - depending on whether the registration succeeded.
 	 *
-	 * @summary  Publishes data to the specified queues.
+	 * @summary  Registers the api function as a handler for the pattern.
 	 */
-	async publish(strategy, topic, data, options) {
+	async add(pattern, api) {
 		try {
-			let publishCount = 0;
-
-			if(!Array.isArray(strategy))
-				strategy = [strategy];
-
-			const pubsubStrategies = Object.keys(this.$config);
-			for(const pubsubStrategy of pubsubStrategies) {
-				if(!strategy.includes('*') &amp;&amp; !strategy.includes(pubsubStrategy))
-					continue;
-
-				await this.$listeners[pubsubStrategy].publishAsync(topic, data, options);
-				publishCount++;
+			// eslint-disable-next-line curly
+			if(typeof api !== 'function') {
+				throw new Error(`${this.name}::add expects a function for the pattern: ${pattern}`);
 			}
 
-			if(!publishCount) throw new Error(`Unknown Strategy: ${strategy}`);
-			return null;
+			pattern = pattern.split('::').reduce((obj, value) => {
+				obj[value] = value;
+				return obj;
+			}, {});
+
+			this.$patrun.add(pattern, api);
+			return true;
 		}
 		catch(err) {
-			throw new TwyrSrvcError(`${this.name}::publish error`, err);
+			throw new TwyrSrvcError(`${this.name}::add error`, err);
 		}
 	}
 
@@ -210,38 +195,64 @@ class PubsubService extends TwyrBaseService {
 	 * @async
 	 * @function
 	 * @instance
-	 * @memberof PubsubService
-	 * @name     subscribe
+	 * @memberof FeatureApiService
+	 * @name     execute
 	 *
-	 * @param    {string} strategy - The messaging server/exchange to connect to.
-	 * @param    {string} topic - The topic to subscribe to.
-	 * @param    {Function} listener - The callback to invoke when data is received.
+	 * @param    {string} pattern - The pattern to be executed.
+	 * @param    {Object} data - The data to be passed in as arguments to each of the api registered against the pattern.
 	 *
-	 * @returns  {undefined} Nothing.
+	 * @returns  {Array} The results of the execution.
 	 *
-	 * @summary  Subscribes the listener to the specified queues.
+	 * @summary  Executes all the apis registered as handlers for the pattern.
 	 */
-	async subscribe(strategy, topic, listener) {
+	async execute(pattern, data) {
 		try {
-			let subscribeCount = 0;
+			const patrunPattern = pattern.split('::').reduce((obj, value) => {
+				obj[value] = value;
+				return obj;
+			}, {});
 
-			if(!Array.isArray(strategy))
-				strategy = [strategy];
+			if(!Array.isArray(data))
+				data = [data];
 
-			const pubsubStrategies = Object.keys(this.$config);
-			for(const pubsubStrategy of pubsubStrategies) {
-				if(!strategy.includes('*') &amp;&amp; !strategy.includes(pubsubStrategy))
-					continue;
+			const apis = this.$patrun.find(patrunPattern);
+			if(!apis || !apis.length) {
+				let parentModule = this.$parent;
+				let parentApiService = parentModule.$dependencies['ApiService'];
 
-				await this.$listeners[pubsubStrategy].subscribeAsync(topic, listener);
-				subscribeCount++;
+				while(!parentApiService) {
+					parentApiService = parentModule.$dependencies['ApiService'];
+					if(!parentApiService) parentModule = parentModule.$parent;
+					if(!parentModule) throw new TwyrSrvcError(`No API Service found to execute request`);
+				}
+
+				const parentResults = await parentApiService.execute(pattern, data);
+				return parentResults;
 			}
 
-			if(!subscribeCount) throw new Error(`Unknown Strategy: ${strategy}`);
-			return null;
+			const results = [];
+
+			let errors = null;
+			for(const api of apis) { // eslint-disable-line curly
+				try {
+					const result = await api(...data);
+					results.push(result);
+				}
+				catch(execErr) {
+					if(!errors)
+						errors = new TwyrSrvcError(execErr);
+					else
+						errors = new TwyrSrvcError(execErr, errors);
+				}
+			}
+
+			if(!errors)
+				return results;
+			else
+				throw errors;
 		}
 		catch(err) {
-			throw new TwyrSrvcError(`${this.name}::subscribe error`, err);
+			throw new TwyrSrvcError(`${this.name}::execute error`, err);
 		}
 	}
 
@@ -249,38 +260,33 @@ class PubsubService extends TwyrBaseService {
 	 * @async
 	 * @function
 	 * @instance
-	 * @memberof PubsubService
-	 * @name     unsubscribe
+	 * @memberof FeatureApiService
+	 * @name     remove
 	 *
-	 * @param    {string} strategy - The messaging server/exchange to connect to.
-	 * @param    {string} topic - The topic to unsubscribe from.
-	 * @param    {Function} listener - The callback that was used for subscribing.
+	 * @param    {string} pattern - The pattern to which this api will respond.
+	 * @param    {Function} api - The api to be de-registered against the pattern.
 	 *
-	 * @returns  {undefined} Nothing.
+	 * @returns  {boolean} Boolean true/false - depending on whether the de-registration succeeded.
 	 *
-	 * @summary  Unubscribes the listener to the specified queues.
+	 * @summary  De-registers the api function as a handler for the pattern.
 	 */
-	async unsubscribe(strategy, topic, listener) {
+	async remove(pattern, api) {
 		try {
-			let unsubscribeCount = 0;
-
-			if(!Array.isArray(strategy))
-				strategy = [strategy];
-
-			const pubsubStrategies = Object.keys(this.$config);
-			for(const pubsubStrategy of pubsubStrategies) {
-				if(!strategy.includes('*') &amp;&amp; !strategy.includes(pubsubStrategy))
-					continue;
-
-				await this.$listeners[pubsubStrategy].unsubscribeAsync(topic, listener);
-				unsubscribeCount++;
+			// eslint-disable-next-line curly
+			if(typeof api !== 'function') {
+				throw new Error(`${this.name}::remove expects a function for the pattern: ${pattern}`);
 			}
 
-			if(!unsubscribeCount) throw new Error(`Unknown Strategy: ${strategy}`);
-			return null;
+			pattern = pattern.split('::').reduce((obj, value) => {
+				obj[value] = value;
+				return obj;
+			}, {});
+
+			this.$patrun.remove(pattern, api);
+			return true;
 		}
 		catch(err) {
-			throw new TwyrSrvcError(`${this.name}::unsubscribe error`, err);
+			throw new TwyrSrvcError(`${this.name}::remove error`, err);
 		}
 	}
 	// #endregion
@@ -291,9 +297,9 @@ class PubsubService extends TwyrBaseService {
 	 */
 	get Interface() {
 		return {
-			'publish': this.publish.bind(this),
-			'subscribe': this.subscribe.bind(this),
-			'unsubscribe': this.unsubscribe.bind(this)
+			'add': this.add.bind(this),
+			'execute': this.execute.bind(this),
+			'remove': this.remove.bind(this)
 		};
 	}
 
@@ -313,7 +319,7 @@ class PubsubService extends TwyrBaseService {
 	// #endregion
 }
 
-exports.service = PubsubService;
+exports.service = FeatureApiService;
 </code></pre>
         </article>
     </section>

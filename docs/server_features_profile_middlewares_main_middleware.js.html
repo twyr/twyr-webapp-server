@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>server/services/pubsub_service/service.js - Twyr Web Application Server</title>
+    <title>server/features/profile/middlewares/main/middleware.js - Twyr Web Application Server</title>
     
     <meta name="description" content="Twyr Web Application Server" />
     
@@ -44,7 +44,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">server/services/pubsub_service/service.js</h1>
+    <h1 class="page-title">server/features/profile/middlewares/main/middleware.js</h1>
     
 
     
@@ -56,9 +56,6 @@
         <article>
             <pre class="prettyprint source linenums"><code>'use strict';
 
-/* eslint-disable security/detect-object-injection */
-/* eslint-disable security/detect-non-literal-require */
-
 /**
  * Module dependencies, required for ALL Twyr' modules
  * @ignore
@@ -68,19 +65,17 @@
  * Module dependencies, required for this module
  * @ignore
  */
-const TwyrBaseService = require('twyr-base-service').TwyrBaseService;
-const TwyrSrvcError = require('twyr-service-error').TwyrServiceError;
+const TwyrBaseMiddleware = require('twyr-base-middleware').TwyrBaseMiddleware;
+const TwyrMiddlewareError = require('twyr-middleware-error').TwyrMiddlewareError;
 
 /**
- * @class   PubsubService
- * @extends {TwyrBaseService}
- * @classdesc The Twyr Web Application Server Publish/Subscribe Service.
+ * @class   Main
+ * @extends {TwyrBaseMiddleware}
+ * @classdesc The Twyr Web Application Server Profile Feature Main middleware - manages CRUD for profile data.
  *
- * @description
- * Allows the rest of the Twyr Modules to use publish / subscribe to topics.
  *
  */
-class PubsubService extends TwyrBaseService {
+class Main extends TwyrBaseMiddleware {
 	// #region Constructor
 	constructor(parent, loader) {
 		super(parent, loader);
@@ -93,42 +88,54 @@ class PubsubService extends TwyrBaseService {
 	 * @function
 	 * @override
 	 * @instance
-	 * @memberof PubsubService
+	 * @memberof ApiService
 	 * @name     _setup
 	 *
 	 * @returns  {null} Nothing.
 	 *
-	 * @summary  Sets up connections to the messaging servers.
+	 * @summary  Sets up the broker to manage API exposed by other modules.
 	 */
 	async _setup() {
 		try {
 			await super._setup();
 
-			this.$listeners = {};
+			const dbSrvc = this.$dependencies.DatabaseService;
+			const self = this; // eslint-disable-line consistent-this
 
-			const promises = require('bluebird');
-			const ascoltatori = promises.promisifyAll(require('ascoltatori'));
+			Object.defineProperty(this, '$UserModel', {
+				'__proto__': null,
+				'configurable': true,
 
-			const pubsubStrategies = Object.keys(this.$config);
-			for(const pubsubStrategy of pubsubStrategies) {
-				const buildSettings = JSON.parse(JSON.stringify(this.$config[pubsubStrategy]));
+				'value': dbSrvc.Model.extend({
+					'tableName': 'users',
+					'idAttribute': 'user_id',
+					'hasTimestamps': true,
 
-				if(buildSettings.type === 'amqplib') {
-					buildSettings['amqp'] = require(buildSettings[buildSettings.type]);
-					delete buildSettings[buildSettings.type];
-				}
-				else {
-					buildSettings[buildSettings.type] = require(buildSettings[buildSettings.type]);
-				}
+					'contacts': function() {
+						return this.hasMany(self.$UserContactModel, 'user_id');
+					}
+				})
+			});
 
-				const connection = await ascoltatori.buildAsync(buildSettings);
-				this.$listeners[pubsubStrategy] = promises.promisifyAll(connection);
-			}
+			Object.defineProperty(this, '$UserContactModel', {
+				'__proto__': null,
+				'configurable': true,
+
+				'value': dbSrvc.Model.extend({
+					'tableName': 'user_contacts',
+					'idAttribute': 'user_contact_id',
+					'hasTimestamps': true,
+
+					'user': function() {
+						return this.belongsTo(self.$UserModel, 'user_id');
+					}
+				})
+			});
 
 			return null;
 		}
 		catch(err) {
-			throw new TwyrSrvcError(`${this.name}::_setup error`, err);
+			throw new TwyrMiddlewareError(`${this.name}::_setup error`, err);
 		}
 	}
 
@@ -137,173 +144,124 @@ class PubsubService extends TwyrBaseService {
 	 * @function
 	 * @override
 	 * @instance
-	 * @memberof PubsubService
+	 * @memberof ApiService
 	 * @name     _teardown
 	 *
 	 * @returns  {undefined} Nothing.
 	 *
-	 * @summary  Quits the connection to the messaging servers.
+	 * @summary  Deletes the broker that manages API.
 	 */
 	async _teardown() {
 		try {
-			const pubsubStrategies = Object.keys(this.$config);
-
-			// eslint-disable-next-line curly
-			for(const pubsubStrategy of pubsubStrategies) {
-				await this.$listeners[pubsubStrategy].closeAsync();
-			}
-
-			this.$listeners = null;
-			delete this.$listeners;
+			delete this.$UserContactModel;
+			delete this.$UserModel;
 
 			await super._teardown();
 			return null;
 		}
 		catch(err) {
-			throw new TwyrSrvcError(`${this.name}::_teardown error`, err);
+			throw new TwyrMiddlewareError(`${this.name}::_teardown error`, err);
+		}
+	}
+	// #endregion
+
+	// #region Protected methods
+	async _registerApis() {
+		try {
+			const ApiService = this.$dependencies.ApiService;
+
+			await super._registerApis();
+			await ApiService.add(`${this.name}::getProfile`, this._getProfile.bind(this));
+			await ApiService.add(`${this.name}::updateProfile`, this._updateProfile.bind(this));
+
+			return null;
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_registerApis`, err);
+		}
+	}
+
+	async _deregisterApis() {
+		try {
+			const ApiService = this.$dependencies.ApiService;
+
+			await ApiService.remove(`${this.name}::updateProfile`, this._updateProfile.bind(this));
+			await ApiService.remove(`${this.name}::getProfile`, this._getProfile.bind(this));
+			await super._deregisterApis();
+
+			return null;
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_deregisterApis`, err);
 		}
 	}
 	// #endregion
 
 	// #region API
-	/**
-	 * @async
-	 * @function
-	 * @instance
-	 * @memberof PubsubService
-	 * @name     publish
-	 *
-	 * @param    {string} strategy - The messaging server/exchange to connect to.
-	 * @param    {string} topic - The topic to publish on.
-	 * @param    {Object} data - The data to publish.
-	 * @param    {Object} [options] - Additional options, if any.
-	 *
-	 * @returns  {undefined} Nothing.
-	 *
-	 * @summary  Publishes data to the specified queues.
-	 */
-	async publish(strategy, topic, data, options) {
+	async _getProfile(ctxt) {
 		try {
-			let publishCount = 0;
+			const UserRecord = new this.$UserModel({
+				'user_id': ctxt.params.user_id
+			});
 
-			if(!Array.isArray(strategy))
-				strategy = [strategy];
+			let profileData = await UserRecord.fetch({
+				'withRelated': [ctxt.query.include]
+			});
 
-			const pubsubStrategies = Object.keys(this.$config);
-			for(const pubsubStrategy of pubsubStrategies) {
-				if(!strategy.includes('*') &amp;&amp; !strategy.includes(pubsubStrategy))
-					continue;
+			profileData = this.$jsonApiMapper.map(profileData, 'profile/users', {
+				'typeForModel': {
+					'contacts': 'profile/user_contacts'
+				},
 
-				await this.$listeners[pubsubStrategy].publishAsync(topic, data, options);
-				publishCount++;
-			}
+				'enableLinks': false
+			});
 
-			if(!publishCount) throw new Error(`Unknown Strategy: ${strategy}`);
-			return null;
+			delete profileData.data.attributes.password;
+			profileData.data.attributes['middle_names'] = profileData.data.attributes['middle_names'] || '';
+
+			return profileData;
 		}
 		catch(err) {
-			throw new TwyrSrvcError(`${this.name}::publish error`, err);
+			throw new TwyrMiddlewareError(`${this.name}::_getProfile`, err);
 		}
 	}
 
-	/**
-	 * @async
-	 * @function
-	 * @instance
-	 * @memberof PubsubService
-	 * @name     subscribe
-	 *
-	 * @param    {string} strategy - The messaging server/exchange to connect to.
-	 * @param    {string} topic - The topic to subscribe to.
-	 * @param    {Function} listener - The callback to invoke when data is received.
-	 *
-	 * @returns  {undefined} Nothing.
-	 *
-	 * @summary  Subscribes the listener to the specified queues.
-	 */
-	async subscribe(strategy, topic, listener) {
+	async _updateProfile(ctxt) {
 		try {
-			let subscribeCount = 0;
+			const user = ctxt.request.body;
 
-			if(!Array.isArray(strategy))
-				strategy = [strategy];
+			delete user.data.relationships;
+			delete user.included;
 
-			const pubsubStrategies = Object.keys(this.$config);
-			for(const pubsubStrategy of pubsubStrategies) {
-				if(!strategy.includes('*') &amp;&amp; !strategy.includes(pubsubStrategy))
-					continue;
+			const jsonDeserializedData = await this.$jsonApiDeserializer.deserializeAsync(user);
+			jsonDeserializedData['user_id'] = jsonDeserializedData.id;
 
-				await this.$listeners[pubsubStrategy].subscribeAsync(topic, listener);
-				subscribeCount++;
-			}
+			delete jsonDeserializedData.id;
+			delete jsonDeserializedData.email;
+			delete jsonDeserializedData.created_at;
+			delete jsonDeserializedData.updated_at;
 
-			if(!subscribeCount) throw new Error(`Unknown Strategy: ${strategy}`);
-			return null;
+			const savedRecord = await this.$UserModel
+				.forge()
+				.save(jsonDeserializedData, {
+					'method': 'update',
+					'patch': true
+				});
+
+			return {
+				'data': {
+					'type': user.data.type,
+					'id': savedRecord.get('user_id')
+				}
+			};
 		}
 		catch(err) {
-			throw new TwyrSrvcError(`${this.name}::subscribe error`, err);
-		}
-	}
-
-	/**
-	 * @async
-	 * @function
-	 * @instance
-	 * @memberof PubsubService
-	 * @name     unsubscribe
-	 *
-	 * @param    {string} strategy - The messaging server/exchange to connect to.
-	 * @param    {string} topic - The topic to unsubscribe from.
-	 * @param    {Function} listener - The callback that was used for subscribing.
-	 *
-	 * @returns  {undefined} Nothing.
-	 *
-	 * @summary  Unubscribes the listener to the specified queues.
-	 */
-	async unsubscribe(strategy, topic, listener) {
-		try {
-			let unsubscribeCount = 0;
-
-			if(!Array.isArray(strategy))
-				strategy = [strategy];
-
-			const pubsubStrategies = Object.keys(this.$config);
-			for(const pubsubStrategy of pubsubStrategies) {
-				if(!strategy.includes('*') &amp;&amp; !strategy.includes(pubsubStrategy))
-					continue;
-
-				await this.$listeners[pubsubStrategy].unsubscribeAsync(topic, listener);
-				unsubscribeCount++;
-			}
-
-			if(!unsubscribeCount) throw new Error(`Unknown Strategy: ${strategy}`);
-			return null;
-		}
-		catch(err) {
-			throw new TwyrSrvcError(`${this.name}::unsubscribe error`, err);
+			throw new TwyrMiddlewareError(`${this.name}::_updateProfile`, err);
 		}
 	}
 	// #endregion
 
 	// #region Properties
-	/**
-	 * @override
-	 */
-	get Interface() {
-		return {
-			'publish': this.publish.bind(this),
-			'subscribe': this.subscribe.bind(this),
-			'unsubscribe': this.unsubscribe.bind(this)
-		};
-	}
-
-	/**
-	 * @override
-	 */
-	get dependencies() {
-		return ['ConfigurationService', 'LoggerService'].concat(super.dependencies);
-	}
-
 	/**
 	 * @override
 	 */
@@ -313,7 +271,7 @@ class PubsubService extends TwyrBaseService {
 	// #endregion
 }
 
-exports.service = PubsubService;
+exports.middleware = Main;
 </code></pre>
         </article>
     </section>
