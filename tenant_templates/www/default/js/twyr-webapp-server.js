@@ -3603,6 +3603,13 @@
       this._super(...arguments);
 
       this.set('permissions', ['registered']);
+      this.get('currentUser').on('userDataUpdated', this, this.onProfileUpdated);
+    },
+
+    destroy() {
+      this.get('currentUser').off('userDataUpdated', this, this.onProfileUpdated);
+
+      this._super(...arguments);
     },
 
     onHasPermissionChange: Ember.observer('hasPermission', function () {
@@ -3613,7 +3620,24 @@
 
       const userDetails = this.get('currentUser').getUser();
       this.set('displayName', userDetails ? userDetails['name'] : '');
-    })
+    }),
+
+    onProfileUpdated() {
+      if (!this.get('hasPermission')) {
+        this.set('displayName', '');
+        return;
+      }
+
+      const userDetails = this.get('currentUser').getUser();
+
+      if (!userDetails) {
+        this.set('displayName', '');
+        return;
+      }
+
+      this.set('displayName', userDetails ? userDetails['name'] : '');
+    }
+
   });
 
   _exports.default = _default;
@@ -3668,7 +3692,8 @@
         });
         notification.display({
           'type': loginResult.status < 400 ? 'success' : 'error',
-          'message': loginResult.info.message
+          'message': loginResult.info.message,
+          'error': loginResult.info.message
         });
 
         if (loginResult.nextAction === 'proceed') {
@@ -3717,7 +3742,8 @@
         });
         notification.display({
           'type': resetPassResult.status < 400 ? 'success' : 'error',
-          'message': resetPassResult.message
+          'message': resetPassResult.message,
+          'error': resetPassResult.message
         });
       } catch (err) {
         notification.display({
@@ -3755,7 +3781,8 @@
         });
         notification.display({
           'type': registerResult.status < 400 ? 'success' : 'error',
-          'message': registerResult.message
+          'message': registerResult.message,
+          'error': registerResult.message
         });
       } catch (err) {
         notification.display({
@@ -3804,7 +3831,8 @@
         });
         notification.display({
           'type': logoutResult.status < 400 ? 'success' : 'error',
-          'message': logoutResult.info.message
+          'message': logoutResult.info.message,
+          'error': logoutResult.info.message
         });
         this.get('currentUser').one('userDataUpdated', () => {
           this.get('router').transitionTo('index');
@@ -4256,6 +4284,7 @@
       const defaultData = {
         'title': 'Twyr Modal',
         'content': `This is the default. Someone forgot to override it!`,
+        'dialogClass': 'flex',
         'confirmButton': {
           'text': 'OK',
           'icon': 'check',
@@ -4384,6 +4413,8 @@
     value: true
   });
   _exports.default = void 0;
+
+  /* eslint-disable require-yield */
   const backoffPolicy = new _exponentialBackoff.default({
     'multiplier': 1.5,
     'minDelay': 30,
@@ -4391,12 +4422,100 @@
   });
 
   var _default = _baseController.default.extend({
+    selectedAccordionItem: '1',
+    currentPassword: '',
+    newPassword1: '',
+    newPassword2: '',
     save: (0, _emberConcurrency.task)(function* () {
-      yield this.get('model').save();
+      try {
+        yield this.get('model').save();
+        this.get('notification').display({
+          'type': 'success',
+          'message': 'Profile saved successfully'
+        });
+        window.TwyrApp.trigger('userChanged');
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      }
     }).drop().retryable(backoffPolicy),
     cancel: (0, _emberConcurrency.task)(function* () {
       yield this.get('model').rollback();
-    }).drop()
+    }).drop(),
+    changePassword: (0, _emberConcurrency.task)(function* () {
+      try {
+        const changePasswordResult = yield this.get('ajax').post('/profile/changePassword', {
+          'dataType': 'json',
+          'data': {
+            'currentPassword': this.get('currentPassword'),
+            'newPassword1': this.get('newPassword1'),
+            'newPassword2': this.get('newPassword2')
+          }
+        });
+        this.get('notification').display({
+          'type': changePasswordResult.status < 400 ? 'success' : 'error',
+          'message': changePasswordResult.message,
+          'error': changePasswordResult.message
+        });
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      } finally {
+        this.get('cancelChangePassword').perform();
+      }
+    }).drop().retryable(backoffPolicy),
+    cancelChangePassword: (0, _emberConcurrency.task)(function* () {
+      this.set('currentPassword', '');
+      this.set('newPassword1', '');
+      this.set('newPassword2', '');
+    }).drop(),
+    deleteAccount: (0, _emberConcurrency.task)(function* () {
+      this.send('controller-action', 'displayModal', {
+        'title': 'Delete Account',
+        'content': `${this.get('model.fullName')}, are you sure you want to delete your account?`,
+        'dialogClass': 'flex-50',
+        'confirmButton': {
+          'text': 'Delete',
+          'icon': 'check',
+          'warn': true,
+          'raised': true,
+          'callback': () => {
+            this.get('_confirmedDeleteAccount').perform();
+          }
+        },
+        'cancelButton': {
+          'text': 'Cancel',
+          'icon': 'cancel',
+          'primary': true,
+          'raised': true,
+          'callback': null
+        }
+      });
+    }).drop(),
+    onChangeAccordionItem: (0, _emberConcurrency.task)(function* (newSelectedItem) {
+      this.set('selectedAccordionItem', newSelectedItem);
+      yield (0, _emberConcurrency.timeout)(10);
+      if (!newSelectedItem) this.set('selectedAccordionItem', '1');
+    }).keepLatest(),
+    _confirmedDeleteAccount: (0, _emberConcurrency.task)(function* () {
+      try {
+        yield this.get('model').destroyRecord();
+        this.get('notification').display({
+          'type': 'success',
+          'message': 'Account deleted successfully'
+        });
+        window.TwyrApp.trigger('userChanged');
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      }
+    }).drop().retryable(backoffPolicy)
   });
 
   _exports.default = _default;
@@ -8238,12 +8357,14 @@
         return;
       }
 
-      if (data.error.errors && data.error.errors.length) {
-        data.error.errors.forEach(dataError => {
-          toast.error(dataError.detail.replace(/\\n/g, '\n').split('\n').splice(0, 2).join('\n'), dataError.title || 'Error', options);
+      if (data.error.payload.errors && data.error.payload.errors.length) {
+        data.error.payload.errors.forEach((dataError, idx) => {
+          if (!idx) return;
+          toast.error(dataError.detail, 'Error', options);
         });
         return;
-      }
+      } // console.error(`Errors: `, data.error.payload.errors);
+
 
       toast.error(data.error.message, 'Error', options);
     }
@@ -8338,6 +8459,19 @@
     enumerable: true,
     get: function () {
       return _paperToaster.default;
+    }
+  });
+});
+;define("twyr-webapp-server/services/password-strength", ["exports", "ember-cli-password-strength/services/password-strength"], function (_exports, _passwordStrength) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _passwordStrength.default;
     }
   });
 });
@@ -8720,8 +8854,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "kuW2qZFk",
-    "block": "{\"symbols\":[\"navbar\",\"nav\"],\"statements\":[[2,\" For the configurable Page Title \"],[0,\"\\n\"],[1,[21,\"head-layout\"],false],[0,\"\\n\"],[1,[27,\"page-title\",[[23,[\"mainTitle\"]]],null],false],[0,\"\\n\\n\"],[2,\" Customizable Header \"],[0,\"\\n\"],[7,\"header\"],[11,\"class\",\"sticky-top\"],[9],[0,\"\\n\"],[4,\"bs-navbar\",null,[[\"class\",\"position\",\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"p-0 px-2 py-1\",\"sticky-top\",\"light\",\"twyr\",false,true]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"navbar-header\"],[9],[0,\"\\n\"],[4,\"link-to\",[\"index\"],[[\"class\"],[\"navbar-brand white-text\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[7,\"span\"],[11,\"class\",\"h3\"],[11,\"style\",\"font-family:Keania One;\"],[9],[0,\"Twy'r\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\"],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,1,[\"nav\"]]],[[\"id\",\"class\"],[\"twyr-webapp-server-template-bhairavi-notification-area\",\"ml-auto nav-flex-icons white-text layout-row layout-align-end-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,2,[\"item\"]]],null,{\"statements\":[[1,[27,\"component\",[\"tenant/notification-area\"],null],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,2,[\"item\"]]],null,{\"statements\":[[1,[27,\"component\",[\"profile/notification-area\"],null],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,2,[\"item\"]]],null,{\"statements\":[[1,[27,\"component\",[\"session/logout-component\"],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null],[10],[0,\"\\n\\n\"],[2,\" Main Area \"],[0,\"\\n\"],[7,\"main\"],[11,\"class\",\"bg-light flex p-2\"],[11,\"style\",\"box-shadow:0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-left-column\"],[11,\"class\",\"layout-column layout-align-start flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-outlet\"],[11,\"class\",\"layout-row layout-align-center-start flex\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"flex\"]]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-right-column\"],[11,\"class\",\"layout-column layout-align-start flex-initial\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[\"session/login-component\"],null],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" Customizable Footer \"],[0,\"\\n\"],[7,\"footer\"],[11,\"class\",\"page-footer mt-2 layout-row layout-align-space-between grey\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"flex p-3 text-left\"],[9],[0,\"\\n\\t\\t\"],[4,\"link-to\",[\"freestyle\"],null,{\"statements\":[[0,\"Styleguide\"]],\"parameters\":[]},null],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"flex p-3 text-right\"],[9],[0,\"\\n\\t\\tCopyright© 2016 \"],[4,\"if\",[[23,[\"displayCurrentYear\"]]],null,{\"statements\":[[0,\"- \"],[1,[21,\"currentYear\"],false],[0,\" \"]],\"parameters\":[]},null],[4,\"link-to\",[\"index\"],null,{\"statements\":[[0,\"Twy'r\"]],\"parameters\":[]},null],[0,\". All rights reserved.\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" The mandatory empty div elements for wormhole, paper, bootstrap, etc. \"],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"ember-bootstrap-wormhole\"],[9],[10],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"ember-basic-dropdown-wormhole\"],[9],[10],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"paper-wormhole\"],[9],[10],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"paper-toast-fab-wormhole\"],[9],[10],[0,\"\\n\\n\\n\"],[2,\" Modal \"],[0,\"\\n\"],[4,\"liquid-if\",[[23,[\"showDialog\"]]],null,{\"statements\":[[4,\"paper-dialog\",null,[[\"class\",\"onClose\",\"parent\",\"origin\",\"clickOutsideToClose\",\"escapeToClose\"],[[23,[\"modalData\",\"dialogClass\"]],[27,\"action\",[[22,0,[]],\"closeDialog\",false],null],[23,[\"modalData\",\"parentElement\"]],[23,[\"modalData\",\"dialogOrigin\"]],false,false]],{\"statements\":[[4,\"paper-toolbar\",null,[[\"class\"],[\"stylish-color white-text\"]],{\"statements\":[[4,\"paper-toolbar-tools\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"h2\"],[9],[1,[23,[\"modalData\",\"title\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"componentName\"]]],null,{\"statements\":[[4,\"paper-dialog-content\",null,[[\"class\"],[\"flex m-0 p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"component\",[[23,[\"modalData\",\"componentName\"]]],[[\"state\"],[[23,[\"modalData\",\"componentState\"]]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-dialog-content\",null,null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[23,[\"modalData\",\"content\"]],true],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}],[0,\"\\n\"],[4,\"if\",[[27,\"or\",[[23,[\"modalData\",\"confirmButton\"]],[23,[\"modalData\",\"cancelButton\"]]],null]],null,{\"statements\":[[0,\"\\t\\t\"],[1,[21,\"paper-divider\"],false],[0,\"\\n\"],[4,\"paper-dialog-actions\",null,[[\"class\"],[\"layout-row layout-align-end-center\"]],{\"statements\":[[4,\"if\",[[23,[\"modalData\",\"cancelButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"closeDialog\",false],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"cancelButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"cancelButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"confirmButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"closeDialog\",true],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"confirmButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"confirmButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "lZn1ZikU",
+    "block": "{\"symbols\":[\"navbar\",\"nav\"],\"statements\":[[2,\" For the configurable Page Title \"],[0,\"\\n\"],[1,[21,\"head-layout\"],false],[0,\"\\n\"],[1,[27,\"page-title\",[[23,[\"mainTitle\"]]],null],false],[0,\"\\n\\n\"],[2,\" Customizable Header \"],[0,\"\\n\"],[7,\"header\"],[11,\"class\",\"sticky-top\"],[9],[0,\"\\n\"],[4,\"bs-navbar\",null,[[\"class\",\"position\",\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"p-0 px-2 py-1\",\"sticky-top\",\"light\",\"twyr\",false,true]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"navbar-header\"],[9],[0,\"\\n\"],[4,\"link-to\",[\"index\"],[[\"class\"],[\"navbar-brand white-text\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[7,\"span\"],[11,\"class\",\"h3\"],[11,\"style\",\"font-family:Keania One;\"],[9],[0,\"Twy'r\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\"],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,1,[\"nav\"]]],[[\"id\",\"class\"],[\"twyr-webapp-server-template-bhairavi-notification-area\",\"ml-auto nav-flex-icons white-text layout-row layout-align-end-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,2,[\"item\"]]],null,{\"statements\":[[1,[27,\"component\",[\"tenant/notification-area\"],null],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,2,[\"item\"]]],null,{\"statements\":[[1,[27,\"component\",[\"profile/notification-area\"],null],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,2,[\"item\"]]],null,{\"statements\":[[1,[27,\"component\",[\"session/logout-component\"],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null],[10],[0,\"\\n\\n\"],[2,\" Main Area \"],[0,\"\\n\"],[7,\"main\"],[11,\"class\",\"bg-light flex p-2\"],[11,\"style\",\"box-shadow:0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-first-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-second-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-left-column\"],[11,\"class\",\"layout-column layout-align-start flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-outlet\"],[11,\"class\",\"layout-row layout-align-center-start flex\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"flex\"]]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-main-row-right-column\"],[11,\"class\",\"layout-column layout-align-start flex-initial\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[\"session/login-component\"],null],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row\"],[11,\"class\",\"layout-row flex-initial\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-1\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-2\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"id\",\"twyr-webapp-server-template-bhairavi-bottom-row-position-3\"],[11,\"class\",\"flex-initial\"],[9],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" Customizable Footer \"],[0,\"\\n\"],[7,\"footer\"],[11,\"class\",\"page-footer mt-2 layout-row layout-align-space-between grey\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"flex p-3 text-left\"],[9],[0,\"\\n\\t\\t\"],[4,\"link-to\",[\"freestyle\"],null,{\"statements\":[[0,\"Styleguide\"]],\"parameters\":[]},null],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"flex p-3 text-right\"],[9],[0,\"\\n\\t\\tCopyright© 2016 \"],[4,\"if\",[[23,[\"displayCurrentYear\"]]],null,{\"statements\":[[0,\"- \"],[1,[21,\"currentYear\"],false],[0,\" \"]],\"parameters\":[]},null],[4,\"link-to\",[\"index\"],null,{\"statements\":[[0,\"Twy'r\"]],\"parameters\":[]},null],[0,\". All rights reserved.\\n\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\\n\"],[2,\" The mandatory empty div elements for wormhole, paper, bootstrap, etc. \"],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"ember-bootstrap-wormhole\"],[9],[10],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"ember-basic-dropdown-wormhole\"],[9],[10],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"paper-wormhole\"],[9],[10],[0,\"\\n\"],[7,\"div\"],[11,\"id\",\"paper-toast-fab-wormhole\"],[9],[10],[0,\"\\n\\n\\n\"],[2,\" Modal \"],[0,\"\\n\"],[4,\"liquid-if\",[[23,[\"showDialog\"]]],null,{\"statements\":[[4,\"paper-dialog\",null,[[\"class\",\"onClose\",\"parent\",\"origin\",\"clickOutsideToClose\",\"escapeToClose\"],[[23,[\"modalData\",\"dialogClass\"]],[27,\"action\",[[22,0,[]],\"controller-action\",\"closeDialog\",false],null],[23,[\"modalData\",\"parentElement\"]],[23,[\"modalData\",\"dialogOrigin\"]],false,false]],{\"statements\":[[4,\"paper-toolbar\",null,[[\"class\"],[\"stylish-color white-text\"]],{\"statements\":[[4,\"paper-toolbar-tools\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"h2\"],[9],[1,[23,[\"modalData\",\"title\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"componentName\"]]],null,{\"statements\":[[4,\"paper-dialog-content\",null,[[\"class\"],[\"flex m-0 p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"component\",[[23,[\"modalData\",\"componentName\"]]],[[\"state\"],[[23,[\"modalData\",\"componentState\"]]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-dialog-content\",null,null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[23,[\"modalData\",\"content\"]],true],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}],[0,\"\\n\"],[4,\"if\",[[27,\"or\",[[23,[\"modalData\",\"confirmButton\"]],[23,[\"modalData\",\"cancelButton\"]]],null]],null,{\"statements\":[[0,\"\\t\\t\"],[1,[21,\"paper-divider\"],false],[0,\"\\n\"],[4,\"paper-dialog-actions\",null,[[\"class\"],[\"layout-row layout-align-end-center\"]],{\"statements\":[[4,\"if\",[[23,[\"modalData\",\"cancelButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"cancelButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"controller-action\",\"closeDialog\",false],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"cancelButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"cancelButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"modalData\",\"confirmButton\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"accent\",\"warn\",\"raised\",\"onClick\"],[[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"primary\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"accent\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"warn\"]]],null]],null],[27,\"not\",[[27,\"not\",[[23,[\"modalData\",\"confirmButton\",\"raised\"]]],null]],null],[27,\"action\",[[22,0,[]],\"controller-action\",\"closeDialog\",true],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[23,[\"modalData\",\"confirmButton\",\"icon\"]]],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[1,[23,[\"modalData\",\"confirmButton\",\"text\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/application.hbs"
     }
@@ -9149,8 +9283,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "EMCL7f72",
-    "block": "{\"symbols\":[\"form\",\"card\",\"title\",\"text\"],\"statements\":[[1,[27,\"page-title\",[\"Profile\"],null],false],[0,\"\\n\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-center flex flex-gt-sm-50 flex-gt-lg-40\"],[9],[0,\"\\n\"],[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"w-100\",[27,\"perform\",[[23,[\"save\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,2,[\"title\"]]],[[\"class\"],[\"bg-twyr-component white-text\"]],{\"statements\":[[4,\"component\",[[22,3,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"headline\"]]],null,{\"statements\":[[0,\"Edit Profile\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[4]},null]],\"parameters\":[3]},null],[4,\"component\",[[22,2,[\"content\"]]],[[\"class\"],[\"pt-4\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between layout-wrap\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex-100 flex-gt-md-50 flex-gt-lg-40\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"id\",\"profile-basic-information-image\"],[11,\"class\",\"flex\"],[11,\"contenteditable\",\"true\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex-100 flex-gt-md-50 flex-gt-lg-60\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,1,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"disabled\"],[\"text\",\"flex-100\",\"Username / Login\",[23,[\"model\",\"email\"]],null,true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,1,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"First Name\",[23,[\"model\",\"firstName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"firstName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,1,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\"],[\"text\",\"flex-100\",\"Middle Name(s)\",[23,[\"model\",\"middleNames\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"middleNames\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,1,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"Last Name\",[23,[\"model\",\"lastName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"lastName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,2,[\"actions\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"raised\",\"warn\",\"disabled\",\"onClick\"],[true,true,[27,\"not\",[[27,\"or\",[[23,[\"model\",\"isDirty\"]],[23,[\"model\",\"content\",\"isDirty\"]]],null]],null],[27,\"perform\",[[23,[\"cancel\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"close\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,1,[\"submit-button\"]]],[[\"raised\",\"primary\",\"disabled\"],[true,true,[27,\"or\",[[22,1,[\"isInvalid\"]],[27,\"not\",[[27,\"or\",[[23,[\"model\",\"isDirty\"]],[23,[\"model\",\"content\",\"isDirty\"]]],null]],null]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "8Gz4Ha/q",
+    "block": "{\"symbols\":[\"accordion\",\"accItem\",\"accItem\",\"accItem\",\"form\",\"card\",\"accItem\",\"form\",\"card\"],\"statements\":[[1,[27,\"page-title\",[\"Profile\"],null],false],[0,\"\\n\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-center flex flex-gt-sm-50 flex-gt-lg-40\"],[9],[0,\"\\n\"],[4,\"bs-accordion\",null,[[\"class\",\"selected\",\"onChange\"],[\"w-100\",[23,[\"selectedAccordionItem\"]],[27,\"perform\",[[23,[\"onChangeAccordionItem\"]]],null]]],{\"statements\":[[4,\"component\",[[22,1,[\"item\"]]],[[\"value\",\"title\"],[\"1\",\"Edit Profile\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" Profile Basics \"],[0,\"\\n\"],[4,\"component\",[[22,7,[\"title\"]]],[[\"class\"],[\"bg-twyr-component p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0 white-text\"],[9],[0,\"Edit Profile\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,7,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"w-100\",[27,\"perform\",[[23,[\"save\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex m-0\"]],{\"statements\":[[4,\"component\",[[22,9,[\"content\"]]],[[\"class\"],[\"pt-4\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between layout-wrap\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex-100 flex-gt-md-50 flex-gt-lg-40\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"id\",\"profile-basic-information-image\"],[11,\"class\",\"flex\"],[11,\"contenteditable\",\"true\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex-100 flex-gt-md-50 flex-gt-lg-60\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"disabled\"],[\"text\",\"flex-100\",\"Username / Login\",[23,[\"model\",\"email\"]],null,true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"First Name\",[23,[\"model\",\"firstName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"firstName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\"],[\"text\",\"flex-100\",\"Middle Name(s)\",[23,[\"model\",\"middleNames\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"middleNames\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"Last Name\",[23,[\"model\",\"lastName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"lastName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,9,[\"actions\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"raised\",\"warn\",\"disabled\",\"onClick\"],[true,true,[27,\"not\",[[27,\"or\",[[23,[\"model\",\"isDirty\"]],[23,[\"model\",\"content\",\"isDirty\"]]],null]],null],[27,\"perform\",[[23,[\"cancel\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"close\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,8,[\"submit-button\"]]],[[\"raised\",\"primary\",\"disabled\"],[true,true,[27,\"or\",[[22,8,[\"isInvalid\"]],[27,\"not\",[[27,\"or\",[[23,[\"model\",\"isDirty\"]],[23,[\"model\",\"content\",\"isDirty\"]]],null]],null]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[9]},null]],\"parameters\":[8]},null]],\"parameters\":[]},null]],\"parameters\":[7]},null],[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"2\",\"Change Password\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" Password Change \"],[0,\"\\n\"],[4,\"component\",[[22,4,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Change Password\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,4,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"w-100\",[27,\"perform\",[[23,[\"changePassword\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex m-0\"]],{\"statements\":[[4,\"component\",[[22,6,[\"content\"]]],[[\"class\"],[\"pt-4\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"flex-100\",\"Current Password\",[23,[\"currentPassword\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"currentPassword\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"flex-100\",\"New Password\",[23,[\"newPassword1\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"newPassword1\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"flex-100\",\"Repeat New Password\",[23,[\"newPassword2\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"newPassword2\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,6,[\"actions\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"raised\",\"warn\",\"disabled\",\"onClick\"],[true,true,[27,\"not\",[[27,\"or\",[[27,\"not-eq\",[[23,[\"currentPassword\"]],\"\"],null],[27,\"not-eq\",[[23,[\"newPassword1\"]],\"\"],null],[27,\"not-eq\",[[23,[\"newPassword2\"]],\"\"],null]],null]],null],[27,\"perform\",[[23,[\"cancelChangePassword\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"close\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,5,[\"submit-button\"]]],[[\"raised\",\"primary\",\"disabled\"],[true,true,[27,\"or\",[[27,\"eq\",[[23,[\"newPassword1\"]],\"\"],null],[27,\"not-eq\",[[23,[\"newPassword1\"]],[23,[\"newPassword2\"]]],null]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[6]},null]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null],[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"3\",\"Contact Information\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" User contact Information \"],[0,\"\\n\"],[4,\"component\",[[22,3,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Contact Information\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,3,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[],\"parameters\":[]},null]],\"parameters\":[3]},null],[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"4\",\"Danger Zone\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" User contact Information \"],[0,\"\\n\"],[4,\"component\",[[22,2,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Danger Zone\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,2,[\"body\"]]],[[\"class\"],[\"layout-row layout-align-start-stretch\"]],{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"raised\",\"onClick\"],[\"flex btn-danger\",true,[27,\"perform\",[[23,[\"deleteAccount\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-off\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Delete Account\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/profile.hbs"
     }
@@ -9487,7 +9621,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+d830f2b2"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+a8748976"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;
