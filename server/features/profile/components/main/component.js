@@ -45,6 +45,8 @@ class Main extends TwyrBaseComponent {
 			this.$router.patch('/users/:user_id', this._updateProfile.bind(this));
 			this.$router.del('/users/:user_id', this._deleteProfile.bind(this));
 
+			this.$router.post('/changePassword', this._changePassword.bind(this));
+
 			await super._addRoutes();
 			return null;
 		}
@@ -86,10 +88,31 @@ class Main extends TwyrBaseComponent {
 	}
 
 	async _deleteProfile(ctxt) {
-		ctxt.status = 200;
-		ctxt.body = { 'status': true };
+		try {
+			const apiSrvc = this.$dependencies.ApiService;
+			await apiSrvc.execute('Main::deleteProfile', ctxt);
 
-		return null;
+			ctxt.status = 204;
+			return null;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error deleting profile`, err);
+		}
+	}
+
+	async _changePassword(ctxt) {
+		try {
+			const apiSrvc = this.$dependencies.ApiService;
+			const status = await apiSrvc.execute('Main::changePassword', ctxt);
+
+			ctxt.status = 200;
+			ctxt.body = status.shift();
+
+			return null;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error updating password`, err);
+		}
 	}
 	// #endregion
 

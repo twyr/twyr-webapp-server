@@ -97,10 +97,10 @@ class WebserverService extends TwyrBaseService {
 					}
 
 					ctxt.type = 'application/json; charset=utf-8';
-					ctxt.status = error.code || error.number || 500;
-					ctxt.body = error.toString().split('\n').filter((errString) => { return !!errString; });
+					ctxt.status = 422;
+					ctxt.body = error.toJSON();
 
-					ctxt.app.emit('error', error, ctxt);
+					// ctxt.app.emit('error', error, ctxt);
 				}
 				finally {
 					if(this.$config.protocol === 'http2')

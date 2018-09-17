@@ -52,6 +52,59 @@ class TwyrBaseError extends Error {
 		return `${errstr}\n${this.$innerError.toString()}`;
 	}
 
+	/**
+	 * @override
+	 */
+	toJSON() {
+		const cleanStack = require('clean-stack');
+		const PgError = require('pg-error');
+
+		const errorData = {
+			'detail': '',
+			'source': {
+				'pointer': 'data'
+			}
+		};
+
+		const errstr = this.$innerError ? cleanStack(this.stack, { 'pretty': true }) : this.stack;
+
+		if(!this.$innerError) {
+			errorData['detail'] = errstr;
+			return { 'errors': [errorData] };
+		}
+
+		if(this.$innerError instanceof PgError) {
+			errorData['detail'] = `${errstr}\n${this.$innerError.message}\n${this.$innerError.D}`;
+			return { 'errors': [errorData] };
+		}
+
+		if(!(this.$innerError instanceof TwyrBaseError)) {
+			errorData['detail'] = `${errstr}\n${this.$innerError.stack}`;
+			return { 'errors': [errorData] };
+		}
+
+		const errors = [{
+			'detail': errstr,
+			'source': {
+				'pointer': 'data'
+			}
+		}];
+
+		let innermostError = this.$innerError;
+		while(innermostError) {
+			errors.push({
+				'detail': innermostError.$innerError ? cleanStack(innermostError.stack, { 'pretty': true }) : innermostError.stack,
+				'source': {
+					'pointer': 'data'
+				}
+			});
+
+			innermostError = innermostError.$innerError;
+		}
+
+		return { 'errors': errors };
+	}
+
 	get inner() { return this.$innerError; }
 }
 

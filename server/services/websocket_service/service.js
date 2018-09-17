@@ -212,7 +212,7 @@ class WebsocketService extends TwyrBaseService {
 
 		if(twyrEnv === 'development') {
 			const loggerSrvc = this.$dependencies.LoggerService;
-			loggerSrvc.debug(`Websocket Connection for user`, username);
+			loggerSrvc.debug(`Websocket Connection for user ${username}`);
 		}
 
 		this.emit('websocket-connect', spark);

@@ -114,10 +114,12 @@ class Main extends TwyrBaseMiddleware {
 		try {
 			const ApiService = this.$dependencies.ApiService;
 
-			await super._registerApis();
 			await ApiService.add(`${this.name}::getProfile`, this._getProfile.bind(this));
 			await ApiService.add(`${this.name}::updateProfile`, this._updateProfile.bind(this));
+			await ApiService.add(`${this.name}::deleteProfile`, this._deleteProfile.bind(this));
+			await ApiService.add(`${this.name}::changePassword`, this._changePassword.bind(this));
 
+			await super._registerApis();
 			return null;
 		}
 		catch(err) {
@@ -129,10 +131,12 @@ class Main extends TwyrBaseMiddleware {
 		try {
 			const ApiService = this.$dependencies.ApiService;
 
+			await ApiService.remove(`${this.name}::changePassword`, this._changePassword.bind(this));
+			await ApiService.remove(`${this.name}::deleteProfile`, this._deleteProfile.bind(this));
 			await ApiService.remove(`${this.name}::updateProfile`, this._updateProfile.bind(this));
 			await ApiService.remove(`${this.name}::getProfile`, this._getProfile.bind(this));
-			await super._deregisterApis();
 
+			await super._deregisterApis();
 			return null;
 		}
 		catch(err) {
@@ -192,6 +196,9 @@ class Main extends TwyrBaseMiddleware {
 					'patch': true
 				});
 
+			const cacheSrvc = this.$dependencies['CacheService'];
+			await cacheSrvc.delAsync(`twyr!webapp!user!${jsonDeserializedData['user_id']}!basics`);
+
 			return {
 				'data': {
 					'type': user.data.type,
@@ -201,6 +208,74 @@ class Main extends TwyrBaseMiddleware {
 		}
 		catch(err) {
 			throw new TwyrMiddlewareError(`${this.name}::_updateProfile`, err);
+		}
+	}
+
+	async _deleteProfile(ctxt) {
+		try {
+			const UserRecord = new this.$UserModel({
+				'user_id': ctxt.state.user.user_id
+			});
+
+			const profileData = await UserRecord.fetch();
+
+			const isUserSuper = ctxt.state.user.permissions.filter((permission) => {
+				return permission.name === 'super-administrator';
+			}).length;
+
+			if(!isUserSuper) {
+				profileData.destroy();
+				return null;
+			}
+
+			const superPermId = ctxt.state.user.permissions.filter((permission) => {
+				return permission.name === 'super-administrator';
+			})[0]['permission_id'];
+
+			const otherSupers = await this.$dependencies.DatabaseService.knex.raw(`SELECT user_id FROM tenants_users_groups WHERE tenant_id = ? AND group_id IN (SELECT group_id FROM tenant_group_permissions WHERE feature_permission_id = ?) AND user_id <> ?`, [
+				ctxt.state.tenant.tenant_id,
+				superPermId,
+				ctxt.state.user.user_id
+			]);
+
+			if(otherSupers.length) {
+				profileData.destroy();
+				return null;
+			}
+
+			throw new Error(`Cannot delete the only Super Administrator for the Tenant`);
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_deleteProfile`, err);
+		}
+	}
+
+	async _changePassword(ctxt) {
+		try {
+			const upash = require('upash');
+			const passwordData = ctxt.request.body;
+
+			if(passwordData.currentPassword.trim() === '') throw new Error(`Current Password cannot be empty`);
+			if(passwordData.newPassword1 === '') throw new Error(`New Password cannot be empty`);
+			if(passwordData.newPassword1 !== passwordData.newPassword2) throw new Error(`New Password is not repeated correctly`);
+
+			const UserRecord = new this.$UserModel({
+				'user_id': ctxt.state.user.user_id
+			});
+
+			const profileData = await UserRecord.fetch();
+			const credentialMatch = await upash.verify(profileData.get('password'), passwordData.currentPassword);
+			if(!credentialMatch) throw new TwyrMiddlewareError('Invalid Credentials - please try again');
+
+			const hashedNewPassword = await upash.hash(passwordData.newPassword1);
+			profileData.set('password', hashedNewPassword);
+
+			await profileData.save();
+
+			return { 'status': 200, 'message': 'Password updated successfully' };
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_changePassword`, err);
 		}
 	}
 	// #endregion

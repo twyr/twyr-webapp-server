@@ -420,7 +420,7 @@ exports.seed = async function(knex) {
 			'name': 'default',
 			'display_name': 'Default Template',
 			'relative_path_to_index': 'index.ejs',
-			'description': 'The default template that ships with Twyr for the www tenant, based on the Bhairavi Ember.js template',
+			'description': 'Twyr WebApp',
 			'configuration': {
 				'title': 'Default Template for the WWW Tenant - based on the Bhairavi Ember.js template'
 			},
