@@ -28,7 +28,7 @@ describe('Session Component Test Cases', function() {
 		agent
 			.get('/session/logout')
 			.end((err, response) => {
-				expect(response).to.have.status(500);
+				expect(response).to.have.status(422);
 				done(err);
 			});
 	});
@@ -41,7 +41,7 @@ describe('Session Component Test Cases', function() {
 				'username': 'root@twyr.com'
 			})
 			.end((err, response) => {
-				expect(response).to.have.status(500);
+				expect(response).to.have.status(422);
 				done(err);
 			});
 	});
@@ -55,7 +55,7 @@ describe('Session Component Test Cases', function() {
 				'password': 'twyr'
 			})
 			.end((err, response) => {
-				expect(response).to.have.status(500);
+				expect(response).to.have.status(422);
 				done(err);
 			});
 	});
@@ -69,7 +69,7 @@ describe('Session Component Test Cases', function() {
 				'password': 'twyr2'
 			})
 			.end((err, response) => {
-				expect(response).to.have.status(500);
+				expect(response).to.have.status(422);
 				done(err);
 			});
 	});
@@ -99,7 +99,7 @@ describe('Session Component Test Cases', function() {
 				'password': 'twyr'
 			})
 			.end((err, response) => {
-				expect(response).to.have.status(500);
+				expect(response).to.have.status(422);
 				done(err);
 			});
 	});
@@ -130,7 +130,7 @@ describe('Session Component Test Cases', function() {
 		agent
 			.get('/session/logout')
 			.end((err, response) => {
-				expect(response).to.have.status(500);
+				expect(response).to.have.status(422);
 				done(err);
 			});
 	});
@@ -156,7 +156,7 @@ describe('Session Component Test Cases', function() {
 				'username': 'unknown-user@twyr.com'
 			})
 			.end((err, response) => {
-				expect(response).to.have.status(500);
+				expect(response).to.have.status(422);
 				done(err);
 			});
 	});
@@ -183,7 +183,7 @@ describe('Session Component Test Cases', function() {
 				'password': 'twyr'
 			})
 			.end((err, response) => {
-				expect(response).to.have.status(500);
+				expect(response).to.have.status(422);
 				done(err);
 			});
 	});

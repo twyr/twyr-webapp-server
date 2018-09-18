@@ -15,7 +15,7 @@ describe('Profile Feature Test Cases', function() {
 		agent
 			.get('/profile')
 			.end((err, response) => {
-				expect(response).to.have.status(500);
+				expect(response).to.have.status(422);
 				done(err);
 			});
 	});
