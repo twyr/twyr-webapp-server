@@ -2461,3 +2461,8 @@ END-FREESTYLE-USAGE */
 .FreestyleTypeface-previewSample {
   font-size: 15px;
   margin: 0; }
+.paper-password-strength {
+  clear: both; }
+  .paper-password-strength .paper-password-strength-label {
+    white-space: nowrap;
+    font-size: 13px; }
