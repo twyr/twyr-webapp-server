@@ -45,7 +45,13 @@ class Main extends TwyrBaseComponent {
 			this.$router.patch('/users/:user_id', this._updateProfile.bind(this));
 			this.$router.del('/users/:user_id', this._deleteProfile.bind(this));
 
+			this.$router.get('/get-image', this._getProfileImage.bind(this));
+			this.$router.post('/upload-image', this._updateProfileImage.bind(this));
+
 			this.$router.post('/changePassword', this._changePassword.bind(this));
+
+			this.$router.post('/user-contacts', this._addContact.bind(this));
+			this.$router.del('/user-contacts/:user_contact_id', this._deleteContact.bind(this));
 
 			await super._addRoutes();
 			return null;
@@ -100,6 +106,89 @@ class Main extends TwyrBaseComponent {
 		}
 	}
 
+	async _getProfileImage(ctxt) {
+		try {
+			const path = require('path');
+			const send = require('koa-send');
+
+			const apiSrvc = this.$dependencies.ApiService;
+
+			let userData = await apiSrvc.execute('Main::getProfile', ctxt);
+			userData = userData.shift();
+
+			const profileImageFolder = this.$parent.$config.profileImagePath;
+			// if(!path.isAbsolute(profileImageFolder)) profileImageFolder = path.join(path.dirname(path.dirname(require.main.filename)), profileImageFolder);
+
+			const profileImagePath = path.join(profileImageFolder, `${userData.data.attributes.profile_image}.png`);
+			const profileImageExists = await this._exists(profileImagePath);
+
+			if(profileImageExists)
+				send(ctxt, profileImagePath);
+			else
+				send(ctxt, path.join(profileImageFolder, 'anonymous.jpg'));
+
+			return null;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error retrieving profile image`, err);
+		}
+	}
+
+	async _updateProfileImage(ctxt) {
+		try {
+			const fs = require('fs');
+			const path = require('path');
+			const promises = require('bluebird');
+			const uuid = require('uuid/v4');
+
+			const filesystem = promises.promisifyAll(fs);
+
+			const apiSrvc = this.$dependencies.ApiService;
+
+			let userData = await apiSrvc.execute('Main::getProfile', ctxt);
+			userData = userData.shift();
+
+			const currentImageId = userData.data.attributes.profile_image,
+				image = ctxt.request.body.image.replace(/' '/g, '+').replace('data:image/png;base64,', ''),
+				imageId = uuid().toString();
+
+			let profileImageFolder = this.$parent.$config.profileImagePath;
+			if(!path.isAbsolute(profileImageFolder)) profileImageFolder = path.join(path.dirname(path.dirname(require.main.filename)), profileImageFolder);
+
+			const profileImagePath = path.join(profileImageFolder, `${imageId}.png`);
+			await filesystem.writeFileAsync(profileImagePath, Buffer.from(image, 'base64'));
+
+			ctxt.request.body = {
+				'data': {
+					'id': ctxt.state.user.user_id,
+					'type': 'profile/users',
+					'attributes': {
+						'profile_image': imageId,
+						'profile_image_metadata': ctxt.request.body.metadata
+					}
+				}
+			};
+
+			userData = await apiSrvc.execute('Main::updateProfile', ctxt);
+			userData = userData.shift();
+
+			ctxt.status = 200;
+			ctxt.body = {
+				'status': true,
+				'responseText': 'Profile Image Updated succesfully'
+			};
+
+			if(!currentImageId) return null;
+			if(currentImageId === 'f8a9da32-26c5-495a-be9a-42f2eb8e4ed1') return null;
+
+			await filesystem.unlinkAsync(path.join(profileImageFolder, `${currentImageId}.png`));
+			return null;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error updating profile image`, err);
+		}
+	}
+
 	async _changePassword(ctxt) {
 		try {
 			const apiSrvc = this.$dependencies.ApiService;
@@ -112,6 +201,34 @@ class Main extends TwyrBaseComponent {
 		}
 		catch(err) {
 			throw new TwyrComponentError(`Error updating password`, err);
+		}
+	}
+
+	async _addContact(ctxt) {
+		try {
+			const apiSrvc = this.$dependencies.ApiService;
+			const status = await apiSrvc.execute('Main::addContact', ctxt);
+
+			ctxt.status = 200;
+			ctxt.body = status.shift();
+
+			return null;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error deleting profile`, err);
+		}
+	}
+
+	async _deleteContact(ctxt) {
+		try {
+			const apiSrvc = this.$dependencies.ApiService;
+			await apiSrvc.execute('Main::deleteContact', ctxt);
+
+			ctxt.status = 204;
+			return null;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error deleting profile`, err);
 		}
 	}
 	// #endregion

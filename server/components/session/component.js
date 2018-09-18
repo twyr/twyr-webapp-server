@@ -70,7 +70,9 @@ class Session extends TwyrBaseComponent {
 			'permissions': (ctxt.state.user ? ctxt.state.user.permissions.map((permission) => { return permission.name; }) : ['public']),
 			'designation': ctxt.state.user ? ctxt.state.user.tenantAttributes.designation : '',
 			'defaultApplication': ctxt.state.user ? ctxt.state.user.tenantAttributes.default_route : '',
-			'otherTenants': ctxt.state.user ? ctxt.state.user.tenantAttributes.allowed_tenants : []
+			'otherTenants': ctxt.state.user ? ctxt.state.user.tenantAttributes.allowed_tenants : [],
+			'image': ctxt.state.user ? ctxt.state.user.profile_image : '',
+			'imageMetadata': ctxt.state.user ? ctxt.state.user.profile_image_metadata : {}
 		};
 
 		if(ctxt.state.user && !ctxt.body.permissions.includes('registered'))

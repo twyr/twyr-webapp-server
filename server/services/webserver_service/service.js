@@ -205,6 +205,9 @@ class WebserverService extends TwyrBaseService {
 			// Step 1.8: The body parser...
 			const koaBodyParser = require('koa-bodyparser');
 			this.$koa.use(koaBodyParser({
+				'formLimit': '10mb',
+				'jsonLimit': '10mb',
+				'textLimit': '10mb',
 				'extendTypes': {
 					'json': ['application/x-javascript', 'application/json', 'application/vnd.api+json']
 				}

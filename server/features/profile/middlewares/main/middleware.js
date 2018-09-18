@@ -1,3 +1,5 @@
+/* eslint-disable security/detect-object-injection */
+
 'use strict';
 
 /**
@@ -117,7 +119,11 @@ class Main extends TwyrBaseMiddleware {
 			await ApiService.add(`${this.name}::getProfile`, this._getProfile.bind(this));
 			await ApiService.add(`${this.name}::updateProfile`, this._updateProfile.bind(this));
 			await ApiService.add(`${this.name}::deleteProfile`, this._deleteProfile.bind(this));
+
 			await ApiService.add(`${this.name}::changePassword`, this._changePassword.bind(this));
+
+			await ApiService.add(`${this.name}::addContact`, this._addContact.bind(this));
+			await ApiService.add(`${this.name}::deleteContact`, this._deleteContact.bind(this));
 
 			await super._registerApis();
 			return null;
@@ -131,7 +137,11 @@ class Main extends TwyrBaseMiddleware {
 		try {
 			const ApiService = this.$dependencies.ApiService;
 
+			await ApiService.add(`${this.name}::deleteContact`, this._deleteContact.bind(this));
+			await ApiService.add(`${this.name}::addContact`, this._addContact.bind(this));
+
 			await ApiService.remove(`${this.name}::changePassword`, this._changePassword.bind(this));
+
 			await ApiService.remove(`${this.name}::deleteProfile`, this._deleteProfile.bind(this));
 			await ApiService.remove(`${this.name}::updateProfile`, this._updateProfile.bind(this));
 			await ApiService.remove(`${this.name}::getProfile`, this._getProfile.bind(this));
@@ -149,7 +159,7 @@ class Main extends TwyrBaseMiddleware {
 	async _getProfile(ctxt) {
 		try {
 			const UserRecord = new this.$UserModel({
-				'user_id': ctxt.params.user_id
+				'user_id': ctxt.state.user.user_id
 			});
 
 			let profileData = await UserRecord.fetch({
@@ -276,6 +286,68 @@ class Main extends TwyrBaseMiddleware {
 		}
 		catch(err) {
 			throw new TwyrMiddlewareError(`${this.name}::_changePassword`, err);
+		}
+	}
+
+	async _addContact(ctxt) {
+		try {
+			const userContact = ctxt.request.body;
+
+			const jsonDeserializedData = await this.$jsonApiDeserializer.deserializeAsync(userContact);
+			jsonDeserializedData['user_contact_id'] = jsonDeserializedData.id;
+
+			delete jsonDeserializedData.id;
+			delete jsonDeserializedData.created_at;
+			delete jsonDeserializedData.updated_at;
+
+			Object.keys(userContact.data.relationships || {}).forEach((relationshipName) => {
+				if(!userContact.data.relationships[relationshipName].data) {
+					delete jsonDeserializedData[relationshipName];
+					return;
+				}
+
+				if(!userContact.data.relationships[relationshipName].data.id) {
+					delete jsonDeserializedData[relationshipName];
+					return;
+				}
+
+				jsonDeserializedData[`${relationshipName}_id`] = userContact.data.relationships[relationshipName].data.id;
+			});
+
+			const savedRecord = await this.$UserContactModel
+				.forge()
+				.save(jsonDeserializedData, {
+					'method': 'insert',
+					'patch': false
+				});
+
+			return {
+				'data': {
+					'type': userContact.data.type,
+					'id': savedRecord.get('user_contact_id')
+				}
+			};
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_addContact`, err);
+		}
+	}
+
+	async _deleteContact(ctxt) {
+		try {
+			const userContact = await new this.$UserContactModel({
+				'user_contact_id': ctxt.params['user_contact_id']
+			})
+			.fetch();
+
+			if(userContact.get('user_id') !== ctxt.state.user['user_id'])
+				throw new Error(`Contact does not belong to the logged in User`);
+
+			await userContact.destroy();
+			return null;
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_deleteContact`, err);
 		}
 	}
 	// #endregion
