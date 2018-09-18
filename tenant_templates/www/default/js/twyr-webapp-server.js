@@ -2350,6 +2350,123 @@
   var _default = _paperContent.default;
   _exports.default = _default;
 });
+;define("twyr-webapp-server/components/paper-data-table-body", ["exports", "paper-data-table/components/paper-data-table-body"], function (_exports, _paperDataTableBody) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _paperDataTableBody.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/paper-data-table-cell", ["exports", "paper-data-table/components/paper-data-table-cell"], function (_exports, _paperDataTableCell) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _paperDataTableCell.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/paper-data-table-column", ["exports", "paper-data-table/components/paper-data-table-column"], function (_exports, _paperDataTableColumn) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _paperDataTableColumn.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/paper-data-table-dialog-inner", ["exports", "paper-data-table/components/paper-data-table-dialog-inner"], function (_exports, _paperDataTableDialogInner) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _paperDataTableDialogInner.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/paper-data-table-edit-dialog", ["exports", "paper-data-table/components/paper-data-table-edit-dialog"], function (_exports, _paperDataTableEditDialog) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _paperDataTableEditDialog.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/paper-data-table-head", ["exports", "paper-data-table/components/paper-data-table-head"], function (_exports, _paperDataTableHead) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _paperDataTableHead.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/paper-data-table-pagination", ["exports", "paper-data-table/components/paper-data-table-pagination"], function (_exports, _paperDataTablePagination) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _paperDataTablePagination.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/paper-data-table-row", ["exports", "paper-data-table/components/paper-data-table-row"], function (_exports, _paperDataTableRow) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _paperDataTableRow.default;
+    }
+  });
+});
+;define("twyr-webapp-server/components/paper-data-table", ["exports", "paper-data-table/components/paper-data-table"], function (_exports, _paperDataTable) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _paperDataTable.default;
+    }
+  });
+});
 ;define("twyr-webapp-server/components/paper-dialog-actions", ["exports", "ember-paper/components/paper-dialog-actions"], function (_exports, _paperDialogActions) {
   "use strict";
 
@@ -3228,6 +3345,19 @@
     }
   });
 });
+;define("twyr-webapp-server/components/paper-table-select", ["exports", "paper-data-table/components/paper-table-select"], function (_exports, _paperTableSelect) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function () {
+      return _paperTableSelect.default;
+    }
+  });
+});
 ;define("twyr-webapp-server/components/paper-tabs", ["exports", "ember-paper/components/paper-tabs"], function (_exports, _paperTabs) {
   "use strict";
 
@@ -3580,6 +3710,353 @@
     }
   });
 });
+;define("twyr-webapp-server/components/profile/contact-management", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _emberConcurrency) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+  const backoffPolicy = new _exponentialBackoff.default({
+    'multiplier': 1.5,
+    'minDelay': 30,
+    'maxDelay': 400
+  });
+
+  var _default = _baseComponent.default.extend({
+    onInit: (0, _emberConcurrency.task)(function* () {
+      try {
+        const contactTypes = yield this.get('ajax').request('/masterdata/contactTypes', {
+          'method': 'GET'
+        });
+        this.set('contactTypes', contactTypes);
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      }
+    }).on('init').drop().retryable(backoffPolicy),
+    addContact: (0, _emberConcurrency.task)(function* () {
+      try {
+        const store = this.get('store');
+        const newContact = store.createRecord('profile/user-contact', {
+          'user': this.get('model')
+        });
+        yield this.get('model.contacts').pushObject(newContact);
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      }
+    }).drop(),
+    saveContact: (0, _emberConcurrency.task)(function* (contact) {
+      try {
+        yield contact.save();
+        this.get('notification').display({
+          'type': 'success',
+          'message': `${Ember.String.capitalize(contact.get('type'))} contact ${contact.get('contact')} saved`
+        });
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      }
+    }).enqueue().retryable(backoffPolicy),
+    deleteContact: (0, _emberConcurrency.task)(function* (contact) {
+      if (contact.get('isNew')) {
+        yield this.get('model.contacts').removeObject(contact);
+        yield contact.destroyRecord();
+        return;
+      }
+
+      const modalData = {
+        'title': 'Delete Contact',
+        'content': `Are you sure you want to delete the <strong>${contact.get('contact')}</strong> contact?`,
+        'confirmButton': {
+          'text': 'Delete',
+          'icon': 'delete',
+          'warn': true,
+          'raised': true,
+          'callback': () => {
+            this.get('_confirmedDeleteContact').perform(contact);
+          }
+        },
+        'cancelButton': {
+          'text': 'Cancel',
+          'icon': 'close',
+          'primary': true,
+          'raised': true
+        }
+      };
+      yield this.invokeAction('controller-action', 'displayModal', modalData);
+    }).enqueue(),
+    // verifyContact: task(function* (contact) {
+    // 	if(contact.get('isNew')) {
+    // 		this.get('notification').display({
+    // 			'type': 'info',
+    // 			'message': 'You should save the contact before verification'
+    // 		});
+    // 		return;
+    // 	}
+    // 	const modalData = {
+    // 		'title': 'Verify Contact',
+    // 		'content': `Are you sure you want to delete the <strong>${contact.get('contact')}</strong> contact?`,
+    // 		'confirmButton': {
+    // 			'text': 'Delete',
+    // 			'icon': 'delete',
+    // 			'warn': true,
+    // 			'raised': true,
+    // 			'callback': () => {
+    // 				this.get('_confirmedDeleteContact').perform(contact);
+    // 			}
+    // 		},
+    // 		'cancelButton': {
+    // 			'text': 'Cancel',
+    // 			'icon': 'close',
+    // 			'primary': true,
+    // 			'raised': true
+    // 		}
+    // 	};
+    // 	yield this.invokeAction('controller-action', 'displayModal', modalData);
+    // }).enqueue().retryable(backoffPolicy),
+    _confirmedDeleteContact: (0, _emberConcurrency.task)(function* (contact) {
+      try {
+        const contactType = contact.get('type');
+        const contactValue = contact.get('contact');
+        yield contact.destroyRecord();
+        yield this.get('model.contacts').removeObject(contact);
+        this.get('notification').display({
+          'type': 'success',
+          'message': `${Ember.String.capitalize(contactType)} contact ${contactValue} deleted`
+        });
+      } catch (err) {
+        yield contact.rollback();
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      }
+    }).enqueue().retryable(backoffPolicy)
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/components/profile/main-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _emberConcurrency) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+  const backoffPolicy = new _exponentialBackoff.default({
+    'multiplier': 1.5,
+    'minDelay': 30,
+    'maxDelay': 400
+  });
+
+  var _default = _baseComponent.default.extend({
+    selectedAccordionItem: '1',
+    _profileImageElem: null,
+    currentPassword: '',
+    newPassword1: '',
+    newPassword2: '',
+    onDidInsertElement: (0, _emberConcurrency.task)(function* () {
+      try {
+        this.set('_profileImageElem', this.$('div#profile-basic-information-image'));
+        const profileImageElem = this.get('_profileImageElem'),
+              croppieDimensions = profileImageElem.width() < profileImageElem.height() ? profileImageElem.width() : profileImageElem.height();
+        profileImageElem.croppie({
+          'boundary': {
+            'width': croppieDimensions,
+            'height': croppieDimensions
+          },
+          'viewport': {
+            'width': croppieDimensions,
+            'height': croppieDimensions,
+            'type': 'circle'
+          },
+          'showZoomer': true,
+          'useCanvas': true,
+          'update': this.get('_processCroppieUpdate').bind(this)
+        });
+        yield profileImageElem.croppie('bind', {
+          'url': '/profile/get-image?_random=' + window.moment().valueOf(),
+          'orientation': 1
+        }); // Add an event handler for catching dropped images
+
+        document.getElementById('profile-basic-information-image').addEventListener('drop', this._processDroppedImage.bind(this));
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      } finally {
+        this.set('_enableCroppieUpdates', true);
+      }
+    }).drop().on('didInsertElement'),
+    onWillDestroyElement: (0, _emberConcurrency.task)(function* () {
+      document.getElementById('profile-basic-information-image').removeEventListener('drop', this._processDroppedImage.bind(this));
+      this.get('_profileImageElem').croppie('destroy');
+    }).drop().on('willDestroyElement'),
+
+    _processDroppedImage(event) {
+      event.stopPropagation();
+      event.preventDefault();
+      const imageFile = event.dataTransfer.files[0];
+      if (!imageFile.type.match('image.*')) return;
+      const imageReader = new FileReader();
+      const profileImageElem = this.get('_profileImageElem');
+
+      imageReader.onload = imageData => {
+        profileImageElem.croppie('bind', {
+          'url': imageData.target.result,
+          'orientation': 1
+        });
+      };
+
+      imageReader.readAsDataURL(imageFile);
+    },
+
+    _processCroppieUpdate() {
+      if (!this.get('_enableCroppieUpdates')) return;
+
+      if (this.get('_profileImageUploadTimeout')) {
+        clearTimeout(this.get('_profileImageUploadTimeout'));
+        this.set('_profileImageUploadTimeout', null);
+      }
+
+      this.set('_profileImageUploadTimeout', setTimeout(() => {
+        this.get('_uploadProfileImage').perform();
+      }, 10000));
+    },
+
+    _uploadProfileImage: (0, _emberConcurrency.task)(function* () {
+      try {
+        this.set('_enableCroppieUpdates', false);
+        const profileImageElem = this.get('_profileImageElem');
+        const metadata = profileImageElem.croppie('get');
+        const imageData = yield profileImageElem.croppie('result', {
+          'type': 'base64',
+          'circle': true
+        });
+        yield this.get('ajax').post('/profile/upload-image', {
+          'dataType': 'json',
+          'data': {
+            'image': imageData,
+            'metadata': metadata
+          }
+        });
+        window.TwyrApp.trigger('userChanged');
+        yield profileImageElem.croppie('bind', {
+          'url': '/profile/get-image?_random=' + window.moment().valueOf(),
+          'orientation': 1
+        });
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      } finally {
+        this.set('_enableCroppieUpdates', true);
+        this.set('_profileImageUploadTimeout', null);
+      }
+    }).keepLatest().retryable(backoffPolicy),
+    save: (0, _emberConcurrency.task)(function* () {
+      try {
+        yield this.get('model').save();
+        this.get('notification').display({
+          'type': 'success',
+          'message': 'Profile saved successfully'
+        });
+        window.TwyrApp.trigger('userChanged');
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      }
+    }).drop().retryable(backoffPolicy),
+    cancel: (0, _emberConcurrency.task)(function* () {
+      yield this.get('model').rollback();
+    }).drop(),
+    changePassword: (0, _emberConcurrency.task)(function* () {
+      try {
+        const changePasswordResult = yield this.get('ajax').post('/profile/changePassword', {
+          'dataType': 'json',
+          'data': {
+            'currentPassword': this.get('currentPassword'),
+            'newPassword1': this.get('newPassword1'),
+            'newPassword2': this.get('newPassword2')
+          }
+        });
+        this.get('notification').display({
+          'type': changePasswordResult.status < 400 ? 'success' : 'error',
+          'message': changePasswordResult.message,
+          'error': changePasswordResult.message
+        });
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      } finally {
+        this.get('cancelChangePassword').perform();
+      }
+    }).drop().retryable(backoffPolicy),
+    cancelChangePassword: (0, _emberConcurrency.task)(function* () {
+      yield this.set('currentPassword', '');
+      this.set('newPassword1', '');
+      this.set('newPassword2', '');
+    }).drop(),
+    deleteAccount: (0, _emberConcurrency.task)(function* () {
+      yield this.invokeAction('controller-action', 'displayModal', {
+        'title': 'Delete Account',
+        'content': `<strong>${this.get('model.fullName')}</strong>, are you sure you want to delete your account?`,
+        'confirmButton': {
+          'text': 'Delete',
+          'icon': 'check',
+          'warn': true,
+          'raised': true,
+          'callback': () => {
+            this.get('_confirmedDeleteAccount').perform();
+          }
+        },
+        'cancelButton': {
+          'text': 'Cancel',
+          'icon': 'cancel',
+          'primary': true,
+          'raised': true,
+          'callback': null
+        }
+      });
+    }).drop(),
+    onChangeAccordionItem: (0, _emberConcurrency.task)(function* (newSelectedItem) {
+      this.set('selectedAccordionItem', newSelectedItem);
+      yield (0, _emberConcurrency.timeout)(10);
+      if (!newSelectedItem) this.set('selectedAccordionItem', '1');
+    }).keepLatest(),
+    _confirmedDeleteAccount: (0, _emberConcurrency.task)(function* () {
+      try {
+        yield this.get('model').destroyRecord();
+        this.get('notification').display({
+          'type': 'success',
+          'message': 'Account deleted successfully'
+        });
+        window.TwyrApp.trigger('userChanged');
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      }
+    }).drop().retryable(backoffPolicy)
+  });
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/components/profile/notification-area", ["exports", "twyr-webapp-server/framework/base-component", "ember-computed-style"], function (_exports, _baseComponent, _emberComputedStyle) {
   "use strict";
 
@@ -3593,6 +4070,7 @@
     style: (0, _emberComputedStyle.default)('display'),
     permissions: null,
     displayName: '',
+    displayImage: '',
     display: Ember.computed('hasPermission', function () {
       return {
         'display': this.get('hasPermission') ? 'unset' : 'none'
@@ -3615,16 +4093,19 @@
     onHasPermissionChange: Ember.observer('hasPermission', function () {
       if (!this.get('hasPermission')) {
         this.set('displayName', '');
+        this.set('displayImage', '');
         return;
       }
 
       const userDetails = this.get('currentUser').getUser();
       this.set('displayName', userDetails ? userDetails['name'] : '');
+      this.set('displayImage', userDetails ? `/profile/get-image?_random=${window.moment().valueOf()}` : '');
     }),
 
     onProfileUpdated() {
       if (!this.get('hasPermission')) {
         this.set('displayName', '');
+        this.set('displayImage', '');
         return;
       }
 
@@ -3632,10 +4113,12 @@
 
       if (!userDetails) {
         this.set('displayName', '');
+        this.set('displayImage', '');
         return;
       }
 
       this.set('displayName', userDetails ? userDetails['name'] : '');
+      this.set('displayImage', userDetails ? `/profile/get-image?_random=${window.moment().valueOf()}` : '');
     }
 
   });
@@ -4284,7 +4767,7 @@
       const defaultData = {
         'title': 'Twyr Modal',
         'content': `This is the default. Someone forgot to override it!`,
-        'dialogClass': 'flex',
+        'dialogClass': '',
         'confirmButton': {
           'text': 'OK',
           'icon': 'check',
@@ -4328,7 +4811,7 @@
           }
         }
 
-        if (this[action]) {
+        if (this[action] && typeof this[action] === 'function') {
           this[action](data);
           return;
         }
@@ -4406,7 +4889,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/controllers/profile", ["exports", "twyr-webapp-server/framework/base-controller", "ember-concurrency-retryable/policies/exponential-backoff", "ember-concurrency"], function (_exports, _baseController, _exponentialBackoff, _emberConcurrency) {
+;define("twyr-webapp-server/controllers/profile", ["exports", "twyr-webapp-server/framework/base-controller"], function (_exports, _baseController) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4415,108 +4898,7 @@
   _exports.default = void 0;
 
   /* eslint-disable require-yield */
-  const backoffPolicy = new _exponentialBackoff.default({
-    'multiplier': 1.5,
-    'minDelay': 30,
-    'maxDelay': 400
-  });
-
-  var _default = _baseController.default.extend({
-    selectedAccordionItem: '1',
-    currentPassword: '',
-    newPassword1: '',
-    newPassword2: '',
-    save: (0, _emberConcurrency.task)(function* () {
-      try {
-        yield this.get('model').save();
-        this.get('notification').display({
-          'type': 'success',
-          'message': 'Profile saved successfully'
-        });
-        window.TwyrApp.trigger('userChanged');
-      } catch (err) {
-        this.get('notification').display({
-          'type': 'error',
-          'error': err
-        });
-      }
-    }).drop().retryable(backoffPolicy),
-    cancel: (0, _emberConcurrency.task)(function* () {
-      yield this.get('model').rollback();
-    }).drop(),
-    changePassword: (0, _emberConcurrency.task)(function* () {
-      try {
-        const changePasswordResult = yield this.get('ajax').post('/profile/changePassword', {
-          'dataType': 'json',
-          'data': {
-            'currentPassword': this.get('currentPassword'),
-            'newPassword1': this.get('newPassword1'),
-            'newPassword2': this.get('newPassword2')
-          }
-        });
-        this.get('notification').display({
-          'type': changePasswordResult.status < 400 ? 'success' : 'error',
-          'message': changePasswordResult.message,
-          'error': changePasswordResult.message
-        });
-      } catch (err) {
-        this.get('notification').display({
-          'type': 'error',
-          'error': err
-        });
-      } finally {
-        this.get('cancelChangePassword').perform();
-      }
-    }).drop().retryable(backoffPolicy),
-    cancelChangePassword: (0, _emberConcurrency.task)(function* () {
-      this.set('currentPassword', '');
-      this.set('newPassword1', '');
-      this.set('newPassword2', '');
-    }).drop(),
-    deleteAccount: (0, _emberConcurrency.task)(function* () {
-      this.send('controller-action', 'displayModal', {
-        'title': 'Delete Account',
-        'content': `${this.get('model.fullName')}, are you sure you want to delete your account?`,
-        'dialogClass': 'flex-50',
-        'confirmButton': {
-          'text': 'Delete',
-          'icon': 'check',
-          'warn': true,
-          'raised': true,
-          'callback': () => {
-            this.get('_confirmedDeleteAccount').perform();
-          }
-        },
-        'cancelButton': {
-          'text': 'Cancel',
-          'icon': 'cancel',
-          'primary': true,
-          'raised': true,
-          'callback': null
-        }
-      });
-    }).drop(),
-    onChangeAccordionItem: (0, _emberConcurrency.task)(function* (newSelectedItem) {
-      this.set('selectedAccordionItem', newSelectedItem);
-      yield (0, _emberConcurrency.timeout)(10);
-      if (!newSelectedItem) this.set('selectedAccordionItem', '1');
-    }).keepLatest(),
-    _confirmedDeleteAccount: (0, _emberConcurrency.task)(function* () {
-      try {
-        yield this.get('model').destroyRecord();
-        this.get('notification').display({
-          'type': 'success',
-          'message': 'Account deleted successfully'
-        });
-        window.TwyrApp.trigger('userChanged');
-      } catch (err) {
-        this.get('notification').display({
-          'type': 'error',
-          'error': err
-        });
-      }
-    }).drop().retryable(backoffPolicy)
-  });
+  var _default = _baseController.default.extend({});
 
   _exports.default = _default;
 });
@@ -4641,10 +5023,11 @@
       'controller-action': function (action, data) {
         if (this[action] && typeof this[action] === 'function') {
           this[action](data);
-          return;
+          return false;
         }
 
-        return true;
+        this.get('target').send('controller-action', action, data);
+        return false;
       }
     }
   });
@@ -4691,7 +5074,8 @@
     actions: {
       'controller-action': function (action, data) {
         const controller = this.get('controller');
-        if (controller && controller[action]) return this.get('controller').send('controller-action', action, data);else return true;
+        if (controller && controller[action] && typeof controller[action] === 'function') return this.get('controller').send('controller-action', action, data);
+        return true;
       }
     }
   });
@@ -9076,6 +9460,42 @@
     }
   });
 });
+;define("twyr-webapp-server/templates/components/profile/contact-management", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = Ember.HTMLBars.template({
+    "id": "4LnTaBir",
+    "block": "{\"symbols\":[\"table\",\"body\",\"contact\",\"row\",\"row\",\"type\",\"row\",\"head\"],\"statements\":[[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\",\"selectable\"],[\"type\",\"asc\",true]],{\"statements\":[[4,\"component\",[[22,1,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\"],[4,\"component\",[[22,8,[\"column\"]]],[[\"sortProp\",\"class\"],[\"type\",\"px-0 text-center\"]],{\"statements\":[[1,[27,\"paper-icon\",[\"contacts\"],[[\"class\"],[\"mr-0 mt-1\"]]],false],[0,\"Type\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,8,[\"column\"]]],[[\"sortProp\",\"class\"],[\"contact\",\"px-0 text-center\"]],{\"statements\":[[1,[27,\"paper-icon\",[\"info\"],[[\"class\"],[\"mr-0 mt-1\"]]],false],[0,\"Contact\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,8,[\"column\"]]],[[\"sortProp\",\"class\"],[\"verified\",\"px-0 text-center\"]],{\"statements\":[[1,[27,\"paper-icon\",[\"verified-user\"],[[\"class\"],[\"mr-0 mt-1\"]]],false],[0,\"Verified\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,8,[\"column\"]]],[[\"class\"],[\"px-0 text-right\"]],{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"iconButton\",\"onClick\"],[true,true,[27,\"perform\",[[23,[\"addContact\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"plus-circle\"],[[\"size\"],[\"2x\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[8]},null],[4,\"component\",[[22,1,[\"body\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,7,[\"cell\"]]],[[\"class\"],[\"p-0 px-3\"]],{\"statements\":[[0,\"Twyr Login\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\"],[4,\"component\",[[22,7,[\"cell\"]]],[[\"class\"],[\"p-0 px-3\"]],{\"statements\":[[1,[23,[\"model\",\"email\"]],false]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,7,[\"cell\"]]],[[\"class\"],[\"p-0 px-3 text-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"paper-checkbox\",null,[[\"class\",\"value\",\"onChange\",\"disabled\"],[\"flex m-0\",true,null,true]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\\t\"],[4,\"component\",[[22,7,[\"cell\"]]],[[\"class\"],[\"p-0 text-right\"]],{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[7]},null],[4,\"each\",[[27,\"sort-by\",[[22,1,[\"sortDesc\"]],[23,[\"model\",\"contacts\"]]],null]],null,{\"statements\":[[4,\"if\",[[22,3,[\"isNew\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],null,{\"statements\":[[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"p-0 px-3 pt-3\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-end-center\"],[9],[0,\"\\n\"],[4,\"paper-select\",null,[[\"class\",\"selected\",\"options\",\"onChange\",\"required\"],[\"flex m-0\",[22,3,[\"type\"]],[23,[\"contactTypes\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[22,3,[\"type\"]]],null]],null],true]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"titleize\",[[22,6,[]]],null],false],[0,\"\\n\"]],\"parameters\":[6]},null],[0,\"\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"p-0 px-3 pt-3\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-end-center\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex m-0\",[22,3,[\"contact\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[22,3,[\"contact\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"p-0 px-3 pt-3\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-center\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-checkbox\",null,[[\"class\",\"value\",\"onChange\",\"disabled\"],[\"flex m-0\",false,null,true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"p-0 text-right\"]],{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"iconButton\",\"class\",\"onClick\"],[true,true,\"m-0 p-0\",[27,\"perform\",[[23,[\"saveContact\"]],[22,3,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-button\",null,[[\"warn\",\"iconButton\",\"class\",\"onClick\"],[true,true,\"m-0 p-0\",[27,\"perform\",[[23,[\"deleteContact\"]],[22,3,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"cancel\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[5]},null]],\"parameters\":[]},{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"p-0 px-3\"]],{\"statements\":[[1,[27,\"titleize\",[[22,3,[\"type\"]]],null],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"p-0 px-3\"]],{\"statements\":[[1,[22,3,[\"contact\"]],false]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"p-0 px-3 text-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-checkbox\",null,[[\"class\",\"value\",\"onChange\",\"disabled\"],[\"flex m-0\",[22,3,[\"verified\"]],null,true]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"p-0 text-right\"]],{\"statements\":[[4,\"paper-button\",null,[[\"warn\",\"iconButton\",\"class\",\"onClick\"],[true,true,\"m-0 p-0\",[27,\"perform\",[[23,[\"deleteContact\"]],[22,3,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null]],\"parameters\":[]}]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
+    "meta": {
+      "moduleName": "twyr-webapp-server/templates/components/profile/contact-management.hbs"
+    }
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/templates/components/profile/main-component", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = Ember.HTMLBars.template({
+    "id": "TjZgb0al",
+    "block": "{\"symbols\":[\"accordion\",\"accItem\",\"accItem\",\"accItem\",\"form\",\"card\",\"accItem\",\"form\",\"card\"],\"statements\":[[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-center flex flex-gt-sm-50 flex-gt-lg-40\"],[9],[0,\"\\n\"],[4,\"bs-accordion\",null,[[\"class\",\"selected\",\"onChange\"],[\"w-100\",[23,[\"selectedAccordionItem\"]],[27,\"perform\",[[23,[\"onChangeAccordionItem\"]]],null]]],{\"statements\":[[4,\"component\",[[22,1,[\"item\"]]],[[\"value\",\"title\"],[\"1\",\"Edit Profile\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" Profile Basics \"],[0,\"\\n\"],[4,\"component\",[[22,7,[\"title\"]]],[[\"class\"],[\"bg-twyr-component p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0 white-text\"],[9],[0,\"Edit Profile\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,7,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"w-100\",[27,\"perform\",[[23,[\"save\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex m-0\"]],{\"statements\":[[4,\"component\",[[22,9,[\"content\"]]],[[\"class\"],[\"pt-4\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between layout-wrap\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex-100 flex-gt-md-50 flex-gt-lg-40\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"id\",\"profile-basic-information-image\"],[11,\"class\",\"flex\"],[11,\"contenteditable\",\"true\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex-100 flex-gt-md-50 flex-gt-lg-60\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"disabled\"],[\"text\",\"flex-100\",\"Username / Login\",[23,[\"model\",\"email\"]],null,true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"First Name\",[23,[\"model\",\"firstName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"firstName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\"],[\"text\",\"flex-100\",\"Middle Name(s)\",[23,[\"model\",\"middleNames\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"middleNames\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"Last Name\",[23,[\"model\",\"lastName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"lastName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,9,[\"actions\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"raised\",\"warn\",\"disabled\",\"onClick\"],[true,true,[27,\"not\",[[27,\"or\",[[23,[\"model\",\"isDirty\"]],[23,[\"model\",\"content\",\"isDirty\"]]],null]],null],[27,\"perform\",[[23,[\"cancel\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"close\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,8,[\"submit-button\"]]],[[\"raised\",\"primary\",\"disabled\"],[true,true,[27,\"or\",[[22,8,[\"isInvalid\"]],[27,\"not\",[[27,\"or\",[[23,[\"model\",\"isDirty\"]],[23,[\"model\",\"content\",\"isDirty\"]]],null]],null]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[9]},null]],\"parameters\":[8]},null]],\"parameters\":[]},null]],\"parameters\":[7]},null],[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"2\",\"Change Password\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" Password Change \"],[0,\"\\n\"],[4,\"component\",[[22,4,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Change Password\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,4,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"w-100\",[27,\"perform\",[[23,[\"changePassword\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex m-0\"]],{\"statements\":[[4,\"component\",[[22,6,[\"content\"]]],[[\"class\"],[\"pt-4\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"flex-100\",\"Current Password\",[23,[\"currentPassword\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"currentPassword\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"flex-100\",\"New Password\",[23,[\"newPassword1\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"newPassword1\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"flex-100\",\"Repeat New Password\",[23,[\"newPassword2\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"newPassword2\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,6,[\"actions\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"raised\",\"warn\",\"disabled\",\"onClick\"],[true,true,[27,\"not\",[[27,\"or\",[[27,\"not-eq\",[[23,[\"currentPassword\"]],\"\"],null],[27,\"not-eq\",[[23,[\"newPassword1\"]],\"\"],null],[27,\"not-eq\",[[23,[\"newPassword2\"]],\"\"],null]],null]],null],[27,\"perform\",[[23,[\"cancelChangePassword\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"close\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,5,[\"submit-button\"]]],[[\"raised\",\"primary\",\"disabled\"],[true,true,[27,\"or\",[[27,\"eq\",[[23,[\"newPassword1\"]],\"\"],null],[27,\"not-eq\",[[23,[\"newPassword1\"]],[23,[\"newPassword2\"]]],null]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[6]},null]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null],[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"3\",\"Contact Information\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" User contact Information \"],[0,\"\\n\"],[4,\"component\",[[22,3,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Contact Information\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,3,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[\"profile/contact-management\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[23,[\"controller-action\"]]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[3]},null],[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"4\",\"Danger Zone\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" User contact Information \"],[0,\"\\n\"],[4,\"component\",[[22,2,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Danger Zone\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,2,[\"body\"]]],[[\"class\"],[\"layout-row layout-align-start-stretch\"]],{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"raised\",\"onClick\"],[\"flex btn-danger\",true,[27,\"perform\",[[23,[\"deleteAccount\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-off\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Delete Account\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
+    "meta": {
+      "moduleName": "twyr-webapp-server/templates/components/profile/main-component.hbs"
+    }
+  });
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/templates/components/profile/notification-area", ["exports"], function (_exports) {
   "use strict";
 
@@ -9085,8 +9505,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "fKk2TNY5",
-    "block": "{\"symbols\":[],\"statements\":[[4,\"liquid-if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"link-to\",[\"profile\"],[[\"class\"],[\"white-text mr-4\"]],{\"statements\":[[0,\"\\t\\t\"],[1,[27,\"fa-icon\",[\"user\"],[[\"class\"],[\"h4 mb-0 mr-2\"]]],false],[0,\"\\n\\t\\t\"],[1,[21,\"displayName\"],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "y4I5LMu9",
+    "block": "{\"symbols\":[],\"statements\":[[4,\"liquid-if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"link-to\",[\"profile\"],[[\"class\"],[\"white-text mr-4\"]],{\"statements\":[[0,\"\\t\\t\"],[7,\"img\"],[12,\"src\",[28,[[21,\"displayImage\"]]]],[11,\"style\",\"max-width:2rem; max-height:1.2rem;\"],[9],[10],[0,\"\\n\\t\\t\"],[1,[21,\"displayName\"],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/profile/notification-area.hbs"
     }
@@ -9229,8 +9649,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "AK6fd+R8",
-    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"models-table\",null,[[\"data\",\"columns\",\"columnComponents\",\"themeInstance\",\"expandedItems\",\"expandedRowComponent\",\"multipleExpand\",\"selectedItems\",\"multipleSelect\",\"filteringIgnoreCase\",\"multipleColumnsSorting\",\"showComponentFooter\",\"showGlobalFilter\",\"showPageSize\",\"useFilteringByColumns\",\"useNumericPagination\",\"showColumnsDropdown\",\"displayDataChangedAction\"],[[23,[\"data\"]],[23,[\"columns\"]],[27,\"assign\",[[23,[\"columnComponents\"]],[27,\"hash\",null,[[\"twyrModelTableActions\"],[[27,\"component\",[\"twyr-model-table-actions\"],[[\"callbacks\",\"expandedRowComponent\",\"inlineEditEnabled\"],[[23,[\"callbacks\"]],[23,[\"expandedRowComponent\"]],[23,[\"inlineEditEnabled\"]]]]]]]]],null],[23,[\"themeInstance\"]],[23,[\"expandedItems\"]],[23,[\"expandedRowComponent\"]],[23,[\"multipleExpand\"]],[23,[\"selectedItems\"]],[23,[\"multipleSelect\"]],true,true,true,true,true,false,true,false,[27,\"action\",[[22,0,[]],\"displayDataChanged\"],null]]]],false],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "kYhYca3E",
+    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"models-table\",null,[[\"data\",\"columns\",\"columnComponents\",\"themeInstance\",\"expandedItems\",\"expandedRowComponent\",\"multipleExpand\",\"selectedItems\",\"multipleSelect\",\"filteringIgnoreCase\",\"multipleColumnsSorting\",\"showComponentFooter\",\"showGlobalFilter\",\"showPageSize\",\"useFilteringByColumns\",\"useNumericPagination\",\"showColumnsDropdown\",\"displayDataChangedAction\"],[[23,[\"data\"]],[23,[\"columns\"]],[27,\"assign\",[[23,[\"columnComponents\"]],[27,\"hash\",null,[[\"twyrModelTableActions\"],[[27,\"component\",[\"twyr-model-table-actions\"],[[\"callbacks\",\"expandedRowComponent\",\"inlineEditEnabled\"],[[23,[\"callbacks\"]],[23,[\"expandedRowComponent\"]],[23,[\"inlineEditEnabled\"]]]]]]]]],null],[23,[\"themeInstance\"]],[23,[\"expandedItems\"]],[23,[\"expandedRowComponent\"]],[23,[\"multipleExpand\"]],[23,[\"selectedItems\"]],[23,[\"multipleSelect\"]],true,true,true,true,true,false,true,false,[27,\"action\",[[22,0,[]],\"controller-action\",\"displayDataChanged\"],null]]]],false],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/twyr-model-table.hbs"
     }
@@ -9283,8 +9703,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "8Gz4Ha/q",
-    "block": "{\"symbols\":[\"accordion\",\"accItem\",\"accItem\",\"accItem\",\"form\",\"card\",\"accItem\",\"form\",\"card\"],\"statements\":[[1,[27,\"page-title\",[\"Profile\"],null],false],[0,\"\\n\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-center flex flex-gt-sm-50 flex-gt-lg-40\"],[9],[0,\"\\n\"],[4,\"bs-accordion\",null,[[\"class\",\"selected\",\"onChange\"],[\"w-100\",[23,[\"selectedAccordionItem\"]],[27,\"perform\",[[23,[\"onChangeAccordionItem\"]]],null]]],{\"statements\":[[4,\"component\",[[22,1,[\"item\"]]],[[\"value\",\"title\"],[\"1\",\"Edit Profile\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" Profile Basics \"],[0,\"\\n\"],[4,\"component\",[[22,7,[\"title\"]]],[[\"class\"],[\"bg-twyr-component p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0 white-text\"],[9],[0,\"Edit Profile\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,7,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"w-100\",[27,\"perform\",[[23,[\"save\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex m-0\"]],{\"statements\":[[4,\"component\",[[22,9,[\"content\"]]],[[\"class\"],[\"pt-4\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between layout-wrap\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex-100 flex-gt-md-50 flex-gt-lg-40\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"id\",\"profile-basic-information-image\"],[11,\"class\",\"flex\"],[11,\"contenteditable\",\"true\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex-100 flex-gt-md-50 flex-gt-lg-60\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"disabled\"],[\"text\",\"flex-100\",\"Username / Login\",[23,[\"model\",\"email\"]],null,true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"First Name\",[23,[\"model\",\"firstName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"firstName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\"],[\"text\",\"flex-100\",\"Middle Name(s)\",[23,[\"model\",\"middleNames\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"middleNames\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"Last Name\",[23,[\"model\",\"lastName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"lastName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,9,[\"actions\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"raised\",\"warn\",\"disabled\",\"onClick\"],[true,true,[27,\"not\",[[27,\"or\",[[23,[\"model\",\"isDirty\"]],[23,[\"model\",\"content\",\"isDirty\"]]],null]],null],[27,\"perform\",[[23,[\"cancel\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"close\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,8,[\"submit-button\"]]],[[\"raised\",\"primary\",\"disabled\"],[true,true,[27,\"or\",[[22,8,[\"isInvalid\"]],[27,\"not\",[[27,\"or\",[[23,[\"model\",\"isDirty\"]],[23,[\"model\",\"content\",\"isDirty\"]]],null]],null]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[9]},null]],\"parameters\":[8]},null]],\"parameters\":[]},null]],\"parameters\":[7]},null],[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"2\",\"Change Password\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" Password Change \"],[0,\"\\n\"],[4,\"component\",[[22,4,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Change Password\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,4,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"w-100\",[27,\"perform\",[[23,[\"changePassword\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex m-0\"]],{\"statements\":[[4,\"component\",[[22,6,[\"content\"]]],[[\"class\"],[\"pt-4\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"flex-100\",\"Current Password\",[23,[\"currentPassword\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"currentPassword\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"flex-100\",\"New Password\",[23,[\"newPassword1\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"newPassword1\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"flex-100\",\"Repeat New Password\",[23,[\"newPassword2\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"newPassword2\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,6,[\"actions\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"raised\",\"warn\",\"disabled\",\"onClick\"],[true,true,[27,\"not\",[[27,\"or\",[[27,\"not-eq\",[[23,[\"currentPassword\"]],\"\"],null],[27,\"not-eq\",[[23,[\"newPassword1\"]],\"\"],null],[27,\"not-eq\",[[23,[\"newPassword2\"]],\"\"],null]],null]],null],[27,\"perform\",[[23,[\"cancelChangePassword\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"close\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,5,[\"submit-button\"]]],[[\"raised\",\"primary\",\"disabled\"],[true,true,[27,\"or\",[[27,\"eq\",[[23,[\"newPassword1\"]],\"\"],null],[27,\"not-eq\",[[23,[\"newPassword1\"]],[23,[\"newPassword2\"]]],null]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[6]},null]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null],[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"3\",\"Contact Information\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" User contact Information \"],[0,\"\\n\"],[4,\"component\",[[22,3,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Contact Information\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,3,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[],\"parameters\":[]},null]],\"parameters\":[3]},null],[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"4\",\"Danger Zone\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" User contact Information \"],[0,\"\\n\"],[4,\"component\",[[22,2,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Danger Zone\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,2,[\"body\"]]],[[\"class\"],[\"layout-row layout-align-start-stretch\"]],{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"raised\",\"onClick\"],[\"flex btn-danger\",true,[27,\"perform\",[[23,[\"deleteAccount\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-off\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Delete Account\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "14nYe5WA",
+    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Profile\"],null],false],[0,\"\\n\"],[1,[27,\"component\",[\"profile/main-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/profile.hbs"
     }
@@ -9621,7 +10041,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+a8748976"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+4a05cce1"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;
