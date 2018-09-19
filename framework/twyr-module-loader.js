@@ -1615,9 +1615,15 @@ class TwyrModuleLoader extends TwyrBaseClass {
 				requiredDependencies = [...uniqueRequiredDependencies];
 			}
 
+			const uniqueDependencies = [];
 			requiredDependencies.forEach((thisDependency) => {
 				if(thisDependency === '*')
 					return;
+
+				if(uniqueDependencies.indexOf(thisDependency) >= 0)
+					return;
+
+				uniqueDependencies.push(thisDependency);
 
 				let currentDependency = null,
 					currentModule = this.$twyrModule;

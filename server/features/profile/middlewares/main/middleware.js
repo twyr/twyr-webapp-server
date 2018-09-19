@@ -137,8 +137,8 @@ class Main extends TwyrBaseMiddleware {
 		try {
 			const ApiService = this.$dependencies.ApiService;
 
-			await ApiService.add(`${this.name}::deleteContact`, this._deleteContact.bind(this));
-			await ApiService.add(`${this.name}::addContact`, this._addContact.bind(this));
+			await ApiService.remove(`${this.name}::deleteContact`, this._deleteContact.bind(this));
+			await ApiService.remove(`${this.name}::addContact`, this._addContact.bind(this));
 
 			await ApiService.remove(`${this.name}::changePassword`, this._changePassword.bind(this));
 

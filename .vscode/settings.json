@@ -7,5 +7,7 @@
 	"git.enableSmartCommit": true,
 	"git.confirmSync": false,
 
-    "npm.enableScriptExplorer": true
+	"github.remoteName": "twyr",
+
+	"npm.enableScriptExplorer": true
 }

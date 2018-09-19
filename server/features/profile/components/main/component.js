@@ -117,7 +117,6 @@ class Main extends TwyrBaseComponent {
 			userData = userData.shift();
 
 			const profileImageFolder = this.$parent.$config.profileImagePath;
-			// if(!path.isAbsolute(profileImageFolder)) profileImageFolder = path.join(path.dirname(path.dirname(require.main.filename)), profileImageFolder);
 
 			const profileImagePath = path.join(profileImageFolder, `${userData.data.attributes.profile_image}.png`);
 			const profileImageExists = await this._exists(profileImagePath);
@@ -181,7 +180,9 @@ class Main extends TwyrBaseComponent {
 			if(!currentImageId) return null;
 			if(currentImageId === 'f8a9da32-26c5-495a-be9a-42f2eb8e4ed1') return null;
 
-			await filesystem.unlinkAsync(path.join(profileImageFolder, `${currentImageId}.png`));
+			const currentImageExists = await this._exists(path.join(profileImageFolder, `${currentImageId}.png`));
+			if(currentImageExists) await filesystem.unlinkAsync(path.join(profileImageFolder, `${currentImageId}.png`));
+
 			return null;
 		}
 		catch(err) {

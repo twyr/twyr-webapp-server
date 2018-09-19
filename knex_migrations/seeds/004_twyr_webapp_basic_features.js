@@ -8,26 +8,44 @@ exports.seed = async function(knex) {
 	parentId = parentId.rows[0]['module_id'];
 
 	let componentId = await knex.raw(`SELECT module_id FROM fn_get_module_descendants(?) WHERE name = ? AND type = 'feature'`, [parentId, 'Profile']);
-	if(componentId.rows.length)
-		return null;
+	if(!componentId.rows.length) {
+		await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'feature',
+			'deploy': 'default',
+			'name': 'Profile',
+			'display_name': 'Profile Manager',
+			'description': 'The Twyr Web Application Profile - manages the user\'s personal information',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
+	}
 
-	let profileFeatureId = await knex('modules').insert({
-		'parent_module_id': parentId,
-		'type': 'feature',
-		'deploy': 'default',
-		'name': 'Profile',
-		'display_name': 'Profile Middleware',
-		'description': 'The Twyr Web Application Profile - manages the user\'s personal information',
-		'metadata': {
-			'author': 'Twyr',
-			'version': '3.0.1',
-			'website': 'https://twyr.com',
-			'demo': 'https://twyr.com',
-			'documentation': 'https://twyr.com'
-		}
-	})
-	.returning('module_id');
+	componentId = await knex.raw(`SELECT module_id FROM fn_get_module_descendants(?) WHERE name = ? AND type = 'feature'`, [parentId, 'Dashboard']);
+	if(!componentId.rows.length) {
+		let dashboardFeatureId = await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'feature',
+			'deploy': 'default',
+			'name': 'Dashboard',
+			'display_name': 'Dashboard',
+			'description': 'The Twyr Web Application Dashbaord - single-point access to all the features the User can access',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		})
+		.returning('module_id');
 
-	profileFeatureId = profileFeatureId[0];
-	await knex.raw(`UPDATE tenants_users SET default_application = ? WHERE user_id = (SELECT user_id FROM users WHERE email = 'root@twyr.com')`, [profileFeatureId]);
+		dashboardFeatureId = dashboardFeatureId[0];
+		await knex.raw(`UPDATE tenants_users SET default_application = ? WHERE user_id = (SELECT user_id FROM users WHERE email = 'root@twyr.com')`, [dashboardFeatureId]);
+	}
 };

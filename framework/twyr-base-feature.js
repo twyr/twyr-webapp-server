@@ -214,6 +214,41 @@ class TwyrBaseFeature extends TwyrBaseModule {
 	 * @function
 	 * @instance
 	 * @memberof TwyrBaseFeature
+	 * @name     getDashboardDisplayDetails
+	 *
+	 * @param    {Object} ctxt - Koa context.
+	 *
+	 * @returns  {Object} Dashboard display stuff for this Feature.
+	 *
+	 * @summary  Derived classes should return details, or null - depending on whether the user has the required permission(s).
+	 */
+	async getDashboardDisplayDetails(ctxt) { // eslint-disable-line no-unused-vars
+		const inflection = require('inflection');
+
+		const id = await this.$dependencies.ConfigurationService.getModuleID(this);
+		const inflectedFeatureName = inflection.transform(this.name, ['foreign_key', 'dasherize']).replace('-id', '');
+
+		return {
+			'id': id,
+			'type': 'dashboard/feature',
+
+			'attributes': {
+				'name': this.name,
+				'type': 'feature',
+				'route': inflectedFeatureName,
+				'description': this.name,
+
+				'icon_type': 'fa', // Other choices are img, paper, mdi
+				'icon_path': 'laptop-code'
+			}
+		};
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @instance
+	 * @memberof TwyrBaseFeature
 	 * @name     _doesUserHavePermission
 	 *
 	 * @param    {Object} ctxt - Koa context.

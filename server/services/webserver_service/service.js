@@ -155,9 +155,7 @@ class WebserverService extends TwyrBaseService {
 				// Ok... whitelisted, but exceeding request quotas? Stop right now!
 				const ratelimiter = require('koa-ratelimit');
 				this.$koa.use(ratelimiter({
-					'db': this.$dependencies.CacheService,
-					'duration': 60000,
-					'max': 250
+					'db': this.$dependencies.CacheService
 				}));
 
 				// All fine, but the server is overloaded? You gotta wait, dude!

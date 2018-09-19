@@ -220,14 +220,15 @@ class WebsocketService extends TwyrBaseService {
 	}
 
 	_websocketServerDisconnection(spark) {
+		const username = spark.request.user ? spark.request.user.name : 'Anonymous';
+
 		if(twyrEnv === 'development') {
 			const loggerSrvc = this.$dependencies.LoggerService;
-			const username = spark.request.user ? `${spark.request.user.first_name} ${spark.request.user.last_name}` : 'Anonymous';
-
-			loggerSrvc.debug(`Websocket Disconnected for user`, username);
+			loggerSrvc.debug(`Websocket Disconnection for user ${username}`);
 		}
 
 		this.emit('websocket-disconnect', spark);
+
 		spark.leaveAll();
 		spark.removeAllListeners();
 	}

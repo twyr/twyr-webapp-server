@@ -30,6 +30,32 @@ class Profile extends TwyrBaseFeature {
 	/**
 	 * @async
 	 * @function
+	 * @override
+	 * @instance
+	 * @memberof Profile
+	 * @name     getDashboardDisplayDetails
+	 *
+	 * @param    {Object} ctxt - Koa context.
+	 *
+	 * @returns  {Object} Dashboard display stuff for this Feature.
+	 *
+	 * @summary  Everyone logged-in gets access.
+	 */
+	async getDashboardDisplayDetails(ctxt) {
+		const defaultDisplay = await super.getDashboardDisplayDetails(ctxt);
+
+		defaultDisplay['attributes']['name'] = `${ctxt.state.user.first_name} ${ctxt.state.user.last_name}`;
+		defaultDisplay['attributes']['description'] = `Edit ${ctxt.state.user.first_name}'s Profile Information`;
+		defaultDisplay['attributes']['icon_type'] = 'img';
+		defaultDisplay['attributes']['icon_path'] = '/profile/get-image';
+
+		return defaultDisplay;
+	}
+
+	/**
+	 * @async
+	 * @function
+	 * @override
 	 * @instance
 	 * @memberof Profile
 	 * @name     _doesUserHavePermission
@@ -39,7 +65,7 @@ class Profile extends TwyrBaseFeature {
 	 *
 	 * @returns  {undefined} Nothing.
 	 *
-	 * @summary  Derived classes should call next, or throw a {TwyrFeatureError} - depending on whether the user has the required permission(s).
+	 * @summary  Everyone logged-in gets access.
 	 */
 	async _doesUserHavePermission(ctxt, next) {
 		if(ctxt.state.user) {
@@ -53,6 +79,7 @@ class Profile extends TwyrBaseFeature {
 	/**
 	 * @async
 	 * @function
+	 * @override
 	 * @instance
 	 * @memberof Profile
 	 * @name     _canUserAccessThisResource
@@ -62,7 +89,7 @@ class Profile extends TwyrBaseFeature {
 	 *
 	 * @returns  {undefined} Nothing.
 	 *
-	 * @summary  Derived classes should call next, or throw a {TwyrFeatureError} - depending on whether the user can access this particular resource.
+	 * @summary  Everyone logged-in gets access.
 	 */
 	async _canUserAccessThisResource(ctxt, next) {
 		if(ctxt.state.user) {
