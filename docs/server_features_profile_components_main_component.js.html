@@ -178,9 +178,9 @@ class Main extends TwyrBaseComponent {
 			const profileImageExists = await this._exists(profileImagePath);
 
 			if(profileImageExists)
-				send(ctxt, profileImagePath);
+				await send(ctxt, profileImagePath);
 			else
-				send(ctxt, path.join(profileImageFolder, 'anonymous.jpg'));
+				await send(ctxt, path.join(profileImageFolder, 'anonymous.jpg'));
 
 			return null;
 		}

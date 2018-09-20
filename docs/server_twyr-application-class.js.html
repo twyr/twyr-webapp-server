@@ -246,10 +246,10 @@ class TwyrApplication extends TwyrBaseModule {
 			ctxt.status = 200;
 			ctxt.body = { 'status': true };
 
-			// TODO: Do something more sophisticated - like storing it into Cassandra, and running analysis
 			if(beaconData.error === 'TransitionAborted')
 				return;
 
+			// TODO: Do something more sophisticated - like storing it into Cassandra, and running analysis
 			console.error(`Client Error Data: ${JSON.stringify(beaconData, null, '\t')}`);
 		});
 
