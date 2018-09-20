@@ -9819,8 +9819,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "K0tb3Ri4",
-    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Profile\"],null],false],[0,\"\\n\"],[1,[27,\"component\",[\"dashboard/main-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "dxsCx2GG",
+    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Dashboard\"],null],false],[0,\"\\n\"],[1,[27,\"component\",[\"dashboard/main-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/dashboard.hbs"
     }
@@ -10211,7 +10211,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+44e8dee0"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+ec1dbd5f"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;
