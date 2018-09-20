@@ -991,7 +991,7 @@
     permissions: null,
     display: Ember.computed('hasPermission', function () {
       return {
-        'display': this.get('hasPermission') ? 'unset' : 'none'
+        'display': this.get('hasPermission') ? 'block' : 'none'
       };
     }),
 
@@ -4873,7 +4873,6 @@
   });
   _exports.default = void 0;
 
-  /* eslint-disable require-yield */
   var _default = _baseController.default.extend({});
 
   _exports.default = _default;
@@ -4952,7 +4951,6 @@
   });
   _exports.default = void 0;
 
-  /* eslint-disable require-yield */
   var _default = _baseController.default.extend({});
 
   _exports.default = _default;
@@ -5021,7 +5019,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/framework/base-controller", ["exports", "ember-invoke-action", "ember-concurrency"], function (_exports, _emberInvokeAction, _emberConcurrency) {
+;define("twyr-webapp-server/framework/base-controller", ["exports", "ember-invoke-action"], function (_exports, _emberInvokeAction) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -5041,24 +5039,20 @@
       this._super(...arguments);
 
       this.set('permissions', ['*']);
-      this.get('currentUser').on('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('currentUser').on('userDataUpdated', this, this.updatePermissions);
     },
 
     destroy() {
-      this.get('currentUser').off('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('currentUser').off('userDataUpdated', this, this.updatePermissions);
 
       this._super(...arguments);
     },
 
     onPermissionChanges: Ember.observer('permissions', function () {
-      this.get('updatePermissions').perform();
+      this.updatePermissions();
     }),
 
-    onUserDataUpdated() {
-      this.get('updatePermissions').perform();
-    },
-
-    updatePermissions: (0, _emberConcurrency.task)(function* () {
+    updatePermissions() {
       if (this.get('permissions').includes('*')) {
         this.set('hasPermission', true);
         return;
@@ -5068,12 +5062,13 @@
       let hasPerm = false;
 
       for (let permIdx = 0; permIdx < requiredPermissions.length; permIdx++) {
-        let hasCurrentPermission = yield this.get('currentUser').hasPermission(requiredPermissions[permIdx]);
+        let hasCurrentPermission = this.get('currentUser').hasPermission(requiredPermissions[permIdx]);
         hasPerm = hasPerm || hasCurrentPermission;
       }
 
       this.set('hasPermission', hasPerm);
-    }).keepLatest(),
+    },
+
     actions: {
       'controller-action': function (action, data) {
         if (this[action] && typeof this[action] === 'function') {
@@ -8458,20 +8453,28 @@
     },
 
     model() {
-      if (!window.twyrUserId) return;
-      const featureData = this.store.peekAll('dashboard/feature');
+      if (!window.twyrUserId) {
+        this.get('store').unloadAll('dashboard/feature');
+        return;
+      }
+
+      const featureData = this.get('store').peekAll('dashboard/feature');
       if (featureData.get('length')) return featureData;
-      return this.store.findAll('dashboard/feature');
+      return this.get('store').findAll('dashboard/feature');
     },
 
     onUserDataUpdated() {
-      if (!window.twyrUserId) return;
+      if (!window.twyrUserId) {
+        this.get('store').unloadAll('dashboard/feature');
+        return;
+      }
+
       this.get('refreshDashboardFeatures').perform();
     },
 
     refreshDashboardFeatures: (0, _emberConcurrency.task)(function* () {
-      let featureData = this.store.peekAll('dashboard/feature');
-      if (!featureData.get('length')) featureData = yield this.store.findAll('dashboard/feature');
+      let featureData = this.get('store').peekAll('dashboard/feature');
+      if (!featureData.get('length')) featureData = yield this.get('store').findAll('dashboard/feature');
       this.get('controller').set('model', featureData);
     }).keepLatest()
   });
@@ -8546,24 +8549,34 @@
     },
 
     model() {
-      if (!window.twyrUserId) return;
-      const profileData = this.store.peekRecord('profile/user', window.twyrUserId);
+      if (!window.twyrUserId) {
+        this.get('store').unloadAll('profile/user');
+        this.get('store').unloadAll('profile/user-contact');
+        return;
+      }
+
+      const profileData = this.get('store').peekRecord('profile/user', window.twyrUserId);
       if (profileData) return profileData;
-      return this.store.findRecord('profile/user', window.twyrUserId, {
+      return this.get('store').findRecord('profile/user', window.twyrUserId, {
         'include': 'contacts'
       });
     },
 
     onUserDataUpdated() {
-      if (!window.twyrUserId) return;
+      if (!window.twyrUserId) {
+        this.get('store').unloadAll('profile/user');
+        this.get('store').unloadAll('profile/user-contact');
+        return;
+      }
+
       this.get('refreshProfileModel').perform();
     },
 
     refreshProfileModel: (0, _emberConcurrency.task)(function* () {
-      let profileData = this.store.peekRecord('profile/user', window.twyrUserId);
+      let profileData = this.get('store').peekRecord('profile/user', window.twyrUserId);
 
       if (!profileData) {
-        profileData = yield this.store.findRecord('profile/user', window.twyrUserId, {
+        profileData = yield this.get('store').findRecord('profile/user', window.twyrUserId, {
           'include': 'contacts'
         });
       }
@@ -10212,7 +10225,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+ec1dbd5f"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+c0c69cfa"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;
