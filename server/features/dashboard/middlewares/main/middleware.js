@@ -83,6 +83,23 @@ class Main extends TwyrBaseMiddleware {
 				return 0;
 			});
 
+			if(ctxt.state.user.tenantAttributes['default_route'] !== 'dashboard') { // eslint-disable-line curly
+				validFeatures.unshift({
+					'id': 'home',
+					'type': 'dashboard/feature',
+
+					'attributes': {
+						'name': 'home',
+						'type': 'feature',
+						'route': ctxt.state.user.tenantAttributes['default_route'],
+						'description': 'Home',
+
+						'icon_type': 'fa', // Other choices are img, paper, mdi
+						'icon_path': 'home'
+					}
+				});
+			}
+
 			return { 'data': validFeatures };
 		}
 		catch(err) {
