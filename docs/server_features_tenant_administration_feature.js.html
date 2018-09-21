@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>server/services/audit_service/service.js - Twyr Web Application Server</title>
+    <title>server/features/tenant_administration/feature.js - Twyr Web Application Server</title>
     
     <meta name="description" content="Twyr Web Application Server" />
     
@@ -44,7 +44,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">server/services/audit_service/service.js</h1>
+    <h1 class="page-title">server/features/tenant_administration/feature.js</h1>
     
 
     
@@ -56,8 +56,6 @@
         <article>
             <pre class="prettyprint source linenums"><code>'use strict';
 
-/* eslint-disable security/detect-object-injection */
-
 /**
  * Module dependencies, required for ALL Twyr' modules
  * @ignore
@@ -67,150 +65,98 @@
  * Module dependencies, required for this module
  * @ignore
  */
-const TwyrBaseService = require('twyr-base-service').TwyrBaseService;
-
-const TwyrBaseError = require('twyr-base-error').TwyrBaseError;
-const TwyrSrvcError = require('twyr-service-error').TwyrServiceError;
+const TwyrBaseFeature = require('twyr-base-feature').TwyrBaseFeature;
+const TwyrFeatureError = require('twyr-feature-error').TwyrFeatureError;
 
 /**
- * @class   AuditService
- * @extends {TwyrBaseService}
- * @classdesc The Twyr Web Application Server Auditing Service.
+ * @class   TenantAdministration
+ * @extends {TwyrBaseFeature}
+ * @classdesc The Twyr Web Application Server TenantAdministration feature - manages user profile updates.
  *
- * @description
- * Allows the rest of the Twyr Modules to publish audit trails.
  *
  */
-class AuditService extends TwyrBaseService {
+class TenantAdministration extends TwyrBaseFeature {
 	// #region Constructor
 	constructor(parent, loader) {
 		super(parent, loader);
 	}
 	// #endregion
 
-	// #region API
+	// #region Protected methods - need to be overriden by derived classes
 	/**
 	 * @async
 	 * @function
+	 * @override
 	 * @instance
-	 * @memberof AuditService
-	 * @name     publish
+	 * @memberof TenantAdministration
+	 * @name     getDashboardDisplayDetails
 	 *
-	 * @param    {Object} auditPayload - The payload to be cleaned and published to the message queue.
+	 * @param    {Object} ctxt - Koa context.
 	 *
-	 * @returns  {null} Nothing.
+	 * @returns  {Object} Dashboard display stuff for this Feature.
 	 *
-	 * @summary  Publishes the audit trail to the messaging queue, and then deletes the cached details.
+	 * @summary  Everyone logged-in gets access.
 	 */
-	async publish(auditPayload) {
-		if(!auditPayload) return;
-		try {
-			this._cleanBeforePublish(auditPayload);
-			if(!auditPayload) return;
-			if(!Object.keys(auditPayload).length) return;
+	async getDashboardDisplayDetails(ctxt) {
+		const defaultDisplay = await super.getDashboardDisplayDetails(ctxt);
 
-			if(auditPayload.error) {
-				this.$dependencies.LoggerService.error(`Error Servicing Request ${auditPayload.id} - ${auditPayload['request-meta']['url']}:`, auditPayload);
-				await this.$dependencies.PubsubService.publish('twyr-audit', 'TWYR.AUDIT.ERROR', JSON.stringify(auditPayload));
-			}
-			else {
-				if(twyrEnv === 'development') this.$dependencies.LoggerService.debug(`Serviced Request ${auditPayload.id} - ${auditPayload['request-meta']['url']}:`, auditPayload);
-				await this.$dependencies.PubsubService.publish('twyr-audit', 'TWYR.AUDIT.LOG', JSON.stringify(auditPayload));
-			}
-		}
-		catch(err) {
-			throw new TwyrSrvcError(`${this.name}::_publishAudit error`, err);
-		}
+		defaultDisplay['attributes']['description'] = `Edit Account Settings`;
+		defaultDisplay['attributes']['icon_type'] = 'mdi';
+		defaultDisplay['attributes']['icon_path'] = 'account-settings';
+
+		return defaultDisplay;
 	}
-	// #endregion
 
-	// #region Private Methods
 	/**
 	 * @async
 	 * @function
+	 * @override
 	 * @instance
-	 * @memberof AuditService
-	 * @name     _cleanBeforePublish
+	 * @memberof TenantAdministration
+	 * @name     _doesUserHavePermission
 	 *
-	 * @param    {Object} auditDetails - The data for the request/response cycle.
-	 * @param    {Object} [value] - The audit trail information.
+	 * @param    {Object} ctxt - Koa context.
+	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
 	 *
-	 * @returns  {null} Nothing.
+	 * @returns  {undefined} Nothing.
 	 *
-	 * @summary  Deletes any empty keys in the audit trail data.
+	 * @summary  Only the super-administrators get access.
 	 */
-	_cleanBeforePublish(auditDetails, value) {
-		if(!auditDetails &amp;&amp; value) auditDetails = { 'payload': value };
-		if(!auditDetails) return null;
+	async _doesUserHavePermission(ctxt, next) {
+		if(ctxt.state.user) {
+			await next();
+			return;
+		}
 
-		if(!Object.keys(auditDetails).length)
-			return null;
+		throw new TwyrFeatureError('No active session');
+	}
 
-		Object.keys(auditDetails).forEach((key) => {
-			if(!auditDetails[key]) {
-				delete auditDetails[key];
-				return;
-			}
+	/**
+	 * @async
+	 * @function
+	 * @override
+	 * @instance
+	 * @memberof TenantAdministration
+	 * @name     _canUserAccessThisResource
+	 *
+	 * @param    {Object} ctxt - Koa context.
+	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
+	 *
+	 * @returns  {undefined} Nothing.
+	 *
+	 * @summary  Only the super-administrators get access.
+	 */
+	async _canUserAccessThisResource(ctxt, next) {
+		if(ctxt.state.user) {
+			await next();
+			return;
+		}
 
-			if(['password', 'image', 'random'].indexOf(key.toLowerCase()) >= 0) {
-				auditDetails[key] = '****';
-				return;
-			}
-
-			if(key.startsWith('_')) {
-				delete auditDetails[key];
-				return;
-			}
-
-			if(auditDetails[key] instanceof TwyrBaseError) {
-				auditDetails[key] = auditDetails[key].toString();
-				return;
-			}
-
-			if(auditDetails[key] instanceof Error) {
-				auditDetails[key] = new TwyrBaseError(`Wrapped for Auditing`, auditDetails[key]).toString();
-				return;
-			}
-
-			if(typeof auditDetails[key] === 'object') {
-				auditDetails[key] = this._cleanBeforePublish(auditDetails[key]);
-
-				if(!auditDetails[key]) {
-					delete auditDetails[key];
-					return;
-				}
-
-				if(!Object.keys(auditDetails[key]).length) {
-					delete auditDetails[key];
-					return;
-				}
-			}
-		});
-
-		if(!Object.keys(auditDetails).length)
-			return null;
-
-		return auditDetails;
+		throw new TwyrFeatureError('No active session');
 	}
 	// #endregion
 
 	// #region Properties
-	/**
-	 * @override
-	 */
-	get Interface() {
-		return {
-			'publish': this.publish.bind(this)
-		};
-	}
-
-	/**
-	 * @override
-	 */
-	get dependencies() {
-		return ['ConfigurationService', 'LoggerService', 'PubsubService'].concat(super.dependencies);
-	}
-
 	/**
 	 * @override
 	 */
@@ -220,7 +166,7 @@ class AuditService extends TwyrBaseService {
 	// #endregion
 }
 
-exports.service = AuditService;
+exports.feature = TenantAdministration;
 </code></pre>
         </article>
     </section>
