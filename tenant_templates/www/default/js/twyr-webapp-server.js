@@ -4392,15 +4392,38 @@
     }
   });
 });
-;define("twyr-webapp-server/components/tenant-administration/main-component", ["exports", "twyr-webapp-server/framework/base-component"], function (_exports, _baseComponent) {
+;define("twyr-webapp-server/components/tenant-administration/main-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
     value: true
   });
   _exports.default = void 0;
+  const backoffPolicy = new _exponentialBackoff.default({
+    'multiplier': 1.5,
+    'minDelay': 30,
+    'maxDelay': 400
+  });
 
-  var _default = _baseComponent.default.extend({});
+  var _default = _baseComponent.default.extend({
+    save: (0, _emberConcurrency.task)(function* () {
+      try {
+        yield this.get('model').save();
+        this.get('notification').display({
+          'type': 'success',
+          'message': 'Tenant saved successfully'
+        });
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      }
+    }).drop().retryable(backoffPolicy),
+    cancel: (0, _emberConcurrency.task)(function* () {
+      yield this.get('model').rollback();
+    }).drop()
+  });
 
   _exports.default = _default;
 });
@@ -5013,19 +5036,21 @@
     }),
 
     updatePermissions() {
-      if (this.get('permissions').includes('*')) {
-        this.set('hasPermission', true);
-        return;
-      }
-
-      const requiredPermissions = this.get('permissions');
       let hasPerm = false;
 
-      for (let permIdx = 0; permIdx < requiredPermissions.length; permIdx++) {
-        let hasCurrentPermission = this.get('currentUser').hasPermission(requiredPermissions[permIdx]);
-        hasPerm = hasPerm || hasCurrentPermission;
+      if (this.get('permissions').includes('*') || this.get('permissions').includes('super-administrator')) {
+        hasPerm = true;
+      } else {
+        const requiredPermissions = this.get('permissions');
+
+        for (let permIdx = 0; permIdx < requiredPermissions.length; permIdx++) {
+          let hasCurrentPermission = this.get('currentUser').hasPermission(requiredPermissions[permIdx]);
+          hasPerm = hasPerm || hasCurrentPermission;
+          if (hasPerm) break;
+        }
       }
 
+      if (hasPerm === this.get('hasPermission')) return;
       this.set('hasPermission', hasPerm);
     },
 
@@ -5077,19 +5102,21 @@
     }),
 
     updatePermissions() {
-      if (this.get('permissions').includes('*')) {
-        this.set('hasPermission', true);
-        return;
-      }
-
-      const requiredPermissions = this.get('permissions');
       let hasPerm = false;
 
-      for (let permIdx = 0; permIdx < requiredPermissions.length; permIdx++) {
-        let hasCurrentPermission = this.get('currentUser').hasPermission(requiredPermissions[permIdx]);
-        hasPerm = hasPerm || hasCurrentPermission;
+      if (this.get('permissions').includes('*') || this.get('permissions').includes('super-administrator')) {
+        hasPerm = true;
+      } else {
+        const requiredPermissions = this.get('permissions');
+
+        for (let permIdx = 0; permIdx < requiredPermissions.length; permIdx++) {
+          let hasCurrentPermission = this.get('currentUser').hasPermission(requiredPermissions[permIdx]);
+          hasPerm = hasPerm || hasCurrentPermission;
+          if (hasPerm) break;
+        }
       }
 
+      if (hasPerm === this.get('hasPermission')) return;
       this.set('hasPermission', hasPerm);
     },
 
@@ -5145,6 +5172,8 @@
   _exports.default = void 0;
 
   var _default = Ember.Route.extend({
+    currentUser: Ember.inject.service('current-user'),
+    router: Ember.inject.service('router'),
     actions: {
       'controller-action': function (action, data) {
         const controller = this.get('controller');
@@ -8384,6 +8413,7 @@
 
   var _default = _baseModel.default.extend({
     'user': _emberData.default.belongsTo('profile/user', {
+      'async': true,
       'inverse': 'contacts'
     }),
     'type': _emberData.default.attr('string', {
@@ -8414,6 +8444,7 @@
     'profileImage': _emberData.default.attr('string'),
     'profileImageMetadata': _emberData.default.attr(),
     'contacts': _emberData.default.hasMany('profile/user-contact', {
+      'async': true,
       'inverse': 'user'
     }),
     'fullName': Ember.computed('firstName', 'lastName', {
@@ -8425,7 +8456,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/models/tenant-administration/tenant-location", ["exports", "twyr-webapp-server/framework/base-model"], function (_exports, _baseModel) {
+;define("twyr-webapp-server/models/tenant-administration/tenant-location", ["exports", "twyr-webapp-server/framework/base-model", "ember-data"], function (_exports, _baseModel, _emberData) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -8433,12 +8464,55 @@
   });
   _exports.default = void 0;
 
-  // import DS from 'ember-data';
-  var _default = _baseModel.default.extend({});
+  var _default = _baseModel.default.extend({
+    'tenant': _emberData.default.belongsTo('tenant-administration/tenant', {
+      'async': true,
+      'inverse': 'location'
+    }),
+    'name': _emberData.default.attr('string', {
+      'defaultValue': 'Main Office'
+    }),
+    'line1': _emberData.default.attr('string', {
+      'defaultValue': ''
+    }),
+    'line2': _emberData.default.attr('string', {
+      'defaultValue': ''
+    }),
+    'line3': _emberData.default.attr('string', {
+      'defaultValue': ''
+    }),
+    'area': _emberData.default.attr('string', {
+      'defaultValue': ''
+    }),
+    'city': _emberData.default.attr('string', {
+      'defaultValue': ''
+    }),
+    'state': _emberData.default.attr('string', {
+      'defaultValue': ''
+    }),
+    'country': _emberData.default.attr('string', {
+      'defaultValue': ''
+    }),
+    'postalCode': _emberData.default.attr('string', {
+      'defaultValue': ''
+    }),
+    'latitude': _emberData.default.attr('number', {
+      'defaultValue': 0
+    }),
+    'longitude': _emberData.default.attr('number', {
+      'defaultValue': 0
+    }),
+    'timezoneId': _emberData.default.attr('string', {
+      'defaultValue': 'Asia/Kolkata'
+    }),
+    'timezoneName': _emberData.default.attr('string', {
+      'defaultValue': 'India Standard Time'
+    })
+  });
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/models/tenant-administration/tenant", ["exports", "twyr-webapp-server/framework/base-model"], function (_exports, _baseModel) {
+;define("twyr-webapp-server/models/tenant-administration/tenant", ["exports", "twyr-webapp-server/framework/base-model", "ember-data", "twyr-webapp-server/config/environment"], function (_exports, _baseModel, _emberData, _environment) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -8446,8 +8520,24 @@
   });
   _exports.default = void 0;
 
-  // import DS from 'ember-data';
-  var _default = _baseModel.default.extend({});
+  var _default = _baseModel.default.extend({
+    'name': _emberData.default.attr('string'),
+    'subDomain': _emberData.default.attr('string'),
+    'location': _emberData.default.belongsTo('tenant-administration/tenant-location', {
+      'inverse': 'tenant'
+    }),
+    'fullDomain': Ember.computed('subDomain', {
+      'get': function () {
+        return `${window.location.protocol}//${this.get('subDomain')}${_environment.default.twyr.domain}:${window.location.port}`;
+      },
+      'set': function (key, value) {
+        let newSubDomain = value.replace(`${window.location.protocol}//`, '').replace(_environment.default.twyr.domain, '').replace(`:${window.location.port}`, '').trim();
+        if (newSubDomain === '') newSubDomain = `${window.location.protocol}//${this.get('subDomain')}${_environment.default.twyr.domain}:${window.location.port}`;else newSubDomain = value;
+        this.set('subDomain', newSubDomain.replace(`${window.location.protocol}//`, '').replace(_environment.default.twyr.domain, '').replace(`:${window.location.port}`, '').trim());
+        return newSubDomain;
+      }
+    })
+  });
 
   _exports.default = _default;
 });
@@ -8519,6 +8609,8 @@
         return;
       }
 
+      const isActive = this.get('router').isActive(this.get('fullRouteName'));
+      if (!isActive) return;
       this.get('refreshDashboardFeatures').perform();
     },
 
@@ -8540,9 +8632,6 @@
   _exports.default = void 0;
 
   var _default = _baseRoute.default.extend({
-    currentUser: Ember.inject.service('current-user'),
-    router: Ember.inject.service('router'),
-
     init() {
       this._super(...arguments);
 
@@ -8563,11 +8652,11 @@
     },
 
     onUserDataUpdated() {
-      const isIndexActive = this.get('router').isActive('index');
-      if (!isIndexActive) return;
       const userData = this.get('currentUser').getUser();
       if (!userData) return;
-      if (userData.defaultApplication === '' || userData.defaultApplication === 'index') return;
+      const isActive = this.get('router').isActive(this.get('fullRouteName'));
+      if (!isActive) return;
+      if (userData.defaultApplication === '' || userData.defaultApplication === this.get('fullRouteName')) return;
       this.transitionTo(userData.defaultApplication);
     }
 
@@ -8619,6 +8708,8 @@
         return;
       }
 
+      const isActive = this.get('router').isActive(this.get('fullRouteName'));
+      if (!isActive) return;
       this.get('refreshProfileModel').perform();
     },
 
@@ -8681,10 +8772,12 @@
         return;
       }
 
+      const isActive = this.get('router').isActive(this.get('fullRouteName'));
+      if (!isActive) return;
       this.get('refreshTenantModel').perform();
     },
 
-    refreshProfileModel: (0, _emberConcurrency.task)(function* () {
+    refreshTenantModel: (0, _emberConcurrency.task)(function* () {
       let tenantData = this.get('store').peekRecord('tenant-administration/tenant', window.twyrTenantId);
 
       if (!tenantData) {
@@ -8699,7 +8792,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/serializers/application", ["exports", "ember-data"], function (_exports, _emberData) {
+;define("twyr-webapp-server/serializers/application", ["exports", "ember-data", "ember-data-change-tracker/mixins/keep-only-changed"], function (_exports, _emberData, _keepOnlyChanged) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -8707,7 +8800,7 @@
   });
   _exports.default = void 0;
 
-  var _default = _emberData.default.JSONAPISerializer.extend({
+  var _default = _emberData.default.JSONAPISerializer.extend(_keepOnlyChanged.default, {
     keyForAttribute(attr) {
       return Ember.String.underscore(attr);
     },
@@ -8854,13 +8947,14 @@
           window.twyrUserId = userData['user_id'];
           window.twyrTenantId = userData['tenant_id'];
         } else {
+          console.log('`Current User Service, setting null #1');
           window.twyrUserId = null;
           window.twyrTenantId = null;
         }
 
         this.trigger('userDataUpdated');
       } catch (err) {
-        // TODO: Use the Beacon API to send all this back to the server;
+        console.log('`Current User Service, setting null #2', err);
         this.set('userData', null);
         window.twyrUserId = null;
         window.twyrTenantId = null;
@@ -8877,7 +8971,8 @@
     },
 
     hasPermission(permission) {
-      return (this.get('userData.permissions') || []).includes(permission);
+      const userPermissions = this.get('userData.permissions') || [];
+      return userPermissions.includes('super-administrator') || userPermissions.includes(permission);
     },
 
     getUser() {
@@ -9516,8 +9611,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "AlL/CFrJ",
-    "block": "{\"symbols\":[\"card\",\"feature\",\"card\",\"header\",\"text\"],\"statements\":[[4,\"if\",[[23,[\"model\",\"length\"]]],null,{\"statements\":[[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex flex-gt-md-80 flex-gt-lg-70\"],[9],[0,\"\\n\"],[4,\"if\",[[27,\"get\",[[27,\"filter-by\",[\"type\",\"feature\",[23,[\"model\"]]],null],\"length\"],null]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],[[\"class\"],[\"bg-twyr-component white-text\"]],{\"statements\":[[4,\"component\",[[22,4,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"title\"]]],null,{\"statements\":[[1,[27,\"fa-icon\",[\"laptop-code\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Features\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[4]},null],[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"layout-row layout-align-start-center layout-wrap py-4\"]],{\"statements\":[[4,\"each\",[[23,[\"model\"]]],null,{\"statements\":[[4,\"if\",[[27,\"eq\",[[22,2,[\"type\"]],\"feature\"],null]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex flex-gt-sm-50 flex-gt-md-33 flex-gt-lg-25\"]],{\"statements\":[[4,\"link-to\",[[22,2,[\"route\"]]],[[\"title\"],[[22,2,[\"description\"]]]],{\"statements\":[[4,\"component\",[[22,3,[\"content\"]]],[[\"class\"],[\"text-center layout-column layout-align-start-center\"]],{\"statements\":[[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"fa\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[[22,2,[\"iconPath\"]]],[[\"size\"],[\"4x\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"paper\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[22,2,[\"iconPath\"]]],[[\"size\"],[64]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"mdi\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[[22,2,[\"iconPath\"]]],[[\"size\"],[64]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"img\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"img\"],[12,\"src\",[22,2,[\"iconPath\"]]],[12,\"alt\",[22,2,[\"name\"]]],[11,\"style\",\"min-height:4rem; height:4rem; max-height:4rem;\"],[9],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"mt-4\"],[11,\"style\",\"font-weight:900;\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[22,2,[\"name\"]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[3]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "zYO+Ko1Z",
+    "block": "{\"symbols\":[\"card\",\"feature\",\"card\",\"header\",\"text\"],\"statements\":[[4,\"if\",[[23,[\"model\",\"length\"]]],null,{\"statements\":[[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex flex-gt-md-80 flex-gt-lg-70\"],[9],[0,\"\\n\"],[4,\"if\",[[27,\"get\",[[27,\"filter-by\",[\"type\",\"feature\",[23,[\"model\"]]],null],\"length\"],null]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],[[\"class\"],[\"bg-twyr-component white-text\"]],{\"statements\":[[4,\"component\",[[22,4,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"title\"]]],null,{\"statements\":[[1,[27,\"fa-icon\",[\"laptop-code\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Features\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[4]},null],[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"layout-row layout-align-start-center layout-wrap py-4\"]],{\"statements\":[[4,\"each\",[[23,[\"model\"]]],null,{\"statements\":[[4,\"if\",[[27,\"eq\",[[22,2,[\"type\"]],\"feature\"],null]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex flex-gt-xs-50 flex-gt-sm-33 flex-gt-md-25 flex-gt-lg-20\"]],{\"statements\":[[4,\"link-to\",[[22,2,[\"route\"]]],[[\"title\"],[[22,2,[\"description\"]]]],{\"statements\":[[4,\"component\",[[22,3,[\"content\"]]],[[\"class\"],[\"text-center layout-column layout-align-start-center\"]],{\"statements\":[[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"fa\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[[22,2,[\"iconPath\"]]],[[\"size\"],[\"4x\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"md\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[22,2,[\"iconPath\"]]],[[\"size\"],[64]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"mdi\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[[22,2,[\"iconPath\"]]],[[\"size\"],[64]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"img\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"img\"],[12,\"src\",[22,2,[\"iconPath\"]]],[12,\"alt\",[22,2,[\"name\"]]],[11,\"style\",\"min-height:4rem; height:4rem; max-height:4rem;\"],[9],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"custom\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[22,2,[\"iconPath\"]],true],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"mt-4\"],[11,\"style\",\"font-weight:900;\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[22,2,[\"name\"]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[3]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/dashboard/main-component.hbs"
     }
@@ -9837,8 +9932,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "EnyZVD41",
-    "block": "{\"symbols\":[\"card\",\"header\",\"text\"],\"statements\":[[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex flex-gt-md-80 flex-gt-lg-70\"],[9],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],[[\"class\"],[\"bg-twyr-component white-text\"]],{\"statements\":[[4,\"component\",[[22,2,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,3,[\"title\"]]],null,{\"statements\":[[1,[27,\"mdi-icon\",[\"account-settings\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Administration\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "jsUFzOJG",
+    "block": "{\"symbols\":[\"card\",\"form\",\"card\",\"header\",\"text\",\"header\",\"text\"],\"statements\":[[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex flex-gt-md-80\"],[9],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],[[\"class\"],[\"bg-twyr-component white-text\"]],{\"statements\":[[4,\"component\",[[22,6,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,7,[\"title\"]]],null,{\"statements\":[[1,[27,\"mdi-icon\",[\"account-settings\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Administration\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[7]},null]],\"parameters\":[6]},null],[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-row layout-align-space-between flex\"]],{\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"flex flex-gt-md-25\",[27,\"perform\",[[23,[\"save\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,3,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,4,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"title\"]]],null,{\"statements\":[[0,\"Basics\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[4]},null],[4,\"component\",[[22,3,[\"content\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"Name\",[23,[\"model\",\"name\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"name\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"url\",\"flex-100\",\"Domain\",[23,[\"model\",\"fullDomain\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"fullDomain\"]]],null]],null],true]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,3,[\"actions\"]]],[[\"class\"],[\"layout-row layout-align-end-center\"]],{\"statements\":[[4,\"component\",[[22,2,[\"submit-button\"]]],[[\"primary\",\"raised\",\"onClick\",\"disabled\"],[true,true,[27,\"perform\",[[23,[\"save\"]]],null],[27,\"or\",[[22,2,[\"isInvalid\"]],[23,[\"save\",\"isRunning\"]],[23,[\"cancel\",\"isRunning\"]],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"save\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[4,\"paper-button\",null,[[\"warn\",\"raised\",\"onClick\",\"disabled\"],[true,true,[27,\"perform\",[[23,[\"cancel\"]]],null],[27,\"or\",[[23,[\"save\",\"isRunning\"]],[23,[\"cancel\",\"isRunning\"]],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"cancel\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"cancel\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/main-component.hbs"
     }
