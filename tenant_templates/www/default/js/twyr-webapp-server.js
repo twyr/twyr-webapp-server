@@ -4392,6 +4392,18 @@
     }
   });
 });
+;define("twyr-webapp-server/components/tenant-administration/main-component", ["exports", "twyr-webapp-server/framework/base-component"], function (_exports, _baseComponent) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseComponent.default.extend({});
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/components/tenant/notification-area", ["exports", "twyr-webapp-server/framework/base-component", "ember-computed-style", "twyr-webapp-server/config/environment"], function (_exports, _baseComponent, _emberComputedStyle, _environment) {
   "use strict";
 
@@ -4944,6 +4956,18 @@
   _exports.default = _default;
 });
 ;define("twyr-webapp-server/controllers/profile", ["exports", "twyr-webapp-server/framework/base-controller"], function (_exports, _baseController) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseController.default.extend({});
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/controllers/tenant-administration", ["exports", "twyr-webapp-server/framework/base-controller"], function (_exports, _baseController) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -8401,6 +8425,32 @@
 
   _exports.default = _default;
 });
+;define("twyr-webapp-server/models/tenant-administration/tenant-location", ["exports", "twyr-webapp-server/framework/base-model"], function (_exports, _baseModel) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  // import DS from 'ember-data';
+  var _default = _baseModel.default.extend({});
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/models/tenant-administration/tenant", ["exports", "twyr-webapp-server/framework/base-model"], function (_exports, _baseModel) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  // import DS from 'ember-data';
+  var _default = _baseModel.default.extend({});
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/resolver", ["exports", "ember-resolver"], function (_exports, _emberResolver) {
   "use strict";
 
@@ -8582,6 +8632,68 @@
       }
 
       this.get('controller').set('model', profileData);
+    }).keepLatest()
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/routes/tenant-administration", ["exports", "twyr-webapp-server/framework/base-route", "ember-concurrency"], function (_exports, _baseRoute, _emberConcurrency) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseRoute.default.extend({
+    currentUser: Ember.inject.service('current-user'),
+
+    init() {
+      this._super(...arguments);
+
+      this.get('currentUser').on('userDataUpdated', this, this.onUserDataUpdated);
+    },
+
+    destroy() {
+      this.get('currentUser').off('userDataUpdated', this, this.onUserDataUpdated);
+
+      this._super(...arguments);
+    },
+
+    model() {
+      if (!window.twyrTenantId) {
+        this.get('store').unloadAll('tenant-administration/tenant');
+        this.get('store').unloadAll('tenant-administration/tenant-location');
+        return;
+      }
+
+      const tenantData = this.get('store').peekRecord('tenant-administration/tenant', window.twyrTenantId);
+      if (tenantData) return tenantData;
+      return this.get('store').findRecord('tenant-administration/tenant', window.twyrTenantId, {
+        'include': 'location'
+      });
+    },
+
+    onUserDataUpdated() {
+      if (!window.twyrTenantId) {
+        this.get('store').unloadAll('tenant-administration/tenant');
+        this.get('store').unloadAll('tenant-administration/tenant-location');
+        return;
+      }
+
+      this.get('refreshTenantModel').perform();
+    },
+
+    refreshProfileModel: (0, _emberConcurrency.task)(function* () {
+      let tenantData = this.get('store').peekRecord('tenant-administration/tenant', window.twyrTenantId);
+
+      if (!tenantData) {
+        tenantData = yield this.get('store').findRecord('tenant-administration/tenant', window.twyrTenantId, {
+          'include': 'location'
+        });
+      }
+
+      this.get('controller').set('model', tenantData);
     }).keepLatest()
   });
 
@@ -9716,6 +9828,24 @@
 
   _exports.default = _default;
 });
+;define("twyr-webapp-server/templates/components/tenant-administration/main-component", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = Ember.HTMLBars.template({
+    "id": "EnyZVD41",
+    "block": "{\"symbols\":[\"card\",\"header\",\"text\"],\"statements\":[[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex flex-gt-md-80 flex-gt-lg-70\"],[9],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],[[\"class\"],[\"bg-twyr-component white-text\"]],{\"statements\":[[4,\"component\",[[22,2,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,3,[\"title\"]]],null,{\"statements\":[[1,[27,\"mdi-icon\",[\"account-settings\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Administration\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
+    "meta": {
+      "moduleName": "twyr-webapp-server/templates/components/tenant-administration/main-component.hbs"
+    }
+  });
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/templates/components/tenant/notification-area", ["exports"], function (_exports) {
   "use strict";
 
@@ -9869,8 +9999,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "m1Ak8PlK",
-    "block": "{\"symbols\":[],\"statements\":[[2,\" `app/templates/head.hbs` \"],[0,\"\\n\"],[2,\" content from ember-page-title, injected by ember-cli-head \"],[0,\"\\n\"],[2,\" The 'model' available in this template can be populated by \"],[0,\"\\n\"],[2,\" setting values on the 'head-data' service. \"],[0,\"\\n\"],[7,\"title\"],[9],[1,[23,[\"model\",\"title\"]],false],[10],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "pOphMAnv",
+    "block": "{\"symbols\":[],\"statements\":[[7,\"title\"],[9],[1,[23,[\"model\",\"title\"]],false],[10],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/head.hbs"
     }
@@ -9891,6 +10021,24 @@
     "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Profile\"],null],false],[0,\"\\n\"],[1,[27,\"component\",[\"profile/main-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/profile.hbs"
+    }
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/templates/tenant-administration", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = Ember.HTMLBars.template({
+    "id": "DYxtguo6",
+    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Tenant Administration\"],null],false],[0,\"\\n\"],[1,[27,\"component\",[\"tenant-administration/main-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"hasEval\":false}",
+    "meta": {
+      "moduleName": "twyr-webapp-server/templates/tenant-administration.hbs"
     }
   });
 
@@ -10225,7 +10373,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+c0c69cfa"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+e2adc0a5"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;
