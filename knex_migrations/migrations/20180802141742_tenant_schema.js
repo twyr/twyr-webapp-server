@@ -1,6 +1,8 @@
 exports.up = async function(knex) {
 	let exists = null;
 
+	await knex.schema.raw("CREATE TYPE public.tenant_relationship_type AS ENUM ('customer', 'oem', 'service provider', 'vendor')");
+
 	// Step 1: Create the basic "tenants" table
 	exists = await knex.schema.withSchema('public').hasTable('tenants');
 	if(!exists) {
@@ -16,7 +18,35 @@ exports.up = async function(knex) {
 		});
 	}
 
-	// Step 2: Create the "tenant_groups" table
+	// Step 2: Create the "tenant_locations" table
+	exists = await knex.schema.withSchema('public').hasTable('tenant_locations');
+	if(!exists) {
+		await knex.schema.withSchema('public').createTable('tenant_locations', function(tenantLocationTbl) {
+			tenantLocationTbl.uuid('tenant_id').notNullable().references('tenant_id').inTable('tenants').onDelete('CASCADE').onUpdate('CASCADE');
+			tenantLocationTbl.uuid('tenant_location_id').notNullable().defaultTo(knex.raw('uuid_generate_v4()'));
+			tenantLocationTbl.boolean('is_primary').notNullable().defaultTo(false);
+			tenantLocationTbl.text('name').notNullable();
+			tenantLocationTbl.text('line1').notNullable();
+			tenantLocationTbl.text('line2');
+			tenantLocationTbl.text('line3');
+			tenantLocationTbl.text('area').notNullable();
+			tenantLocationTbl.text('city').notNullable();
+			tenantLocationTbl.text('state').notNullable();
+			tenantLocationTbl.text('country').notNullable();
+			tenantLocationTbl.text('postal_code').notNullable();
+			tenantLocationTbl.specificType('latitude', 'double precision').notNullable();
+			tenantLocationTbl.specificType('longitude', 'double precision').notNullable();
+			tenantLocationTbl.text('timezone_id').notNullable();
+			tenantLocationTbl.text('timezone_name').notNullable();
+			tenantLocationTbl.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
+			tenantLocationTbl.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
+
+			tenantLocationTbl.primary(['tenant_id', 'tenant_location_id']);
+			tenantLocationTbl.unique(['tenant_id', 'name']);
+		});
+	}
+
+	// Step 3: Create the "tenant_groups" table
 	exists = await knex.schema.withSchema('public').hasTable('tenant_groups');
 	if(!exists) {
 		await knex.schema.withSchema('public').createTable('tenant_groups', function(groupTbl) {
@@ -37,8 +67,7 @@ exports.up = async function(knex) {
 		});
 	}
 
-	// Step 3: Create the tenant_relationships table
-	await knex.schema.raw("CREATE TYPE public.tenant_relationship_type AS ENUM ('customer', 'oem', 'service provider', 'vendor')");
+	// Step 4: Create the tenant_relationships table
 	exists = await knex.schema.withSchema('public').hasTable('tenant_relationships');
 	if(!exists) {
 		await knex.schema.withSchema('public').createTable('tenant_relationships', function(tenantRelationshipsTbl) {
@@ -58,7 +87,7 @@ exports.up = async function(knex) {
 		});
 	}
 
-	// Step 4: Setup user-defined functions on the groups table for traversing the tree, etc.
+	// Step 5: Setup user-defined functions on the groups table for traversing the tree, etc.
 	await knex.schema.withSchema('public').raw(
 `CREATE OR REPLACE FUNCTION public.fn_get_group_ancestors (IN groupid uuid)
 	RETURNS TABLE (level integer, tenant_id uuid,  group_id uuid,  parent_group_id uuid,  name text)
@@ -157,7 +186,7 @@ END;
 $$;`
 	);
 
-	// Step 5: Enforce rules for sanity using triggers.
+	// Step 6: Enforce rules for sanity using triggers.
 	await knex.schema.withSchema('public').raw(
 `CREATE OR REPLACE FUNCTION public.fn_assign_defaults_to_tenant ()
 	RETURNS trigger
@@ -255,6 +284,7 @@ exports.down = async function(knex) {
 	await knex.raw('DROP TABLE IF EXISTS public.tenant_relationships CASCADE;');
 	await knex.raw(`DROP TABLE IF EXISTS public.tenant_groups CASCADE;`);
 	await knex.raw(`DROP TABLE IF EXISTS public.tenants CASCADE;`);
+	await knex.raw(`DROP TABLE IF EXISTS public.tenant_locations CASCADE;`);
 
 	await knex.raw(`DROP TYPE IF EXISTS public.tenant_relationship_type CASCADE;`);
 };

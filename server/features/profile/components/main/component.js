@@ -89,7 +89,7 @@ class Main extends TwyrBaseComponent {
 			return null;
 		}
 		catch(err) {
-			throw new TwyrComponentError(`Error retrieving profile data`, err);
+			throw new TwyrComponentError(`Error updating profile data`, err);
 		}
 	}
 
@@ -216,7 +216,7 @@ class Main extends TwyrBaseComponent {
 			return null;
 		}
 		catch(err) {
-			throw new TwyrComponentError(`Error deleting profile`, err);
+			throw new TwyrComponentError(`Error adding contact`, err);
 		}
 	}
 
@@ -229,7 +229,7 @@ class Main extends TwyrBaseComponent {
 			return null;
 		}
 		catch(err) {
-			throw new TwyrComponentError(`Error deleting profile`, err);
+			throw new TwyrComponentError(`Error deleting contact`, err);
 		}
 	}
 	// #endregion

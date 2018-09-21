@@ -139,7 +139,7 @@ class DatabaseService extends TwyrBaseService {
 
 	// #region Private Methods
 	_databaseQuery(queryData) {
-		this.$dependencies.LoggerService.silly(`${this.name}::_databaseQuery: ${JSON.stringify(queryData, null, '\t')}`);
+		this.$dependencies.LoggerService.debug(`${this.name}::_databaseQuery: ${JSON.stringify(queryData, null, '\t')}`);
 	}
 
 	_databaseQueryError(error, query) {

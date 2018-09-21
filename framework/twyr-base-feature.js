@@ -233,12 +233,13 @@ class TwyrBaseFeature extends TwyrBaseModule {
 			'type': 'dashboard/feature',
 
 			'attributes': {
-				'name': this.name,
+				'name': inflection.transform(this.name, ['tableize', 'singularize', 'titleize']),
 				'type': 'feature',
 				'route': inflectedFeatureName,
 				'description': this.name,
 
-				'icon_type': 'fa', // Other choices are img, paper, mdi
+				// eslint-disable-next-line no-inline-comments
+				'icon_type': 'fa', // Other choices are paper, mdi, img, custom
 				'icon_path': 'laptop-code'
 			}
 		};

@@ -94,7 +94,7 @@ class Main extends TwyrBaseMiddleware {
 						'route': ctxt.state.user.tenantAttributes['default_route'],
 						'description': 'Home',
 
-						'icon_type': 'fa', // Other choices are img, paper, mdi
+						'icon_type': 'fa', // Other choices are md, mdi, img, custom
 						'icon_path': 'home'
 					}
 				});

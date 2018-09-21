@@ -48,4 +48,24 @@ exports.seed = async function(knex) {
 		dashboardFeatureId = dashboardFeatureId[0];
 		await knex.raw(`UPDATE tenants_users SET default_application = ? WHERE user_id = (SELECT user_id FROM users WHERE email = 'root@twyr.com')`, [dashboardFeatureId]);
 	}
+
+	componentId = await knex.raw(`SELECT module_id FROM fn_get_module_descendants(?) WHERE name = ? AND type = 'feature'`, [parentId, 'TenantAdministration']);
+	if(!componentId.rows.length) {
+		await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'feature',
+			'deploy': 'default',
+			'name': 'TenantAdministration',
+			'display_name': 'Tenant Administration',
+			'description': 'The Twyr Web Application Tenant Administration - allows administrators to configure the account',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		})
+		.returning('module_id');
+	}
 };
