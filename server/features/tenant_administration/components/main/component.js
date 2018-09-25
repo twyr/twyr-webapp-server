@@ -121,7 +121,7 @@ class Main extends TwyrBaseComponent {
 	async _addLocation(ctxt) {
 		try {
 			const apiSrvc = this.$dependencies.ApiService;
-			const status = await apiSrvc.execute('Main::addLocation', ctxt, true);
+			const status = await apiSrvc.execute('Main::addLocation', [ctxt, true]);
 
 			ctxt.status = 200;
 			ctxt.body = status.shift();
@@ -136,7 +136,7 @@ class Main extends TwyrBaseComponent {
 	async _updateLocation(ctxt) {
 		try {
 			const apiSrvc = this.$dependencies.ApiService;
-			const status = await apiSrvc.execute('Main::addLocation', ctxt, false);
+			const status = await apiSrvc.execute('Main::addLocation', [ctxt, false]);
 
 			ctxt.status = 200;
 			ctxt.body = status.shift();

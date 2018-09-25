@@ -161,15 +161,10 @@ class TwyrBaseFeature extends TwyrBaseModule {
 
 			Object.keys(featureClientsideAssets).forEach((featureClientsideAssetName) => {
 				if(featureClientsideAssetName === 'RouteMap') {
-					if(!clientsideAssets['RouteMap']) clientsideAssets['RouteMap'] = {
-						'index': {
-							'path': '/',
-							'routes': {}
-						}
-					};
+					if(!clientsideAssets['RouteMap']) clientsideAssets['RouteMap'] = assets['RouteMap'];
 
 					const inflectedFeatureName = inflection.transform(featureName, ['foreign_key', 'dasherize']).replace('-id', '');
-					clientsideAssets['RouteMap']['index']['routes'][inflectedFeatureName] = {
+					clientsideAssets['RouteMap'][inflectedFeatureName] = {
 						'path': `/${inflectedFeatureName}`,
 						'routes': featureClientsideAssets['RouteMap']
 					};
@@ -351,6 +346,8 @@ class TwyrBaseFeature extends TwyrBaseModule {
 	 * @readonly
 	 */
 	get EmberAssets() {
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::EmberAssets`);
+
 		return {
 			'RouteMap': {
 				'index': {

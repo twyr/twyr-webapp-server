@@ -51,7 +51,7 @@ exports.seed = async function(knex) {
 
 	componentId = await knex.raw(`SELECT module_id FROM fn_get_module_descendants(?) WHERE name = ? AND type = 'feature'`, [parentId, 'TenantAdministration']);
 	if(!componentId.rows.length) {
-		await knex('modules').insert({
+		componentId = await knex('modules').insert({
 			'parent_module_id': parentId,
 			'type': 'feature',
 			'deploy': 'default',
@@ -67,5 +67,30 @@ exports.seed = async function(knex) {
 			}
 		})
 		.returning('module_id');
+
+		componentId = componentId[0];
+	}
+	else {
+		componentId = componentId.rows.shift()['module_id'];
+	}
+
+	const tenantAdminFeatureId = componentId;
+	componentId = await knex.raw(`SELECT module_id FROM fn_get_module_descendants(?) WHERE name = ? AND type = 'feature'`, [tenantAdminFeatureId, 'FeatureManager']);
+	if(!componentId.rows.length) {
+		await knex('modules').insert({
+			'parent_module_id': tenantAdminFeatureId,
+			'type': 'feature',
+			'deploy': 'default',
+			'name': 'FeatureManager',
+			'display_name': 'Feature Manager',
+			'description': 'The Twyr Web Application Feature Manager - manages the tenants\' feature selections',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
 	}
 };

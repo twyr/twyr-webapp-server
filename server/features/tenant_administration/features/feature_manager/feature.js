@@ -13,13 +13,13 @@ const TwyrBaseFeature = require('twyr-base-feature').TwyrBaseFeature;
 const TwyrFeatureError = require('twyr-feature-error').TwyrFeatureError;
 
 /**
- * @class   TenantAdministration
+ * @class   FeatureManager
  * @extends {TwyrBaseFeature}
- * @classdesc The Twyr Web Application Server TenantAdministration feature - manages tenant settings.
+ * @classdesc The Twyr Web Application Server FeatureManager feature - manages tenant feature selection.
  *
  *
  */
-class TenantAdministration extends TwyrBaseFeature {
+class FeatureManager extends TwyrBaseFeature {
 	// #region Constructor
 	constructor(parent, loader) {
 		super(parent, loader);
@@ -32,31 +32,7 @@ class TenantAdministration extends TwyrBaseFeature {
 	 * @function
 	 * @override
 	 * @instance
-	 * @memberof TenantAdministration
-	 * @name     getDashboardDisplayDetails
-	 *
-	 * @param    {Object} ctxt - Koa context.
-	 *
-	 * @returns  {Object} Dashboard display stuff for this Feature.
-	 *
-	 * @summary  Everyone logged-in gets access.
-	 */
-	async getDashboardDisplayDetails(ctxt) {
-		const defaultDisplay = await super.getDashboardDisplayDetails(ctxt);
-
-		defaultDisplay['attributes']['description'] = `Edit Account Settings`;
-		defaultDisplay['attributes']['icon_type'] = 'mdi';
-		defaultDisplay['attributes']['icon_path'] = 'account-settings';
-
-		return defaultDisplay;
-	}
-
-	/**
-	 * @async
-	 * @function
-	 * @override
-	 * @instance
-	 * @memberof TenantAdministration
+	 * @memberof FeatureManager
 	 * @name     _doesUserHavePermission
 	 *
 	 * @param    {Object} ctxt - Koa context.
@@ -80,7 +56,7 @@ class TenantAdministration extends TwyrBaseFeature {
 	 * @function
 	 * @override
 	 * @instance
-	 * @memberof TenantAdministration
+	 * @memberof FeatureManager
 	 * @name     _canUserAccessThisResource
 	 *
 	 * @param    {Object} ctxt - Koa context.
@@ -110,4 +86,4 @@ class TenantAdministration extends TwyrBaseFeature {
 	// #endregion
 }
 
-exports.feature = TenantAdministration;
+exports.feature = FeatureManager;
