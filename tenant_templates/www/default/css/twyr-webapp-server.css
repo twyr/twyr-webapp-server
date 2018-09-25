@@ -39445,3 +39445,7 @@ md-input-container {
 
 md-input-container .md-input {
   height: unset !important; }
+
+div.md-dialog-container {
+  top: 60px;
+  height: calc(100% - 75px); }

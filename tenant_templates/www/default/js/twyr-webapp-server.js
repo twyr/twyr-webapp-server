@@ -4587,7 +4587,7 @@
     }
   });
 });
-;define("twyr-webapp-server/components/tenant-administration/main-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _emberConcurrency) {
+;define("twyr-webapp-server/components/tenant-administration/main-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-resize/mixins/resize-aware", "twyr-webapp-server/config/environment", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _resizeAware, _environment, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4600,7 +4600,116 @@
     'maxDelay': 400
   });
 
-  var _default = _baseComponent.default.extend({
+  var _default = _baseComponent.default.extend(_resizeAware.default, {
+    resizeWidthSensitive: true,
+    resizeHeightSensitive: true,
+    staticUrl: null,
+    onDidInsertElement: (0, _emberConcurrency.task)(function* () {
+      yield this.get('displayPrimaryLocation').perform();
+    }).drop().on('didInsertElement'),
+    onPrimaryLocationChange: Ember.observer('model.location', 'model.location.latitude', 'model.location.longitude', function () {
+      this.get('displayPrimaryLocation').perform();
+    }),
+
+    debouncedDidResize() {
+      this.get('displayPrimaryLocation').perform();
+    },
+
+    addPrimaryLocation: (0, _emberConcurrency.task)(function* () {
+      try {
+        const self = this;
+        const primaryTenantLocation = this.get('store').createRecord('tenant-administration/tenant-location', {
+          'isPrimary': true
+        });
+        const modalData = {
+          'title': 'Add Location',
+          'dialogClass': 'flex-75',
+          'componentName': 'tenant-administration/tenant-location-editor',
+          'componentState': {
+            'model': primaryTenantLocation
+          },
+          'confirmButton': {
+            'text': 'Add',
+            'icon': 'check',
+            'primary': true,
+            'raised': true,
+            'callback': () => {
+              self.get('saveLocation').perform(primaryTenantLocation);
+            }
+          },
+          'cancelButton': {
+            'text': 'Cancel',
+            'icon': 'cancel',
+            'warn': true,
+            'raised': true,
+            'callback': () => {
+              self.get('removeLocation').perform(primaryTenantLocation);
+            }
+          }
+        };
+        this.set('model.location', primaryTenantLocation);
+        yield this.invokeAction('controller-action', 'displayModal', modalData);
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      }
+    }).drop(),
+    editPrimaryLocation: (0, _emberConcurrency.task)(function* () {
+      try {
+        const self = this;
+        const modalData = {
+          'title': 'Add Location',
+          'dialogClass': 'flex-75',
+          'componentName': 'tenant-administration/tenant-location-editor',
+          'componentState': {
+            'model': this.get('model.location')
+          },
+          'confirmButton': {
+            'text': 'Save',
+            'icon': 'check',
+            'primary': true,
+            'raised': true,
+            'callback': () => {
+              self.get('saveLocation').perform(this.get('model.location'));
+            }
+          },
+          'cancelButton': {
+            'text': 'Cancel',
+            'icon': 'cancel',
+            'warn': true,
+            'raised': true
+          }
+        };
+        yield this.invokeAction('controller-action', 'displayModal', modalData);
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      }
+    }).drop(),
+    displayPrimaryLocation: (0, _emberConcurrency.task)(function* () {
+      yield (0, _emberConcurrency.timeout)(500);
+      const staticLocationdisplayDiv = document.getElementById('tenant-administrator-main-component-static-location-display');
+      if (!staticLocationdisplayDiv) return;
+      const mapWidth = staticLocationdisplayDiv.clientWidth;
+      const mapHeight = staticLocationdisplayDiv.clientHeight;
+      const mapParameters = {
+        'lat': 0,
+        'lng': 0,
+        'key': _environment.default['ember-google-maps']['key']
+      };
+      const location = yield this.get('model.location');
+
+      if (location) {
+        mapParameters.lat = location.get('latitude');
+        mapParameters.lng = location.get('longitude');
+      }
+
+      this.set('staticUrl', `//maps.googleapis.com/maps/api/staticmap?center=${mapParameters.lat},${mapParameters.lng}&size=${mapWidth}x${mapHeight}&maptype=roadmap&markers=color:blue%7Clabel:S%7C${mapParameters.lat},${mapParameters.lng}&key=${mapParameters.key}`);
+    }).keepLatest(),
     save: (0, _emberConcurrency.task)(function* () {
       try {
         yield this.get('model').save();
@@ -4617,7 +4726,360 @@
     }).drop().retryable(backoffPolicy),
     cancel: (0, _emberConcurrency.task)(function* () {
       yield this.get('model').rollback();
-    }).drop()
+    }).drop(),
+    saveLocation: (0, _emberConcurrency.task)(function* (tenantLocation) {
+      try {
+        if (tenantLocation.save) yield tenantLocation.save();
+        if (tenantLocation.content && tenantLocation.content.save) yield tenantLocation.content.save();
+        if (tenantLocation.reload) yield tenantLocation.reload();
+        if (tenantLocation.content && tenantLocation.content.reload) yield tenantLocation.content.reload();
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      }
+    }).drop().retryable(backoffPolicy),
+    removeLocation: (0, _emberConcurrency.task)(function* (tenantLocation) {
+      try {
+        if (tenantLocation.destroyRecord) yield tenantLocation.destroyRecord();
+        if (tenantLocation.content && tenantLocation.content.destroyRecord) yield tenantLocation.content.destroyRecord();
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      } finally {
+        this.set('model.location', null);
+      }
+    }).drop().retryable(backoffPolicy)
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/components/tenant-administration/tenant-location-editor", ["exports", "twyr-webapp-server/framework/base-component", "twyr-webapp-server/config/environment", "ember-concurrency"], function (_exports, _baseComponent, _environment, _emberConcurrency) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseComponent.default.extend({
+    _map: undefined,
+    _markers: undefined,
+    approxLocation: '',
+    onDidInsertElement: (0, _emberConcurrency.task)(function* () {
+      const notification = this.get('notification');
+      this.$('md-card').css('box-shadow', 'none');
+
+      try {
+        this.set('_markers', []);
+
+        if (window.google && window.google.maps) {
+          yield (0, _emberConcurrency.timeout)(500);
+          const mapCanvas = window.document.getElementById(`tenant-location-editor-map-container-${this.get('state.model.id')}`),
+                mapOptions = {
+            'zoom': 16,
+            'mapTypeId': window.google.maps.MapTypeId.ROADMAP
+          };
+          this.set('_map', new window.google.maps.Map(mapCanvas, mapOptions));
+          this.get('_map').addListener('click', position => {
+            this.get('_onClickMap').perform(position);
+          });
+          yield this.get('_resetGoogleMap').perform();
+        }
+      } catch (err) {
+        notification.display({
+          'type': 'error',
+          'error': err
+        });
+      }
+    }).drop().on('didInsertElement'),
+    onWillDestroyElement: (0, _emberConcurrency.task)(function* () {
+      if (!this.get('_map')) return;
+      yield this.get('_resetGoogleMap').perform();
+      window.google.maps.event.clearInstanceListeners(this.get('_map'));
+      this.set('_map', undefined);
+    }).drop().on('willDestroyElement'),
+    onApproxLocationChanged: Ember.observer('approxLocation', function () {
+      if (!this.get('state.model.isNew')) return;
+      if (this.get('state.model.name') === this.get('approxLocation')) return;
+      this.set('state.model.name', this.get('approxLocation').split(',')[0].trim());
+      this.get('_markGoogleMap').perform();
+    }),
+    _onClickMap: (0, _emberConcurrency.task)(function* (position) {
+      this._clearMapMarkers();
+
+      this.get('_map').setCenter({
+        'lat': position.latLng.lat(),
+        'lng': position.latLng.lng()
+      });
+
+      this._setMapMarker({
+        'lat': position.latLng.lat(),
+        'lng': position.latLng.lng()
+      });
+
+      yield this.get('_geoCodeMarker').perform({
+        'lat': position.latLng.lat(),
+        'lng': position.latLng.lng()
+      });
+    }).keepLatest(),
+    _resetGoogleMap: (0, _emberConcurrency.task)(function* () {
+      this._clearMapMarkers();
+
+      if (!this.get('state.model')) return;
+      if (!this.get('_map')) return;
+      this.get('_map').setZoom(16);
+
+      if (this.get('state.model.isNew') && this.get('state.model.latitude') === 0) {
+        this.set('approxLocation', this.get('state.model.name'));
+        yield this.get('_markGoogleMap').perform();
+        return;
+      }
+
+      this.get('_map').setCenter({
+        'lat': this.get('state.model.latitude') || 0,
+        'lng': this.get('state.model.longitude') || 0
+      });
+
+      this._setMapMarker({
+        'lat': this.get('state.model.latitude') || 0,
+        'lng': this.get('state.model.longitude') || 0
+      });
+    }).drop(),
+    _markGoogleMap: (0, _emberConcurrency.task)(function* () {
+      yield (0, _emberConcurrency.timeout)(3000);
+
+      this._clearMapMarkers();
+
+      if (!this.get('_map')) return;
+      if (!this.get('approxLocation') || this.get('approxLocation').trim() === '') this.set('approxLocation', 'Nagpur, India');
+      const addressData = yield this.get('ajax').request(`https://maps.googleapis.com/maps/api/geocode/json?address=${this.get('approxLocation').replace(/ /g, '+')}&key=${_environment.default['ember-google-maps']['key']}`, {
+        'method': 'GET',
+        'xhrFields': {
+          'withCredentials': false
+        },
+        'dataType': 'json'
+      });
+      this.get('_map').setZoom(16);
+      this.get('_map').setCenter(addressData.results[0].geometry.location);
+      addressData.results.forEach(result => {
+        this._setMapMarker(result.geometry.location);
+      });
+
+      if (addressData.results.length) {
+        yield this.get('_geoCodeMarker').perform(addressData.results[0].geometry.location);
+      }
+    }).restartable(),
+
+    _clearMapMarkers() {
+      this.get('_markers').forEach(marker => {
+        marker.setMap(null);
+        if (window.google && window.google.maps) window.google.maps.event.clearInstanceListeners(marker);
+      });
+      this.get('_markers').clear();
+    },
+
+    _setMapMarker(location) {
+      if (!this.get('_map')) return;
+      const marker = new window.google.maps.Marker({
+        'position': location,
+        'map': this.get('_map')
+      });
+      marker.addListener('click', function (mark) {
+        this.get('_map').setZoom(16);
+        this.get('_map').setCenter(mark.getPosition());
+        this.get('_geoCodeMarker').perform(mark.getPosition());
+      }.bind(this, marker));
+      this.get('_markers').addObject(marker);
+    },
+
+    _geoCodeMarker: (0, _emberConcurrency.task)(function* (location) {
+      if (!(window.google && window.google.maps)) return;
+      const timezone = yield this.get('ajax').request(`https://maps.googleapis.com/maps/api/timezone/json?location=${location.lat},${location.lng}&timestamp=${Math.floor(new Date().valueOf() / 1000)}&key=${_environment.default['ember-google-maps']['key']}`, {
+        'method': 'GET',
+        'xhrFields': {
+          'withCredentials': false
+        },
+        'dataType': 'json'
+      });
+      this.set('state.model.latitude', location.lat);
+      this.set('state.model.longitude', location.lng);
+      this.set('state.model.timezoneId', timezone.timeZoneId);
+      this.set('state.model.timezoneName', timezone.timeZoneName);
+      const geoCoder = new window.google.maps.Geocoder();
+      geoCoder.geocode({
+        'location': location
+      }, (results, status) => {
+        if (status !== window.google.maps.GeocoderStatus.OK) return;
+        const geoCodedAddr = [];
+        results.forEach(result => {
+          geoCodedAddr.push(...result.address_components);
+        });
+        if (!geoCodedAddr.length) return;
+        const area = [],
+              city = [],
+              country = [],
+              line1 = [],
+              line2 = [],
+              line3 = [],
+              postBox = [],
+              postalCode = [],
+              state = [],
+              streetAddress = [];
+        geoCodedAddr.forEach(addrComponent => {
+          if (addrComponent.types.indexOf('street_address') >= 0) {
+            if (!streetAddress.length) streetAddress.push(addrComponent.long_name);
+            return;
+          }
+
+          if (addrComponent.types.indexOf('post_box') >= 0) {
+            if (!postBox.length) postBox.push(addrComponent.long_name);
+            return;
+          }
+
+          if (addrComponent.types.indexOf('room') >= 0) {
+            if (!line1[0]) line1[0] = addrComponent.long_name;
+            return;
+          }
+
+          if (addrComponent.types.indexOf('floor') >= 0) {
+            if (!line1[1]) line1[1] = addrComponent.long_name;
+            return;
+          }
+
+          if (addrComponent.types.indexOf('subpremise') >= 0) {
+            if (!line1[2]) line1[2] = addrComponent.long_name;
+            return;
+          }
+
+          if (addrComponent.types.indexOf('premise') >= 0) {
+            if (!line1[3]) line1[3] = addrComponent.long_name;
+            return;
+          }
+
+          if (addrComponent.types.indexOf('street_number') >= 0) {
+            if (!line2[0]) line2[0] = addrComponent.long_name;
+            return;
+          }
+
+          if (addrComponent.types.indexOf('route') >= 0) {
+            if (!line2[1]) line2[1] = addrComponent.long_name;
+            return;
+          }
+
+          if (addrComponent.types.indexOf('neighborhood') >= 0) {
+            if (!line3.indexOf(addrComponent.long_name) < 0) line3.push(addrComponent.long_name);
+            return;
+          }
+
+          if (addrComponent.types.indexOf('sublocality') >= 0) {
+            if (!area[5]) area[5] = addrComponent.long_name;
+            return;
+          }
+
+          if (addrComponent.types.indexOf('sublocality_level_1') >= 0) {
+            if (!area[4]) area[4] = addrComponent.long_name;
+            return;
+          }
+
+          if (addrComponent.types.indexOf('sublocality_level_2') >= 0) {
+            if (!area[3]) area[3] = addrComponent.long_name;
+            return;
+          }
+
+          if (addrComponent.types.indexOf('sublocality_level_3') >= 0) {
+            if (!area[2]) area[2] = addrComponent.long_name;
+            return;
+          }
+
+          if (addrComponent.types.indexOf('sublocality_level_4') >= 0) {
+            if (!area[1]) area[1] = addrComponent.long_name;
+            return;
+          }
+
+          if (addrComponent.types.indexOf('sublocality_level_5') >= 0) {
+            if (!area[0]) area[0] = addrComponent.long_name;
+            return;
+          }
+
+          if (addrComponent.types.indexOf('locality') >= 0) {
+            if (city.indexOf(addrComponent.long_name) < 0) city.push(addrComponent.long_name);
+            return;
+          }
+
+          if (addrComponent.types.indexOf('administrative_area_level_1') >= 0) {
+            if (!state[4]) state[4] = addrComponent.long_name;
+            return;
+          }
+
+          if (addrComponent.types.indexOf('administrative_area_level_2') >= 0) {
+            if (!state[3]) state[3] = addrComponent.long_name;
+            return;
+          }
+
+          if (addrComponent.types.indexOf('administrative_area_level_3') >= 0) {
+            if (!state[2]) state[2] = addrComponent.long_name;
+            return;
+          }
+
+          if (addrComponent.types.indexOf('administrative_area_level_4') >= 0) {
+            if (!state[1]) state[1] = addrComponent.long_name;
+            return;
+          }
+
+          if (addrComponent.types.indexOf('administrative_area_level_5') >= 0) {
+            if (!state[0]) state[0] = addrComponent.long_name;
+            return;
+          }
+
+          if (addrComponent.types.indexOf('country') >= 0) {
+            if (country.indexOf(addrComponent.long_name) < 0) country.push(addrComponent.long_name);
+            return;
+          }
+
+          if (addrComponent.types.indexOf('postal_code') >= 0) {
+            if (postalCode.indexOf(addrComponent.long_name) < 0) postalCode.push(addrComponent.long_name);
+            return;
+          }
+        });
+        this.set('state.model.line1', line1.filter(lineSegment => {
+          return !!lineSegment;
+        }).join(', ').trim());
+        if (line2.length) this.set('state.model.line2', line2.filter(lineSegment => {
+          return !!lineSegment;
+        }).join(', ').trim());else if (streetAddress.length) this.set('state.model.line2', streetAddress.filter(lineSegment => {
+          return !!lineSegment;
+        }).join(', ').trim());else if (postBox.length) this.set('state.model.line2', postBox.filter(lineSegment => {
+          return !!lineSegment;
+        }).join(', ').trim());
+        this.set('state.model.line3', line3.filter(lineSegment => {
+          return !!lineSegment;
+        }).join(', ').trim());
+        this.set('state.model.area', area.filter(areaSegment => {
+          return !!areaSegment;
+        }).join(', ').trim());
+        this.set('state.model.city', city.filter(citySegment => {
+          return !!citySegment;
+        }).join(', ').trim());
+        this.set('state.model.state', state.filter(stateSegment => {
+          return !!stateSegment;
+        }).join(', ').trim());
+        this.set('state.model.country', country.filter(countrySegment => {
+          return !!countrySegment;
+        }).join(', ').trim());
+        this.set('state.model.postalCode', postalCode.filter(codeSegment => {
+          return !!codeSegment;
+        }).join(', ').trim());
+
+        if (this.get('state.model.line1') === '' && this.get('state.model.line2') !== '') {
+          this.set('state.model.line1', this.get('state.model.line2'));
+          this.set('state.model.line2', '');
+        }
+      });
+    }).restartable()
   });
 
   _exports.default = _default;
@@ -5186,6 +5648,18 @@
   _exports.default = _default;
 });
 ;define("twyr-webapp-server/controllers/tenant-administration", ["exports", "twyr-webapp-server/framework/base-controller"], function (_exports, _baseController) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseController.default.extend({});
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/controllers/tenant-administration/feature-manager", ["exports", "twyr-webapp-server/controllers/framework/base-controller"], function (_exports, _baseController) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -8729,7 +9203,7 @@
       'inverse': 'location'
     }),
     'name': _emberData.default.attr('string', {
-      'defaultValue': 'Main Office'
+      'defaultValue': ''
     }),
     'line1': _emberData.default.attr('string', {
       'defaultValue': ''
@@ -8766,6 +9240,9 @@
     }),
     'timezoneName': _emberData.default.attr('string', {
       'defaultValue': 'India Standard Time'
+    }),
+    'isPrimary': _emberData.default.attr('boolean', {
+      'defaultValue': false
     })
   });
 
@@ -8783,6 +9260,7 @@
     'name': _emberData.default.attr('string'),
     'subDomain': _emberData.default.attr('string'),
     'location': _emberData.default.belongsTo('tenant-administration/tenant-location', {
+      'async': true,
       'inverse': 'tenant'
     }),
     'fullDomain': Ember.computed('subDomain', {
@@ -8850,8 +9328,6 @@
   _exports.default = void 0;
 
   var _default = _baseRoute.default.extend({
-    currentUser: Ember.inject.service('current-user'),
-
     init() {
       this._super(...arguments);
 
@@ -8945,8 +9421,6 @@
   _exports.default = void 0;
 
   var _default = _baseRoute.default.extend({
-    currentUser: Ember.inject.service('current-user'),
-
     init() {
       this._super(...arguments);
 
@@ -9009,8 +9483,6 @@
   _exports.default = void 0;
 
   var _default = _baseRoute.default.extend({
-    currentUser: Ember.inject.service('current-user'),
-
     init() {
       this._super(...arguments);
 
@@ -9037,6 +9509,12 @@
       });
     },
 
+    afterModel() {
+      const isActive = this.get('router').isActive(this.get('fullRouteName'));
+      if (!isActive) return;
+      this.transitionTo('tenant-administration.features');
+    },
+
     onUserDataUpdated() {
       if (!window.twyrTenantId) {
         this.get('store').unloadAll('tenant-administration/tenant');
@@ -9061,6 +9539,18 @@
       this.get('controller').set('model', tenantData);
     }).keepLatest()
   });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/routes/tenant-administration/feature-manager", ["exports", "twyr-webapp-server/routes/framework/base-route"], function (_exports, _baseRoute) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseRoute.default.extend({});
 
   _exports.default = _default;
 });
@@ -9184,7 +9674,6 @@
   });
   _exports.default = void 0;
 
-  /* eslint-disable no-console */
   var _default = Ember.Service.extend(Ember.Evented, {
     ajax: Ember.inject.service('ajax'),
     notification: Ember.inject.service('integrated-notification'),
@@ -9219,14 +9708,12 @@
           window.twyrUserId = userData['user_id'];
           window.twyrTenantId = userData['tenant_id'];
         } else {
-          console.log('`Current User Service, setting null #1');
           window.twyrUserId = null;
           window.twyrTenantId = null;
         }
 
         this.trigger('userDataUpdated');
       } catch (err) {
-        console.log('`Current User Service, setting null #2', err);
         this.set('userData', null);
         window.twyrUserId = null;
         window.twyrTenantId = null;
@@ -9364,14 +9851,13 @@
         return;
       }
 
-      if (data.error.payload.errors && data.error.payload.errors.length) {
+      if (data.error.payload && data.error.payload.errors && data.error.payload.errors.length) {
         data.error.payload.errors.forEach((dataError, idx) => {
           if (!idx) return;
           toast.error(dataError.detail, 'Error', options);
         });
         return;
-      } // console.error(`Errors: `, data.error.payload.errors);
-
+      }
 
       toast.error(data.error.message, 'Error', options);
     }
@@ -9490,9 +9976,6 @@
   });
   _exports.default = void 0;
 
-  /* eslint-disable require-yield */
-
-  /* eslint-disable no-console */
   var _default = Ember.Service.extend(Ember.Evented, {
     boundDataProcessor: null,
 
@@ -9509,23 +9992,18 @@
         }
       });
       streamer.on('open', this.onStreamerOpen.bind(this)); // streamer.on('reconnect', () => {
-      // 	if(window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnect: ', arguments);
       // 	this.trigger('websocket-reconnect');
       // });
       // streamer.on('reconnect scheduled', () => {
-      // 	if(window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnect scheduled: ', arguments);
       // 	this.trigger('websocket-reconnect-scheduled');
       // });
       // streamer.on('reconnected', () => {
-      // 	if(window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnected: ', arguments);
       // 	this.trigger('websocket-reconnected');
       // });
       // streamer.on('reconnect timeout', () => {
-      // 	if(window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnect timeout: ', arguments);
       // 	this.trigger('websocket-reconnect-timeout');
       // });
       // streamer.on('reconnect failed', () => {
-      // 	if(window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::reconnect failed: ', arguments);
       // 	this.trigger('websocket-reconnect-failed');
       // });
 
@@ -9546,30 +10024,25 @@
     },
 
     onStreamerOpen() {
-      if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::open: ', arguments);
       this.get('streamer').on('data', this.get('boundDataProcessor'));
       this.trigger('websocket-open');
     },
 
     onStreamerClose() {
-      if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::close: ', arguments);
       this.get('streamer').off('data', this.get('boundDataProcessor'));
       this.trigger('websocket-close');
     },
 
     onStreamerEnd() {
-      if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::end: ', arguments);
       this.get('streamer').off('data', this.get('boundDataProcessor'));
       this.trigger('websocket-end');
     },
 
     onStreamerError() {
-      if (window.developmentMode) console.error('twyr-webapp-server/services/websockets::streamer::on::error: ', arguments);
       this.trigger('websocket-error');
     },
 
     _websocketDataProcessor(websocketData) {
-      if (window.developmentMode) console.log('twyr-webapp-server/services/websockets::streamer::on::data: ', websocketData);
       this.trigger(`websocket-data::${websocketData.channel}`, websocketData.data);
       this.trigger(`data`, websocketData.channel, websocketData.data);
     }
@@ -10230,10 +10703,28 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "jsUFzOJG",
-    "block": "{\"symbols\":[\"card\",\"form\",\"card\",\"header\",\"text\",\"header\",\"text\"],\"statements\":[[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex flex-gt-md-80\"],[9],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],[[\"class\"],[\"bg-twyr-component white-text\"]],{\"statements\":[[4,\"component\",[[22,6,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,7,[\"title\"]]],null,{\"statements\":[[1,[27,\"mdi-icon\",[\"account-settings\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Administration\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[7]},null]],\"parameters\":[6]},null],[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-row layout-align-space-between flex\"]],{\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"flex flex-gt-md-25\",[27,\"perform\",[[23,[\"save\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,3,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,4,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"title\"]]],null,{\"statements\":[[0,\"Basics\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[4]},null],[4,\"component\",[[22,3,[\"content\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"Name\",[23,[\"model\",\"name\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"name\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"url\",\"flex-100\",\"Domain\",[23,[\"model\",\"fullDomain\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"fullDomain\"]]],null]],null],true]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,3,[\"actions\"]]],[[\"class\"],[\"layout-row layout-align-end-center\"]],{\"statements\":[[4,\"component\",[[22,2,[\"submit-button\"]]],[[\"primary\",\"raised\",\"onClick\",\"disabled\"],[true,true,[27,\"perform\",[[23,[\"save\"]]],null],[27,\"or\",[[22,2,[\"isInvalid\"]],[23,[\"save\",\"isRunning\"]],[23,[\"cancel\",\"isRunning\"]],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"save\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[4,\"paper-button\",null,[[\"warn\",\"raised\",\"onClick\",\"disabled\"],[true,true,[27,\"perform\",[[23,[\"cancel\"]]],null],[27,\"or\",[[23,[\"save\",\"isRunning\"]],[23,[\"cancel\",\"isRunning\"]],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"cancel\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"cancel\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "C0T1nB37",
+    "block": "{\"symbols\":[\"card\",\"navbar\",\"nav\",\"card\",\"card\",\"header\",\"text\",\"form\",\"card\",\"header\",\"text\",\"header\",\"text\"],\"statements\":[[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex flex-gt-md-80\"],[9],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,4,[\"header\"]]],[[\"class\"],[\"bg-twyr-component white-text\"]],{\"statements\":[[4,\"component\",[[22,12,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,13,[\"title\"]]],null,{\"statements\":[[1,[27,\"mdi-icon\",[\"account-settings\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Administration\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[13]},null]],\"parameters\":[12]},null],[4,\"component\",[[22,4,[\"content\"]]],[[\"class\"],[\"p-0 layout-row layout-align-start-stretch layout-wrap flex\"]],{\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-50 flex-gt-lg-30 layout-row layout-align-center-stretch\",[27,\"perform\",[[23,[\"save\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,9,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,10,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"title\"]]],null,{\"statements\":[[0,\"Basics\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[11]},null]],\"parameters\":[10]},null],[4,\"component\",[[22,9,[\"content\"]]],[[\"class\"],[\"layout-column layout-align-start-stretch\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"Name\",[23,[\"model\",\"name\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"name\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"url\",\"flex-100\",\"Domain\",[23,[\"model\",\"fullDomain\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"fullDomain\"]]],null]],null],true]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,9,[\"actions\"]]],[[\"class\"],[\"layout-row layout-align-end-center layout-wrap\"]],{\"statements\":[[4,\"component\",[[22,8,[\"submit-button\"]]],[[\"primary\",\"raised\",\"onClick\",\"disabled\"],[true,true,[27,\"perform\",[[23,[\"save\"]]],null],[27,\"or\",[[22,8,[\"isInvalid\"]],[23,[\"save\",\"isRunning\"]],[23,[\"cancel\",\"isRunning\"]],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"save\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[4,\"paper-button\",null,[[\"warn\",\"raised\",\"onClick\",\"disabled\"],[true,true,[27,\"perform\",[[23,[\"cancel\"]]],null],[27,\"or\",[[23,[\"save\",\"isRunning\"]],[23,[\"cancel\",\"isRunning\"]],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"cancel\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"cancel\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[9]},null]],\"parameters\":[8]},null],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,5,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,6,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,7,[\"title\"]]],null,{\"statements\":[[0,\"Main Office Location\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[7]},null],[4,\"paper-button\",null,[[\"primary\",\"raised\",\"mini\",\"onClick\",\"bubbles\"],[true,true,true,[27,\"perform\",[[23,[\"editPrimaryLocation\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"edit\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[6]},null],[4,\"component\",[[22,5,[\"content\"]]],[[\"class\"],[\"flex layout-row layout-align-center-stretch layout-wrap\"]],{\"statements\":[[4,\"if\",[[23,[\"model\",\"location\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"id\",\"tenant-administrator-main-component-static-location-display\"],[11,\"class\",\"p-0 text-center flex-100 flex-gt-lg-70\"],[11,\"style\",\"min-height:15rem;\"],[9],[0,\"\\n\"],[4,\"if\",[[23,[\"staticUrl\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"img\"],[11,\"border\",\"0\"],[12,\"src\",[28,[[21,\"staticUrl\"]]]],[12,\"alt\",[28,[[23,[\"model\",\"location\",\"name\"]]]]],[9],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\tFetching map...\\n\"]],\"parameters\":[]}],[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex-100 flex-gt-lg-30\"],[11,\"style\",\"font-style:italic;\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"line1\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"line2\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"line2\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"line3\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"line3\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"area\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"area\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"city\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"state\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"country\"]],false],[0,\" \"],[1,[23,[\"model\",\"location\",\"postalCode\"]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"primary\",\"raised\",\"onClick\",\"bubbles\"],[\"flex\",true,true,[27,\"perform\",[[23,[\"addPrimaryLocation\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"map-marked\"],[[\"class\"],[\"mr-1\"]]],false],[0,\" Add Main Office Location\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[4,\"bs-navbar\",null,[[\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"light\",\"white\",false,true]],{\"statements\":[[4,\"component\",[[22,2,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"nav\"]]],[[\"class\"],[\"layout-row layout-align-start-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,3,[\"item\"]]],[[\"class\"],[\"mr-4\"]],{\"statements\":[[0,\"Feature Management\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,3,[\"item\"]]],[[\"class\"],[\"mr-4\"]],{\"statements\":[[0,\"Groups & Permissions\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,3,[\"item\"]]],null,{\"statements\":[[0,\"User Management\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[3]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"mt-2 flex\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/main-component.hbs"
+    }
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/templates/components/tenant-administration/tenant-location-editor", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = Ember.HTMLBars.template({
+    "id": "M8zvuojg",
+    "block": "{\"symbols\":[\"card\",\"header\",\"text\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0\"]],{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"text\"]]],null,{\"statements\":[[4,\"component\",[[22,3,[\"title\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[23,[\"state\",\"model\",\"name\"]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[0,\"\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex-65 layout-column layout-align-start-stretch\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-start-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"onChange\"],[\"text\",\"flex\",\"Approximate Location\",[23,[\"approxLocation\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"approxLocation\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex layout-row layout-align-start-stretch\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex\"],[12,\"id\",[28,[\"tenant-location-editor-map-container-\",[23,[\"state\",\"model\",\"id\"]]]]],[9],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex-30 layout-column layout-align-center-stretch\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Name\",[23,[\"state\",\"model\",\"name\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"name\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Line #1\",[23,[\"state\",\"model\",\"line1\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"line1\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Line #2\",[23,[\"state\",\"model\",\"line2\"]],[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"line2\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Line #3\",[23,[\"state\",\"model\",\"line3\"]],[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"line3\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Area\",[23,[\"state\",\"model\",\"area\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"area\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"City\",[23,[\"state\",\"model\",\"city\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"city\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"State\",[23,[\"state\",\"model\",\"state\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"state\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Country\",[23,[\"state\",\"model\",\"country\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"country\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Postal Code\",[23,[\"state\",\"model\",\"postalCode\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"postalCode\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex-90 layout-row layout-align-space-between\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"disabled\",\"onChange\"],[\"text\",\"flex-45\",\"Latitude\",[23,[\"state\",\"model\",\"latitude\"]],true,[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"latitude\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"disabled\",\"onChange\"],[\"text\",\"flex-45\",\"Longitude\",[23,[\"state\",\"model\",\"longitude\"]],true,[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"longitude\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Timezone\",[23,[\"state\",\"model\",\"timezoneName\"]],true,[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"timezoneName\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
+    "meta": {
+      "moduleName": "twyr-webapp-server/templates/components/tenant-administration/tenant-location-editor.hbs"
     }
   });
 
@@ -10432,6 +10923,24 @@
     "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Tenant Administration\"],null],false],[0,\"\\n\"],[1,[27,\"component\",[\"tenant-administration/main-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/tenant-administration.hbs"
+    }
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/templates/tenant-administration/feature-manager", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = Ember.HTMLBars.template({
+    "id": "gMqx9JoW",
+    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Feature Manager\"],null],false],[0,\"\\n\"],[0,\"TODO...\\n\"]],\"hasEval\":false}",
+    "meta": {
+      "moduleName": "twyr-webapp-server/templates/tenant-administration/feature-manager.hbs"
     }
   });
 
