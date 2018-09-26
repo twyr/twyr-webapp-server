@@ -65,7 +65,7 @@ module.exports = function(grunt) {
 						'mochaFile': './buildresults/tests.xml'
 					},
 					'require': ['./test/setup_mocks'],
-					'timeout': 5000
+					'timeout': 50000
 				},
 
 				'src': ['./test/**/*.spec.js']
