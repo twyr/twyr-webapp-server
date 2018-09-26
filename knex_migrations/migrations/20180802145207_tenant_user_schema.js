@@ -2,11 +2,14 @@ exports.up = async function(knex) {
 	let exists = null;
 
 	// Step 1: Create the "tenants_users" table
+	await knex.schema.raw("CREATE TYPE public.tenant_user_access_status AS ENUM ('waiting', 'authorized', 'disabled')");
+
 	exists = await knex.schema.withSchema('public').hasTable('tenants_users');
 	if(!exists) {
 		await knex.schema.withSchema('public').createTable('tenants_users', function(tenantUserTbl) {
 			tenantUserTbl.uuid('tenant_id').notNullable().references('tenant_id').inTable('tenants').onDelete('CASCADE').onUpdate('CASCADE');
 			tenantUserTbl.uuid('user_id').notNullable().references('user_id').inTable('users').onDelete('CASCADE').onUpdate('CASCADE');
+			tenantUserTbl.specificType('access_status', 'public.tenant_user_access_status').notNullable().defaultTo('waiting');
 			tenantUserTbl.uuid('tenant_user_id').notNullable().defaultTo(knex.raw('uuid_generate_v4()')); // For front-end, browser-based state management libraries (for e.g. ember-data)
 			tenantUserTbl.text('designation');
 			tenantUserTbl.uuid('default_application');
@@ -215,4 +218,6 @@ exports.down = async function(knex) {
 
 	await knex.raw(`DROP TABLE IF EXISTS public.tenants_users_groups CASCADE;`);
 	await knex.raw(`DROP TABLE IF EXISTS public.tenants_users CASCADE;`);
+
+	await knex.schema.raw("DROP TYPE IF EXISTS public.tenant_user_access_status CASCADE;");
 };

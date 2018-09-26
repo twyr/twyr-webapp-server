@@ -150,7 +150,9 @@ class TwyrBaseFeature extends TwyrBaseModule {
 		const inflection = require('inflection');
 
 		const featureNames = Object.keys(tenantFeatures || {});
-		const clientsideAssets = {};
+		const clientsideAssets = {
+			'RouteMap': JSON.parse(JSON.stringify(assets['RouteMap']))
+		};
 
 		for(let idx = 0; idx < featureNames.length; idx++) {
 			const featureName = featureNames[idx];
@@ -161,8 +163,6 @@ class TwyrBaseFeature extends TwyrBaseModule {
 
 			Object.keys(featureClientsideAssets).forEach((featureClientsideAssetName) => {
 				if(featureClientsideAssetName === 'RouteMap') {
-					if(!clientsideAssets['RouteMap']) clientsideAssets['RouteMap'] = assets['RouteMap'];
-
 					const inflectedFeatureName = inflection.transform(featureName, ['foreign_key', 'dasherize']).replace('-id', '');
 					clientsideAssets['RouteMap'][inflectedFeatureName] = {
 						'path': `/${inflectedFeatureName}`,
@@ -182,24 +182,7 @@ class TwyrBaseFeature extends TwyrBaseModule {
 			clientsideAssets[clientsideAssetName] = clientsideAssets[clientsideAssetName].join('\n');
 		});
 
-		Object.keys(assets).forEach((assetName) => {
-			if(assetName === 'RouteMap') {
-				if(!assets['RouteMap']) assets['RouteMap'] = {
-					'index': {
-						'path': '/',
-						'routes': ''
-					}
-				};
-
-				assets['RouteMap']['index']['routes'] = clientsideAssets['RouteMap'] || '';
-				return;
-			}
-
-			if(!assets[assetName]) assets[assetName] = [];
-			assets[assetName].push(clientsideAssets[assetName]);
-		});
-
-		return assets;
+		return clientsideAssets;
 	}
 	// #endregion
 
@@ -346,13 +329,13 @@ class TwyrBaseFeature extends TwyrBaseModule {
 	 * @readonly
 	 */
 	get EmberAssets() {
-		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::EmberAssets`);
+		// if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`${this.name}::EmberAssets`);
 
 		return {
 			'RouteMap': {
 				'index': {
 					'path': '/',
-					'routes': ''
+					'routes': {}
 				}
 			}
 		};

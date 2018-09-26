@@ -557,7 +557,7 @@ exports.seed = async function(knex) {
 	await knex.raw(`INSERT INTO tenant_group_permissions (tenant_id, group_id, module_id, feature_permission_id) SELECT '${tenantId}', '${publicGroupId}', module_id, feature_permission_id FROM feature_permissions WHERE name IN ('public') ON CONFLICT DO NOTHING;`);
 
 	// Step 8: Add the root user to the tenant's super-admin group
-	await knex.raw(`INSERT INTO tenants_users (tenant_id, user_id, designation) VALUES('${tenantId}', '${userId}', 'Super Administrator') ON CONFLICT DO NOTHING;`);
+	await knex.raw(`INSERT INTO tenants_users (tenant_id, user_id, access_status, designation) VALUES('${tenantId}', '${userId}', 'authorized', 'Super Administrator') ON CONFLICT DO NOTHING;`);
 	await knex.raw(`INSERT INTO tenants_users_groups (tenant_id, user_id, group_id) SELECT '${tenantId}', '${userId}', group_id FROM tenant_groups WHERE tenant_id = '${tenantId}' AND parent_group_id IS NULL ON CONFLICT DO NOTHING;`);
 
 	// Step 9: Create a User representing all the non-logged-in visitors to the portal, assign the user to the default tenant,
@@ -580,7 +580,7 @@ exports.seed = async function(knex) {
 		publicUserId = publicUserId.rows[0]['user_id'];
 	}
 
-	await knex.raw(`INSERT INTO tenants_users (tenant_id, user_id, designation) VALUES('${tenantId}', '${publicUserId}', 'Visitor') ON CONFLICT DO NOTHING;`);
+	await knex.raw(`INSERT INTO tenants_users (tenant_id, user_id, access_status, designation) VALUES('${tenantId}', '${publicUserId}', 'authorized', 'Visitor') ON CONFLICT DO NOTHING;`);
 
 	await knex.raw(`DELETE FROM tenants_users_groups WHERE tenant_id = '${tenantId}' AND user_id = '${publicUserId}';`);
 	await knex.raw(`INSERT INTO tenants_users_groups (tenant_id, user_id, group_id) SELECT '${tenantId}', '${publicUserId}', group_id FROM tenant_groups WHERE tenant_id = '${tenantId}' AND name = 'public' ON CONFLICT DO NOTHING;`);

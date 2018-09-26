@@ -75,6 +75,7 @@ exports.seed = async function(knex) {
 	}
 
 	const tenantAdminFeatureId = componentId;
+
 	componentId = await knex.raw(`SELECT module_id FROM fn_get_module_descendants(?) WHERE name = ? AND type = 'feature'`, [tenantAdminFeatureId, 'FeatureManager']);
 	if(!componentId.rows.length) {
 		await knex('modules').insert({
@@ -84,6 +85,44 @@ exports.seed = async function(knex) {
 			'name': 'FeatureManager',
 			'display_name': 'Feature Manager',
 			'description': 'The Twyr Web Application Feature Manager - manages the tenants\' feature selections',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
+	}
+
+	componentId = await knex.raw(`SELECT module_id FROM fn_get_module_descendants(?) WHERE name = ? AND type = 'feature'`, [tenantAdminFeatureId, 'GroupManager']);
+	if(!componentId.rows.length) {
+		await knex('modules').insert({
+			'parent_module_id': tenantAdminFeatureId,
+			'type': 'feature',
+			'deploy': 'default',
+			'name': 'GroupManager',
+			'display_name': 'Group & Permissions Manager',
+			'description': 'The Twyr Web Application Groups Permissions Manager - manages the tenants\' groups, and permissions for those groups, etc.',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
+	}
+
+	componentId = await knex.raw(`SELECT module_id FROM fn_get_module_descendants(?) WHERE name = ? AND type = 'feature'`, [tenantAdminFeatureId, 'UserManager']);
+	if(!componentId.rows.length) {
+		await knex('modules').insert({
+			'parent_module_id': tenantAdminFeatureId,
+			'type': 'feature',
+			'deploy': 'default',
+			'name': 'UserManager',
+			'display_name': 'User Manager',
+			'description': 'The Twyr Web Application User Manager - manages the tenants\' users',
 			'metadata': {
 				'author': 'Twyr',
 				'version': '3.0.1',

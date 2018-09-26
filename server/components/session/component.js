@@ -94,7 +94,7 @@ class Session extends TwyrBaseComponent {
 			ctxt.body = { 'status': status || 200, 'info': info || { 'message': `Login for ${user.first_name} ${user.last_name} successful` } };
 
 			const dbSrvc = this.$dependencies.DatabaseService;
-			const allowedTenants = await dbSrvc.knex.raw('SELECT * FROM tenants WHERE tenant_id IN (SELECT tenant_id FROM tenants_users WHERE user_id = ?)', [user.user_id]);
+			const allowedTenants = await dbSrvc.knex.raw(`SELECT * FROM tenants WHERE tenant_id IN (SELECT tenant_id FROM tenants_users WHERE user_id = ? AND access_status = 'authorized') AND enabled = true`, [user.user_id]);
 
 			const allowedTenantIds = allowedTenants.rows.map((allowedTenant) => {
 				return allowedTenant['tenant_id'];

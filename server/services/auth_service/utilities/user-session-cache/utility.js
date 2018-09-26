@@ -159,7 +159,7 @@ const getTenantUserAttributes = async function(tenantId, userId) {
 		}
 
 		// Setup the models...
-		const databaseTenantUser = await databaseSrvc.knex.raw(`SELECT A.tenant_id, A.name, A.sub_domain, B.designation, B.default_application FROM tenants A INNER JOIN tenants_users B ON (A.tenant_id = B.tenant_id) WHERE A.enabled= true AND B.user_id = ?`, [userId]);
+		const databaseTenantUser = await databaseSrvc.knex.raw(`SELECT A.tenant_id, A.name, A.sub_domain, B.designation, B.default_application FROM tenants A INNER JOIN tenants_users B ON (A.tenant_id = B.tenant_id) WHERE B.user_id = ? AND B.access_status = 'authorized' AND A.enabled = true`, [userId]);
 
 		const tenantUserAttributes = {
 			'designation': '',

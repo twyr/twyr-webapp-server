@@ -161,7 +161,14 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 		while(server.$parent) server = server.$parent;
 
 		const featureNames = Object.keys(ctxt.state.tenant.features || {});
-		const clientsideAssets = {};
+		const clientsideAssets = {
+			'RouteMap': {
+				'index': {
+					'path': '/',
+					'routes': {}
+				}
+			}
+		};
 
 		for(let idx = 0; idx < featureNames.length; idx++) {
 			const featureName = featureNames[idx];
@@ -172,13 +179,6 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 
 			Object.keys(featureClientsideAssets).forEach((featureClientsideAssetName) => {
 				if(featureClientsideAssetName === 'RouteMap') {
-					if(!clientsideAssets['RouteMap']) clientsideAssets['RouteMap'] = {
-						'index': {
-							'path': '/',
-							'routes': ''
-						}
-					};
-
 					const inflectedFeatureName = inflection.transform(featureName, ['foreign_key', 'dasherize']).replace('-id', '');
 					clientsideAssets['RouteMap'][inflectedFeatureName] = {
 						'path': `/${inflectedFeatureName}`,
@@ -198,14 +198,6 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 			clientsideAssets[clientsideAssetName] = clientsideAssets[clientsideAssetName].join('\n');
 		});
 
-		if(!clientsideAssets['RouteMap'])
-		clientsideAssets['RouteMap'] = {
-			'index': {
-				'path': '/',
-				'routes': ''
-			}
-		};
-
 		// Just for kicks - to make it look good when someone views the HTML in the Browser Developer tools.
 		clientsideAssets['RouteMap'] = this._generateEmberRouteMap(clientsideAssets['RouteMap']).replace(/\n/g, '\n\t\t\t\t');
 		return clientsideAssets;
@@ -213,23 +205,27 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 
 	_generateEmberRouteMap(featureRoutes) {
 		let routeStr = '';
-		Object.keys(featureRoutes).forEach((routeName, idx) => {
-			if(!featureRoutes[routeName]['path'].startsWith('/')) featureRoutes[routeName]['path'] = `$/${featureRoutes[routeName]['path']}`;
+		const routeNames = Object.keys(featureRoutes);
+		const indexSubRoute = routeNames.indexOf('index');
+		if(indexSubRoute >= 0) routeNames.splice(indexSubRoute, 1);
 
-			let thisFeatureRouteMap = '';
+		routeNames.forEach((routeName, idx) => {
+			let thisFeatureRouteMap = idx ? '\n' : '';
+			thisFeatureRouteMap += `this.route('${routeName}', { 'path': '${featureRoutes[routeName]['path']}' }`;
 
-			if(!featureRoutes[routeName]['routes'] || ((typeof featureRoutes[routeName]['routes'] === 'string') && (featureRoutes[routeName]['routes'].trim() === '')))
-				thisFeatureRouteMap = `this.route("${routeName}", { "path": "${featureRoutes[routeName]['path']}" });`;
-			else
-				thisFeatureRouteMap =
-`this.route("${routeName}", { "path": "${featureRoutes[routeName]['path']}" }, function() {
-	${this._generateEmberRouteMap(featureRoutes[routeName]['routes'])}
-});`;
+			const subRoutes = Object.keys(featureRoutes[routeName]['routes']);
+			const subIndexSubRoute = subRoutes.indexOf('index');
+			if(subIndexSubRoute >= 0) subRoutes.splice(subIndexSubRoute, 1);
 
-			if(idx < (Object.keys(featureRoutes).length - 1))
-				thisFeatureRouteMap = `${thisFeatureRouteMap}\n\n`;
+			if(subRoutes.length) {
+				thisFeatureRouteMap += ', function() {\n\t';
+				thisFeatureRouteMap += this._generateEmberRouteMap(featureRoutes[routeName]['routes']).replace(/\n/g, '\t');
+				thisFeatureRouteMap += '\n});\n';
+			}
+			else {
+				thisFeatureRouteMap += `);`;
+			}
 
-			thisFeatureRouteMap = thisFeatureRouteMap.replace('/\n/g', '\n\t');
 			routeStr += thisFeatureRouteMap;
 		});
 

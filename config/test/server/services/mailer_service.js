@@ -1,6 +1,5 @@
 exports.config = {
 	"test": true,
-
 	"transporter": {
 		"host": "smtp.ethereal.email",
 		"port": 587,
@@ -10,7 +9,6 @@ exports.config = {
 			"pass": ""
 		}
 	},
-
 	"sendMail": {
 		"from": "Twy'r WebApp Server"
 	}
