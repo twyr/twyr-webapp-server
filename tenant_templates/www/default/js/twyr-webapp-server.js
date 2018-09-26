@@ -10,9 +10,7 @@
   });
   _exports.default = void 0;
 
-  var _default = _emberData.default.JSONAPIAdapter.extend(_ajaxSupport.default, {
-    'host': '/'
-  });
+  var _default = _emberData.default.JSONAPIAdapter.extend(_ajaxSupport.default, {});
 
   _exports.default = _default;
 });
@@ -5659,7 +5657,31 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/controllers/tenant-administration/feature-manager", ["exports", "twyr-webapp-server/controllers/framework/base-controller"], function (_exports, _baseController) {
+;define("twyr-webapp-server/controllers/tenant-administration/feature-manager", ["exports", "twyr-webapp-server/framework/base-controller"], function (_exports, _baseController) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseController.default.extend({});
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/controllers/tenant-administration/group-manager", ["exports", "twyr-webapp-server/framework/base-controller"], function (_exports, _baseController) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseController.default.extend({});
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/controllers/tenant-administration/user-manager", ["exports", "twyr-webapp-server/framework/base-controller"], function (_exports, _baseController) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -8959,6 +8981,84 @@
   };
   _exports.default = _default;
 });
+;define("twyr-webapp-server/initializers/tenant-administration/feature-manager/add-features-rel-tenant-model", ["exports", "ember-data", "twyr-webapp-server/models/tenant-administration/tenant"], function (_exports, _emberData, _tenant) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.initialize = initialize;
+  _exports.default = void 0;
+
+  function initialize()
+  /* application */
+  {
+    // application.inject('route', 'foo', 'service:foo');
+    _tenant.default.reopen({
+      'features': _emberData.default.hasMany('tenant-administration/feature-manager/tenant-feature', {
+        'async': true,
+        'inverse': 'tenant'
+      })
+    });
+  }
+
+  var _default = {
+    initialize
+  };
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/initializers/tenant-administration/group-manager/add-groups-rel-tenant-model", ["exports", "ember-data", "twyr-webapp-server/models/tenant-administration/tenant"], function (_exports, _emberData, _tenant) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.initialize = initialize;
+  _exports.default = void 0;
+
+  function initialize()
+  /* application */
+  {
+    // application.inject('route', 'foo', 'service:foo');
+    _tenant.default.reopen({
+      'groups': _emberData.default.hasMany('tenant-administration/group-manager/tenant-group', {
+        'async': true,
+        'inverse': 'tenant'
+      })
+    });
+  }
+
+  var _default = {
+    initialize
+  };
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/initializers/tenant-administration/user-manager/add-users-rel-tenant-model", ["exports", "ember-data", "twyr-webapp-server/models/tenant-administration/tenant"], function (_exports, _emberData, _tenant) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.initialize = initialize;
+  _exports.default = void 0;
+
+  function initialize()
+  /* application */
+  {
+    // application.inject('route', 'foo', 'service:foo');
+    _tenant.default.reopen({
+      'users': _emberData.default.hasMany('tenant-administration/user-manager/tenant-user', {
+        'async': true,
+        'inverse': 'tenant'
+      })
+    });
+  }
+
+  var _default = {
+    initialize
+  };
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/initializers/toastr", ["exports", "ember-toastr/initializers/toastr", "twyr-webapp-server/config/environment"], function (_exports, _toastr, _environment) {
   "use strict";
 
@@ -9189,6 +9289,40 @@
 
   _exports.default = _default;
 });
+;define("twyr-webapp-server/models/tenant-administration/feature-manager/tenant-feature", ["exports", "twyr-webapp-server/framework/base-model", "ember-data"], function (_exports, _baseModel, _emberData) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseModel.default.extend({
+    'tenant': _emberData.default.belongsTo('tenant-administration/tenant', {
+      'async': true,
+      'inverse': 'features'
+    })
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/models/tenant-administration/group-manager/tenant-group", ["exports", "twyr-webapp-server/framework/base-model", "ember-data"], function (_exports, _baseModel, _emberData) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseModel.default.extend({
+    'tenant': _emberData.default.belongsTo('tenant-administration/tenant', {
+      'async': true,
+      'inverse': 'groups'
+    })
+  });
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/models/tenant-administration/tenant-location", ["exports", "twyr-webapp-server/framework/base-model", "ember-data"], function (_exports, _baseModel, _emberData) {
   "use strict";
 
@@ -9278,6 +9412,23 @@
 
   _exports.default = _default;
 });
+;define("twyr-webapp-server/models/tenant-administration/user-manager/tenant-user", ["exports", "twyr-webapp-server/framework/base-model", "ember-data"], function (_exports, _baseModel, _emberData) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseModel.default.extend({
+    'tenant': _emberData.default.belongsTo('tenant-administration/tenant', {
+      'async': true,
+      'inverse': 'users'
+    })
+  });
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/options", ["exports", "ember-google-maps/options"], function (_exports, _options) {
   "use strict";
 
@@ -9357,7 +9508,7 @@
         return;
       }
 
-      const isActive = this.get('router').isActive(this.get('fullRouteName'));
+      const isActive = this.get('router').get('currentRouteName').includes(this.get('fullRouteName'));
       if (!isActive) return;
       this.get('refreshDashboardFeatures').perform();
     },
@@ -9454,7 +9605,7 @@
         return;
       }
 
-      const isActive = this.get('router').isActive(this.get('fullRouteName'));
+      const isActive = this.get('router').get('currentRouteName').includes(this.get('fullRouteName'));
       if (!isActive) return;
       this.get('refreshProfileModel').perform();
     },
@@ -9509,10 +9660,8 @@
       });
     },
 
-    afterModel() {
-      const isActive = this.get('router').isActive(this.get('fullRouteName'));
-      if (!isActive) return;
-      this.transitionTo('tenant-administration.features');
+    redirect(model, transition) {
+      if (transition.targetName === `${this.get('fullRouteName')}.index`) this.transitionTo(`${this.get('fullRouteName')}.feature-manager`);
     },
 
     onUserDataUpdated() {
@@ -9522,7 +9671,7 @@
         return;
       }
 
-      const isActive = this.get('router').isActive(this.get('fullRouteName'));
+      const isActive = this.get('router').get('currentRouteName').includes(this.get('fullRouteName'));
       if (!isActive) return;
       this.get('refreshTenantModel').perform();
     },
@@ -9542,7 +9691,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/routes/tenant-administration/feature-manager", ["exports", "twyr-webapp-server/routes/framework/base-route"], function (_exports, _baseRoute) {
+;define("twyr-webapp-server/routes/tenant-administration/feature-manager", ["exports", "twyr-webapp-server/framework/base-route"], function (_exports, _baseRoute) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -9550,7 +9699,142 @@
   });
   _exports.default = void 0;
 
-  var _default = _baseRoute.default.extend({});
+  var _default = _baseRoute.default.extend({
+    parentController: null,
+
+    init() {
+      this._super(...arguments);
+
+      this.set('parentController', this.controllerFor('tenant-administration'));
+      this.get('parentController').addObserver('model', this, 'onParentModelChange');
+      this.get('currentUser').on('userDataUpdated', this, this.onUserDataUpdated);
+    },
+
+    destroy() {
+      this.get('currentUser').off('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('parentController').removeObserver('model', this, 'onParentModelChange');
+
+      this._super(...arguments);
+    },
+
+    setupController(controller) {
+      const parentModel = this.get('parentController.model');
+      controller.set('model', parentModel);
+    },
+
+    onParentModelChange() {
+      const parentModel = this.get('parentController.model');
+      const thisController = this.get('controller');
+      if (!thisController) return;
+      thisController.set('model', parentModel);
+    },
+
+    onUserDataUpdated() {
+      if (!window.twyrTenantId) {
+        this.get('store').unloadAll('tenant-administration/feature-manager/tenant-feature');
+        return;
+      }
+    }
+
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/routes/tenant-administration/group-manager", ["exports", "twyr-webapp-server/framework/base-route"], function (_exports, _baseRoute) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseRoute.default.extend({
+    parentController: null,
+
+    init() {
+      this._super(...arguments);
+
+      this.set('parentController', this.controllerFor('tenant-administration'));
+      this.get('parentController').addObserver('model', this, 'onParentModelChange');
+      this.get('currentUser').on('userDataUpdated', this, this.onUserDataUpdated);
+    },
+
+    destroy() {
+      this.get('currentUser').off('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('parentController').removeObserver('model', this, 'onParentModelChange');
+
+      this._super(...arguments);
+    },
+
+    setupController(controller) {
+      const parentModel = this.get('parentController.model');
+      controller.set('model', parentModel);
+    },
+
+    onParentModelChange() {
+      const parentModel = this.get('parentController.model');
+      const thisController = this.get('controller');
+      if (!thisController) return;
+      thisController.set('model', parentModel);
+    },
+
+    onUserDataUpdated() {
+      if (!window.twyrTenantId) {
+        this.get('store').unloadAll('tenant-administration/group-manager/tenant-group');
+        return;
+      }
+    }
+
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/routes/tenant-administration/user-manager", ["exports", "twyr-webapp-server/framework/base-route"], function (_exports, _baseRoute) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseRoute.default.extend({
+    parentController: null,
+
+    init() {
+      this._super(...arguments);
+
+      this.set('parentController', this.controllerFor('tenant-administration'));
+      this.get('parentController').addObserver('model', this, 'onParentModelChange');
+      this.get('currentUser').on('userDataUpdated', this, this.onUserDataUpdated);
+    },
+
+    destroy() {
+      this.get('currentUser').off('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('parentController').removeObserver('model', this, 'onParentModelChange');
+
+      this._super(...arguments);
+    },
+
+    setupController(controller) {
+      const parentModel = this.get('parentController.model');
+      controller.set('model', parentModel);
+    },
+
+    onParentModelChange() {
+      const parentModel = this.get('parentController.model');
+      const thisController = this.get('controller');
+      if (!thisController) return;
+      thisController.set('model', parentModel);
+    },
+
+    onUserDataUpdated() {
+      if (!window.twyrTenantId) {
+        this.get('store').unloadAll('tenant-administration/user-manager/tenant-user');
+        return;
+      }
+    }
+
+  });
 
   _exports.default = _default;
 });
@@ -10703,8 +10987,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "C0T1nB37",
-    "block": "{\"symbols\":[\"card\",\"navbar\",\"nav\",\"card\",\"card\",\"header\",\"text\",\"form\",\"card\",\"header\",\"text\",\"header\",\"text\"],\"statements\":[[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex flex-gt-md-80\"],[9],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,4,[\"header\"]]],[[\"class\"],[\"bg-twyr-component white-text\"]],{\"statements\":[[4,\"component\",[[22,12,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,13,[\"title\"]]],null,{\"statements\":[[1,[27,\"mdi-icon\",[\"account-settings\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Administration\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[13]},null]],\"parameters\":[12]},null],[4,\"component\",[[22,4,[\"content\"]]],[[\"class\"],[\"p-0 layout-row layout-align-start-stretch layout-wrap flex\"]],{\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-50 flex-gt-lg-30 layout-row layout-align-center-stretch\",[27,\"perform\",[[23,[\"save\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,9,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,10,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"title\"]]],null,{\"statements\":[[0,\"Basics\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[11]},null]],\"parameters\":[10]},null],[4,\"component\",[[22,9,[\"content\"]]],[[\"class\"],[\"layout-column layout-align-start-stretch\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"Name\",[23,[\"model\",\"name\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"name\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"url\",\"flex-100\",\"Domain\",[23,[\"model\",\"fullDomain\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"fullDomain\"]]],null]],null],true]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,9,[\"actions\"]]],[[\"class\"],[\"layout-row layout-align-end-center layout-wrap\"]],{\"statements\":[[4,\"component\",[[22,8,[\"submit-button\"]]],[[\"primary\",\"raised\",\"onClick\",\"disabled\"],[true,true,[27,\"perform\",[[23,[\"save\"]]],null],[27,\"or\",[[22,8,[\"isInvalid\"]],[23,[\"save\",\"isRunning\"]],[23,[\"cancel\",\"isRunning\"]],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"save\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[4,\"paper-button\",null,[[\"warn\",\"raised\",\"onClick\",\"disabled\"],[true,true,[27,\"perform\",[[23,[\"cancel\"]]],null],[27,\"or\",[[23,[\"save\",\"isRunning\"]],[23,[\"cancel\",\"isRunning\"]],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"cancel\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"cancel\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[9]},null]],\"parameters\":[8]},null],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,5,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,6,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,7,[\"title\"]]],null,{\"statements\":[[0,\"Main Office Location\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[7]},null],[4,\"paper-button\",null,[[\"primary\",\"raised\",\"mini\",\"onClick\",\"bubbles\"],[true,true,true,[27,\"perform\",[[23,[\"editPrimaryLocation\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"edit\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[6]},null],[4,\"component\",[[22,5,[\"content\"]]],[[\"class\"],[\"flex layout-row layout-align-center-stretch layout-wrap\"]],{\"statements\":[[4,\"if\",[[23,[\"model\",\"location\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"id\",\"tenant-administrator-main-component-static-location-display\"],[11,\"class\",\"p-0 text-center flex-100 flex-gt-lg-70\"],[11,\"style\",\"min-height:15rem;\"],[9],[0,\"\\n\"],[4,\"if\",[[23,[\"staticUrl\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"img\"],[11,\"border\",\"0\"],[12,\"src\",[28,[[21,\"staticUrl\"]]]],[12,\"alt\",[28,[[23,[\"model\",\"location\",\"name\"]]]]],[9],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\tFetching map...\\n\"]],\"parameters\":[]}],[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex-100 flex-gt-lg-30\"],[11,\"style\",\"font-style:italic;\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"line1\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"line2\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"line2\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"line3\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"line3\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"area\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"area\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"city\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"state\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"country\"]],false],[0,\" \"],[1,[23,[\"model\",\"location\",\"postalCode\"]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"primary\",\"raised\",\"onClick\",\"bubbles\"],[\"flex\",true,true,[27,\"perform\",[[23,[\"addPrimaryLocation\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"map-marked\"],[[\"class\"],[\"mr-1\"]]],false],[0,\" Add Main Office Location\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[4,\"bs-navbar\",null,[[\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"light\",\"white\",false,true]],{\"statements\":[[4,\"component\",[[22,2,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"nav\"]]],[[\"class\"],[\"layout-row layout-align-start-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,3,[\"item\"]]],[[\"class\"],[\"mr-4\"]],{\"statements\":[[0,\"Feature Management\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,3,[\"item\"]]],[[\"class\"],[\"mr-4\"]],{\"statements\":[[0,\"Groups & Permissions\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,3,[\"item\"]]],null,{\"statements\":[[0,\"User Management\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[3]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"mt-2 flex\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "kK9LLEBH",
+    "block": "{\"symbols\":[\"card\",\"navbar\",\"nav\",\"card\",\"card\",\"header\",\"text\",\"form\",\"card\",\"header\",\"text\",\"header\",\"text\"],\"statements\":[[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex flex-gt-md-80\"],[9],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,4,[\"header\"]]],[[\"class\"],[\"bg-twyr-component white-text\"]],{\"statements\":[[4,\"component\",[[22,12,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,13,[\"title\"]]],null,{\"statements\":[[1,[27,\"mdi-icon\",[\"account-settings\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Administration\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[13]},null]],\"parameters\":[12]},null],[4,\"component\",[[22,4,[\"content\"]]],[[\"class\"],[\"p-0 layout-row layout-align-start-stretch layout-wrap flex\"]],{\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-50 flex-gt-lg-30 layout-row layout-align-center-stretch\",[27,\"perform\",[[23,[\"save\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,9,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,10,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"title\"]]],null,{\"statements\":[[0,\"Basics\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[11]},null]],\"parameters\":[10]},null],[4,\"component\",[[22,9,[\"content\"]]],[[\"class\"],[\"layout-column layout-align-start-stretch\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"Name\",[23,[\"model\",\"name\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"name\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"url\",\"flex-100\",\"Domain\",[23,[\"model\",\"fullDomain\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"fullDomain\"]]],null]],null],true]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,9,[\"actions\"]]],[[\"class\"],[\"layout-row layout-align-end-center layout-wrap\"]],{\"statements\":[[4,\"component\",[[22,8,[\"submit-button\"]]],[[\"primary\",\"raised\",\"onClick\",\"disabled\"],[true,true,[27,\"perform\",[[23,[\"save\"]]],null],[27,\"or\",[[22,8,[\"isInvalid\"]],[23,[\"save\",\"isRunning\"]],[23,[\"cancel\",\"isRunning\"]],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"save\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[4,\"paper-button\",null,[[\"warn\",\"raised\",\"onClick\",\"disabled\"],[true,true,[27,\"perform\",[[23,[\"cancel\"]]],null],[27,\"or\",[[23,[\"save\",\"isRunning\"]],[23,[\"cancel\",\"isRunning\"]],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"cancel\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"cancel\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[9]},null]],\"parameters\":[8]},null],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,5,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,6,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,7,[\"title\"]]],null,{\"statements\":[[0,\"Main Office Location\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[7]},null],[4,\"paper-button\",null,[[\"primary\",\"raised\",\"mini\",\"onClick\",\"bubbles\"],[true,true,true,[27,\"perform\",[[23,[\"editPrimaryLocation\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"edit\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[6]},null],[4,\"component\",[[22,5,[\"content\"]]],[[\"class\"],[\"flex layout-row layout-align-center-stretch layout-wrap\"]],{\"statements\":[[4,\"if\",[[23,[\"model\",\"location\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"id\",\"tenant-administrator-main-component-static-location-display\"],[11,\"class\",\"p-0 text-center flex-100 flex-gt-lg-70\"],[11,\"style\",\"min-height:15rem;\"],[9],[0,\"\\n\"],[4,\"if\",[[23,[\"staticUrl\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"img\"],[11,\"border\",\"0\"],[12,\"src\",[28,[[21,\"staticUrl\"]]]],[12,\"alt\",[28,[[23,[\"model\",\"location\",\"name\"]]]]],[9],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\tFetching map...\\n\"]],\"parameters\":[]}],[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex-100 flex-gt-lg-30\"],[11,\"style\",\"font-style:italic;\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"line1\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"line2\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"line2\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"line3\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"line3\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"area\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"area\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"city\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"state\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"country\"]],false],[0,\" \"],[1,[23,[\"model\",\"location\",\"postalCode\"]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"onClick\",\"bubbles\"],[\"flex\",[27,\"perform\",[[23,[\"addPrimaryLocation\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"map-marked\"],[[\"class\"],[\"mr-1\"]]],false],[0,\" Add Main Office Location\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[4,\"bs-navbar\",null,[[\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"light\",\"white\",false,true]],{\"statements\":[[4,\"component\",[[22,2,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"nav\"]]],[[\"class\"],[\"layout-row layout-align-start-center\"]],{\"statements\":[[4,\"component\",[[22,3,[\"item\"]]],[[\"class\"],[\"mr-4\"]],{\"statements\":[[4,\"link-to\",[\"tenant-administration.feature-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"star-circle-outline\"],null],false],[0,\" Feature Management\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[4,\"component\",[[22,3,[\"item\"]]],[[\"class\"],[\"mr-4\"]],{\"statements\":[[4,\"link-to\",[\"tenant-administration.group-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"group\"],null],false],[0,\" Groups & Permissions\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[4,\"component\",[[22,3,[\"item\"]]],null,{\"statements\":[[4,\"link-to\",[\"tenant-administration.user-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-multiple-outline\"],null],false],[0,\" User Management\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[3]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"mt-2 flex\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/main-component.hbs"
     }
@@ -10937,10 +11221,46 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "gMqx9JoW",
-    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Feature Manager\"],null],false],[0,\"\\n\"],[0,\"TODO...\\n\"]],\"hasEval\":false}",
+    "id": "cAEUGIvV",
+    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Feature Manager\"],null],false],[0,\"\\n\"],[0,\"Show Features: \"],[1,[23,[\"model\",\"features\",\"length\"]],false],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/tenant-administration/feature-manager.hbs"
+    }
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/templates/tenant-administration/group-manager", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = Ember.HTMLBars.template({
+    "id": "rGRH5yxo",
+    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Group Manager\"],null],false],[0,\"\\n\"],[0,\"TODO Group Management...\\n\"]],\"hasEval\":false}",
+    "meta": {
+      "moduleName": "twyr-webapp-server/templates/tenant-administration/group-manager.hbs"
+    }
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/templates/tenant-administration/user-manager", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = Ember.HTMLBars.template({
+    "id": "HsJr1k7e",
+    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"User Manager\"],null],false],[0,\"\\n\"],[0,\"TODO User Management...\\n\"]],\"hasEval\":false}",
+    "meta": {
+      "moduleName": "twyr-webapp-server/templates/tenant-administration/user-manager.hbs"
     }
   });
 
@@ -11307,7 +11627,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-google-maps":{"key":"AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA","language":"en","region":"IN","protocol":"https","version":"3.34","src":"https://maps.googleapis.com/maps/api/js?v=3.34&region=IN&language=en&key=AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+5282d1f6"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-google-maps":{"key":"AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA","language":"en","region":"IN","protocol":"https","version":"3.34","src":"https://maps.googleapis.com/maps/api/js?v=3.34&region=IN&language=en&key=AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+5de48c74"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;
