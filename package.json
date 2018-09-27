@@ -52,7 +52,7 @@
 		"amqplib": "*",
 		"app-module-path": "*",
 		"ascoltatori": "^4.3.0",
-		"aws-sdk": "^2.322.0",
+		"aws-sdk": "^2.323.0",
 		"axios": "^0.18.0",
 		"bluebird": "^3.5.2",
 		"bookshelf": "*",
@@ -125,7 +125,7 @@
 	},
 	"devDependencies": {
 		"autocannon": "^3.0.0",
-		"chai": "*",
+		"chai": "^4.2.0",
 		"chai-http": "^4.2.0",
 		"chai-json": "^1.0.0",
 		"clinic": "^1.2.1",
