@@ -39,16 +39,11 @@ class TwyrBaseComponent extends TwyrBaseModule {
 		const inflection = require('inflection');
 		const Router = require('koa-router');
 
-		let inflectedName = inflection.transform(this.name, ['foreign_key', 'dasherize']).replace('-id', '');
-		if(inflectedName === 'main') inflectedName = '';
-
 		const parentType = Object.getPrototypeOf(Object.getPrototypeOf(this.$parent)).name;
-		if(parentType === 'TwyrBaseFeature') {
-			const inflectedFeatureName = inflection.transform(this.$parent.name, ['foreign_key', 'dasherize']).replace('-id', '');
-			inflectedName = (inflectedName !== '') ? `${inflectedFeatureName}/${inflectedName}` : inflectedFeatureName;
-		}
+		let inflectedName = inflection.transform(this.name, ['foreign_key', 'dasherize']).replace('-id', '');
 
-		this.$router = new Router({ 'prefix': `/${inflectedName}` });
+		if((inflectedName === 'main') && (parentType === 'TwyrBaseFeature')) inflectedName = '';
+		this.$router = (inflectedName !== '') ? new Router({ 'prefix': `/${inflectedName}` }) : new Router();
 	}
 	// #endregion
 

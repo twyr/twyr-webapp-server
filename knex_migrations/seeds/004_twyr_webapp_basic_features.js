@@ -49,6 +49,25 @@ exports.seed = async function(knex) {
 		await knex.raw(`UPDATE tenants_users SET default_application = ? WHERE user_id = (SELECT user_id FROM users WHERE email = 'root@twyr.com')`, [dashboardFeatureId]);
 	}
 
+	componentId = await knex.raw(`SELECT module_id FROM fn_get_module_descendants(?) WHERE name = ? AND type = 'feature'`, [parentId, 'ServerAdministration']);
+	if(!componentId.rows.length) {
+		await knex('modules').insert({
+			'parent_module_id': parentId,
+			'type': 'feature',
+			'deploy': 'admin',
+			'name': 'ServerAdministration',
+			'display_name': 'Server Administration',
+			'description': 'The Twyr Web Application Server Administration - allows administrators to configure the server',
+			'metadata': {
+				'author': 'Twyr',
+				'version': '3.0.1',
+				'website': 'https://twyr.com',
+				'demo': 'https://twyr.com',
+				'documentation': 'https://twyr.com'
+			}
+		});
+	}
+
 	componentId = await knex.raw(`SELECT module_id FROM fn_get_module_descendants(?) WHERE name = ? AND type = 'feature'`, [parentId, 'TenantAdministration']);
 	if(!componentId.rows.length) {
 		componentId = await knex('modules').insert({

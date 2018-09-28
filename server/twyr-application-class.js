@@ -215,6 +215,7 @@ class TwyrApplication extends TwyrBaseModule {
 			appRouter.get('*', tmplRouter.routes());
 		});
 
+		// console.log(`All Routes: ${JSON.stringify(appRouter.stack.map((route) => { return `${JSON.stringify(route.methods)} ${route.path}`; }), null, '\t')}`);
 		return;
 	}
 	// #endregion

@@ -133,16 +133,24 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 		}
 
 		try {
-			const clientsideAssets = await this._getClientsideAssets(ctxt);
+			const cacheSrvc = this.$dependencies.CacheService;
+			let indexHTML = await cacheSrvc.getAsync(`twyr!webapp!user!${ctxt.state.user ? ctxt.state.user.user_id : 'public'}!${ctxt.state.tenant.tenant_id}!tmpl`);
 
-			const renderConfig = Object.assign({}, ctxt.state.tenant['template']['base_template_configuration'], ctxt.state.tenant['template']['configuration'], clientsideAssets);
-			renderConfig['developmentMode'] = (twyrEnv === 'development') || (twyrEnv === 'test');
+			if(!indexHTML) {
+				const clientsideAssets = await this._getClientsideAssets(ctxt);
 
-			const ejs = require('ejs');
-			const path = require('path');
+				const renderConfig = Object.assign({}, ctxt.state.tenant['template']['base_template_configuration'], ctxt.state.tenant['template']['configuration'], clientsideAssets);
+				renderConfig['developmentMode'] = (twyrEnv === 'development') || (twyrEnv === 'test');
 
-			const tmplPath = path.join(path.dirname(__dirname), 'tenant_templates', ctxt.state.tenant['template']['tenant_domain'], ctxt.state.tenant['template']['tmpl_name'], ctxt.state.tenant['template']['path_to_index']);
-			const indexHTML = await ejs.renderFile(tmplPath, renderConfig, { 'async': true });
+				const ejs = require('ejs');
+				const path = require('path');
+
+				const tmplPath = path.join(path.dirname(__dirname), 'tenant_templates', ctxt.state.tenant['template']['tenant_domain'], ctxt.state.tenant['template']['tmpl_name'], ctxt.state.tenant['template']['path_to_index']);
+				indexHTML = await ejs.renderFile(tmplPath, renderConfig, { 'async': true });
+
+				await cacheSrvc.setAsync(`twyr!webapp!user!${ctxt.state.user ? ctxt.state.user.user_id : 'public'}!${ctxt.state.tenant.tenant_id}!tmpl`, indexHTML);
+				if(twyrEnv === 'development') await cacheSrvc.expireAsync(`twyr!webapp!user!${ctxt.state.user ? ctxt.state.user.user_id : 'public'}!${ctxt.state.tenant.tenant_id}!tmpl`, 30);
+			}
 
 			ctxt.status = 200;
 			ctxt.type = 'text/html';
@@ -250,7 +258,7 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 	 * @override
 	 */
 	get dependencies() {
-		return ['ConfigurationService', 'LoggerService', 'WebserverService'].concat(super.dependencies);
+		return ['CacheService', 'ConfigurationService', 'LoggerService', 'WebserverService'].concat(super.dependencies);
 	}
 
 	/**

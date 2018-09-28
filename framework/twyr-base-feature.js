@@ -40,14 +40,14 @@ class TwyrBaseFeature extends TwyrBaseModule {
 		const Router = require('koa-router');
 
 		const inflectedName = inflection.transform(this.name, ['foreign_key', 'dasherize']).replace('-id', '');
-		// this.$router = new Router({ 'prefix': `/${inflectedName}` });
-		this.$router = new Router();
+		this.$router = new Router({ 'prefix': `/${inflectedName}` });
+		// this.$router = new Router();
 
 		// The RBAC Koa middleware
-		this.$router.use(`/${inflectedName}`, this._doesUserHavePermission.bind(this));
+		this.$router.use(this._doesUserHavePermission.bind(this));
 
 		// The ABAC Koa middleware
-		this.$router.use(`/${inflectedName}`, this._canUserAccessThisResource.bind(this));
+		this.$router.use(this._canUserAccessThisResource.bind(this));
 	}
 	// #endregion
 
