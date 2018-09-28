@@ -4622,7 +4622,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/components/tenant-administration/feature-manager/main-component", ["exports", "twyr-webapp-server/framework/base-component"], function (_exports, _baseComponent) {
+;define("twyr-webapp-server/components/tenant-administration/feature-manager/main-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency"], function (_exports, _baseComponent, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4630,7 +4630,16 @@
   });
   _exports.default = void 0;
 
-  var _default = _baseComponent.default.extend({});
+  var _default = _baseComponent.default.extend({
+    changeSelectedFeature: (0, _emberConcurrency.task)(function* (feature) {
+      const store = this.get('store');
+      const loadedFeatureModels = yield store.peekAll('tenant-administration/feature-manager/tenant-feature');
+      const featureModel = loadedFeatureModels.filter(loadedFeatureModel => {
+        return loadedFeatureModel.get('feature.id') === feature.get('id');
+      });
+      this.invokeAction('controller-action', 'setSelectedFeature', featureModel.shift());
+    }).keepLatest()
+  });
 
   _exports.default = _default;
 });
@@ -4662,15 +4671,21 @@
             'responsive': true
           },
           'data': {
-            'url': '/tenant-administration/feature-manager/tree'
+            'url': '/tenant-administration/feature-manager/tree',
+            'dataType': 'json',
+            'data': function (node) {
+              return {
+                'id': node.id
+              };
+            }
           }
         },
         'plugins': ['sort', 'unique']
       });
       moduTree.on('ready.jstree', () => {
         const rootNodeId = this.$('div#tenant-administration-feature-manager-tree-container > ul > li:first-child').attr('id');
-        this.$('div#tenant-administration-feature-manager-tree-container').jstree('activate_node', rootNodeId, false, false);
         this.$('div#tenant-administration-feature-manager-tree-container').jstree('open_node', rootNodeId);
+        this.$('div#tenant-administration-feature-manager-tree-container').jstree('activate_node', rootNodeId, false, false);
       });
       moduTree.on('activate_node.jstree', (event, data) => {
         this.get('onActivateNode').perform(data.node);
@@ -4678,6 +4693,7 @@
     },
 
     willDestroyElement() {
+      this.invokeAction('controller-action', 'setSelectedFeature', null);
       this.$('div#tenant-administration-feature-manager-tree-container').jstree('destroy', true);
 
       this._super(...arguments);
@@ -4685,23 +4701,37 @@
 
     onActivateNode: (0, _emberConcurrency.task)(function* (treeNode) {
       try {
+        const serverFeature = yield this.get('selectedFeature.feature');
+        if (serverFeature && serverFeature.get('id') === treeNode.id) return;
         const store = this.get('store');
-        let featureModel = store.peekRecord('tenant-administration/feature-manager/tenant-feature', treeNode.id);
-        if (!featureModel) featureModel = yield store.findRecord('tenant-administration/feature-manager/tenant-feature', treeNode.id);
-        if (this.get('selectedFolder.id') === treeNode.id) return;
-        this.invokeAction('controller-action', 'setSelectedFeature', featureModel);
+        let loadedFeatureModels = store.peekAll('tenant-administration/feature-manager/tenant-feature');
+
+        if (!loadedFeatureModels.get('length')) {
+          yield store.findAll('tenant-administration/feature-manager/tenant-feature');
+          loadedFeatureModels = store.peekAll('tenant-administration/feature-manager/tenant-feature');
+
+          for (let idx = 0; idx < loadedFeatureModels.get('length'); idx++) {
+            const loadedFeatureModel = loadedFeatureModels.objectAt(idx);
+            yield loadedFeatureModel.get('feature');
+          }
+        }
+
+        const featureModel = loadedFeatureModels.filter(loadedFeatureModel => {
+          return loadedFeatureModel.get('feature.id') === treeNode.id;
+        });
+        this.invokeAction('controller-action', 'setSelectedFeature', featureModel.shift());
       } catch (err) {
         this.get('notification').display({
           'type': 'error',
           'error': err
         });
       }
-    }).drop(),
-    onSelectedFolderChanged: Ember.observer('selectedFolder', function () {
-      if (!this.get('selectedFolder')) return;
-      if (this.$('div#tenant-administration-feature-manager-tree-container').jstree('get_selected')[0] === this.get('selectedFolder.id')) return;
-      this.$('div#tenant-administration-feature-manager-tree-container').jstree('activate_node', this.get('selectedFolder.id'), false, false);
-      this.$('div#tenant-administration-feature-manager-tree-container').jstree('open_node', this.get('selectedFolder.id'));
+    }).keepLatest(),
+    onSelectedFeatureChanged: Ember.observer('selectedFeature', function () {
+      if (!this.get('selectedFeature')) return;
+      if (this.$('div#tenant-administration-feature-manager-tree-container').jstree('get_selected')[0] === this.get('selectedFeature.feature.id')) return;
+      this.$('div#tenant-administration-feature-manager-tree-container').jstree('activate_node', this.get('selectedFeature.feature.id'), false, false);
+      this.$('div#tenant-administration-feature-manager-tree-container').jstree('open_node', this.get('selectedFeature.feature.id'));
     })
   });
 
@@ -4795,14 +4825,24 @@
             'primary': true,
             'raised': true,
             'callback': () => {
-              self.get('saveLocation').perform(this.get('model.location'));
+              self.get('saveLocation').perform(self.get('model.location'));
             }
           },
           'cancelButton': {
             'text': 'Cancel',
             'icon': 'cancel',
             'warn': true,
-            'raised': true
+            'raised': true,
+            'callback': () => {
+              const location = self.get('model.location');
+
+              if (location.rollback) {
+                location.rollback();
+                return;
+              }
+
+              if (location.content.rollback) location.content.rollback();
+            }
           }
         };
         yield this.invokeAction('controller-action', 'displayModal', modalData);
@@ -5774,7 +5814,12 @@
   _exports.default = void 0;
 
   var _default = _baseController.default.extend({
-    selectedFeature: null
+    selectedFeature: null,
+
+    setSelectedFeature(featureModel) {
+      this.set('selectedFeature', featureModel);
+    }
+
   });
 
   _exports.default = _default;
@@ -9091,7 +9136,7 @@
   };
   _exports.default = _default;
 });
-;define("twyr-webapp-server/initializers/tenant-administration/feature-manager/add-features-rel-tenant-model", ["exports", "ember-data", "twyr-webapp-server/models/tenant-administration/tenant"], function (_exports, _emberData, _tenant) {
+;define("twyr-webapp-server/initializers/tenant-administration/feature-manager/add-features-rel-tenant-model", ["exports", "twyr-webapp-server/models/tenant-administration/tenant", "ember-data"], function (_exports, _tenant, _emberData) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -9117,7 +9162,7 @@
   };
   _exports.default = _default;
 });
-;define("twyr-webapp-server/initializers/tenant-administration/group-manager/add-groups-rel-tenant-model", ["exports", "ember-data", "twyr-webapp-server/models/tenant-administration/tenant"], function (_exports, _emberData, _tenant) {
+;define("twyr-webapp-server/initializers/tenant-administration/group-manager/add-groups-rel-tenant-model", ["exports", "twyr-webapp-server/models/tenant-administration/tenant", "ember-data"], function (_exports, _tenant, _emberData) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -9143,7 +9188,7 @@
   };
   _exports.default = _default;
 });
-;define("twyr-webapp-server/initializers/tenant-administration/user-manager/add-users-rel-tenant-model", ["exports", "ember-data", "twyr-webapp-server/models/tenant-administration/tenant"], function (_exports, _emberData, _tenant) {
+;define("twyr-webapp-server/initializers/tenant-administration/user-manager/add-users-rel-tenant-model", ["exports", "twyr-webapp-server/models/tenant-administration/tenant", "ember-data"], function (_exports, _tenant, _emberData) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -9399,6 +9444,70 @@
 
   _exports.default = _default;
 });
+;define("twyr-webapp-server/models/server-administration/feature-permission", ["exports", "twyr-webapp-server/framework/base-model", "ember-data"], function (_exports, _baseModel, _emberData) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseModel.default.extend({
+    'name': _emberData.default.attr('string'),
+    'displayName': _emberData.default.attr('string'),
+    'description': _emberData.default.attr('string'),
+    'feature': _emberData.default.belongsTo('server-administration/feature', {
+      'async': true,
+      'inverse': 'permissions'
+    })
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/models/server-administration/feature", ["exports", "twyr-webapp-server/framework/base-model", "ember-data", "ember-concurrency"], function (_exports, _baseModel, _emberData, _emberConcurrency) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseModel.default.extend({
+    'name': _emberData.default.attr('string'),
+    'displayName': _emberData.default.attr('string'),
+    'deploy': _emberData.default.attr('string', {
+      'defaultValue': 'default'
+    }),
+    'description': _emberData.default.attr('string'),
+    'parent': _emberData.default.belongsTo('server-administration/feature', {
+      'async': true,
+      'inverse': 'features'
+    }),
+    'features': _emberData.default.hasMany('server-administration/feature', {
+      'async': true,
+      'inverse': 'parent'
+    }),
+    'permissions': _emberData.default.hasMany('server-administration/feature-permission', {
+      'async': true,
+      'inverse': 'feature'
+    }),
+    'path': Ember.computed('parent', 'parent.path', {
+      get() {
+        return this.get('computePath').perform();
+      }
+
+    }),
+    'computePath': (0, _emberConcurrency.task)(function* () {
+      const parentModule = yield this.get('parent');
+      if (!parentModule) return this.get('displayName');
+      const parentModulePath = yield parentModule.get('path');
+      if (!parentModulePath) return this.get('displayName');
+      return `${parentModulePath} > ${this.get('displayName')}`;
+    }).keepLatest()
+  });
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/models/tenant-administration/feature-manager/tenant-feature", ["exports", "twyr-webapp-server/framework/base-model", "ember-data"], function (_exports, _baseModel, _emberData) {
   "use strict";
 
@@ -9411,6 +9520,10 @@
     'tenant': _emberData.default.belongsTo('tenant-administration/tenant', {
       'async': true,
       'inverse': 'features'
+    }),
+    'feature': _emberData.default.belongsTo('server-administration/feature', {
+      'async': true,
+      'inverse': null
     })
   });
 
@@ -9810,39 +9923,24 @@
   _exports.default = void 0;
 
   var _default = _baseRoute.default.extend({
-    parentController: null,
-
     init() {
       this._super(...arguments);
 
-      this.set('parentController', this.controllerFor('tenant-administration'));
-      this.get('parentController').addObserver('model', this, 'onParentModelChange');
       this.get('currentUser').on('userDataUpdated', this, this.onUserDataUpdated);
     },
 
     destroy() {
       this.get('currentUser').off('userDataUpdated', this, this.onUserDataUpdated);
-      this.get('parentController').removeObserver('model', this, 'onParentModelChange');
 
       this._super(...arguments);
-    },
-
-    setupController(controller) {
-      const parentModel = this.get('parentController.model');
-      controller.set('model', parentModel);
-    },
-
-    onParentModelChange() {
-      const parentModel = this.get('parentController.model');
-      const thisController = this.get('controller');
-      if (!thisController) return;
-      thisController.set('model', parentModel);
     },
 
     onUserDataUpdated() {
       if (!window.twyrTenantId) {
         this.get('store').unloadAll('tenant-administration/feature-manager/tenant-feature');
-        return;
+        this.get('store').unloadAll('server-administration/feature');
+        this.get('store').unloadAll('server-administration/feature-permission');
+        return null;
       }
     }
 
@@ -11115,8 +11213,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "nuLB/TmR",
-    "block": "{\"symbols\":[],\"statements\":[[0,\"Feature details\\n\"]],\"hasEval\":false}",
+    "id": "SVZtnRMC",
+    "block": "{\"symbols\":[\"card\",\"table\",\"body\",\"feature\",\"row\",\"head\",\"table\",\"body\",\"permission\",\"row\",\"head\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[0,\"\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Basics\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"class\",\"mx-2 mt-4 layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"class\",\"label\",\"placeholder\",\"value\",\"onChange\",\"readonly\"],[\"flex-80\",\"Path\",\"Feature Name\",[27,\"await\",[[23,[\"selectedFeature\",\"feature\",\"path\"]]],null],null,true]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-switch\",null,[[\"label\",\"value\",\"onChange\",\"disabled\"],[\"Subscribed\",true,[27,\"perform\",[[23,[\"modifyTenantFeatureStatus\"]]],null],[27,\"not-eq\",[[27,\"get\",[[27,\"await\",[[23,[\"selectedFeature\",\"feature\"]]],null],\"deploy\"],null],\"custom\"],null]]]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"class\",\"mx-2 pt-2 pb-4 layout-row layout-align-start-center\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"get\",[[27,\"await\",[[23,[\"selectedFeature\",\"feature\"]]],null],\"description\"],null],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"],[4,\"if\",[[27,\"get\",[[27,\"await\",[[23,[\"selectedFeature\",\"feature\",\"permissions\"]]],null],\"length\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Permissions\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,7,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[11]},null],[4,\"component\",[[22,7,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,7,[\"sortDesc\"]],[27,\"await\",[[23,[\"selectedFeature\",\"feature\",\"permissions\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,8,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,10,[\"cell\"]]],null,{\"statements\":[[1,[22,9,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,10,[\"cell\"]]],null,{\"statements\":[[1,[22,9,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[10]},null]],\"parameters\":[9]},null]],\"parameters\":[8]},null]],\"parameters\":[7]},null]],\"parameters\":[]},null],[4,\"if\",[[27,\"get\",[[27,\"await\",[[23,[\"selectedFeature\",\"feature\",\"features\"]]],null],\"length\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Sub Features\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,2,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Access Level\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null],[4,\"component\",[[22,2,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,2,[\"sortDesc\"]],[27,\"await\",[[23,[\"selectedFeature\",\"feature\",\"features\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,3,[\"row\"]]],[[\"onClick\"],[[27,\"perform\",[[23,[\"changeSelectedFeature\"]],[22,4,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[27,\"titleize\",[[22,4,[\"deploy\"]]],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null],[0,\"\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/feature-manager/main-component.hbs"
     }
@@ -11133,8 +11231,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "mXk4SLG8",
-    "block": "{\"symbols\":[],\"statements\":[[7,\"div\"],[11,\"id\",\"tenant-administration-feature-manager-tree-container\"],[11,\"class\",\"p-2\"],[9],[0,\"\\n\\t \\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "z4Mo1RCK",
+    "block": "{\"symbols\":[\"card\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 pt-1 layout-column layout-align-start-stretch\"]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"id\",\"tenant-administration-feature-manager-tree-container\"],[11,\"class\",\"p-2\"],[9],[0,\"\\n\\t\\t\\t \\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/feature-manager/tree-component.hbs"
     }
@@ -11367,8 +11465,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "QnZ6BUPU",
-    "block": "{\"symbols\":[\"card\",\"navbar\",\"nav\",\"card\",\"header\",\"text\"],\"statements\":[[1,[27,\"page-title\",[\"Tenant Administration\"],null],false],[0,\"\\n\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex flex-gt-md-80\"],[9],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,4,[\"header\"]]],[[\"class\"],[\"bg-twyr-component white-text\"]],{\"statements\":[[4,\"component\",[[22,5,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"title\"]]],null,{\"statements\":[[1,[27,\"mdi-icon\",[\"account-settings\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Administration\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null]],\"parameters\":[5]},null],[4,\"component\",[[22,4,[\"content\"]]],[[\"class\"],[\"p-0 layout-row layout-align-start-stretch layout-wrap flex\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/basics-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/location-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[4]},null],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[4,\"bs-navbar\",null,[[\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"light\",\"white\",false,true]],{\"statements\":[[4,\"component\",[[22,2,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"nav\"]]],[[\"class\"],[\"layout-row layout-align-start-center\"]],{\"statements\":[[4,\"component\",[[22,3,[\"item\"]]],[[\"class\"],[\"mr-4\"]],{\"statements\":[[4,\"link-to\",[\"tenant-administration.feature-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"star-circle-outline\"],null],false],[0,\" Feature Management\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[4,\"component\",[[22,3,[\"item\"]]],[[\"class\"],[\"mr-4\"]],{\"statements\":[[4,\"link-to\",[\"tenant-administration.group-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"group\"],null],false],[0,\" Groups & Permissions\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[4,\"component\",[[22,3,[\"item\"]]],null,{\"statements\":[[4,\"link-to\",[\"tenant-administration.user-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-multiple-outline\"],null],false],[0,\" User Management\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[3]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"mt-2 flex\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "Q9wj52Zt",
+    "block": "{\"symbols\":[\"card\",\"navbar\",\"nav\",\"card\",\"header\",\"text\"],\"statements\":[[1,[27,\"page-title\",[\"Tenant Administration\"],null],false],[0,\"\\n\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex flex-gt-md-80\"],[9],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,4,[\"header\"]]],[[\"class\"],[\"bg-twyr-component white-text\"]],{\"statements\":[[4,\"component\",[[22,5,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"title\"]]],null,{\"statements\":[[1,[27,\"mdi-icon\",[\"account-settings\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Administration\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null]],\"parameters\":[5]},null],[4,\"component\",[[22,4,[\"content\"]]],[[\"class\"],[\"p-0 layout-row layout-align-start-stretch layout-wrap flex\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/basics-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/location-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[4]},null],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[4,\"bs-navbar\",null,[[\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"light\",\"white\",false,true]],{\"statements\":[[4,\"component\",[[22,2,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"nav\"]]],[[\"class\"],[\"layout-row layout-align-start-center\"]],{\"statements\":[[4,\"component\",[[22,3,[\"item\"]]],[[\"class\"],[\"mr-4\"]],{\"statements\":[[4,\"link-to\",[\"tenant-administration.feature-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"star-circle-outline\"],null],false],[0,\" Feature Management\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[4,\"component\",[[22,3,[\"item\"]]],[[\"class\"],[\"mr-4\"]],{\"statements\":[[4,\"link-to\",[\"tenant-administration.group-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"group\"],null],false],[0,\" Groups & Permissions\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[4,\"component\",[[22,3,[\"item\"]]],null,{\"statements\":[[4,\"link-to\",[\"tenant-administration.user-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-multiple-outline\"],null],false],[0,\" User Management\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[3]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"mt-1 flex\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/tenant-administration.hbs"
     }
@@ -11385,8 +11483,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "0hbG0Lxo",
-    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Feature Manager\"],null],false],[0,\"\\n\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-start-center layout-wrap\"],[9],[0,\"\\n\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/tree-component\"],[[\"class\",\"model\",\"selectedFeature\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-40 flex-gt-lg-30\",[23,[\"model\"]],[23,[\"selectedFeature\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/main-component\"],[[\"class\",\"model\",\"selectedFeature\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-60 flex-gt-lg-70\",[23,[\"model\"]],[23,[\"selectedFeature\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"],[10],[0,\"\\n\\n\"]],\"hasEval\":false}",
+    "id": "pWyaC7Yq",
+    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Feature Manager\"],null],false],[0,\"\\n\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-start-stretch layout-wrap\"],[9],[0,\"\\n\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/tree-component\"],[[\"class\",\"model\",\"selectedFeature\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-40 flex-gt-lg-30 layout-row layout-align-start-stretch\",[23,[\"model\"]],[23,[\"selectedFeature\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/main-component\"],[[\"class\",\"model\",\"selectedFeature\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-60 flex-gt-lg-70 layout-row layout-align-start-stretch\",[23,[\"model\"]],[23,[\"selectedFeature\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"],[10],[0,\"\\n\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/tenant-administration/feature-manager.hbs"
     }
