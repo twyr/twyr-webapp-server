@@ -69,12 +69,41 @@ const getTenantUserPermissions = async function(tenantId, userId) {
 		databaseSrvc = this.$dependencies.DatabaseService,
 		loggerSrvc = this.$dependencies.LoggerService;
 
+	const addImpliedPermissions = function(tenantUserPermissions, allPermissions, impliedPermission) {
+		const hasImpliedPermissionAlreadyAdded = tenantUserPermissions.filter((tuperm) => {
+			return tuperm.name === impliedPermission;
+		}).length;
+		if(hasImpliedPermissionAlreadyAdded) return;
+
+		const serverPermission = allPermissions.filter((perm) => {
+			return perm.name === impliedPermission;
+		}).shift();
+
+		tenantUserPermissions.push({
+			'permission_id': serverPermission.permission,
+			'name': serverPermission.name
+		});
+
+		if(!serverPermission['implies_permissions'].length)
+			return;
+
+		serverPermission['implies_permissions'].forEach((impliedPerm) => {
+			addImpliedPermissions(tenantUserPermissions, allPermissions, impliedPerm);
+		});
+	};
+
 	try {
 		let cachedTenantUserPermissions = await cacheSrvc.getAsync(`twyr!webapp!user!${userId}!${tenantId}!permissions`);
 		if(cachedTenantUserPermissions) {
 			cachedTenantUserPermissions = JSON.parse(cachedTenantUserPermissions);
 			return cachedTenantUserPermissions;
 		}
+
+		let serverModule = this.$parent;
+		while(serverModule.$parent) serverModule = serverModule.$parent;
+
+		const serverModuleId = await this.$dependencies.ConfigurationService.getModuleID(serverModule);
+		const allServerPermissions = (await databaseSrvc.knex.raw(`SELECT feature_permission_id AS permission, name, implies_permissions FROM feature_permissions WHERE module_id IN (SELECT module_id FROM fn_get_module_descendants(?))`, [serverModuleId])).rows;
 
 		const publicPermission = (await databaseSrvc.knex.raw(`SELECT feature_permission_id AS permission, name, implies_permissions FROM feature_permissions WHERE name = ?`, ['public'])).rows;
 		const userPermissions = (await databaseSrvc.knex.raw('SELECT * FROM fn_get_user_permissions(?, ?)', [tenantId, userId])).rows;
@@ -98,41 +127,24 @@ const getTenantUserPermissions = async function(tenantId, userId) {
 
 		const permissionNames = Object.keys(combinedPermissions);
 		permissionNames.forEach((permissionName) => {
-			if(tenantUserPermissions.indexOf(combinedPermissions[permissionName].permission) >= 0)
-				return;
+			const hasAlreadyBeenAdded = tenantUserPermissions.filter((tuperm) => {
+				return tuperm.name === permissionName;
+			}).length;
 
-			const impliedPermissions = combinedPermissions[permissionName]['implies_permissions'];
-			if(impliedPermissions.length) return;
+			if(hasAlreadyBeenAdded) return;
 
 			tenantUserPermissions.push({
 				'permission_id': combinedPermissions[permissionName].permission,
 				'name': permissionName
 			});
+
+			const impliedPermissions = combinedPermissions[permissionName]['implies_permissions'];
+			if(!impliedPermissions.length) return;
+
+			impliedPermissions.forEach((impliedPerm) => {
+				addImpliedPermissions(tenantUserPermissions, allServerPermissions, impliedPerm);
+			});
 		});
-
-		let currentPermissionLength = 0;
-		while(currentPermissionLength !== tenantUserPermissions.length) {
-			currentPermissionLength = tenantUserPermissions.length;
-
-			for(const permissionName of permissionNames) {
-				if(tenantUserPermissions.filter((tenantUserPermission) => { return tenantUserPermission.name === permissionName; }).length > 0)
-					continue;
-
-				const impliedPermissions = combinedPermissions[permissionName]['implies_permissions'];
-				if(!impliedPermissions.length) continue;
-
-				let shouldAdd = true;
-				for(const impliedPermission of impliedPermissions) { // eslint-disable-line curly
-					shouldAdd = shouldAdd && (tenantUserPermissions.filter((tenantUserPermission) => { return tenantUserPermission.name === impliedPermission; }).length > 0);
-				}
-
-				if(!shouldAdd) continue;
-				tenantUserPermissions.push({
-					'permission_id': combinedPermissions[permissionName].permission,
-					'name': permissionName
-				});
-			}
-		}
 
 		await cacheSrvc.setAsync(`twyr!webapp!user!${userId}!${tenantId}!permissions`, JSON.stringify(tenantUserPermissions));
 		return tenantUserPermissions;
