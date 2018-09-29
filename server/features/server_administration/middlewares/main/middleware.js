@@ -123,6 +123,8 @@ class Main extends TwyrBaseMiddleware {
 	async _registerApis() {
 		try {
 			const ApiService = this.$dependencies.ApiService;
+
+			await ApiService.add(`${this.name}::getModuleTree`, this._getModuleTree.bind(this));
 			await ApiService.add(`${this.name}::getModule`, this._getModule.bind(this));
 
 			await super._registerApis();
@@ -136,7 +138,9 @@ class Main extends TwyrBaseMiddleware {
 	async _deregisterApis() {
 		try {
 			const ApiService = this.$dependencies.ApiService;
+
 			await ApiService.remove(`${this.name}::getModule`, this._getModule.bind(this));
+			await ApiService.remove(`${this.name}::getModuleTree`, this._getModuleTree.bind(this));
 
 			await super._deregisterApis();
 			return null;
@@ -148,6 +152,27 @@ class Main extends TwyrBaseMiddleware {
 	// #endregion
 
 	// #region API
+	async _getModuleTree(ctxt) {
+		try {
+			let serverModule = this.$parent;
+			while(serverModule.$parent) serverModule = serverModule.$parent;
+
+			const configSrvc = this.$dependencies.ConfigurationService;
+			const serverModuleId = await configSrvc.getModuleID(serverModule);
+
+			let query = `SELECT module_id AS id, COALESCE(CAST(parent_module_id AS text), '#') AS parent, display_name AS text FROM modules WHERE module_id IN (SELECT module_id FROM fn_get_module_descendants(?) WHERE (type = 'server' OR type = 'feature'))`;
+			if(ctxt.state.tenant['sub_domain'] !== 'www') query += ` AND deploy <> 'admin'`;
+
+			const dbSrvc = this.$dependencies.DatabaseService;
+			const serverFeatures = await dbSrvc.knex.raw(query, [serverModuleId]);
+
+			return serverFeatures.rows;
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_getModuleTree`, err);
+		}
+	}
+
 	async _getModule(ctxt) {
 		try {
 			const ModuleRecord = new this.$ModuleModel({
@@ -155,18 +180,24 @@ class Main extends TwyrBaseMiddleware {
 			});
 
 			let moduleData = await ModuleRecord.fetch({
-				'withRelated': ['parent', 'permissions']
+				'withRelated': ['parent', 'permissions', 'modules']
 			});
 
-			moduleData = this.$jsonApiMapper.map(moduleData, 'server-administration/features', {
+			moduleData = this.$jsonApiMapper.map(moduleData, 'server_administration/features', {
 				'typeForModel': {
-					'parent': 'server-administration/features',
-					'permissions': 'server-administration/feature_permissions'
+					'parent': 'server_administration/features',
+					'modules': 'server_administration/features',
+					'permissions': 'server_administration/feature_permissions'
 				},
 
 				'enableLinks': false
 			});
 
+			moduleData.included = moduleData.included.filter((inclData) => {
+				return inclData['type'] === 'server_administration/feature_permissions';
+			});
+
+			moduleData.data.relationships.features = JSON.parse(JSON.stringify(moduleData.data.relationships.modules));
 			return moduleData;
 		}
 		catch(err) {
