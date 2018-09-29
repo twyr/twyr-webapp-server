@@ -4622,7 +4622,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/components/tenant-administration/feature-manager/main-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency"], function (_exports, _baseComponent, _emberConcurrency) {
+;define("twyr-webapp-server/components/tenant-administration/feature-manager/main-component", ["exports", "twyr-webapp-server/framework/base-component"], function (_exports, _baseComponent) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4631,14 +4631,16 @@
   _exports.default = void 0;
 
   var _default = _baseComponent.default.extend({
-    changeSelectedFeature: (0, _emberConcurrency.task)(function* (feature) {
-      const store = this.get('store');
-      const loadedFeatureModels = yield store.peekAll('tenant-administration/feature-manager/tenant-feature');
-      const featureModel = loadedFeatureModels.filter(loadedFeatureModel => {
-        return loadedFeatureModel.get('feature.id') === feature.get('id');
-      });
-      this.invokeAction('controller-action', 'setSelectedFeature', featureModel.shift());
-    }).keepLatest()
+    didInsertElement() {
+      this._super(...arguments);
+
+      this.$('div.md-subheader-inner').addClass('pb-0');
+    },
+
+    changeSelectedFeature(feature) {
+      this.invokeAction('controller-action', 'setSelectedFeature', feature);
+    }
+
   });
 
   _exports.default = _default;
@@ -4671,7 +4673,7 @@
             'responsive': true
           },
           'data': {
-            'url': '/tenant-administration/feature-manager/tree',
+            'url': '/server-administration/features/tree',
             'dataType': 'json',
             'data': function (node) {
               return {
@@ -4701,25 +4703,14 @@
 
     onActivateNode: (0, _emberConcurrency.task)(function* (treeNode) {
       try {
-        const serverFeature = yield this.get('selectedFeature.feature');
+        let serverFeature = yield this.get('selectedFeature');
         if (serverFeature && serverFeature.get('id') === treeNode.id) return;
         const store = this.get('store');
-        let loadedFeatureModels = store.peekAll('tenant-administration/feature-manager/tenant-feature');
-
-        if (!loadedFeatureModels.get('length')) {
-          yield store.findAll('tenant-administration/feature-manager/tenant-feature');
-          loadedFeatureModels = store.peekAll('tenant-administration/feature-manager/tenant-feature');
-
-          for (let idx = 0; idx < loadedFeatureModels.get('length'); idx++) {
-            const loadedFeatureModel = loadedFeatureModels.objectAt(idx);
-            yield loadedFeatureModel.get('feature');
-          }
-        }
-
-        const featureModel = loadedFeatureModels.filter(loadedFeatureModel => {
-          return loadedFeatureModel.get('feature.id') === treeNode.id;
+        serverFeature = store.peekRecord('server-administration/feature', treeNode.id);
+        if (!serverFeature) serverFeature = yield store.findRecord('server-administration/feature', treeNode.id, {
+          'include': 'permissions'
         });
-        this.invokeAction('controller-action', 'setSelectedFeature', featureModel.shift());
+        this.invokeAction('controller-action', 'setSelectedFeature', serverFeature);
       } catch (err) {
         this.get('notification').display({
           'type': 'error',
@@ -4729,9 +4720,9 @@
     }).keepLatest(),
     onSelectedFeatureChanged: Ember.observer('selectedFeature', function () {
       if (!this.get('selectedFeature')) return;
-      if (this.$('div#tenant-administration-feature-manager-tree-container').jstree('get_selected')[0] === this.get('selectedFeature.feature.id')) return;
-      this.$('div#tenant-administration-feature-manager-tree-container').jstree('activate_node', this.get('selectedFeature.feature.id'), false, false);
-      this.$('div#tenant-administration-feature-manager-tree-container').jstree('open_node', this.get('selectedFeature.feature.id'));
+      if (this.$('div#tenant-administration-feature-manager-tree-container').jstree('get_selected')[0] === this.get('selectedFeature.id')) return;
+      this.$('div#tenant-administration-feature-manager-tree-container').jstree('activate_node', this.get('selectedFeature.id'), false, false);
+      this.$('div#tenant-administration-feature-manager-tree-container').jstree('open_node', this.get('selectedFeature.id'));
     })
   });
 
@@ -9479,6 +9470,7 @@
       'defaultValue': 'default'
     }),
     'description': _emberData.default.attr('string'),
+    'type': _emberData.default.attr('string'),
     'parent': _emberData.default.belongsTo('server-administration/feature', {
       'async': true,
       'inverse': 'features'
@@ -11213,8 +11205,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "SVZtnRMC",
-    "block": "{\"symbols\":[\"card\",\"table\",\"body\",\"feature\",\"row\",\"head\",\"table\",\"body\",\"permission\",\"row\",\"head\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[0,\"\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Basics\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"class\",\"mx-2 mt-4 layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"class\",\"label\",\"placeholder\",\"value\",\"onChange\",\"readonly\"],[\"flex-80\",\"Path\",\"Feature Name\",[27,\"await\",[[23,[\"selectedFeature\",\"feature\",\"path\"]]],null],null,true]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-switch\",null,[[\"label\",\"value\",\"onChange\",\"disabled\"],[\"Subscribed\",true,[27,\"perform\",[[23,[\"modifyTenantFeatureStatus\"]]],null],[27,\"not-eq\",[[27,\"get\",[[27,\"await\",[[23,[\"selectedFeature\",\"feature\"]]],null],\"deploy\"],null],\"custom\"],null]]]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"class\",\"mx-2 pt-2 pb-4 layout-row layout-align-start-center\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"get\",[[27,\"await\",[[23,[\"selectedFeature\",\"feature\"]]],null],\"description\"],null],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"],[4,\"if\",[[27,\"get\",[[27,\"await\",[[23,[\"selectedFeature\",\"feature\",\"permissions\"]]],null],\"length\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Permissions\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,7,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[11]},null],[4,\"component\",[[22,7,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,7,[\"sortDesc\"]],[27,\"await\",[[23,[\"selectedFeature\",\"feature\",\"permissions\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,8,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,10,[\"cell\"]]],null,{\"statements\":[[1,[22,9,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,10,[\"cell\"]]],null,{\"statements\":[[1,[22,9,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[10]},null]],\"parameters\":[9]},null]],\"parameters\":[8]},null]],\"parameters\":[7]},null]],\"parameters\":[]},null],[4,\"if\",[[27,\"get\",[[27,\"await\",[[23,[\"selectedFeature\",\"feature\",\"features\"]]],null],\"length\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Sub Features\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,2,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Access Level\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null],[4,\"component\",[[22,2,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,2,[\"sortDesc\"]],[27,\"await\",[[23,[\"selectedFeature\",\"feature\",\"features\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,3,[\"row\"]]],[[\"onClick\"],[[27,\"perform\",[[23,[\"changeSelectedFeature\"]],[22,4,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[27,\"titleize\",[[22,4,[\"deploy\"]]],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null],[0,\"\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
+    "id": "jzYlcFCw",
+    "block": "{\"symbols\":[\"card\",\"table\",\"body\",\"feature\",\"row\",\"head\",\"table\",\"body\",\"permission\",\"row\",\"head\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-start\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"class\",\"value\",\"onChange\",\"readonly\"],[\"m-0 flex-80\",[27,\"await\",[[23,[\"selectedFeature\",\"path\"]]],null],null,true]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-switch\",null,[[\"class\",\"label\",\"value\",\"onChange\",\"disabled\"],[\"m-0\",\"Subscribed\",true,[27,\"perform\",[[23,[\"modifyTenantFeatureStatus\"]]],null],[27,\"not-eq\",[[23,[\"selectedFeature\",\"deploy\"]],\"custom\"],null]]]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"mx-2 pt-2 pb-4 layout-row layout-align-start-center\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[23,[\"selectedFeature\",\"description\"]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"],[4,\"if\",[[27,\"get\",[[27,\"await\",[[23,[\"selectedFeature\",\"permissions\"]]],null],\"length\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Permissions\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,7,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[11]},null],[4,\"component\",[[22,7,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,7,[\"sortDesc\"]],[27,\"await\",[[23,[\"selectedFeature\",\"permissions\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,8,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,10,[\"cell\"]]],null,{\"statements\":[[1,[22,9,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,10,[\"cell\"]]],null,{\"statements\":[[1,[22,9,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[10]},null]],\"parameters\":[9]},null]],\"parameters\":[8]},null]],\"parameters\":[7]},null]],\"parameters\":[]},null],[4,\"if\",[[27,\"get\",[[27,\"await\",[[23,[\"selectedFeature\",\"features\"]]],null],\"length\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Sub Features\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,2,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Access Level\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null],[4,\"component\",[[22,2,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,2,[\"sortDesc\"]],[27,\"await\",[[23,[\"selectedFeature\",\"features\"]]],null]],null]],null,{\"statements\":[[4,\"if\",[[27,\"eq\",[[22,4,[\"type\"]],\"feature\"],null]],null,{\"statements\":[[4,\"component\",[[22,3,[\"row\"]]],[[\"onClick\"],[[27,\"action\",[[22,0,[]],\"controller-action\",\"changeSelectedFeature\",[22,4,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[27,\"titleize\",[[22,4,[\"deploy\"]]],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null],[0,\"\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/feature-manager/main-component.hbs"
     }
@@ -11483,8 +11475,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "pWyaC7Yq",
-    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Feature Manager\"],null],false],[0,\"\\n\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-start-stretch layout-wrap\"],[9],[0,\"\\n\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/tree-component\"],[[\"class\",\"model\",\"selectedFeature\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-40 flex-gt-lg-30 layout-row layout-align-start-stretch\",[23,[\"model\"]],[23,[\"selectedFeature\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/main-component\"],[[\"class\",\"model\",\"selectedFeature\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-60 flex-gt-lg-70 layout-row layout-align-start-stretch\",[23,[\"model\"]],[23,[\"selectedFeature\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"],[10],[0,\"\\n\\n\"]],\"hasEval\":false}",
+    "id": "t3u54oMl",
+    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Feature Manager\"],null],false],[0,\"\\n\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-start-stretch layout-wrap\"],[9],[0,\"\\n\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/tree-component\"],[[\"class\",\"selectedFeature\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-40 flex-gt-lg-30 layout-row layout-align-start-stretch\",[23,[\"selectedFeature\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/main-component\"],[[\"class\",\"selectedFeature\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-60 flex-gt-lg-70 layout-row layout-align-start-stretch\",[23,[\"selectedFeature\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"],[10],[0,\"\\n\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/tenant-administration/feature-manager.hbs"
     }
