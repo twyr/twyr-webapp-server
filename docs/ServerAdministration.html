@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>CassandraService - Twyr Web Application Server</title>
+    <title>ServerAdministration - Twyr Web Application Server</title>
     
     <meta name="description" content="Twyr Web Application Server" />
     
@@ -44,7 +44,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">CassandraService</h1>
+    <h1 class="page-title">ServerAdministration</h1>
     
 
     
@@ -57,10 +57,10 @@
 <header>
     
         <h2>
-        CassandraService
+        ServerAdministration
         </h2>
         
-            <div class="class-description"><p>The Twyr Web Application Server Cassandra Service.</p></div>
+            <div class="class-description"><p>The Twyr Web Application Server ServerAdministration feature - manages server settings.</p></div>
         
     
 </header>
@@ -74,10 +74,8 @@
     <h2>Constructor</h2>
     
 
-    <h4 class="name" id="CassandraService"><span class="type-signature"></span>new CassandraService<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="ServerAdministration"><span class="type-signature"></span>new ServerAdministration<span class="signature">()</span><span class="type-signature"></span></h4>
 
-    
-    <p class="summary">Allows the rest of the Twyr Modules to use Cassandra as a NoSQL Storage.</p>
     
 
 
@@ -88,7 +86,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="server_services_cassandra_service_service.js.html">server/services/cassandra_service/service.js</a>, <a href="server_services_cassandra_service_service.js.html#line17">line 17</a>
+        <a href="server_features_server_administration_feature.js.html">server/features/server_administration/feature.js</a>, <a href="server_features_server_administration_feature.js.html#line15">line 15</a>
     </li></ul></dd>
     
 
@@ -127,10 +125,6 @@
 
 
 
-<div class="description">
-    <p>Allows the rest of the Twyr Modules to use Cassandra as a NoSQL Storage.</p>
-</div>
-
 
 
 
@@ -165,7 +159,7 @@
 
 
     <ul>
-        <li><a href="TwyrBaseService.html">TwyrBaseService</a></li>
+        <li><a href="TwyrBaseFeature.html">TwyrBaseFeature</a></li>
     </ul>
 
 
@@ -208,7 +202,7 @@
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="TwyrBaseService.html#basePath">TwyrBaseService#basePath</a>
+        <a href="TwyrBaseFeature.html#basePath">TwyrBaseFeature#basePath</a>
     </li></ul></dd>
     
 
@@ -278,12 +272,12 @@
     
 
     
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="TwyrBaseService.html#dependencies">TwyrBaseService#dependencies</a>
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrBaseModule.html#dependencies">TwyrBaseModule#dependencies</a>
     </li></ul></dd>
+    
+
     
 
     
@@ -332,7 +326,7 @@
 
         
             
-<h4 class="name" id="Interface"><span class="type-signature">(readonly) </span>Interface<span class="type-signature"> :Object</span></h4>
+<h4 class="name" id="EmberAssets"><span class="type-signature">(readonly) </span>EmberAssets<span class="type-signature"> :Object</span></h4>
 
 
 
@@ -343,7 +337,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="framework_twyr-base-service.js.html">framework/twyr-base-service.js</a>, <a href="framework_twyr-base-service.js.html#line39">line 39</a>
+        <a href="framework_twyr-base-feature.js.html">framework/twyr-base-feature.js</a>, <a href="framework_twyr-base-feature.js.html#line324">line 324</a>
     </li></ul></dd>
     
 
@@ -352,12 +346,12 @@
     
 
     
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="TwyrBaseService.html#Interface">TwyrBaseService#Interface</a>
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrBaseFeature.html#EmberAssets">TwyrBaseFeature#EmberAssets</a>
     </li></ul></dd>
+    
+
     
 
     
@@ -479,10 +473,374 @@
 
 
         
+            
+<h4 class="name" id="Router"><span class="type-signature">(readonly) </span>Router<span class="type-signature"> :Object</span></h4>
+
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-base-feature.js.html">framework/twyr-base-feature.js</a>, <a href="framework_twyr-base-feature.js.html#line313">line 313</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrBaseFeature.html#Router">TwyrBaseFeature#Router</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">Object</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+
+        
     
 
     
         <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id="_addRoutes"><span class="type-signature">(async) </span>_addRoutes<span class="signature">()</span><span class="type-signature"> &rarr; {undefined}</span></h4>
+
+    
+    <p class="summary"><p>Adds routes to the Koa Router.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-base-feature.js.html">framework/twyr-base-feature.js</a>, <a href="framework_twyr-base-feature.js.html#line262">line 262</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrBaseFeature.html#_addRoutes">TwyrBaseFeature#_addRoutes</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Nothing.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">undefined</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_canUserAccessThisResource"><span class="type-signature">(async) </span>_canUserAccessThisResource<span class="signature">(ctxt, next)</span><span class="type-signature"> &rarr; {undefined}</span></h4>
+
+    
+    <p class="summary"><p>Derived classes should call next, or throw a {TwyrFeatureError} - depending on whether the user can access this particular resource.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-base-feature.js.html">framework/twyr-base-feature.js</a>, <a href="framework_twyr-base-feature.js.html#line244">line 244</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="TwyrBaseFeature.html#_canUserAccessThisResource">TwyrBaseFeature#_canUserAccessThisResource</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>ctxt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Koa context.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>next</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#callback">callback</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Callback to pass the request on to the next route in the chain.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Nothing.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">undefined</span>
+
+
+    </dd>
+</dl>
+
+    
+
 
         
             
@@ -604,6 +962,115 @@
     
     </tbody>
 </table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Nothing.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">undefined</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_deleteRoutes"><span class="type-signature">(async) </span>_deleteRoutes<span class="signature">()</span><span class="type-signature"> &rarr; {undefined}</span></h4>
+
+    
+    <p class="summary"><p>Removes all the routes from the Koa Router.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-base-feature.js.html">framework/twyr-base-feature.js</a>, <a href="framework_twyr-base-feature.js.html#line291">line 291</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrBaseFeature.html#_deleteRoutes">TwyrBaseFeature#_deleteRoutes</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -938,6 +1405,187 @@
             
 
             <td class="description last"><p>The next state of the dependency.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Nothing.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">undefined</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_doesUserHavePermission"><span class="type-signature">(async) </span>_doesUserHavePermission<span class="signature">(ctxt, next)</span><span class="type-signature"> &rarr; {undefined}</span></h4>
+
+    
+    <p class="summary"><p>Derived classes should call next, or throw a {TwyrFeatureError} - depending on whether the user has the required permission(s).</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-base-feature.js.html">framework/twyr-base-feature.js</a>, <a href="framework_twyr-base-feature.js.html#line226">line 226</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="TwyrBaseFeature.html#_doesUserHavePermission">TwyrBaseFeature#_doesUserHavePermission</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>ctxt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Koa context.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>next</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#callback">callback</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Callback to pass the request on to the next route in the chain.</p></td>
         </tr>
 
     
@@ -1773,12 +2421,12 @@
     
 
     
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="TwyrBaseService.html#_setup">TwyrBaseService#_setup</a>
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrBaseModule.html#_setup">TwyrBaseModule#_setup</a>
     </li></ul></dd>
+    
+
     
 
     
@@ -1873,7 +2521,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="framework_twyr-base-module.js.html">framework/twyr-base-module.js</a>, <a href="framework_twyr-base-module.js.html#line347">line 347</a>
+        <a href="framework_twyr-base-feature.js.html">framework/twyr-base-feature.js</a>, <a href="framework_twyr-base-feature.js.html#line103">line 103</a>
     </li></ul></dd>
     
 
@@ -1884,7 +2532,7 @@
     
     <dt class="inherited-from">Inherited From:</dt>
     <dd class="inherited-from"><ul class="dummy"><li>
-        <a href="TwyrBaseModule.html#_subModuleReconfigure">TwyrBaseModule#_subModuleReconfigure</a>
+        <a href="TwyrBaseFeature.html#_subModuleReconfigure">TwyrBaseFeature#_subModuleReconfigure</a>
     </li></ul></dd>
     
 
@@ -2221,12 +2869,12 @@
     
 
     
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="TwyrBaseService.html#_teardown">TwyrBaseService#_teardown</a>
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrBaseModule.html#_teardown">TwyrBaseModule#_teardown</a>
     </li></ul></dd>
+    
+
     
 
     
@@ -2294,6 +2942,345 @@
     <dd>
         
 <span class="param-type">undefined</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="getClientsideAssets"><span class="type-signature">(async) </span>getClientsideAssets<span class="signature">(ctxt, tenantFeatures)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Returns the route map that is used by the Ember.js Router on the browser.</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-base-feature.js.html">framework/twyr-base-feature.js</a>, <a href="framework_twyr-base-feature.js.html#line132">line 132</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="TwyrBaseFeature.html#getClientsideAssets">TwyrBaseFeature#getClientsideAssets</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>ctxt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Koa context.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>tenantFeatures</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Sub-features allowed for this Tenant.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Containing the compiled Ember.js client-side assets (specifically the route map, but could be others, as well).</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="getDashboardDisplayDetails"><span class="type-signature">(async) </span>getDashboardDisplayDetails<span class="signature">(ctxt)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+    <p class="summary"><p>Derived classes should return details, or null - depending on whether the user has the required permission(s).</p></p>
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="framework_twyr-base-feature.js.html">framework/twyr-base-feature.js</a>, <a href="framework_twyr-base-feature.js.html#line190">line 190</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="TwyrBaseFeature.html#getDashboardDisplayDetails">TwyrBaseFeature#getDashboardDisplayDetails</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>ctxt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Koa context.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Dashboard display stuff for this Feature.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
 
 
     </dd>
