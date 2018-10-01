@@ -243,9 +243,44 @@ class Main extends TwyrBaseMiddleware {
 
 	async _addTenantFeature(ctxt) {
 		try {
+			const tenantFeature = ctxt.request.body;
+
+			const jsonDeserializedData = await this.$jsonApiDeserializer.deserializeAsync(tenantFeature);
+			jsonDeserializedData['tenant_feature_id'] = jsonDeserializedData.id;
+
+			Object.keys(tenantFeature.data.relationships || {}).forEach((relationshipName) => {
+				if(!tenantFeature.data.relationships[relationshipName].data) {
+					delete jsonDeserializedData[relationshipName];
+					return;
+				}
+
+				if(!tenantFeature.data.relationships[relationshipName].data.id) {
+					delete jsonDeserializedData[relationshipName];
+					return;
+				}
+
+				jsonDeserializedData[`${relationshipName}_id`] = tenantFeature.data.relationships[relationshipName].data.id;
+			});
+
+			jsonDeserializedData['module_id'] = jsonDeserializedData['feature_id'];
+
+			delete jsonDeserializedData.id;
+			delete jsonDeserializedData.feature_id;
+			delete jsonDeserializedData.created_at;
+			delete jsonDeserializedData.updated_at;
+
+			const savedRecord = await this.$TenantFeatureModel
+				.forge()
+				.save(jsonDeserializedData, {
+					'method': 'insert',
+					'patch': false
+				});
+
 			return {
-				'id': ctxt.request.body.id,
-				'type': ctxt.request.body.data.type
+				'data': {
+					'type': tenantFeature.data.type,
+					'id': savedRecord.get('tenant_feature_id')
+				}
 			};
 		}
 		catch(err) {
@@ -256,7 +291,7 @@ class Main extends TwyrBaseMiddleware {
 	async _deleteTenantFeature(ctxt) {
 		try {
 			await new this.$TenantFeatureModel({
-				'tenant_feature_id': ctxt.params.id
+				'tenant_feature_id': ctxt.params['tenant_feature_id']
 			}).destroy();
 
 			return null;
