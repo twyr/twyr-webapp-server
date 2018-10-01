@@ -41,14 +41,14 @@ class Main extends TwyrBaseComponent {
 	 */
 	async _addRoutes() {
 		try {
-			this.$router.get('/tenants/:tenant_id', this._getTenant.bind(this));
-			this.$router.patch('/tenants/:tenant_id', this._updateTenant.bind(this));
-			this.$router.del('/tenants/:tenant_id', this._deleteTenant.bind(this));
+			this.$router.get('/tenants/:tenant_id', this.$parent._rbac('tenant-administration-read'), this._getTenant.bind(this));
+			this.$router.patch('/tenants/:tenant_id', this.$parent._rbac('tenant-administration-update'), this._updateTenant.bind(this));
+			this.$router.del('/tenants/:tenant_id', this.$parent._rbac('tenant-administration-all'), this._deleteTenant.bind(this));
 
-			this.$router.get('/tenant-locations/:tenant_location_id', this._getLocation.bind(this));
-			this.$router.post('/tenant-locations', this._addLocation.bind(this));
-			this.$router.patch('/tenant-locations/:tenant_location_id', this._updateLocation.bind(this));
-			this.$router.del('/tenant-locations/:tenant_location_id', this._deleteLocation.bind(this));
+			this.$router.get('/tenant-locations/:tenant_location_id', this.$parent._rbac('tenant-administration-read'), this._getLocation.bind(this));
+			this.$router.post('/tenant-locations', this.$parent._rbac('tenant-administration-update'), this._addLocation.bind(this));
+			this.$router.patch('/tenant-locations/:tenant_location_id', this.$parent._rbac('tenant-administration-update'), this._updateLocation.bind(this));
+			this.$router.del('/tenant-locations/:tenant_location_id', this.$parent._rbac('tenant-administration-update'), this._deleteLocation.bind(this));
 
 			await super._addRoutes();
 			return null;

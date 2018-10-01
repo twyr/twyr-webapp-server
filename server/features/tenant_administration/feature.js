@@ -10,7 +10,7 @@
  * @ignore
  */
 const TwyrBaseFeature = require('twyr-base-feature').TwyrBaseFeature;
-const TwyrFeatureError = require('twyr-feature-error').TwyrFeatureError;
+// const TwyrFeatureError = require('twyr-feature-error').TwyrFeatureError;
 
 /**
  * @class   TenantAdministration
@@ -42,61 +42,21 @@ class TenantAdministration extends TwyrBaseFeature {
 	 * @summary  Everyone logged-in gets access.
 	 */
 	async getDashboardDisplayDetails(ctxt) {
-		const defaultDisplay = await super.getDashboardDisplayDetails(ctxt);
+		try {
+			const rbacChecker = this._rbac('tenant-administration-read');
+			await rbacChecker(ctxt);
 
-		defaultDisplay['attributes']['description'] = `Edit Account Settings`;
-		defaultDisplay['attributes']['icon_type'] = 'mdi';
-		defaultDisplay['attributes']['icon_path'] = 'account-settings';
+			const defaultDisplay = await super.getDashboardDisplayDetails(ctxt);
 
-		return defaultDisplay;
-	}
+			defaultDisplay['attributes']['description'] = `Edit Account Settings`;
+			defaultDisplay['attributes']['icon_type'] = 'mdi';
+			defaultDisplay['attributes']['icon_path'] = 'account-settings';
 
-	/**
-	 * @async
-	 * @function
-	 * @override
-	 * @instance
-	 * @memberof TenantAdministration
-	 * @name     _doesUserHavePermission
-	 *
-	 * @param    {Object} ctxt - Koa context.
-	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
-	 *
-	 * @returns  {undefined} Nothing.
-	 *
-	 * @summary  Only the super-administrators get access.
-	 */
-	async _doesUserHavePermission(ctxt, next) {
-		if(ctxt.state.user) {
-			await next();
-			return;
+			return defaultDisplay;
 		}
-
-		throw new TwyrFeatureError('No active session');
-	}
-
-	/**
-	 * @async
-	 * @function
-	 * @override
-	 * @instance
-	 * @memberof TenantAdministration
-	 * @name     _canUserAccessThisResource
-	 *
-	 * @param    {Object} ctxt - Koa context.
-	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
-	 *
-	 * @returns  {undefined} Nothing.
-	 *
-	 * @summary  Only the super-administrators get access.
-	 */
-	async _canUserAccessThisResource(ctxt, next) {
-		if(ctxt.state.user) {
-			await next();
-			return;
+		catch(err) {
+			return null;
 		}
-
-		throw new TwyrFeatureError('No active session');
 	}
 	// #endregion
 

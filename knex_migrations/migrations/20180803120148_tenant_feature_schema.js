@@ -464,20 +464,7 @@ $$;`
 	COST 1
 	AS $$
 DECLARE
-	admin_group_id	UUID;
 BEGIN
-	admin_group_id := NULL;
-
-	SELECT
-		group_id
-	FROM
-		tenant_groups
-	WHERE
-		tenant_id = NEW.tenant_id AND
-		parent_group_id IS NULL
-	INTO
-		admin_group_id;
-
 	INSERT INTO
 		tenant_group_permissions (
 			tenant_id,
@@ -486,14 +473,14 @@ BEGIN
 			feature_permission_id
 		)
 	SELECT
-		NEW.tenant_id,
-		admin_group_id,
+		tenant_id,
+		group_id,
 		NEW.module_id,
-		feature_permission_id
+		NEW.feature_permission_id
 	FROM
-		feature_permissions
+		tenant_groups
 	WHERE
-		module_id = NEW.module_id;
+		parent_group_id IS NULL;
 
 	RETURN NEW;
 END;
@@ -595,8 +582,8 @@ BEGIN
 		RETURN NEW;
 	END IF;
 
-	RAISE SQLSTATE '2F003' USING MESSAGE = 'Parent Group does not have this permission';
-	RETURN NULL;
+	RAISE WARNING USING MESSAGE = 'Parent Group ' || parent_id || ' of ' || NEW.group_id || ' does not have this permission';
+	RETURN NEW;
 END;
 $$;`
 	);
@@ -639,7 +626,7 @@ $$;`
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_check_tenant_feature_upsert_is_valid BEFORE INSERT OR UPDATE ON public.tenants_features FOR EACH ROW EXECUTE PROCEDURE public.fn_check_tenant_feature_upsert_is_valid();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_assign_feature_to_tenant AFTER INSERT ON public.modules FOR EACH ROW EXECUTE PROCEDURE public.fn_assign_new_feature_to_tenants();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_assign_tenant_to_feature AFTER INSERT ON public.tenants FOR EACH ROW EXECUTE PROCEDURE public.fn_assign_features_to_new_tenants();');
-	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_assign_feature_permissions_to_tenant AFTER INSERT ON public.tenants_features FOR EACH ROW EXECUTE PROCEDURE public.fn_assign_feature_permissions_to_tenant();');
+	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_assign_feature_permissions_to_tenant AFTER INSERT ON public.feature_permissions FOR EACH ROW EXECUTE PROCEDURE public.fn_assign_feature_permissions_to_tenant();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_remove_descendant_feature_from_tenant AFTER DELETE ON public.tenants_features FOR EACH ROW EXECUTE PROCEDURE public.fn_remove_descendant_feature_from_tenant();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_remove_group_permission_from_descendants AFTER DELETE ON public.tenant_group_permissions FOR EACH ROW EXECUTE PROCEDURE public.fn_remove_group_permission_from_descendants();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_check_group_permission_upsert_is_valid BEFORE INSERT OR UPDATE ON public.tenant_group_permissions FOR EACH ROW EXECUTE PROCEDURE public.fn_check_group_permission_upsert_is_valid();');
@@ -652,7 +639,7 @@ exports.down = async function(knex) {
 	await knex.raw('DROP TRIGGER IF EXISTS trigger_remove_group_permission_from_descendants ON public.tenant_group_permissions CASCADE;');
 	await knex.raw('DROP TRIGGER IF EXISTS trigger_remove_descendant_feature_from_tenant ON public.tenants_features CASCADE;');
 	await knex.raw('DROP TRIGGER IF EXISTS trigger_check_tenant_feature_upsert_is_valid ON public.tenants_features CASCADE;');
-	await knex.raw('DROP TRIGGER IF EXISTS trigger_assign_feature_permissions_to_tenant ON public.tenants_features CASCADE;');
+	await knex.raw('DROP TRIGGER IF EXISTS trigger_assign_feature_permissions_to_tenant ON public.feature_permissions CASCADE;');
 	await knex.raw('DROP TRIGGER IF EXISTS trigger_assign_tenant_to_feature ON public.tenants CASCADE;');
 	await knex.raw('DROP TRIGGER IF EXISTS trigger_assign_feature_to_tenant ON public.modules CASCADE;');
 

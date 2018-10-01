@@ -41,15 +41,14 @@ class Main extends TwyrBaseComponent {
 	 */
 	async _addRoutes() {
 		try {
-			this.$router.get('/tree', this._getTenantFeatureTree.bind(this));
-			this.$router.get('/tenant-features', this._getTenantFeatures.bind(this));
+			this.$router.get('/tree', this.$parent._rbac('feature-manager-read'), this._getTenantFeatureTree.bind(this));
+			this.$router.get('/tenant-features', this.$parent._rbac('feature-manager-read'), this._getTenantFeatures.bind(this));
 
-			this.$router.get('/tenant-features/:tenant_feature_id', this._getTenantFeature.bind(this));
-			this.$router.post('/tenant-features', this._addTenantFeature.bind(this));
-			this.$router.del('/tenant-features/:tenant_feature_id', this._deleteTenantFeature.bind(this));
+			this.$router.get('/tenant-features/:tenant_feature_id', this.$parent._rbac('feature-manager-read'), this._getTenantFeature.bind(this));
+			this.$router.post('/tenant-features', this.$parent._rbac('feature-manager-update'), this._addTenantFeature.bind(this));
+			this.$router.del('/tenant-features/:tenant_feature_id', this.$parent._rbac('feature-manager-update'), this._deleteTenantFeature.bind(this));
 
 			await super._addRoutes();
-
 			return null;
 		}
 		catch(err) {

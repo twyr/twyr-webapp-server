@@ -41,13 +41,12 @@ class TwyrBaseFeature extends TwyrBaseModule {
 
 		const inflectedName = inflection.transform(this.name, ['foreign_key', 'dasherize']).replace('-id', '');
 		this.$router = new Router({ 'prefix': `/${inflectedName}` });
-		// this.$router = new Router();
 
 		// The RBAC Koa middleware
-		this.$router.use(this._doesUserHavePermission.bind(this));
+		// this.$router.use(this._doesUserHavePermission.bind(this));
 
 		// The ABAC Koa middleware
-		this.$router.use(this._canUserAccessThisResource.bind(this));
+		// this.$router.use(this._canUserAccessThisResource.bind(this));
 	}
 	// #endregion
 
@@ -224,21 +223,33 @@ class TwyrBaseFeature extends TwyrBaseModule {
 	}
 
 	/**
-	 * @async
 	 * @function
 	 * @instance
 	 * @memberof TwyrBaseFeature
-	 * @name     _doesUserHavePermission
+	 * @name     _rbac
 	 *
-	 * @param    {Object} ctxt - Koa context.
-	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
+	 * @param    {string} permission - The permission to check for.
 	 *
-	 * @returns  {undefined} Nothing.
+	 * @returns  {undefined} Koa middleware that can be injected into a route.
 	 *
 	 * @summary  Derived classes should call next, or throw a {TwyrFeatureError} - depending on whether the user has the required permission(s).
 	 */
-	async _doesUserHavePermission(ctxt, next) {
-		await next();
+	_rbac(permission) {
+		return async function(ctxt, next) {
+			// console.log(`Requested Permission: ${permission},\nUser Permissions: ${JSON.stringify(ctxt.state.user.permissions, null, '\t')}`);
+			if(ctxt.state.user && ctxt.state.user.permissions) {
+				const doesUserHavePermission = ctxt.state.user.permissions.filter((userPerm) => {
+					return ((userPerm.name === 'super-administrator') || (userPerm.name === permission));
+				}).length;
+
+				if(doesUserHavePermission) {
+					if(next) await next();
+					return;
+				}
+			}
+
+			throw new TwyrFeatureError('User doesn\'t have the required permissions');
+		};
 	}
 
 	/**
@@ -246,7 +257,7 @@ class TwyrBaseFeature extends TwyrBaseModule {
 	 * @function
 	 * @instance
 	 * @memberof TwyrBaseFeature
-	 * @name     _canUserAccessThisResource
+	 * @name     _abac
 	 *
 	 * @param    {Object} ctxt - Koa context.
 	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
@@ -255,7 +266,7 @@ class TwyrBaseFeature extends TwyrBaseModule {
 	 *
 	 * @summary  Derived classes should call next, or throw a {TwyrFeatureError} - depending on whether the user can access this particular resource.
 	 */
-	async _canUserAccessThisResource(ctxt, next) {
+	async _abac(ctxt, next) {
 		await next();
 	}
 

@@ -41,7 +41,7 @@ class Main extends TwyrBaseComponent {
 	 */
 	async _addRoutes() {
 		try {
-			this.$router.get('/features', this._getTenantUserFeatures.bind(this));
+			this.$router.get('/features', this.$parent._rbac('registered'), this._getTenantUserFeatures.bind(this));
 			await super._addRoutes();
 
 			return null;

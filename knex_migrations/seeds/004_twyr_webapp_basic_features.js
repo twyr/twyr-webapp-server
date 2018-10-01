@@ -88,6 +88,29 @@ exports.seed = async function(knex) {
 		.returning('module_id');
 
 		componentId = componentId[0];
+
+		await knex('feature_permissions').insert({
+			'module_id': componentId,
+			'name': 'tenant-administration-read',
+			'display_name': 'Tenant Administration Read',
+			'description': 'The Read-only Permission for the Tenant Adminstration Module'
+		});
+
+		await knex('feature_permissions').insert({
+			'module_id': componentId,
+			'name': 'tenant-administration-update',
+			'implies_permissions': '["tenant-administration-read"]',
+			'display_name': 'Tenant Administration Update',
+			'description': 'Update Permission for the Tenant Adminstration Module'
+		});
+
+		await knex('feature_permissions').insert({
+			'module_id': componentId,
+			'name': 'tenant-administration-all',
+			'implies_permissions': '["tenant-administration-update"]',
+			'display_name': 'Tenant Administration All',
+			'description': 'All Permissions for the Tenant Adminstration Module'
+		});
 	}
 	else {
 		componentId = componentId.rows.shift()['module_id'];
@@ -97,7 +120,7 @@ exports.seed = async function(knex) {
 
 	componentId = await knex.raw(`SELECT module_id FROM fn_get_module_descendants(?) WHERE name = ? AND type = 'feature'`, [tenantAdminFeatureId, 'FeatureManager']);
 	if(!componentId.rows.length) {
-		await knex('modules').insert({
+		componentId = await knex('modules').insert({
 			'parent_module_id': tenantAdminFeatureId,
 			'type': 'feature',
 			'deploy': 'default',
@@ -111,12 +134,39 @@ exports.seed = async function(knex) {
 				'demo': 'https://twyr.com',
 				'documentation': 'https://twyr.com'
 			}
+		})
+		.returning('module_id');
+
+		componentId = componentId[0];
+
+		await knex('feature_permissions').insert({
+			'module_id': componentId,
+			'name': 'feature-manager-read',
+			'implies_permissions': '["tenant-administration-read"]',
+			'display_name': 'Feature Manager Read',
+			'description': 'The Read-only Permission for the Feature Manager Module'
+		});
+
+		await knex('feature_permissions').insert({
+			'module_id': componentId,
+			'name': 'feature-manager-update',
+			'implies_permissions': '["feature-manager-read"]',
+			'display_name': 'Feature Manager Update',
+			'description': 'Update Permission for the Feature Manager Module'
+		});
+
+		await knex('feature_permissions').insert({
+			'module_id': componentId,
+			'name': 'feature-manager-all',
+			'implies_permissions': '["feature-manager-update"]',
+			'display_name': 'Feature Manager All',
+			'description': 'All Permissions for the Feature Manager Module'
 		});
 	}
 
 	componentId = await knex.raw(`SELECT module_id FROM fn_get_module_descendants(?) WHERE name = ? AND type = 'feature'`, [tenantAdminFeatureId, 'GroupManager']);
 	if(!componentId.rows.length) {
-		await knex('modules').insert({
+		componentId = await knex('modules').insert({
 			'parent_module_id': tenantAdminFeatureId,
 			'type': 'feature',
 			'deploy': 'default',
@@ -130,12 +180,39 @@ exports.seed = async function(knex) {
 				'demo': 'https://twyr.com',
 				'documentation': 'https://twyr.com'
 			}
+		})
+		.returning('module_id');
+
+		componentId = componentId[0];
+
+		await knex('feature_permissions').insert({
+			'module_id': componentId,
+			'name': 'group-manager-read',
+			'implies_permissions': '["tenant-administration-read"]',
+			'display_name': 'Group Manager Read',
+			'description': 'The Read-only Permission for the Group Manager Module'
+		});
+
+		await knex('feature_permissions').insert({
+			'module_id': componentId,
+			'name': 'group-manager-update',
+			'implies_permissions': '["group-manager-read"]',
+			'display_name': 'Group Manager Update',
+			'description': 'Update Permission for the Group Manager Module'
+		});
+
+		await knex('feature_permissions').insert({
+			'module_id': componentId,
+			'name': 'group-manager-all',
+			'implies_permissions': '["group-manager-update"]',
+			'display_name': 'Group Manager All',
+			'description': 'All Permissions for the Group Manager Module'
 		});
 	}
 
 	componentId = await knex.raw(`SELECT module_id FROM fn_get_module_descendants(?) WHERE name = ? AND type = 'feature'`, [tenantAdminFeatureId, 'UserManager']);
 	if(!componentId.rows.length) {
-		await knex('modules').insert({
+		componentId = await knex('modules').insert({
 			'parent_module_id': tenantAdminFeatureId,
 			'type': 'feature',
 			'deploy': 'default',
@@ -149,6 +226,33 @@ exports.seed = async function(knex) {
 				'demo': 'https://twyr.com',
 				'documentation': 'https://twyr.com'
 			}
+		})
+		.returning('module_id');
+
+		componentId = componentId[0];
+
+		await knex('feature_permissions').insert({
+			'module_id': componentId,
+			'name': 'user-manager-read',
+			'implies_permissions': '["tenant-administration-read"]',
+			'display_name': 'User Manager Read',
+			'description': 'The Read-only Permission for the User Manager Module'
+		});
+
+		await knex('feature_permissions').insert({
+			'module_id': componentId,
+			'name': 'user-manager-update',
+			'implies_permissions': '["user-manager-read"]',
+			'display_name': 'User Manager Update',
+			'description': 'Update Permission for the User Manager Module'
+		});
+
+		await knex('feature_permissions').insert({
+			'module_id': componentId,
+			'name': 'user-manager-all',
+			'implies_permissions': '["user-manager-update"]',
+			'display_name': 'User Manager All',
+			'description': 'All Permissions for the User Manager Module'
 		});
 	}
 };

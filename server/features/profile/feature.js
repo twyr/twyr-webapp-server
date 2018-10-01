@@ -10,7 +10,7 @@
  * @ignore
  */
 const TwyrBaseFeature = require('twyr-base-feature').TwyrBaseFeature;
-const TwyrFeatureError = require('twyr-feature-error').TwyrFeatureError;
+// const TwyrFeatureError = require('twyr-feature-error').TwyrFeatureError;
 
 /**
  * @class   Profile
@@ -50,54 +50,6 @@ class Profile extends TwyrBaseFeature {
 		defaultDisplay['attributes']['icon_path'] = '/profile/get-image';
 
 		return defaultDisplay;
-	}
-
-	/**
-	 * @async
-	 * @function
-	 * @override
-	 * @instance
-	 * @memberof Profile
-	 * @name     _doesUserHavePermission
-	 *
-	 * @param    {Object} ctxt - Koa context.
-	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
-	 *
-	 * @returns  {undefined} Nothing.
-	 *
-	 * @summary  Everyone logged-in gets access.
-	 */
-	async _doesUserHavePermission(ctxt, next) {
-		if(ctxt.state.user) {
-			await next();
-			return;
-		}
-
-		throw new TwyrFeatureError('No active session');
-	}
-
-	/**
-	 * @async
-	 * @function
-	 * @override
-	 * @instance
-	 * @memberof Profile
-	 * @name     _canUserAccessThisResource
-	 *
-	 * @param    {Object} ctxt - Koa context.
-	 * @param    {callback} next - Callback to pass the request on to the next route in the chain.
-	 *
-	 * @returns  {undefined} Nothing.
-	 *
-	 * @summary  Everyone logged-in gets access.
-	 */
-	async _canUserAccessThisResource(ctxt, next) {
-		if(ctxt.state.user) {
-			await next();
-			return;
-		}
-
-		throw new TwyrFeatureError('No active session');
 	}
 	// #endregion
 

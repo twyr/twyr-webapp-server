@@ -41,17 +41,17 @@ class Main extends TwyrBaseComponent {
 	 */
 	async _addRoutes() {
 		try {
-			this.$router.get('/users/:user_id', this._getProfile.bind(this));
-			this.$router.patch('/users/:user_id', this._updateProfile.bind(this));
-			this.$router.del('/users/:user_id', this._deleteProfile.bind(this));
+			this.$router.get('/users/:user_id', this.$parent._rbac('registered'), this._getProfile.bind(this));
+			this.$router.patch('/users/:user_id', this.$parent._rbac('registered'), this._updateProfile.bind(this));
+			this.$router.del('/users/:user_id', this.$parent._rbac('registered'), this._deleteProfile.bind(this));
 
-			this.$router.get('/get-image', this._getProfileImage.bind(this));
-			this.$router.post('/upload-image', this._updateProfileImage.bind(this));
+			this.$router.get('/get-image', this.$parent._rbac('registered'), this._getProfileImage.bind(this));
+			this.$router.post('/upload-image', this.$parent._rbac('registered'), this._updateProfileImage.bind(this));
 
-			this.$router.post('/changePassword', this._changePassword.bind(this));
+			this.$router.post('/changePassword', this.$parent._rbac('registered'), this._changePassword.bind(this));
 
-			this.$router.post('/user-contacts', this._addContact.bind(this));
-			this.$router.del('/user-contacts/:user_contact_id', this._deleteContact.bind(this));
+			this.$router.post('/user-contacts', this.$parent._rbac('registered'), this._addContact.bind(this));
+			this.$router.del('/user-contacts/:user_contact_id', this.$parent._rbac('registered'), this._deleteContact.bind(this));
 
 			await super._addRoutes();
 			return null;
