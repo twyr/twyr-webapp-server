@@ -217,7 +217,7 @@ class Main extends TwyrBaseMiddleware {
 		try {
 			const TenantFeatureRecord = new this.$TenantFeatureModel({
 				'tenant_id': ctxt.state.tenant['tenant_id'],
-				'module_id': ctxt.params['tenant_feature_id']
+				'tenant_feature_id': ctxt.params['tenant_feature_id']
 			});
 
 			let tenantFeatureData = await TenantFeatureRecord.fetch({

@@ -67,6 +67,10 @@ class Main extends TwyrBaseMiddleware {
 
 					'permissions': function() {
 						return this.hasMany(self.$FeaturePermissionModel, 'module_id');
+					},
+
+					'tenant_features': function() {
+						return this.hasMany(self.$TenantFeatureModel, 'module_id');
 					}
 				})
 			});
@@ -81,6 +85,40 @@ class Main extends TwyrBaseMiddleware {
 					'hasTimestamps': true,
 
 					'module': function() {
+						return this.belongsTo(self.$ModuleModel, 'module_id');
+					}
+				})
+			});
+
+			Object.defineProperty(this, '$TenantModel', {
+				'__proto__': null,
+				'configurable': true,
+
+				'value': dbSrvc.Model.extend({
+					'tableName': 'tenants',
+					'idAttribute': 'tenant_id',
+					'hasTimestamps': true,
+
+					'tenant_features': function() {
+						return this.hasMany(self.$TenantFeatureModel, 'module_id');
+					}
+				})
+			});
+
+			Object.defineProperty(this, '$TenantFeatureModel', {
+				'__proto__': null,
+				'configurable': true,
+
+				'value': dbSrvc.Model.extend({
+					'tableName': 'tenants_features',
+					'idAttribute': 'tenant_feature_id',
+					'hasTimestamps': true,
+
+					'tenant': function() {
+						return this.belongsTo(self.$TenantModel, 'tenant_id');
+					},
+
+					'feature': function() {
 						return this.belongsTo(self.$ModuleModel, 'module_id');
 					}
 				})
@@ -180,14 +218,15 @@ class Main extends TwyrBaseMiddleware {
 			});
 
 			let moduleData = await ModuleRecord.fetch({
-				'withRelated': ['parent', 'permissions', 'modules']
+				'withRelated': ['parent', 'permissions', 'modules', 'tenant_features']
 			});
 
 			moduleData = this.$jsonApiMapper.map(moduleData, 'server_administration/features', {
 				'typeForModel': {
 					'parent': 'server_administration/features',
+					'permissions': 'server_administration/feature_permissions',
 					'modules': 'server_administration/features',
-					'permissions': 'server_administration/feature_permissions'
+					'tenant_features': 'tenant_administration/feature_manager/tenant_feature'
 				},
 
 				'enableLinks': false
