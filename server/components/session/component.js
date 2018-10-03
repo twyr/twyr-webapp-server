@@ -105,6 +105,8 @@ class Session extends TwyrBaseComponent {
 				return;
 			}
 
+			await ctxt.logout();
+
 			if(allowedTenantIds.length === 0) {
 				ctxt.body.nextAction = 'redirect';
 				ctxt.body.redirectDomain = 'www';

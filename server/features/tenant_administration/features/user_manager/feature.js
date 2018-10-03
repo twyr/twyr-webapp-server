@@ -26,6 +26,26 @@ class UserManager extends TwyrBaseFeature {
 	}
 	// #endregion
 
+	// #region Protected methods - need to be overriden by derived classes
+	/**
+	 * @async
+	 * @function
+	 * @override
+	 * @instance
+	 * @memberof Dashboard
+	 * @name     getDashboardDisplayDetails
+	 *
+	 * @param    {Object} ctxt - Koa context.
+	 *
+	 * @returns  {Object} Dashboard display stuff for this Feature.
+	 *
+	 * @summary  No display in the dashboard itself.
+	 */
+	async getDashboardDisplayDetails(ctxt) { // eslint-disable-line no-unused-vars
+		return null;
+	}
+	// #endregion
+
 	// #region Properties
 	/**
 	 * @override

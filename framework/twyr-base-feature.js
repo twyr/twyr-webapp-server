@@ -238,6 +238,11 @@ class TwyrBaseFeature extends TwyrBaseModule {
 		return async function(ctxt, next) {
 			// console.log(`Requested Permission: ${permission},\nUser Permissions: ${JSON.stringify(ctxt.state.user.permissions, null, '\t')}`);
 			if(ctxt.state.user && ctxt.state.user.permissions) {
+				if(permission === 'registered') {
+					if(next) await next();
+					return;
+				}
+
 				const doesUserHavePermission = ctxt.state.user.permissions.filter((userPerm) => {
 					return ((userPerm.name === 'super-administrator') || (userPerm.name === permission));
 				}).length;
