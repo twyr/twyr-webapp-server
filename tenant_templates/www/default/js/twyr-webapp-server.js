@@ -1012,7 +1012,6 @@
   var _default = _baseComponent.default.extend({
     attributeBindings: ['style'],
     style: (0, _emberComputedStyle.default)('display'),
-    permissions: null,
     display: Ember.computed('hasPermission', function () {
       return {
         'display': this.get('hasPermission') ? 'block' : 'none'
@@ -4303,7 +4302,6 @@
   var _default = _baseComponent.default.extend({
     attributeBindings: ['style'],
     style: (0, _emberComputedStyle.default)('display'),
-    permissions: null,
     displayName: '',
     displayImage: '',
     display: Ember.computed('hasPermission', function () {
@@ -4316,11 +4314,11 @@
       this._super(...arguments);
 
       this.set('permissions', ['registered']);
-      this.get('currentUser').on('userDataUpdated', this, this.onProfileUpdated);
+      this.get('currentUser').on('userDataUpdated', this, 'onProfileUpdated');
     },
 
     destroy() {
-      this.get('currentUser').off('userDataUpdated', this, this.onProfileUpdated);
+      this.get('currentUser').off('userDataUpdated', this, 'onProfileUpdated');
 
       this._super(...arguments);
     },
@@ -4372,7 +4370,6 @@
     router: Ember.inject.service('router'),
     attributeBindings: ['style'],
     style: (0, _emberComputedStyle.default)('display'),
-    permissions: null,
     displayForm: 'loginForm',
     username: '',
     password: '',
@@ -4528,7 +4525,6 @@
 
   var _default = _baseComponent.default.extend({
     router: Ember.inject.service('router'),
-    permissions: null,
 
     init() {
       this._super(...arguments);
@@ -4585,7 +4581,7 @@
     }
   });
 });
-;define("twyr-webapp-server/components/tenant-administration/basics-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _emberConcurrency) {
+;define("twyr-webapp-server/components/tenant-administration/basics-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-computed-style", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _emberComputedStyle, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4600,7 +4596,30 @@
 
   var _default = _baseComponent.default.extend({
     classNames: ['flex-100', 'flex-gt-sm-50', 'flex-gt-md-40', 'flex-gt-lg-30'],
-    // eslint-disable-line ember/avoid-leaking-state-in-ember-objects
+    readonly: true,
+    attributeBindings: ['style'],
+    style: (0, _emberComputedStyle.default)('display'),
+    display: Ember.computed('hasPermission', function () {
+      return {
+        'display': this.get('hasPermission') ? 'flex' : 'none'
+      };
+    }),
+
+    init() {
+      this._super(...arguments);
+
+      this.set('permissions', ['tenant-administration-read']);
+    },
+
+    onHasPermissionChange: Ember.observer('hasPermission', function () {
+      if (!this.get('hasPermission')) {
+        this.set('readonly', true);
+        return;
+      }
+
+      const updatePerm = this.get('currentUser').hasPermission('tenant-administration-update');
+      if (updatePerm) this.set('readonly', false);
+    }),
     save: (0, _emberConcurrency.task)(function* () {
       try {
         yield this.get('model').save();
@@ -4622,7 +4641,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/components/tenant-administration/feature-manager/main-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _emberConcurrency) {
+;define("twyr-webapp-server/components/tenant-administration/feature-manager/main-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-concurrency", "ember-computed-style"], function (_exports, _baseComponent, _exponentialBackoff, _emberConcurrency, _emberComputedStyle) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4636,11 +4655,29 @@
   });
 
   var _default = _baseComponent.default.extend({
-    didInsertElement() {
+    attributeBindings: ['style'],
+    style: (0, _emberComputedStyle.default)('display'),
+    display: Ember.computed('hasPermission', function () {
+      return {
+        'display': this.get('hasPermission') ? 'flex' : 'none'
+      };
+    }),
+
+    init() {
       this._super(...arguments);
 
-      this.$('div.md-subheader-inner').addClass('pb-0');
+      this.set('permissions', ['feature-administration-read']);
     },
+
+    onHasPermissionChange: Ember.observer('hasPermission', function () {
+      if (!this.get('hasPermission')) {
+        this.set('readonly', true);
+        return;
+      }
+
+      const updatePerm = this.get('currentUser').hasPermission('feature-administration-update');
+      if (updatePerm) this.set('readonly', false);
+    }),
 
     changeSelectedFeature(feature) {
       this.invokeAction('controller-action', 'setSelectedFeature', feature);
@@ -4682,7 +4719,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/components/tenant-administration/feature-manager/tree-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency"], function (_exports, _baseComponent, _emberConcurrency) {
+;define("twyr-webapp-server/components/tenant-administration/feature-manager/tree-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-computed-style", "ember-concurrency"], function (_exports, _baseComponent, _emberComputedStyle, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4691,6 +4728,30 @@
   _exports.default = void 0;
 
   var _default = _baseComponent.default.extend({
+    attributeBindings: ['style'],
+    style: (0, _emberComputedStyle.default)('display'),
+    display: Ember.computed('hasPermission', function () {
+      return {
+        'display': this.get('hasPermission') ? 'flex' : 'none'
+      };
+    }),
+
+    init() {
+      this._super(...arguments);
+
+      this.set('permissions', ['feature-administration-read']);
+    },
+
+    onHasPermissionChange: Ember.observer('hasPermission', function () {
+      if (!this.get('hasPermission')) {
+        this.set('readonly', true);
+        return;
+      }
+
+      const updatePerm = this.get('currentUser').hasPermission('feature-administration-update');
+      if (updatePerm) this.set('readonly', false);
+    }),
+
     didInsertElement() {
       this._super(...arguments);
 
@@ -4766,7 +4827,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/components/tenant-administration/location-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-resize/mixins/resize-aware", "twyr-webapp-server/config/environment", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _resizeAware, _environment, _emberConcurrency) {
+;define("twyr-webapp-server/components/tenant-administration/location-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-resize/mixins/resize-aware", "twyr-webapp-server/config/environment", "ember-computed-style", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _resizeAware, _environment, _emberComputedStyle, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4785,6 +4846,30 @@
     resizeWidthSensitive: true,
     resizeHeightSensitive: true,
     staticUrl: null,
+    readonly: true,
+    attributeBindings: ['style'],
+    style: (0, _emberComputedStyle.default)('display'),
+    display: Ember.computed('hasPermission', function () {
+      return {
+        'display': this.get('hasPermission') ? 'flex' : 'none'
+      };
+    }),
+
+    init() {
+      this._super(...arguments);
+
+      this.set('permissions', ['tenant-administration-read']);
+    },
+
+    onHasPermissionChange: Ember.observer('hasPermission', function () {
+      if (!this.get('hasPermission')) {
+        this.set('readonly', true);
+        return;
+      }
+
+      const updatePerm = this.get('currentUser').hasPermission('tenant-administration-update');
+      if (updatePerm) this.set('readonly', false);
+    }),
     onDidInsertElement: (0, _emberConcurrency.task)(function* () {
       yield this.get('displayPrimaryLocation').perform();
     }).drop().on('didInsertElement'),
@@ -5273,7 +5358,6 @@
     attributeBindings: ['style'],
     style: (0, _emberComputedStyle.default)('display'),
     currentTenant: null,
-    permissions: null,
     allowedTenants: null,
     display: Ember.computed('allowedTenants', 'hasPermission', function () {
       return {
@@ -5286,11 +5370,11 @@
       this._super(...arguments);
 
       this.set('permissions', ['registered']);
-      this.get('currentUser').on('userDataUpdated', this, this.onAllowedTenantsUpdated);
+      this.get('currentUser').on('userDataUpdated', this, 'onAllowedTenantsUpdated');
     },
 
     destroy() {
-      this.get('currentUser').off('userDataUpdated', this, this.onAllowedTenantsUpdated);
+      this.get('currentUser').off('userDataUpdated', this, 'onAllowedTenantsUpdated');
 
       this._super(...arguments);
     },
@@ -5830,7 +5914,36 @@
   });
   _exports.default = void 0;
 
-  var _default = _baseController.default.extend({});
+  var _default = _baseController.default.extend({
+    'canViewFeatureAdministrator': false,
+    'canViewGroupAdministrator': false,
+    'canViewUserAdministrator': false,
+    'hasSubModulePermissions': Ember.computed.or('canViewFeatureAdministrator', 'canViewGroupAdministrator', 'canViewUserAdministrator'),
+
+    init() {
+      this._super(...arguments);
+
+      this.get('currentUser').on('userDataUpdated', this, 'onUserDataUpdated');
+    },
+
+    destroy() {
+      this.get('currentUser').off('userDataUpdated', this, 'onUserDataUpdated');
+
+      this._super(...arguments);
+    },
+
+    onPermissionChanges: Ember.on('init', Ember.observer('permissions', 'permissions.[]', 'permissions.@each', function () {
+      this.onUserDataUpdated();
+    })),
+
+    onUserDataUpdated() {
+      const currentUser = this.get('currentUser');
+      this.set('canViewFeatureAdministrator', currentUser.hasPermission('feature-manager-read'));
+      this.set('canViewGroupAdministrator', currentUser.hasPermission('group-manager-read'));
+      this.set('canViewUserAdministrator', currentUser.hasPermission('user-manager-read'));
+    }
+
+  });
 
   _exports.default = _default;
 });
@@ -5843,8 +5956,19 @@
   _exports.default = void 0;
 
   var _default = _baseController.default.extend({
+    'breadcrumbStack': null,
+
     setSelectedFeature(featureModel) {
       this.set('model', featureModel);
+      let currentFeature = featureModel;
+      const breadcrumbHierarchy = [];
+
+      while (currentFeature) {
+        if (currentFeature.get('path')) breadcrumbHierarchy.unshift(currentFeature);
+        currentFeature = currentFeature.get('parent');
+      }
+
+      this.set('breadcrumbStack', breadcrumbHierarchy);
     }
 
   });
@@ -5895,29 +6019,30 @@
       this._super(...arguments);
 
       this.set('permissions', ['*']);
-      this.get('currentUser').on('userDataUpdated', this, this.updatePermissions);
+      this.get('currentUser').on('userDataUpdated', this, 'updatePermissions');
     },
 
     destroy() {
-      this.get('currentUser').off('userDataUpdated', this, this.updatePermissions);
+      this.get('currentUser').off('userDataUpdated', this, 'updatePermissions');
 
       this._super(...arguments);
     },
 
-    onPermissionChanges: Ember.observer('permissions', function () {
+    // eslint-disable-next-line ember/no-on-calls-in-components
+    onPermissionChanges: Ember.on('init', Ember.observer('permissions', 'permissions.[]', 'permissions.@each', function () {
       this.updatePermissions();
-    }),
+    })),
 
     updatePermissions() {
       let hasPerm = false;
 
-      if (this.get('permissions').includes('*') || this.get('permissions').includes('super-administrator')) {
+      if (this.get('permissions').includes('*')) {
         hasPerm = true;
       } else {
         const requiredPermissions = this.get('permissions');
 
         for (let permIdx = 0; permIdx < requiredPermissions.length; permIdx++) {
-          let hasCurrentPermission = this.get('currentUser').hasPermission(requiredPermissions[permIdx]);
+          const hasCurrentPermission = this.get('currentUser').hasPermission(requiredPermissions[permIdx]);
           hasPerm = hasPerm || hasCurrentPermission;
           if (hasPerm) break;
         }
@@ -5961,23 +6086,23 @@
       this._super(...arguments);
 
       this.set('permissions', ['*']);
-      this.get('currentUser').on('userDataUpdated', this, this.updatePermissions);
+      this.get('currentUser').on('userDataUpdated', this, 'updatePermissions');
     },
 
     destroy() {
-      this.get('currentUser').off('userDataUpdated', this, this.updatePermissions);
+      this.get('currentUser').off('userDataUpdated', this, 'updatePermissions');
 
       this._super(...arguments);
     },
 
-    onPermissionChanges: Ember.observer('permissions', function () {
+    onPermissionChanges: Ember.on('init', Ember.observer('permissions', 'permissions.[]', 'permissions.@each', function () {
       this.updatePermissions();
-    }),
+    })),
 
     updatePermissions() {
       let hasPerm = false;
 
-      if (this.get('permissions').includes('*') || this.get('permissions').includes('super-administrator')) {
+      if (this.get('permissions').includes('*')) {
         hasPerm = true;
       } else {
         const requiredPermissions = this.get('permissions');
@@ -9758,11 +9883,11 @@
     init() {
       this._super(...arguments);
 
-      this.get('currentUser').on('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('currentUser').on('userDataUpdated', this, 'onUserDataUpdated');
     },
 
     destroy() {
-      this.get('currentUser').off('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('currentUser').off('userDataUpdated', this, 'onUserDataUpdated');
 
       this._super(...arguments);
     },
@@ -9810,11 +9935,11 @@
     init() {
       this._super(...arguments);
 
-      this.get('currentUser').on('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('currentUser').on('userDataUpdated', this, 'onUserDataUpdated');
     },
 
     destroy() {
-      this.get('currentUser').off('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('currentUser').off('userDataUpdated', this, 'onUserDataUpdated');
 
       this._super(...arguments);
     },
@@ -9851,11 +9976,11 @@
     init() {
       this._super(...arguments);
 
-      this.get('currentUser').on('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('currentUser').on('userDataUpdated', this, 'onUserDataUpdated');
     },
 
     destroy() {
-      this.get('currentUser').off('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('currentUser').off('userDataUpdated', this, 'onUserDataUpdated');
 
       this._super(...arguments);
     },
@@ -9913,11 +10038,11 @@
     init() {
       this._super(...arguments);
 
-      this.get('currentUser').on('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('currentUser').on('userDataUpdated', this, 'onUserDataUpdated');
     },
 
     destroy() {
-      this.get('currentUser').off('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('currentUser').off('userDataUpdated', this, 'onUserDataUpdated');
 
       this._super(...arguments);
     },
@@ -9979,11 +10104,11 @@
     init() {
       this._super(...arguments);
 
-      this.get('currentUser').on('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('currentUser').on('userDataUpdated', this, 'onUserDataUpdated');
     },
 
     destroy() {
-      this.get('currentUser').off('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('currentUser').off('userDataUpdated', this, 'onUserDataUpdated');
 
       this._super(...arguments);
     },
@@ -10017,11 +10142,11 @@
 
       this.set('parentController', this.controllerFor('tenant-administration'));
       this.get('parentController').addObserver('model', this, 'onParentModelChange');
-      this.get('currentUser').on('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('currentUser').on('userDataUpdated', this, 'onUserDataUpdated');
     },
 
     destroy() {
-      this.get('currentUser').off('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('currentUser').off('userDataUpdated', this, 'onUserDataUpdated');
       this.get('parentController').removeObserver('model', this, 'onParentModelChange');
 
       this._super(...arguments);
@@ -10066,11 +10191,11 @@
 
       this.set('parentController', this.controllerFor('tenant-administration'));
       this.get('parentController').addObserver('model', this, 'onParentModelChange');
-      this.get('currentUser').on('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('currentUser').on('userDataUpdated', this, 'onUserDataUpdated');
     },
 
     destroy() {
-      this.get('currentUser').off('userDataUpdated', this, this.onUserDataUpdated);
+      this.get('currentUser').off('userDataUpdated', this, 'onUserDataUpdated');
       this.get('parentController').removeObserver('model', this, 'onParentModelChange');
 
       this._super(...arguments);
@@ -11248,8 +11373,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "keJxNN6A",
-    "block": "{\"symbols\":[\"form\",\"card\",\"header\",\"text\"],\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"flex h-100 layout-row layout-align-center-stretch\",[27,\"perform\",[[23,[\"save\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,2,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,3,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"title\"]]],null,{\"statements\":[[0,\"Basics\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[4]},null]],\"parameters\":[3]},null],[4,\"component\",[[22,2,[\"content\"]]],[[\"class\"],[\"layout-column layout-align-start-stretch\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"component\",[[22,1,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"Name\",[23,[\"model\",\"name\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"name\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,1,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"url\",\"flex-100\",\"Domain\",[23,[\"model\",\"fullDomain\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"fullDomain\"]]],null]],null],true]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,2,[\"actions\"]]],[[\"class\"],[\"layout-row layout-align-end-center layout-wrap\"]],{\"statements\":[[4,\"component\",[[22,1,[\"submit-button\"]]],[[\"primary\",\"raised\",\"onClick\",\"disabled\"],[true,true,[27,\"perform\",[[23,[\"save\"]]],null],[27,\"or\",[[22,1,[\"isInvalid\"]],[23,[\"save\",\"isRunning\"]],[23,[\"cancel\",\"isRunning\"]],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"save\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[4,\"paper-button\",null,[[\"warn\",\"raised\",\"onClick\",\"disabled\"],[true,true,[27,\"perform\",[[23,[\"cancel\"]]],null],[27,\"or\",[[23,[\"save\",\"isRunning\"]],[23,[\"cancel\",\"isRunning\"]],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"cancel\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"cancel\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
+    "id": "U6cZ+Tgq",
+    "block": "{\"symbols\":[\"form\",\"card\",\"header\",\"text\"],\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"flex h-100 layout-row layout-align-center-stretch\",[27,\"perform\",[[23,[\"save\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,2,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,3,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"title\"]]],null,{\"statements\":[[0,\"Basics\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[4]},null]],\"parameters\":[3]},null],[4,\"component\",[[22,2,[\"content\"]]],[[\"class\"],[\"layout-column layout-align-start-stretch\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"component\",[[22,1,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"readonly\",\"required\"],[\"text\",\"flex-100\",\"Name\",[23,[\"model\",\"name\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"name\"]]],null]],null],[23,[\"readonly\"]],true]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,1,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"readonly\",\"required\"],[\"url\",\"flex-100\",\"Domain\",[23,[\"model\",\"fullDomain\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"fullDomain\"]]],null]],null],[23,[\"readonly\"]],true]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,2,[\"actions\"]]],[[\"class\"],[\"layout-row layout-align-end-center layout-wrap\"]],{\"statements\":[[4,\"unless\",[[23,[\"readonly\"]]],null,{\"statements\":[[4,\"component\",[[22,1,[\"submit-button\"]]],[[\"primary\",\"raised\",\"onClick\",\"disabled\"],[true,true,[27,\"perform\",[[23,[\"save\"]]],null],[27,\"or\",[[22,1,[\"isInvalid\"]],[23,[\"save\",\"isRunning\"]],[23,[\"cancel\",\"isRunning\"]],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"save\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[4,\"paper-button\",null,[[\"warn\",\"raised\",\"onClick\",\"disabled\"],[true,true,[27,\"perform\",[[23,[\"cancel\"]]],null],[27,\"or\",[[23,[\"save\",\"isRunning\"]],[23,[\"cancel\",\"isRunning\"]],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"cancel\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"cancel\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/basics-component.hbs"
     }
@@ -11266,8 +11391,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "oz4PvFv0",
-    "block": "{\"symbols\":[\"card\",\"table\",\"body\",\"feature\",\"row\",\"head\",\"table\",\"body\",\"permission\",\"row\",\"head\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-start\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"class\",\"value\",\"onChange\",\"readonly\"],[\"m-0 flex-80\",[27,\"await\",[[23,[\"model\",\"path\"]]],null],null,true]]],false],[0,\"\\n\"],[4,\"paper-switch\",null,[[\"class\",\"value\",\"onChange\",\"disabled\"],[\"m-0\",[27,\"await\",[[23,[\"model\",\"isTenantSubscribed\"]]],null],[27,\"perform\",[[23,[\"modifyTenantFeatureStatus\"]]],null],[27,\"not-eq\",[[23,[\"model\",\"deploy\"]],\"custom\"],null]]],{\"statements\":[[4,\"if\",[[27,\"await\",[[23,[\"model\",\"isTenantSubscribed\"]]],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\tSubscribed\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\tUnsubscribed\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"mx-3 pt-2 pb-4 layout-row layout-align-start-center\"],[11,\"style\",\"font-size:14px;\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[23,[\"model\",\"description\"]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"],[4,\"if\",[[27,\"get\",[[27,\"await\",[[23,[\"model\",\"permissions\"]]],null],\"length\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Permissions\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,7,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[11]},null],[4,\"component\",[[22,7,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,7,[\"sortDesc\"]],[27,\"await\",[[23,[\"model\",\"permissions\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,8,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,10,[\"cell\"]]],null,{\"statements\":[[1,[22,9,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,10,[\"cell\"]]],null,{\"statements\":[[1,[22,9,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[10]},null]],\"parameters\":[9]},null]],\"parameters\":[8]},null]],\"parameters\":[7]},null]],\"parameters\":[]},null],[4,\"if\",[[27,\"get\",[[27,\"await\",[[23,[\"model\",\"features\"]]],null],\"length\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Sub Features\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,2,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Access Level\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null],[4,\"component\",[[22,2,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,2,[\"sortDesc\"]],[27,\"await\",[[23,[\"model\",\"features\"]]],null]],null]],null,{\"statements\":[[4,\"if\",[[27,\"eq\",[[22,4,[\"type\"]],\"feature\"],null]],null,{\"statements\":[[4,\"component\",[[22,3,[\"row\"]]],[[\"onClick\"],[[27,\"action\",[[22,0,[]],\"controller-action\",\"changeSelectedFeature\",[22,4,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[27,\"titleize\",[[22,4,[\"deploy\"]]],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
+    "id": "5RMSbXsG",
+    "block": "{\"symbols\":[\"card\",\"table\",\"body\",\"feature\",\"row\",\"head\",\"table\",\"body\",\"permission\",\"row\",\"head\",\"parentCrumb\",\"idx\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[11,\"style\",\"font-size:16px;\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex layout-row layout-align-start-center\"],[9],[0,\"\\n\"],[4,\"each\",[[23,[\"breadcrumbStack\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"if\",[[22,13,[]]],null,{\"statements\":[[0,\"  >  \"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,13,[]],[27,\"sub\",[[23,[\"breadcrumbStack\",\"length\"]],1],null]],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[22,12,[\"displayName\"]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"controller-action\",\"changeSelectedFeature\",[22,12,[]]]],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[22,12,[\"displayName\"]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[12,13]},null],[0,\"\\t\\t\\t\"],[10],[0,\"\\n\"],[4,\"paper-switch\",null,[[\"class\",\"value\",\"onChange\",\"disabled\"],[\"m-0\",[27,\"await\",[[23,[\"model\",\"isTenantSubscribed\"]]],null],[27,\"perform\",[[23,[\"modifyTenantFeatureStatus\"]]],null],[27,\"not-eq\",[[23,[\"model\",\"deploy\"]],\"custom\"],null]]],{\"statements\":[[4,\"if\",[[27,\"await\",[[23,[\"model\",\"isTenantSubscribed\"]]],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\tSubscribed\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\tUnsubscribed\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"mx-3 pt-2 pb-4 layout-row layout-align-start-center\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[23,[\"model\",\"description\"]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"],[4,\"if\",[[27,\"get\",[[27,\"await\",[[23,[\"model\",\"permissions\"]]],null],\"length\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Permissions\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,7,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[11]},null],[4,\"component\",[[22,7,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,7,[\"sortDesc\"]],[27,\"await\",[[23,[\"model\",\"permissions\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,8,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,10,[\"cell\"]]],null,{\"statements\":[[1,[22,9,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,10,[\"cell\"]]],null,{\"statements\":[[1,[22,9,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[10]},null]],\"parameters\":[9]},null]],\"parameters\":[8]},null]],\"parameters\":[7]},null]],\"parameters\":[]},null],[4,\"if\",[[27,\"get\",[[27,\"await\",[[23,[\"model\",\"features\"]]],null],\"length\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Sub Features\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,2,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Access Level\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null],[4,\"component\",[[22,2,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,2,[\"sortDesc\"]],[27,\"await\",[[23,[\"model\",\"features\"]]],null]],null]],null,{\"statements\":[[4,\"if\",[[27,\"eq\",[[22,4,[\"type\"]],\"feature\"],null]],null,{\"statements\":[[4,\"component\",[[22,3,[\"row\"]]],[[\"onClick\"],[[27,\"action\",[[22,0,[]],\"controller-action\",\"changeSelectedFeature\",[22,4,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[27,\"titleize\",[[22,4,[\"deploy\"]]],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/feature-manager/main-component.hbs"
     }
@@ -11302,8 +11427,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "tMspQ+zf",
-    "block": "{\"symbols\":[\"card\",\"header\",\"text\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,3,[\"title\"]]],null,{\"statements\":[[0,\"Main Office Location\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[3]},null],[4,\"paper-button\",null,[[\"primary\",\"raised\",\"mini\",\"onClick\",\"bubbles\"],[true,true,true,[27,\"perform\",[[23,[\"editPrimaryLocation\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"edit\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[2]},null],[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"flex layout-row layout-align-center-stretch layout-wrap\"]],{\"statements\":[[4,\"if\",[[23,[\"model\",\"location\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[7,\"div\"],[11,\"id\",\"tenant-administrator-main-component-static-location-display\"],[11,\"class\",\"p-0 text-center flex-100 flex-gt-lg-70\"],[11,\"style\",\"min-height:5rem;\"],[9],[0,\"\\n\"],[4,\"if\",[[23,[\"staticUrl\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"img\"],[11,\"border\",\"0\"],[12,\"src\",[28,[[21,\"staticUrl\"]]]],[12,\"alt\",[28,[[23,[\"model\",\"location\",\"name\"]]]]],[9],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\tFetching map...\\n\"]],\"parameters\":[]}],[0,\"\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex-100 flex-gt-lg-30\"],[11,\"style\",\"font-style:italic;\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"line1\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"line2\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"line2\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"line3\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"line3\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"area\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"area\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"city\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"state\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"country\"]],false],[0,\" \"],[1,[23,[\"model\",\"location\",\"postalCode\"]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"onClick\",\"bubbles\"],[\"flex\",[27,\"perform\",[[23,[\"addPrimaryLocation\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"map-marked\"],[[\"class\"],[\"mr-1\"]]],false],[0,\" Add Main Office Location\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
+    "id": "AFpecYNj",
+    "block": "{\"symbols\":[\"card\",\"header\",\"text\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,3,[\"title\"]]],null,{\"statements\":[[0,\"Main Office Location\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[3]},null],[4,\"if\",[[27,\"and\",[[23,[\"model\",\"location\"]],[27,\"not\",[[23,[\"model\",\"location\",\"isNew\"]]],null],[27,\"not\",[[23,[\"readonly\"]]],null]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"raised\",\"mini\",\"onClick\",\"bubbles\"],[true,true,true,[27,\"perform\",[[23,[\"editPrimaryLocation\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"edit\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null],[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"flex layout-row layout-align-center-stretch layout-wrap\"]],{\"statements\":[[4,\"if\",[[23,[\"model\",\"location\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[7,\"div\"],[11,\"id\",\"tenant-administrator-main-component-static-location-display\"],[11,\"class\",\"p-0 text-center flex-100 flex-gt-lg-70\"],[11,\"style\",\"min-height:5rem;\"],[9],[0,\"\\n\"],[4,\"if\",[[23,[\"staticUrl\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"img\"],[11,\"border\",\"0\"],[12,\"src\",[28,[[21,\"staticUrl\"]]]],[12,\"alt\",[28,[[23,[\"model\",\"location\",\"name\"]]]]],[9],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\tFetching map...\\n\"]],\"parameters\":[]}],[0,\"\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex-100 flex-gt-lg-30\"],[11,\"style\",\"font-style:italic;\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"line1\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"line2\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"line2\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"line3\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"line3\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"area\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"area\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"city\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"state\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"country\"]],false],[0,\" \"],[1,[23,[\"model\",\"location\",\"postalCode\"]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[4,\"unless\",[[23,[\"readonly\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"onClick\",\"bubbles\"],[\"flex\",[27,\"perform\",[[23,[\"addPrimaryLocation\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"map-marked\"],[[\"class\"],[\"mr-1\"]]],false],[0,\" Add Main Office Location\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/location-component.hbs"
     }
@@ -11518,8 +11643,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "Q9wj52Zt",
-    "block": "{\"symbols\":[\"card\",\"navbar\",\"nav\",\"card\",\"header\",\"text\"],\"statements\":[[1,[27,\"page-title\",[\"Tenant Administration\"],null],false],[0,\"\\n\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex flex-gt-md-80\"],[9],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,4,[\"header\"]]],[[\"class\"],[\"bg-twyr-component white-text\"]],{\"statements\":[[4,\"component\",[[22,5,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"title\"]]],null,{\"statements\":[[1,[27,\"mdi-icon\",[\"account-settings\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Administration\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null]],\"parameters\":[5]},null],[4,\"component\",[[22,4,[\"content\"]]],[[\"class\"],[\"p-0 layout-row layout-align-start-stretch layout-wrap flex\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/basics-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/location-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[4]},null],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[4,\"bs-navbar\",null,[[\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"light\",\"white\",false,true]],{\"statements\":[[4,\"component\",[[22,2,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"nav\"]]],[[\"class\"],[\"layout-row layout-align-start-center\"]],{\"statements\":[[4,\"component\",[[22,3,[\"item\"]]],[[\"class\"],[\"mr-4\"]],{\"statements\":[[4,\"link-to\",[\"tenant-administration.feature-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"star-circle-outline\"],null],false],[0,\" Feature Management\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[4,\"component\",[[22,3,[\"item\"]]],[[\"class\"],[\"mr-4\"]],{\"statements\":[[4,\"link-to\",[\"tenant-administration.group-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"group\"],null],false],[0,\" Groups & Permissions\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[4,\"component\",[[22,3,[\"item\"]]],null,{\"statements\":[[4,\"link-to\",[\"tenant-administration.user-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-multiple-outline\"],null],false],[0,\" User Management\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[3]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"mt-1 flex\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "SOCRuXwP",
+    "block": "{\"symbols\":[\"card\",\"navbar\",\"nav\",\"card\",\"header\",\"text\"],\"statements\":[[1,[27,\"page-title\",[\"Tenant Administration\"],null],false],[0,\"\\n\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex flex-gt-md-80\"],[9],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,4,[\"header\"]]],[[\"class\"],[\"bg-twyr-component white-text\"]],{\"statements\":[[4,\"component\",[[22,5,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"title\"]]],null,{\"statements\":[[1,[27,\"mdi-icon\",[\"account-settings\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Administration\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null]],\"parameters\":[5]},null],[4,\"component\",[[22,4,[\"content\"]]],[[\"class\"],[\"p-0 layout-row layout-align-start-stretch layout-wrap flex\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/basics-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/location-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[4]},null],[4,\"if\",[[23,[\"hasSubModulePermissions\"]]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[4,\"bs-navbar\",null,[[\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"light\",\"white\",false,true]],{\"statements\":[[4,\"component\",[[22,2,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"nav\"]]],[[\"class\"],[\"layout-row layout-align-start-center\"]],{\"statements\":[[4,\"if\",[[23,[\"canViewFeatureAdministrator\"]]],null,{\"statements\":[[4,\"component\",[[22,3,[\"item\"]]],[[\"class\"],[\"mr-4\"]],{\"statements\":[[4,\"link-to\",[\"tenant-administration.feature-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"star-circle-outline\"],null],false],[0,\" Feature Management\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"canViewGroupAdministrator\"]]],null,{\"statements\":[[4,\"component\",[[22,3,[\"item\"]]],[[\"class\"],[\"mr-4\"]],{\"statements\":[[4,\"link-to\",[\"tenant-administration.group-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"group\"],null],false],[0,\" Groups & Permissions\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"canViewUserAdministrator\"]]],null,{\"statements\":[[4,\"component\",[[22,3,[\"item\"]]],null,{\"statements\":[[4,\"link-to\",[\"tenant-administration.user-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-multiple-outline\"],null],false],[0,\" User Management\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[3]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"mt-1 flex\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/tenant-administration.hbs"
     }
@@ -11536,8 +11661,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "hA13kSbD",
-    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Feature Manager\"],null],false],[0,\"\\n\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-start-stretch layout-wrap\"],[9],[0,\"\\n\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/tree-component\"],[[\"class\",\"model\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-40 flex-gt-lg-30 layout-row layout-align-start-stretch\",[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/main-component\"],[[\"class\",\"model\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-60 flex-gt-lg-70 layout-row layout-align-start-stretch\",[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "xw5T0x/C",
+    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Feature Manager\"],null],false],[0,\"\\n\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-start-stretch layout-wrap\"],[9],[0,\"\\n\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/tree-component\"],[[\"class\",\"model\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-40 flex-gt-lg-30 layout-row layout-align-start-stretch\",[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/main-component\"],[[\"class\",\"model\",\"breadcrumbStack\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-60 flex-gt-lg-70 layout-row layout-align-start-stretch\",[23,[\"model\"]],[23,[\"breadcrumbStack\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/tenant-administration/feature-manager.hbs"
     }
