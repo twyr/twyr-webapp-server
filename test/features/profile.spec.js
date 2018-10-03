@@ -13,7 +13,7 @@ describe('Profile Feature Test Cases', function() {
 
 	it('Should not return the User details if not logged in', function(done) {
 		agent
-			.get('/profile')
+			.get('/profile/get-image?_random=1538566796891')
 			.end((err, response) => {
 				expect(response).to.have.status(422);
 				done(err);

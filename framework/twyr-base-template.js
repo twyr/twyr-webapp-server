@@ -227,7 +227,7 @@ class TwyrBaseTemplate extends TwyrBaseModule {
 
 			if(subRoutes.length) {
 				thisFeatureRouteMap += ', function() {\n\t';
-				thisFeatureRouteMap += this._generateEmberRouteMap(featureRoutes[routeName]['routes']).replace(/\n/g, '\t');
+				thisFeatureRouteMap += this._generateEmberRouteMap(featureRoutes[routeName]['routes']).replace(/\n/g, '\n\t');
 				thisFeatureRouteMap += '\n});\n';
 			}
 			else {
