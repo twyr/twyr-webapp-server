@@ -15121,6 +15121,14 @@ table.table-sm td {
   padding-right: 8px; }
 
 /* Ember Paper */
+/*
+$colors-export: export('palettes', $colors);
+$contrasts-export: export('contrasts', (
+  'light-contrast-color': $light-contrast-color,
+  'dark-contrast-color': $dark-contrast-color,
+  'strong-light-contrast-color': $strong-light-contrast-color
+));
+*/
 .md-searchbox {
   -webkit-box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.1), 0 0 0 0 rgba(0, 0, 0, 0.14), 0 0 0 0 rgba(0, 0, 0, 0.12);
           box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.1), 0 0 0 0 rgba(0, 0, 0, 0.14), 0 0 0 0 rgba(0, 0, 0, 0.12);
@@ -15194,6 +15202,14 @@ table.table-sm td {
     -webkit-transform: rotate(-359deg);
             transform: rotate(-359deg); } }
 
+/*
+$colors-export: export('palettes', $colors);
+$contrasts-export: export('contrasts', (
+  'light-contrast-color': $light-contrast-color,
+  'dark-contrast-color': $dark-contrast-color,
+  'strong-light-contrast-color': $strong-light-contrast-color
+));
+*/
 :root {
   --primary-50: 227, 242, 253;
   --primary-50-contrast: 0, 0, 0;
