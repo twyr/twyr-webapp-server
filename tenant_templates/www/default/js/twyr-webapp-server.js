@@ -997,11 +997,18 @@
   });
   _exports.default = void 0;
 
-  var _default = _baseComponent.default.extend({});
+  var _default = _baseComponent.default.extend({
+    init() {
+      this._super(...arguments);
+
+      this.set('permissions', ['registered']);
+    }
+
+  });
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/components/dashboard/notification-area", ["exports", "twyr-webapp-server/framework/base-component", "ember-computed-style"], function (_exports, _baseComponent, _emberComputedStyle) {
+;define("twyr-webapp-server/components/dashboard/notification-area", ["exports", "twyr-webapp-server/framework/base-component"], function (_exports, _baseComponent) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -1010,14 +1017,6 @@
   _exports.default = void 0;
 
   var _default = _baseComponent.default.extend({
-    attributeBindings: ['style'],
-    style: (0, _emberComputedStyle.default)('display'),
-    display: Ember.computed('hasPermission', function () {
-      return {
-        'display': this.get('hasPermission') ? 'block' : 'none'
-      };
-    }),
-
     init() {
       this._super(...arguments);
 
@@ -3958,6 +3957,14 @@
   });
 
   var _default = _baseComponent.default.extend({
+    'contactTypes': null,
+
+    init() {
+      this._super(...arguments);
+
+      this.set('permissions', ['registered']);
+    },
+
     onInit: (0, _emberConcurrency.task)(function* () {
       try {
         const contactTypes = yield this.get('ajax').request('/masterdata/contactTypes', {
@@ -4067,6 +4074,7 @@
           'message': `${Ember.String.capitalize(contactType)} contact ${contactValue} deleted`
         });
       } catch (err) {
+        yield this.get('model.contacts').addObject(contact);
         yield contact.rollback();
         this.get('notification').display({
           'type': 'error',
@@ -4097,6 +4105,13 @@
     currentPassword: '',
     newPassword1: '',
     newPassword2: '',
+
+    init() {
+      this._super(...arguments);
+
+      this.set('permissions', ['registered']);
+    },
+
     onDidInsertElement: (0, _emberConcurrency.task)(function* () {
       try {
         this.set('_profileImageElem', this.$('div#profile-basic-information-image'));
@@ -4291,7 +4306,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/components/profile/notification-area", ["exports", "twyr-webapp-server/framework/base-component", "ember-computed-style"], function (_exports, _baseComponent, _emberComputedStyle) {
+;define("twyr-webapp-server/components/profile/notification-area", ["exports", "twyr-webapp-server/framework/base-component"], function (_exports, _baseComponent) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4300,15 +4315,8 @@
   _exports.default = void 0;
 
   var _default = _baseComponent.default.extend({
-    attributeBindings: ['style'],
-    style: (0, _emberComputedStyle.default)('display'),
     displayName: '',
     displayImage: '',
-    display: Ember.computed('hasPermission', function () {
-      return {
-        'display': this.get('hasPermission') ? 'unset' : 'none'
-      };
-    }),
 
     init() {
       this._super(...arguments);
@@ -4581,7 +4589,7 @@
     }
   });
 });
-;define("twyr-webapp-server/components/tenant-administration/basics-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-computed-style", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _emberComputedStyle, _emberConcurrency) {
+;define("twyr-webapp-server/components/tenant-administration/basics-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4596,14 +4604,7 @@
 
   var _default = _baseComponent.default.extend({
     classNames: ['flex-100', 'flex-gt-sm-50', 'flex-gt-md-40', 'flex-gt-lg-30'],
-    readonly: true,
-    attributeBindings: ['style'],
-    style: (0, _emberComputedStyle.default)('display'),
-    display: Ember.computed('hasPermission', function () {
-      return {
-        'display': this.get('hasPermission') ? 'flex' : 'none'
-      };
-    }),
+    editable: false,
 
     init() {
       this._super(...arguments);
@@ -4612,13 +4613,8 @@
     },
 
     onHasPermissionChange: Ember.observer('hasPermission', function () {
-      if (!this.get('hasPermission')) {
-        this.set('readonly', true);
-        return;
-      }
-
       const updatePerm = this.get('currentUser').hasPermission('tenant-administration-update');
-      if (updatePerm) this.set('readonly', false);
+      this.set('editable', updatePerm);
     }),
     save: (0, _emberConcurrency.task)(function* () {
       try {
@@ -4641,7 +4637,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/components/tenant-administration/feature-manager/main-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-concurrency", "ember-computed-style"], function (_exports, _baseComponent, _exponentialBackoff, _emberConcurrency, _emberComputedStyle) {
+;define("twyr-webapp-server/components/tenant-administration/feature-manager/main-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4655,13 +4651,7 @@
   });
 
   var _default = _baseComponent.default.extend({
-    attributeBindings: ['style'],
-    style: (0, _emberComputedStyle.default)('display'),
-    display: Ember.computed('hasPermission', function () {
-      return {
-        'display': this.get('hasPermission') ? 'flex' : 'none'
-      };
-    }),
+    'editable': false,
 
     init() {
       this._super(...arguments);
@@ -4670,13 +4660,8 @@
     },
 
     onHasPermissionChange: Ember.observer('hasPermission', function () {
-      if (!this.get('hasPermission')) {
-        this.set('readonly', true);
-        return;
-      }
-
       const updatePerm = this.get('currentUser').hasPermission('feature-administration-update');
-      if (updatePerm) this.set('readonly', false);
+      this.set('editable', updatePerm);
     }),
 
     changeSelectedFeature(feature) {
@@ -4719,7 +4704,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/components/tenant-administration/feature-manager/tree-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-computed-style", "ember-concurrency"], function (_exports, _baseComponent, _emberComputedStyle, _emberConcurrency) {
+;define("twyr-webapp-server/components/tenant-administration/feature-manager/tree-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency"], function (_exports, _baseComponent, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4728,29 +4713,11 @@
   _exports.default = void 0;
 
   var _default = _baseComponent.default.extend({
-    attributeBindings: ['style'],
-    style: (0, _emberComputedStyle.default)('display'),
-    display: Ember.computed('hasPermission', function () {
-      return {
-        'display': this.get('hasPermission') ? 'flex' : 'none'
-      };
-    }),
-
     init() {
       this._super(...arguments);
 
       this.set('permissions', ['feature-administration-read']);
     },
-
-    onHasPermissionChange: Ember.observer('hasPermission', function () {
-      if (!this.get('hasPermission')) {
-        this.set('readonly', true);
-        return;
-      }
-
-      const updatePerm = this.get('currentUser').hasPermission('feature-administration-update');
-      if (updatePerm) this.set('readonly', false);
-    }),
 
     didInsertElement() {
       this._super(...arguments);
@@ -4827,7 +4794,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/components/tenant-administration/location-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-resize/mixins/resize-aware", "twyr-webapp-server/config/environment", "ember-computed-style", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _resizeAware, _environment, _emberComputedStyle, _emberConcurrency) {
+;define("twyr-webapp-server/components/tenant-administration/location-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-resize/mixins/resize-aware", "twyr-webapp-server/config/environment", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _resizeAware, _environment, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -4846,14 +4813,7 @@
     resizeWidthSensitive: true,
     resizeHeightSensitive: true,
     staticUrl: null,
-    readonly: true,
-    attributeBindings: ['style'],
-    style: (0, _emberComputedStyle.default)('display'),
-    display: Ember.computed('hasPermission', function () {
-      return {
-        'display': this.get('hasPermission') ? 'flex' : 'none'
-      };
-    }),
+    editable: false,
 
     init() {
       this._super(...arguments);
@@ -4862,13 +4822,8 @@
     },
 
     onHasPermissionChange: Ember.observer('hasPermission', function () {
-      if (!this.get('hasPermission')) {
-        this.set('readonly', true);
-        return;
-      }
-
       const updatePerm = this.get('currentUser').hasPermission('tenant-administration-update');
-      if (updatePerm) this.set('readonly', false);
+      this.set('editable', updatePerm);
     }),
     onDidInsertElement: (0, _emberConcurrency.task)(function* () {
       yield this.get('displayPrimaryLocation').perform();
@@ -5824,7 +5779,14 @@
   });
   _exports.default = void 0;
 
-  var _default = _baseController.default.extend({});
+  var _default = _baseController.default.extend({
+    init() {
+      this._super(...arguments);
+
+      this.set('permissions', ['registered']);
+    }
+
+  });
 
   _exports.default = _default;
 });
@@ -5902,7 +5864,14 @@
   });
   _exports.default = void 0;
 
-  var _default = _baseController.default.extend({});
+  var _default = _baseController.default.extend({
+    init() {
+      this._super(...arguments);
+
+      this.set('permissions', ['registered']);
+    }
+
+  });
 
   _exports.default = _default;
 });
@@ -5923,6 +5892,7 @@
     init() {
       this._super(...arguments);
 
+      this.set('permissions', ['tenant-administration-read']);
       this.get('currentUser').on('userDataUpdated', this, 'onUserDataUpdated');
     },
 
@@ -5958,6 +5928,12 @@
   var _default = _baseController.default.extend({
     'breadcrumbStack': null,
 
+    init() {
+      this._super(...arguments);
+
+      this.set('permissions', ['feature-manager-read']);
+    },
+
     setSelectedFeature(featureModel) {
       this.set('model', featureModel);
       let currentFeature = featureModel;
@@ -5983,7 +5959,14 @@
   });
   _exports.default = void 0;
 
-  var _default = _baseController.default.extend({});
+  var _default = _baseController.default.extend({
+    init() {
+      this._super(...arguments);
+
+      this.set('permissions', ['group-manager-read']);
+    }
+
+  });
 
   _exports.default = _default;
 });
@@ -5995,7 +5978,14 @@
   });
   _exports.default = void 0;
 
-  var _default = _baseController.default.extend({});
+  var _default = _baseController.default.extend({
+    init() {
+      this._super(...arguments);
+
+      this.set('permissions', ['user-manager-read']);
+    }
+
+  });
 
   _exports.default = _default;
 });
@@ -9906,11 +9896,16 @@
     onUserDataUpdated() {
       if (!window.twyrUserId) {
         this.get('store').unloadAll('dashboard/feature');
-        return;
       }
 
       const isActive = this.get('router').get('currentRouteName').includes(this.get('fullRouteName'));
       if (!isActive) return;
+
+      if (!window.twyrUserId) {
+        this.transitionTo('index');
+        return;
+      }
+
       this.get('refreshDashboardFeatures').perform();
     },
 
@@ -10003,11 +9998,16 @@
       if (!window.twyrUserId) {
         this.get('store').unloadAll('profile/user');
         this.get('store').unloadAll('profile/user-contact');
-        return;
       }
 
       const isActive = this.get('router').get('currentRouteName').includes(this.get('fullRouteName'));
       if (!isActive) return;
+
+      if (!window.twyrUserId) {
+        this.transitionTo('index');
+        return;
+      }
+
       this.get('refreshProfileModel').perform();
     },
 
@@ -10062,18 +10062,24 @@
     },
 
     redirect(model, transition) {
-      if (transition.targetName === `${this.get('fullRouteName')}.index`) this.transitionTo(`${this.get('fullRouteName')}.feature-manager`);
+      if (transition.targetName !== `${this.get('fullRouteName')}.index`) return;
+      this.transitionTo(`${this.get('fullRouteName')}.feature-manager`);
     },
 
     onUserDataUpdated() {
       if (!window.twyrTenantId) {
         this.get('store').unloadAll('tenant-administration/tenant');
         this.get('store').unloadAll('tenant-administration/tenant-location');
-        return;
       }
 
       const isActive = this.get('router').get('currentRouteName').includes(this.get('fullRouteName'));
       if (!isActive) return;
+
+      if (!window.twyrUserId) {
+        this.transitionTo('index');
+        return;
+      }
+
       this.get('refreshTenantModel').perform();
     },
 
@@ -10118,7 +10124,14 @@
         this.get('store').unloadAll('tenant-administration/feature-manager/tenant-feature');
         this.get('store').unloadAll('server-administration/feature');
         this.get('store').unloadAll('server-administration/feature-permission');
-        return null;
+      }
+
+      const isActive = this.get('router').get('currentRouteName').includes(this.get('fullRouteName'));
+      if (!isActive) return;
+
+      if (!window.twyrUserId) {
+        this.transitionTo('index');
+        return;
       }
     }
 
@@ -10167,6 +10180,13 @@
     onUserDataUpdated() {
       if (!window.twyrTenantId) {
         this.get('store').unloadAll('tenant-administration/group-manager/tenant-group');
+      }
+
+      const isActive = this.get('router').get('currentRouteName').includes(this.get('fullRouteName'));
+      if (!isActive) return;
+
+      if (!window.twyrUserId) {
+        this.transitionTo('index');
         return;
       }
     }
@@ -10216,6 +10236,13 @@
     onUserDataUpdated() {
       if (!window.twyrTenantId) {
         this.get('store').unloadAll('tenant-administration/user-manager/tenant-user');
+      }
+
+      const isActive = this.get('router').get('currentRouteName').includes(this.get('fullRouteName'));
+      if (!isActive) return;
+
+      if (!window.twyrUserId) {
+        this.transitionTo('index');
         return;
       }
     }
@@ -11039,8 +11066,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "zYO+Ko1Z",
-    "block": "{\"symbols\":[\"card\",\"feature\",\"card\",\"header\",\"text\"],\"statements\":[[4,\"if\",[[23,[\"model\",\"length\"]]],null,{\"statements\":[[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex flex-gt-md-80 flex-gt-lg-70\"],[9],[0,\"\\n\"],[4,\"if\",[[27,\"get\",[[27,\"filter-by\",[\"type\",\"feature\",[23,[\"model\"]]],null],\"length\"],null]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],[[\"class\"],[\"bg-twyr-component white-text\"]],{\"statements\":[[4,\"component\",[[22,4,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"title\"]]],null,{\"statements\":[[1,[27,\"fa-icon\",[\"laptop-code\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Features\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[4]},null],[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"layout-row layout-align-start-center layout-wrap py-4\"]],{\"statements\":[[4,\"each\",[[23,[\"model\"]]],null,{\"statements\":[[4,\"if\",[[27,\"eq\",[[22,2,[\"type\"]],\"feature\"],null]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex flex-gt-xs-50 flex-gt-sm-33 flex-gt-md-25 flex-gt-lg-20\"]],{\"statements\":[[4,\"link-to\",[[22,2,[\"route\"]]],[[\"title\"],[[22,2,[\"description\"]]]],{\"statements\":[[4,\"component\",[[22,3,[\"content\"]]],[[\"class\"],[\"text-center layout-column layout-align-start-center\"]],{\"statements\":[[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"fa\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[[22,2,[\"iconPath\"]]],[[\"size\"],[\"4x\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"md\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[22,2,[\"iconPath\"]]],[[\"size\"],[64]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"mdi\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[[22,2,[\"iconPath\"]]],[[\"size\"],[64]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"img\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"img\"],[12,\"src\",[22,2,[\"iconPath\"]]],[12,\"alt\",[22,2,[\"name\"]]],[11,\"style\",\"min-height:4rem; height:4rem; max-height:4rem;\"],[9],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"custom\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[22,2,[\"iconPath\"]],true],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"mt-4\"],[11,\"style\",\"font-weight:900;\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[22,2,[\"name\"]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[3]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "hTPY7Psw",
+    "block": "{\"symbols\":[\"card\",\"feature\",\"card\",\"header\",\"text\"],\"statements\":[[4,\"if\",[[27,\"and\",[[23,[\"hasPermission\"]],[23,[\"model\",\"length\"]]],null]],null,{\"statements\":[[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex flex-gt-md-80 flex-gt-lg-70\"],[9],[0,\"\\n\"],[4,\"if\",[[27,\"get\",[[27,\"filter-by\",[\"type\",\"feature\",[23,[\"model\"]]],null],\"length\"],null]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],[[\"class\"],[\"bg-twyr-component white-text\"]],{\"statements\":[[4,\"component\",[[22,4,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"title\"]]],null,{\"statements\":[[1,[27,\"fa-icon\",[\"laptop-code\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Features\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[4]},null],[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"layout-row layout-align-start-center layout-wrap py-4\"]],{\"statements\":[[4,\"each\",[[23,[\"model\"]]],null,{\"statements\":[[4,\"if\",[[27,\"eq\",[[22,2,[\"type\"]],\"feature\"],null]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex flex-gt-xs-50 flex-gt-sm-33 flex-gt-md-25 flex-gt-lg-20\"]],{\"statements\":[[4,\"link-to\",[[22,2,[\"route\"]]],[[\"title\"],[[22,2,[\"description\"]]]],{\"statements\":[[4,\"component\",[[22,3,[\"content\"]]],[[\"class\"],[\"text-center layout-column layout-align-start-center\"]],{\"statements\":[[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"fa\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[[22,2,[\"iconPath\"]]],[[\"size\"],[\"4x\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"md\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[[22,2,[\"iconPath\"]]],[[\"size\"],[64]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"mdi\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[[22,2,[\"iconPath\"]]],[[\"size\"],[64]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"img\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"img\"],[12,\"src\",[22,2,[\"iconPath\"]]],[12,\"alt\",[22,2,[\"name\"]]],[11,\"style\",\"min-height:4rem; height:4rem; max-height:4rem;\"],[9],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,2,[\"iconType\"]],\"custom\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[22,2,[\"iconPath\"]],true],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"mt-4\"],[11,\"style\",\"font-weight:900;\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[22,2,[\"name\"]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[3]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/dashboard/main-component.hbs"
     }
@@ -11283,8 +11310,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "HtI+Zued",
-    "block": "{\"symbols\":[\"table\",\"body\",\"contact\",\"row\",\"row\",\"type\",\"head\"],\"statements\":[[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\",\"selectable\"],[\"type\",\"asc\",true]],{\"statements\":[[4,\"component\",[[22,1,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\"],[4,\"component\",[[22,7,[\"column\"]]],[[\"sortProp\",\"class\"],[\"type\",\"px-0 text-center\"]],{\"statements\":[[1,[27,\"paper-icon\",[\"contacts\"],[[\"class\"],[\"mr-0 mt-1\"]]],false],[0,\"Type\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,7,[\"column\"]]],[[\"sortProp\",\"class\"],[\"contact\",\"px-0 text-center\"]],{\"statements\":[[1,[27,\"paper-icon\",[\"info\"],[[\"class\"],[\"mr-0 mt-1\"]]],false],[0,\"Contact\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,7,[\"column\"]]],[[\"sortProp\",\"class\"],[\"verified\",\"px-0 text-center\"]],{\"statements\":[[1,[27,\"paper-icon\",[\"verified-user\"],[[\"class\"],[\"mr-0 mt-1\"]]],false],[0,\"Verified\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,7,[\"column\"]]],[[\"class\"],[\"px-0 text-right\"]],{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"iconButton\",\"onClick\"],[true,true,[27,\"perform\",[[23,[\"addContact\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"plus-circle\"],[[\"size\"],[\"2x\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[7]},null],[4,\"component\",[[22,1,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,1,[\"sortDesc\"]],[23,[\"model\",\"contacts\"]]],null]],null,{\"statements\":[[4,\"if\",[[22,3,[\"isNew\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],null,{\"statements\":[[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"p-0 px-3 pt-3\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-end-center\"],[9],[0,\"\\n\"],[4,\"paper-select\",null,[[\"class\",\"selected\",\"options\",\"onChange\",\"required\"],[\"flex m-0\",[22,3,[\"type\"]],[23,[\"contactTypes\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[22,3,[\"type\"]]],null]],null],true]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"titleize\",[[22,6,[]]],null],false],[0,\"\\n\"]],\"parameters\":[6]},null],[0,\"\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"p-0 px-3 pt-3\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-end-center\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex m-0\",[22,3,[\"contact\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[22,3,[\"contact\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"p-0 px-3 pt-3\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-center\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-checkbox\",null,[[\"class\",\"value\",\"onChange\",\"disabled\"],[\"flex m-0\",false,null,true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"p-0 text-right\"]],{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"iconButton\",\"class\",\"onClick\"],[true,true,\"m-0 p-0\",[27,\"perform\",[[23,[\"saveContact\"]],[22,3,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-button\",null,[[\"warn\",\"iconButton\",\"class\",\"onClick\"],[true,true,\"m-0 p-0\",[27,\"perform\",[[23,[\"deleteContact\"]],[22,3,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"cancel\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[5]},null]],\"parameters\":[]},{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"p-0 px-3\"]],{\"statements\":[[1,[27,\"titleize\",[[22,3,[\"type\"]]],null],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"p-0 px-3\"]],{\"statements\":[[1,[22,3,[\"contact\"]],false]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"p-0 px-3 text-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-checkbox\",null,[[\"class\",\"value\",\"onChange\",\"disabled\"],[\"flex m-0\",[22,3,[\"verified\"]],null,true]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"p-0 text-right\"]],{\"statements\":[[4,\"paper-button\",null,[[\"warn\",\"iconButton\",\"class\",\"onClick\"],[true,true,\"m-0 p-0\",[27,\"perform\",[[23,[\"deleteContact\"]],[22,3,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null]],\"parameters\":[]}]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
+    "id": "Tk5mO9Ac",
+    "block": "{\"symbols\":[\"table\",\"body\",\"contact\",\"row\",\"row\",\"type\",\"head\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\",\"selectable\"],[\"type\",\"asc\",true]],{\"statements\":[[4,\"component\",[[22,1,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\"],[4,\"component\",[[22,7,[\"column\"]]],[[\"sortProp\",\"class\"],[\"type\",\"px-0 text-center\"]],{\"statements\":[[1,[27,\"paper-icon\",[\"contacts\"],[[\"class\"],[\"mr-0 mt-1\"]]],false],[0,\"Type\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,7,[\"column\"]]],[[\"sortProp\",\"class\"],[\"contact\",\"px-0 text-center\"]],{\"statements\":[[1,[27,\"paper-icon\",[\"info\"],[[\"class\"],[\"mr-0 mt-1\"]]],false],[0,\"Contact\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,7,[\"column\"]]],[[\"sortProp\",\"class\"],[\"verified\",\"px-0 text-center\"]],{\"statements\":[[1,[27,\"paper-icon\",[\"verified-user\"],[[\"class\"],[\"mr-0 mt-1\"]]],false],[0,\"Verified\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,7,[\"column\"]]],[[\"class\"],[\"px-0 text-right\"]],{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"iconButton\",\"onClick\"],[true,true,[27,\"perform\",[[23,[\"addContact\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"plus-circle\"],[[\"size\"],[\"2x\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[7]},null],[4,\"component\",[[22,1,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,1,[\"sortDesc\"]],[23,[\"model\",\"contacts\"]]],null]],null,{\"statements\":[[4,\"if\",[[22,3,[\"isNew\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],null,{\"statements\":[[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"p-0 px-3 pt-3\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-end-center\"],[9],[0,\"\\n\"],[4,\"paper-select\",null,[[\"class\",\"selected\",\"options\",\"onChange\",\"required\"],[\"flex m-0\",[22,3,[\"type\"]],[23,[\"contactTypes\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[22,3,[\"type\"]]],null]],null],true]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"titleize\",[[22,6,[]]],null],false],[0,\"\\n\"]],\"parameters\":[6]},null],[0,\"\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"p-0 px-3 pt-3\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-end-center\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex m-0\",[22,3,[\"contact\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[22,3,[\"contact\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"p-0 px-3 pt-3\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-center\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-checkbox\",null,[[\"class\",\"value\",\"onChange\",\"disabled\"],[\"flex m-0\",false,null,true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"p-0 text-right\"]],{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"iconButton\",\"class\",\"onClick\"],[true,true,\"m-0 p-0\",[27,\"perform\",[[23,[\"saveContact\"]],[22,3,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-button\",null,[[\"warn\",\"iconButton\",\"class\",\"onClick\"],[true,true,\"m-0 p-0\",[27,\"perform\",[[23,[\"deleteContact\"]],[22,3,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"cancel\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[5]},null]],\"parameters\":[]},{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"p-0 px-3\"]],{\"statements\":[[1,[27,\"titleize\",[[22,3,[\"type\"]]],null],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"p-0 px-3\"]],{\"statements\":[[1,[22,3,[\"contact\"]],false]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"p-0 px-3 text-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-checkbox\",null,[[\"class\",\"value\",\"onChange\",\"disabled\"],[\"flex m-0\",[22,3,[\"verified\"]],null,true]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"p-0 text-right\"]],{\"statements\":[[4,\"paper-button\",null,[[\"warn\",\"iconButton\",\"class\",\"onClick\"],[true,true,\"m-0 p-0\",[27,\"perform\",[[23,[\"deleteContact\"]],[22,3,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null]],\"parameters\":[]}]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/profile/contact-management.hbs"
     }
@@ -11301,8 +11328,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "ZlfR/85l",
-    "block": "{\"symbols\":[\"accordion\",\"accItem\",\"accItem\",\"accItem\",\"form\",\"card\",\"accItem\",\"form\",\"card\"],\"statements\":[[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-center flex flex-gt-md-50 flex-gt-lg-40\"],[9],[0,\"\\n\"],[4,\"bs-accordion\",null,[[\"class\",\"selected\",\"onChange\"],[\"w-100\",[23,[\"selectedAccordionItem\"]],[27,\"perform\",[[23,[\"onChangeAccordionItem\"]]],null]]],{\"statements\":[[4,\"component\",[[22,1,[\"item\"]]],[[\"value\",\"title\"],[\"1\",\"Edit Profile\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" Profile Basics \"],[0,\"\\n\"],[4,\"component\",[[22,7,[\"title\"]]],[[\"class\"],[\"bg-twyr-component p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0 white-text\"],[9],[0,\"Edit Profile\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,7,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"w-100\",[27,\"perform\",[[23,[\"save\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex m-0\"]],{\"statements\":[[4,\"component\",[[22,9,[\"content\"]]],[[\"class\"],[\"pt-4\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between layout-wrap\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex-100 flex-gt-md-45\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"id\",\"profile-basic-information-image\"],[11,\"class\",\"flex\"],[11,\"contenteditable\",\"true\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex-100 flex-gt-md-45 flex-gt-lg-50\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"disabled\"],[\"text\",\"flex-100\",\"Username / Login\",[23,[\"model\",\"email\"]],null,true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"First Name\",[23,[\"model\",\"firstName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"firstName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\"],[\"text\",\"flex-100\",\"Middle Name(s)\",[23,[\"model\",\"middleNames\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"middleNames\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"Last Name\",[23,[\"model\",\"lastName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"lastName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,9,[\"actions\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"raised\",\"warn\",\"disabled\",\"onClick\"],[true,true,[27,\"not\",[[27,\"or\",[[23,[\"model\",\"isDirty\"]],[23,[\"model\",\"content\",\"isDirty\"]]],null]],null],[27,\"perform\",[[23,[\"cancel\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"close\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,8,[\"submit-button\"]]],[[\"raised\",\"primary\",\"disabled\"],[true,true,[27,\"or\",[[22,8,[\"isInvalid\"]],[27,\"not\",[[27,\"or\",[[23,[\"model\",\"isDirty\"]],[23,[\"model\",\"content\",\"isDirty\"]]],null]],null]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[9]},null]],\"parameters\":[8]},null]],\"parameters\":[]},null]],\"parameters\":[7]},null],[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"2\",\"Change Password\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" Password Change \"],[0,\"\\n\"],[4,\"component\",[[22,4,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Change Password\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,4,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"w-100\",[27,\"perform\",[[23,[\"changePassword\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex m-0\"]],{\"statements\":[[4,\"component\",[[22,6,[\"content\"]]],[[\"class\"],[\"pt-4\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"flex-100\",\"Current Password\",[23,[\"currentPassword\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"currentPassword\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"flex-100\",\"New Password\",[23,[\"newPassword1\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"newPassword1\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"flex-100\",\"Repeat New Password\",[23,[\"newPassword2\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"newPassword2\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,6,[\"actions\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"raised\",\"warn\",\"disabled\",\"onClick\"],[true,true,[27,\"not\",[[27,\"or\",[[27,\"not-eq\",[[23,[\"currentPassword\"]],\"\"],null],[27,\"not-eq\",[[23,[\"newPassword1\"]],\"\"],null],[27,\"not-eq\",[[23,[\"newPassword2\"]],\"\"],null]],null]],null],[27,\"perform\",[[23,[\"cancelChangePassword\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"close\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,5,[\"submit-button\"]]],[[\"raised\",\"primary\",\"disabled\"],[true,true,[27,\"or\",[[27,\"eq\",[[23,[\"newPassword1\"]],\"\"],null],[27,\"not-eq\",[[23,[\"newPassword1\"]],[23,[\"newPassword2\"]]],null]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[6]},null]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null],[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"3\",\"Contact Information\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" User contact Information \"],[0,\"\\n\"],[4,\"component\",[[22,3,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Contact Information\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,3,[\"body\"]]],[[\"class\"],[\"p-2\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[\"profile/contact-management\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[3]},null],[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"4\",\"Danger Zone\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" User contact Information \"],[0,\"\\n\"],[4,\"component\",[[22,2,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Danger Zone\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,2,[\"body\"]]],[[\"class\"],[\"layout-row layout-align-start-stretch\"]],{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"raised\",\"onClick\"],[\"flex btn-danger\",true,[27,\"perform\",[[23,[\"deleteAccount\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-off\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Delete Account\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "DHjXOXp0",
+    "block": "{\"symbols\":[\"accordion\",\"accItem\",\"accItem\",\"accItem\",\"form\",\"card\",\"accItem\",\"form\",\"card\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-center flex flex-gt-md-50 flex-gt-lg-40\"],[9],[0,\"\\n\"],[4,\"bs-accordion\",null,[[\"class\",\"selected\",\"onChange\"],[\"w-100\",[23,[\"selectedAccordionItem\"]],[27,\"perform\",[[23,[\"onChangeAccordionItem\"]]],null]]],{\"statements\":[[4,\"component\",[[22,1,[\"item\"]]],[[\"value\",\"title\"],[\"1\",\"Edit Profile\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" Profile Basics \"],[0,\"\\n\"],[4,\"component\",[[22,7,[\"title\"]]],[[\"class\"],[\"bg-twyr-component p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0 white-text\"],[9],[0,\"Edit Profile\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,7,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"w-100\",[27,\"perform\",[[23,[\"save\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex m-0\"]],{\"statements\":[[4,\"component\",[[22,9,[\"content\"]]],[[\"class\"],[\"pt-4\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between layout-wrap\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex-100 flex-gt-md-45\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"id\",\"profile-basic-information-image\"],[11,\"class\",\"flex\"],[11,\"contenteditable\",\"true\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex-100 flex-gt-md-45 flex-gt-lg-50\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"disabled\"],[\"text\",\"flex-100\",\"Username / Login\",[23,[\"model\",\"email\"]],null,true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"First Name\",[23,[\"model\",\"firstName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"firstName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\"],[\"text\",\"flex-100\",\"Middle Name(s)\",[23,[\"model\",\"middleNames\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"middleNames\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,8,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"Last Name\",[23,[\"model\",\"lastName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"lastName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,9,[\"actions\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"raised\",\"warn\",\"disabled\",\"onClick\"],[true,true,[27,\"not\",[[27,\"or\",[[23,[\"model\",\"isDirty\"]],[23,[\"model\",\"content\",\"isDirty\"]]],null]],null],[27,\"perform\",[[23,[\"cancel\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"close\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,8,[\"submit-button\"]]],[[\"raised\",\"primary\",\"disabled\"],[true,true,[27,\"or\",[[22,8,[\"isInvalid\"]],[27,\"not\",[[27,\"or\",[[23,[\"model\",\"isDirty\"]],[23,[\"model\",\"content\",\"isDirty\"]]],null]],null]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[9]},null]],\"parameters\":[8]},null]],\"parameters\":[]},null]],\"parameters\":[7]},null],[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"2\",\"Change Password\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" Password Change \"],[0,\"\\n\"],[4,\"component\",[[22,4,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Change Password\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,4,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"w-100\",[27,\"perform\",[[23,[\"changePassword\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex m-0\"]],{\"statements\":[[4,\"component\",[[22,6,[\"content\"]]],[[\"class\"],[\"pt-4\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"flex-100\",\"Current Password\",[23,[\"currentPassword\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"currentPassword\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"flex-100\",\"New Password\",[23,[\"newPassword1\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"newPassword1\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,5,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"password\",\"flex-100\",\"Repeat New Password\",[23,[\"newPassword2\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"newPassword2\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,6,[\"actions\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"raised\",\"warn\",\"disabled\",\"onClick\"],[true,true,[27,\"not\",[[27,\"or\",[[27,\"not-eq\",[[23,[\"currentPassword\"]],\"\"],null],[27,\"not-eq\",[[23,[\"newPassword1\"]],\"\"],null],[27,\"not-eq\",[[23,[\"newPassword2\"]],\"\"],null]],null]],null],[27,\"perform\",[[23,[\"cancelChangePassword\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"close\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,5,[\"submit-button\"]]],[[\"raised\",\"primary\",\"disabled\"],[true,true,[27,\"or\",[[27,\"eq\",[[23,[\"newPassword1\"]],\"\"],null],[27,\"not-eq\",[[23,[\"newPassword1\"]],[23,[\"newPassword2\"]]],null]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[6]},null]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null],[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"3\",\"Contact Information\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" User contact Information \"],[0,\"\\n\"],[4,\"component\",[[22,3,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Contact Information\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,3,[\"body\"]]],[[\"class\"],[\"p-2\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[\"profile/contact-management\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[3]},null],[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"4\",\"Danger Zone\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[2,\" User contact Information \"],[0,\"\\n\"],[4,\"component\",[[22,2,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Danger Zone\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,2,[\"body\"]]],[[\"class\"],[\"layout-row layout-align-start-stretch\"]],{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"raised\",\"onClick\"],[\"flex btn-danger\",true,[27,\"perform\",[[23,[\"deleteAccount\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-off\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Delete Account\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/profile/main-component.hbs"
     }
@@ -11373,8 +11400,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "U6cZ+Tgq",
-    "block": "{\"symbols\":[\"form\",\"card\",\"header\",\"text\"],\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"flex h-100 layout-row layout-align-center-stretch\",[27,\"perform\",[[23,[\"save\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,2,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,3,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"title\"]]],null,{\"statements\":[[0,\"Basics\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[4]},null]],\"parameters\":[3]},null],[4,\"component\",[[22,2,[\"content\"]]],[[\"class\"],[\"layout-column layout-align-start-stretch\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"component\",[[22,1,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"readonly\",\"required\"],[\"text\",\"flex-100\",\"Name\",[23,[\"model\",\"name\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"name\"]]],null]],null],[23,[\"readonly\"]],true]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,1,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"readonly\",\"required\"],[\"url\",\"flex-100\",\"Domain\",[23,[\"model\",\"fullDomain\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"fullDomain\"]]],null]],null],[23,[\"readonly\"]],true]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,2,[\"actions\"]]],[[\"class\"],[\"layout-row layout-align-end-center layout-wrap\"]],{\"statements\":[[4,\"unless\",[[23,[\"readonly\"]]],null,{\"statements\":[[4,\"component\",[[22,1,[\"submit-button\"]]],[[\"primary\",\"raised\",\"onClick\",\"disabled\"],[true,true,[27,\"perform\",[[23,[\"save\"]]],null],[27,\"or\",[[22,1,[\"isInvalid\"]],[23,[\"save\",\"isRunning\"]],[23,[\"cancel\",\"isRunning\"]],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"save\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[4,\"paper-button\",null,[[\"warn\",\"raised\",\"onClick\",\"disabled\"],[true,true,[27,\"perform\",[[23,[\"cancel\"]]],null],[27,\"or\",[[23,[\"save\",\"isRunning\"]],[23,[\"cancel\",\"isRunning\"]],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"cancel\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"cancel\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
+    "id": "f91hPvsi",
+    "block": "{\"symbols\":[\"form\",\"card\",\"header\",\"text\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"flex h-100 layout-row layout-align-center-stretch\",[27,\"perform\",[[23,[\"save\"]]],null]]],{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,2,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,3,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"title\"]]],null,{\"statements\":[[0,\"Basics\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[4]},null]],\"parameters\":[3]},null],[4,\"component\",[[22,2,[\"content\"]]],[[\"class\"],[\"layout-column layout-align-start-stretch\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"component\",[[22,1,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"readonly\",\"required\"],[\"text\",\"flex-100\",\"Name\",[23,[\"model\",\"name\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"name\"]]],null]],null],[23,[\"readonly\"]],true]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"component\",[[22,1,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"readonly\",\"required\"],[\"url\",\"flex-100\",\"Domain\",[23,[\"model\",\"fullDomain\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"fullDomain\"]]],null]],null],[23,[\"readonly\"]],true]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,2,[\"actions\"]]],[[\"class\"],[\"layout-row layout-align-end-center layout-wrap\"]],{\"statements\":[[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"component\",[[22,1,[\"submit-button\"]]],[[\"primary\",\"raised\",\"onClick\",\"disabled\"],[true,true,[27,\"perform\",[[23,[\"save\"]]],null],[27,\"or\",[[22,1,[\"isInvalid\"]],[23,[\"save\",\"isRunning\"]],[23,[\"cancel\",\"isRunning\"]],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"save\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Save\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[4,\"paper-button\",null,[[\"warn\",\"raised\",\"onClick\",\"disabled\"],[true,true,[27,\"perform\",[[23,[\"cancel\"]]],null],[27,\"or\",[[23,[\"save\",\"isRunning\"]],[23,[\"cancel\",\"isRunning\"]],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"cancel\",\"isRunning\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"cancel\"],[[\"class\"],[\"mr-1\"]]],false],[7,\"span\"],[9],[0,\"Cancel\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/basics-component.hbs"
     }
@@ -11391,8 +11418,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "5RMSbXsG",
-    "block": "{\"symbols\":[\"card\",\"table\",\"body\",\"feature\",\"row\",\"head\",\"table\",\"body\",\"permission\",\"row\",\"head\",\"parentCrumb\",\"idx\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[11,\"style\",\"font-size:16px;\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex layout-row layout-align-start-center\"],[9],[0,\"\\n\"],[4,\"each\",[[23,[\"breadcrumbStack\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"if\",[[22,13,[]]],null,{\"statements\":[[0,\"  >  \"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,13,[]],[27,\"sub\",[[23,[\"breadcrumbStack\",\"length\"]],1],null]],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[22,12,[\"displayName\"]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"controller-action\",\"changeSelectedFeature\",[22,12,[]]]],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[22,12,[\"displayName\"]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[12,13]},null],[0,\"\\t\\t\\t\"],[10],[0,\"\\n\"],[4,\"paper-switch\",null,[[\"class\",\"value\",\"onChange\",\"disabled\"],[\"m-0\",[27,\"await\",[[23,[\"model\",\"isTenantSubscribed\"]]],null],[27,\"perform\",[[23,[\"modifyTenantFeatureStatus\"]]],null],[27,\"not-eq\",[[23,[\"model\",\"deploy\"]],\"custom\"],null]]],{\"statements\":[[4,\"if\",[[27,\"await\",[[23,[\"model\",\"isTenantSubscribed\"]]],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\tSubscribed\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\tUnsubscribed\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"mx-3 pt-2 pb-4 layout-row layout-align-start-center\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[23,[\"model\",\"description\"]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"],[4,\"if\",[[27,\"get\",[[27,\"await\",[[23,[\"model\",\"permissions\"]]],null],\"length\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Permissions\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,7,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[11]},null],[4,\"component\",[[22,7,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,7,[\"sortDesc\"]],[27,\"await\",[[23,[\"model\",\"permissions\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,8,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,10,[\"cell\"]]],null,{\"statements\":[[1,[22,9,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,10,[\"cell\"]]],null,{\"statements\":[[1,[22,9,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[10]},null]],\"parameters\":[9]},null]],\"parameters\":[8]},null]],\"parameters\":[7]},null]],\"parameters\":[]},null],[4,\"if\",[[27,\"get\",[[27,\"await\",[[23,[\"model\",\"features\"]]],null],\"length\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Sub Features\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,2,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Access Level\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null],[4,\"component\",[[22,2,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,2,[\"sortDesc\"]],[27,\"await\",[[23,[\"model\",\"features\"]]],null]],null]],null,{\"statements\":[[4,\"if\",[[27,\"eq\",[[22,4,[\"type\"]],\"feature\"],null]],null,{\"statements\":[[4,\"component\",[[22,3,[\"row\"]]],[[\"onClick\"],[[27,\"action\",[[22,0,[]],\"controller-action\",\"changeSelectedFeature\",[22,4,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[27,\"titleize\",[[22,4,[\"deploy\"]]],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
+    "id": "6lxSg2TG",
+    "block": "{\"symbols\":[\"card\",\"table\",\"body\",\"feature\",\"row\",\"head\",\"table\",\"body\",\"permission\",\"row\",\"head\",\"parentCrumb\",\"idx\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[11,\"style\",\"font-size:16px;\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex layout-row layout-align-start-center\"],[9],[0,\"\\n\"],[4,\"each\",[[23,[\"breadcrumbStack\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"if\",[[22,13,[]]],null,{\"statements\":[[0,\"  >  \"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,13,[]],[27,\"sub\",[[23,[\"breadcrumbStack\",\"length\"]],1],null]],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[22,12,[\"displayName\"]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[3,\"action\",[[22,0,[]],\"controller-action\",\"changeSelectedFeature\",[22,12,[]]]],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[22,12,[\"displayName\"]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[12,13]},null],[0,\"\\t\\t\\t\"],[10],[0,\"\\n\"],[4,\"paper-switch\",null,[[\"class\",\"value\",\"onChange\",\"disabled\"],[\"m-0\",[27,\"await\",[[23,[\"model\",\"isTenantSubscribed\"]]],null],[27,\"perform\",[[23,[\"modifyTenantFeatureStatus\"]]],null],[27,\"not-eq\",[[23,[\"model\",\"deploy\"]],\"custom\"],null]]],{\"statements\":[[4,\"if\",[[27,\"await\",[[23,[\"model\",\"isTenantSubscribed\"]]],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\tSubscribed\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\tUnsubscribed\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"mx-3 pt-2 pb-4 layout-row layout-align-start-center\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[23,[\"model\",\"description\"]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"],[4,\"if\",[[27,\"get\",[[27,\"await\",[[23,[\"model\",\"permissions\"]]],null],\"length\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Permissions\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,7,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[11]},null],[4,\"component\",[[22,7,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,7,[\"sortDesc\"]],[27,\"await\",[[23,[\"model\",\"permissions\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,8,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,10,[\"cell\"]]],null,{\"statements\":[[1,[22,9,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,10,[\"cell\"]]],null,{\"statements\":[[1,[22,9,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[10]},null]],\"parameters\":[9]},null]],\"parameters\":[8]},null]],\"parameters\":[7]},null]],\"parameters\":[]},null],[4,\"if\",[[27,\"get\",[[27,\"await\",[[23,[\"model\",\"features\"]]],null],\"length\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Sub Features\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,2,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Access Level\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null],[4,\"component\",[[22,2,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,2,[\"sortDesc\"]],[27,\"await\",[[23,[\"model\",\"features\"]]],null]],null]],null,{\"statements\":[[4,\"if\",[[27,\"eq\",[[22,4,[\"type\"]],\"feature\"],null]],null,{\"statements\":[[4,\"component\",[[22,3,[\"row\"]]],[[\"onClick\"],[[27,\"action\",[[22,0,[]],\"controller-action\",\"changeSelectedFeature\",[22,4,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[27,\"titleize\",[[22,4,[\"deploy\"]]],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/feature-manager/main-component.hbs"
     }
@@ -11409,8 +11436,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "z4Mo1RCK",
-    "block": "{\"symbols\":[\"card\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 pt-1 layout-column layout-align-start-stretch\"]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"id\",\"tenant-administration-feature-manager-tree-container\"],[11,\"class\",\"p-2\"],[9],[0,\"\\n\\t\\t\\t \\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
+    "id": "3QTkvsbV",
+    "block": "{\"symbols\":[\"card\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 pt-1 layout-column layout-align-start-stretch\"]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"id\",\"tenant-administration-feature-manager-tree-container\"],[11,\"class\",\"p-2\"],[9],[0,\"\\n\\t\\t\\t \\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/feature-manager/tree-component.hbs"
     }
@@ -11427,8 +11454,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "AFpecYNj",
-    "block": "{\"symbols\":[\"card\",\"header\",\"text\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,3,[\"title\"]]],null,{\"statements\":[[0,\"Main Office Location\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[3]},null],[4,\"if\",[[27,\"and\",[[23,[\"model\",\"location\"]],[27,\"not\",[[23,[\"model\",\"location\",\"isNew\"]]],null],[27,\"not\",[[23,[\"readonly\"]]],null]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"raised\",\"mini\",\"onClick\",\"bubbles\"],[true,true,true,[27,\"perform\",[[23,[\"editPrimaryLocation\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"edit\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null],[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"flex layout-row layout-align-center-stretch layout-wrap\"]],{\"statements\":[[4,\"if\",[[23,[\"model\",\"location\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[7,\"div\"],[11,\"id\",\"tenant-administrator-main-component-static-location-display\"],[11,\"class\",\"p-0 text-center flex-100 flex-gt-lg-70\"],[11,\"style\",\"min-height:5rem;\"],[9],[0,\"\\n\"],[4,\"if\",[[23,[\"staticUrl\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"img\"],[11,\"border\",\"0\"],[12,\"src\",[28,[[21,\"staticUrl\"]]]],[12,\"alt\",[28,[[23,[\"model\",\"location\",\"name\"]]]]],[9],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\tFetching map...\\n\"]],\"parameters\":[]}],[0,\"\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex-100 flex-gt-lg-30\"],[11,\"style\",\"font-style:italic;\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"line1\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"line2\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"line2\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"line3\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"line3\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"area\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"area\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"city\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"state\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"country\"]],false],[0,\" \"],[1,[23,[\"model\",\"location\",\"postalCode\"]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[4,\"unless\",[[23,[\"readonly\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"onClick\",\"bubbles\"],[\"flex\",[27,\"perform\",[[23,[\"addPrimaryLocation\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"map-marked\"],[[\"class\"],[\"mr-1\"]]],false],[0,\" Add Main Office Location\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
+    "id": "1zJPRHTf",
+    "block": "{\"symbols\":[\"card\",\"header\",\"text\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,3,[\"title\"]]],null,{\"statements\":[[0,\"Main Office Location\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[3]},null],[4,\"if\",[[27,\"and\",[[23,[\"model\",\"location\"]],[23,[\"editable\"]],[27,\"not\",[[23,[\"model\",\"location\",\"isNew\"]]],null]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"raised\",\"mini\",\"onClick\",\"bubbles\"],[true,true,true,[27,\"perform\",[[23,[\"editPrimaryLocation\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"edit\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null],[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"flex pt-0 layout-row layout-align-center-stretch layout-wrap\"]],{\"statements\":[[4,\"if\",[[23,[\"model\",\"location\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[7,\"div\"],[11,\"id\",\"tenant-administrator-main-component-static-location-display\"],[11,\"class\",\"p-0 text-center flex-100 flex-gt-lg-70\"],[11,\"style\",\"min-height:5rem;\"],[9],[0,\"\\n\"],[4,\"if\",[[23,[\"staticUrl\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"img\"],[11,\"border\",\"0\"],[12,\"src\",[28,[[21,\"staticUrl\"]]]],[12,\"alt\",[28,[[23,[\"model\",\"location\",\"name\"]]]]],[9],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\tFetching map...\\n\"]],\"parameters\":[]}],[0,\"\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex-100 flex-gt-lg-30\"],[11,\"style\",\"font-style:italic;\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"line1\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"line2\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"line2\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"line3\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"line3\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"area\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"area\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"city\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"state\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"country\"]],false],[0,\" \"],[1,[23,[\"model\",\"location\",\"postalCode\"]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"onClick\",\"bubbles\"],[\"flex\",[27,\"perform\",[[23,[\"addPrimaryLocation\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"map-marked\"],[[\"class\"],[\"mr-1\"]]],false],[0,\" Add Main Office Location\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/location-component.hbs"
     }
@@ -11445,8 +11472,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "M8zvuojg",
-    "block": "{\"symbols\":[\"card\",\"header\",\"text\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0\"]],{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"text\"]]],null,{\"statements\":[[4,\"component\",[[22,3,[\"title\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[23,[\"state\",\"model\",\"name\"]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[0,\"\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex-65 layout-column layout-align-start-stretch\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-start-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"onChange\"],[\"text\",\"flex\",\"Approximate Location\",[23,[\"approxLocation\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"approxLocation\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex layout-row layout-align-start-stretch\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex\"],[12,\"id\",[28,[\"tenant-location-editor-map-container-\",[23,[\"state\",\"model\",\"id\"]]]]],[9],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex-30 layout-column layout-align-center-stretch\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Name\",[23,[\"state\",\"model\",\"name\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"name\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Line #1\",[23,[\"state\",\"model\",\"line1\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"line1\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Line #2\",[23,[\"state\",\"model\",\"line2\"]],[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"line2\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Line #3\",[23,[\"state\",\"model\",\"line3\"]],[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"line3\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Area\",[23,[\"state\",\"model\",\"area\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"area\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"City\",[23,[\"state\",\"model\",\"city\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"city\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"State\",[23,[\"state\",\"model\",\"state\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"state\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Country\",[23,[\"state\",\"model\",\"country\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"country\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Postal Code\",[23,[\"state\",\"model\",\"postalCode\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"postalCode\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex-90 layout-row layout-align-space-between\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"disabled\",\"onChange\"],[\"text\",\"flex-45\",\"Latitude\",[23,[\"state\",\"model\",\"latitude\"]],true,[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"latitude\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"disabled\",\"onChange\"],[\"text\",\"flex-45\",\"Longitude\",[23,[\"state\",\"model\",\"longitude\"]],true,[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"longitude\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Timezone\",[23,[\"state\",\"model\",\"timezoneName\"]],true,[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"timezoneName\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
+    "id": "YgZwKF9B",
+    "block": "{\"symbols\":[\"card\",\"header\",\"text\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0\"]],{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"text\"]]],null,{\"statements\":[[4,\"component\",[[22,3,[\"title\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[23,[\"state\",\"model\",\"name\"]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null],[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[0,\"\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between\"],[9],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex-65 layout-column layout-align-start-stretch\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-start-center\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"onChange\"],[\"text\",\"flex\",\"Approximate Location\",[23,[\"approxLocation\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"approxLocation\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex layout-row layout-align-start-stretch\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex\"],[12,\"id\",[28,[\"tenant-location-editor-map-container-\",[23,[\"state\",\"model\",\"id\"]]]]],[9],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex-30 layout-column layout-align-center-stretch\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Name\",[23,[\"state\",\"model\",\"name\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"name\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Line #1\",[23,[\"state\",\"model\",\"line1\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"line1\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Line #2\",[23,[\"state\",\"model\",\"line2\"]],[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"line2\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Line #3\",[23,[\"state\",\"model\",\"line3\"]],[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"line3\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Area\",[23,[\"state\",\"model\",\"area\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"area\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"City\",[23,[\"state\",\"model\",\"city\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"city\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"State\",[23,[\"state\",\"model\",\"state\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"state\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Country\",[23,[\"state\",\"model\",\"country\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"country\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"required\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Postal Code\",[23,[\"state\",\"model\",\"postalCode\"]],true,[27,\"not\",[[23,[\"state\",\"model\",\"latitude\"]]],null],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"postalCode\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex-90 layout-row layout-align-space-between\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"disabled\",\"onChange\"],[\"text\",\"flex-45\",\"Latitude\",[23,[\"state\",\"model\",\"latitude\"]],true,[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"latitude\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"disabled\",\"onChange\"],[\"text\",\"flex-45\",\"Longitude\",[23,[\"state\",\"model\",\"longitude\"]],true,[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"longitude\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"disabled\",\"onChange\"],[\"text\",\"flex-90\",\"Timezone\",[23,[\"state\",\"model\",\"timezoneName\"]],true,[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"timezoneName\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/tenant-location-editor.hbs"
     }
@@ -11463,8 +11490,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "+I3u8tNL",
-    "block": "{\"symbols\":[\"tenant\"],\"statements\":[[4,\"paper-select\",null,[[\"class\",\"options\",\"selected\",\"onChange\"],[\"m-0 p-0\",[23,[\"allowedTenants\"]],[23,[\"currentTenant\"]],[27,\"action\",[[22,0,[]],\"controller-action\",\"changeTenant\"],null]]],{\"statements\":[[0,\"\\t\"],[1,[22,1,[\"name\"]],false],[0,\"\\n\"]],\"parameters\":[1]},null]],\"hasEval\":false}",
+    "id": "VfZAxQqH",
+    "block": "{\"symbols\":[\"tenant\"],\"statements\":[[4,\"liquid-if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-select\",null,[[\"class\",\"options\",\"selected\",\"onChange\"],[\"m-0 p-0\",[23,[\"allowedTenants\"]],[23,[\"currentTenant\"]],[27,\"action\",[[22,0,[]],\"controller-action\",\"changeTenant\"],null]]],{\"statements\":[[0,\"\\t\"],[1,[22,1,[\"name\"]],false],[0,\"\\n\"]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant/notification-area.hbs"
     }
@@ -11571,8 +11598,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "dxsCx2GG",
-    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Dashboard\"],null],false],[0,\"\\n\"],[1,[27,\"component\",[\"dashboard/main-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "PzyHPdNV",
+    "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[0,\"\\t\"],[1,[27,\"page-title\",[\"Dashboard\"],null],false],[0,\"\\n\\t\"],[1,[27,\"component\",[\"dashboard/main-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/dashboard.hbs"
     }
@@ -11625,8 +11652,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "14nYe5WA",
-    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Profile\"],null],false],[0,\"\\n\"],[1,[27,\"component\",[\"profile/main-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "QKt416eL",
+    "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[0,\"\\t\"],[1,[27,\"page-title\",[\"Profile\"],null],false],[0,\"\\n\\t\"],[1,[27,\"component\",[\"profile/main-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/profile.hbs"
     }
@@ -11643,8 +11670,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "SOCRuXwP",
-    "block": "{\"symbols\":[\"card\",\"navbar\",\"nav\",\"card\",\"header\",\"text\"],\"statements\":[[1,[27,\"page-title\",[\"Tenant Administration\"],null],false],[0,\"\\n\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex flex-gt-md-80\"],[9],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,4,[\"header\"]]],[[\"class\"],[\"bg-twyr-component white-text\"]],{\"statements\":[[4,\"component\",[[22,5,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"title\"]]],null,{\"statements\":[[1,[27,\"mdi-icon\",[\"account-settings\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Administration\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null]],\"parameters\":[5]},null],[4,\"component\",[[22,4,[\"content\"]]],[[\"class\"],[\"p-0 layout-row layout-align-start-stretch layout-wrap flex\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/basics-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/location-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[4]},null],[4,\"if\",[[23,[\"hasSubModulePermissions\"]]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[4,\"bs-navbar\",null,[[\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"light\",\"white\",false,true]],{\"statements\":[[4,\"component\",[[22,2,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"nav\"]]],[[\"class\"],[\"layout-row layout-align-start-center\"]],{\"statements\":[[4,\"if\",[[23,[\"canViewFeatureAdministrator\"]]],null,{\"statements\":[[4,\"component\",[[22,3,[\"item\"]]],[[\"class\"],[\"mr-4\"]],{\"statements\":[[4,\"link-to\",[\"tenant-administration.feature-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"star-circle-outline\"],null],false],[0,\" Feature Management\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"canViewGroupAdministrator\"]]],null,{\"statements\":[[4,\"component\",[[22,3,[\"item\"]]],[[\"class\"],[\"mr-4\"]],{\"statements\":[[4,\"link-to\",[\"tenant-administration.group-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"group\"],null],false],[0,\" Groups & Permissions\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"canViewUserAdministrator\"]]],null,{\"statements\":[[4,\"component\",[[22,3,[\"item\"]]],null,{\"statements\":[[4,\"link-to\",[\"tenant-administration.user-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-multiple-outline\"],null],false],[0,\" User Management\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[3]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"mt-1 flex\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "HzXQfKoH",
+    "block": "{\"symbols\":[\"card\",\"navbar\",\"nav\",\"card\",\"header\",\"text\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[1,[27,\"page-title\",[\"Tenant Administration\"],null],false],[0,\"\\n\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-center-start py-4\"],[9],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex flex-gt-md-80\"],[9],[0,\"\\n\"],[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,4,[\"header\"]]],[[\"class\"],[\"bg-twyr-component white-text\"]],{\"statements\":[[4,\"component\",[[22,5,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"title\"]]],null,{\"statements\":[[1,[27,\"mdi-icon\",[\"account-settings\"],[[\"class\"],[\"mr-2\"]]],false],[0,\"Administration\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null]],\"parameters\":[5]},null],[4,\"component\",[[22,4,[\"content\"]]],[[\"class\"],[\"p-0 layout-row layout-align-start-stretch layout-wrap flex\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/basics-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/location-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[4]},null],[4,\"if\",[[23,[\"hasSubModulePermissions\"]]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[4,\"bs-navbar\",null,[[\"type\",\"backgroundColor\",\"collapsed\",\"fluid\"],[\"light\",\"white\",false,true]],{\"statements\":[[4,\"component\",[[22,2,[\"content\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"nav\"]]],[[\"class\"],[\"layout-row layout-align-start-center\"]],{\"statements\":[[4,\"if\",[[23,[\"canViewFeatureAdministrator\"]]],null,{\"statements\":[[4,\"component\",[[22,3,[\"item\"]]],[[\"class\"],[\"mr-4\"]],{\"statements\":[[4,\"link-to\",[\"tenant-administration.feature-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"star-circle-outline\"],null],false],[0,\" Feature Management\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"canViewGroupAdministrator\"]]],null,{\"statements\":[[4,\"component\",[[22,3,[\"item\"]]],[[\"class\"],[\"mr-4\"]],{\"statements\":[[4,\"link-to\",[\"tenant-administration.group-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"group\"],null],false],[0,\" Groups & Permissions\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"canViewUserAdministrator\"]]],null,{\"statements\":[[4,\"component\",[[22,3,[\"item\"]]],null,{\"statements\":[[4,\"link-to\",[\"tenant-administration.user-manager\"],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-multiple-outline\"],null],false],[0,\" User Management\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[3]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null],[0,\"\\n\\t\\t\\t\\t\"],[1,[27,\"liquid-outlet\",null,[[\"class\"],[\"mt-1 flex\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null],[0,\"\\t\"],[10],[0,\"\\n\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/tenant-administration.hbs"
     }
@@ -11661,8 +11688,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "xw5T0x/C",
-    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Feature Manager\"],null],false],[0,\"\\n\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-start-stretch layout-wrap\"],[9],[0,\"\\n\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/tree-component\"],[[\"class\",\"model\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-40 flex-gt-lg-30 layout-row layout-align-start-stretch\",[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/main-component\"],[[\"class\",\"model\",\"breadcrumbStack\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-60 flex-gt-lg-70 layout-row layout-align-start-stretch\",[23,[\"model\"]],[23,[\"breadcrumbStack\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"],[10],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "+9i87hPH",
+    "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[0,\"\\t\"],[1,[27,\"page-title\",[\"Feature Manager\"],null],false],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-start-stretch layout-wrap\"],[9],[0,\"\\n\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/tree-component\"],[[\"class\",\"model\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-40 flex-gt-lg-30 layout-row layout-align-start-stretch\",[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/main-component\"],[[\"class\",\"model\",\"breadcrumbStack\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-60 flex-gt-lg-70 layout-row layout-align-start-stretch\",[23,[\"model\"]],[23,[\"breadcrumbStack\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/tenant-administration/feature-manager.hbs"
     }
@@ -11679,8 +11706,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "rGRH5yxo",
-    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"Group Manager\"],null],false],[0,\"\\n\"],[0,\"TODO Group Management...\\n\"]],\"hasEval\":false}",
+    "id": "XAuvpbyK",
+    "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[0,\"\\t\"],[1,[27,\"page-title\",[\"Group Manager\"],null],false],[0,\"\\n\"],[0,\"\\tTODO Group Management...\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/tenant-administration/group-manager.hbs"
     }
@@ -11697,8 +11724,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "HsJr1k7e",
-    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"page-title\",[\"User Manager\"],null],false],[0,\"\\n\"],[0,\"TODO User Management...\\n\"]],\"hasEval\":false}",
+    "id": "DC4l1KC+",
+    "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[0,\"\\t\"],[1,[27,\"page-title\",[\"User Manager\"],null],false],[0,\"\\n\"],[0,\"\\tTODO User Management...\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/tenant-administration/user-manager.hbs"
     }
@@ -12067,7 +12094,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-google-maps":{"key":"AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA","language":"en","region":"IN","protocol":"https","version":"3.34","src":"https://maps.googleapis.com/maps/api/js?v=3.34&region=IN&language=en&key=AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+448303e2"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-google-maps":{"key":"AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA","language":"en","region":"IN","protocol":"https","version":"3.34","src":"https://maps.googleapis.com/maps/api/js?v=3.34&region=IN&language=en&key=AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+bba35c83"},"emberData":{"enableRecordDataRFCBuild":false},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;
