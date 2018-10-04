@@ -153,29 +153,24 @@ class WebsocketService extends TwyrBaseService {
 				const koaRequestHandler = self.$dependencies.WebserverService.App.callback();
 
 				const twyrPrimusMiddleware = async function(request, response, next) {
-					// const ringpop = this.$dependencies.RingpopService;
-					// if(ringpop.lookup(request.tenant.tenant_id) !== ringpop.whoami()) {
-					// 	await koaRequestHandler(request, response);
-					// 	return;
-					// }
+					try {
+						const mockResponse = httpMocks.createResponse({
+							'locals': response.locals,
+							'req': request
+						});
 
-					const mockResponse = httpMocks.createResponse({
-						'locals': response.locals,
-						'req': request
-					});
+						await koaRequestHandler(request, mockResponse);
+						const responseData = JSON.parse(mockResponse._getData());
 
-					await koaRequestHandler(request, mockResponse);
-					const responseData = JSON.parse(mockResponse._getData());
+						request.headers['x-request-id'] = responseData.id;
+						request.user = responseData.user;
+						request.tenant = responseData.tenant;
 
-					request.headers['x-request-id'] = responseData.id;
-					request.user = responseData.user;
-					request.tenant = responseData.tenant;
-
-					// Object.keys(responseData['response-meta']['headers']).forEach((responseHeader) => {
-					// 	response.setHeader(responseHeader, responseData['response-meta']['headers'][responseHeader]);
-					// });
-
-					next();
+						next();
+					}
+					catch(err) {
+						throw new TwyrSrvcError(`WebsocketService::twyrPrimusMiddleware error`, err);
+					}
 				};
 
 				return twyrPrimusMiddleware;
