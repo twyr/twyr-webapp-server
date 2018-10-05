@@ -95,7 +95,7 @@
 		"koa2-formidable": "*",
 		"memory-cache": "*",
 		"moment": "^2.22.2",
-		"node-mocks-http": "1.7.2",
+		"node-mocks-http": "1.7.0",
 		"nodejs-projecthoneypot": "*",
 		"nodemailer": "^4.6.8",
 		"nodemailer-smtp-transport": "*",
