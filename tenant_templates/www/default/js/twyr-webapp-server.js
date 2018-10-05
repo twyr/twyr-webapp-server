@@ -10026,7 +10026,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/routes/tenant-administration", ["exports", "twyr-webapp-server/framework/base-route", "ember-concurrency"], function (_exports, _baseRoute, _emberConcurrency) {
+;define("twyr-webapp-server/routes/tenant-administration", ["exports", "twyr-webapp-server/framework/base-route", "ember-lifeline", "ember-concurrency"], function (_exports, _baseRoute, _emberLifeline, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -10063,7 +10063,7 @@
 
     redirect(model, transition) {
       if (transition.targetName !== `${this.get('fullRouteName')}.index`) return;
-      this.transitionTo(`${this.get('fullRouteName')}.feature-manager`);
+      (0, _emberLifeline.runTask)(this, this._redirectToSubRoute, 500);
     },
 
     onUserDataUpdated() {
@@ -10093,7 +10093,29 @@
       }
 
       this.get('controller').set('model', tenantData);
-    }).keepLatest()
+    }).keepLatest(),
+
+    _redirectToSubRoute() {
+      if (!this.get('controller.hasSubModulePermissions')) {
+        return;
+      }
+
+      if (this.get('controller.canViewFeatureAdministrator')) {
+        this.transitionTo(`${this.get('fullRouteName')}.feature-manager`);
+        return;
+      }
+
+      if (this.get('controller.canViewGroupAdministrator')) {
+        this.transitionTo(`${this.get('fullRouteName')}.group-manager`);
+        return;
+      }
+
+      if (this.get('controller.canViewUserAdministrator')) {
+        this.transitionTo(`${this.get('fullRouteName')}.user-manager`);
+        return;
+      }
+    }
+
   });
 
   _exports.default = _default;
@@ -10129,7 +10151,7 @@
       const isActive = this.get('router').get('currentRouteName').includes(this.get('fullRouteName'));
       if (!isActive) return;
 
-      if (!window.twyrUserId) {
+      if (!window.twyrTenantId) {
         this.transitionTo('index');
         return;
       }
@@ -10148,33 +10170,16 @@
   _exports.default = void 0;
 
   var _default = _baseRoute.default.extend({
-    parentController: null,
-
     init() {
       this._super(...arguments);
 
-      this.set('parentController', this.controllerFor('tenant-administration'));
-      this.get('parentController').addObserver('model', this, 'onParentModelChange');
       this.get('currentUser').on('userDataUpdated', this, 'onUserDataUpdated');
     },
 
     destroy() {
       this.get('currentUser').off('userDataUpdated', this, 'onUserDataUpdated');
-      this.get('parentController').removeObserver('model', this, 'onParentModelChange');
 
       this._super(...arguments);
-    },
-
-    setupController(controller) {
-      const parentModel = this.get('parentController.model');
-      controller.set('model', parentModel);
-    },
-
-    onParentModelChange() {
-      const parentModel = this.get('parentController.model');
-      const thisController = this.get('controller');
-      if (!thisController) return;
-      thisController.set('model', parentModel);
     },
 
     onUserDataUpdated() {
@@ -10185,7 +10190,7 @@
       const isActive = this.get('router').get('currentRouteName').includes(this.get('fullRouteName'));
       if (!isActive) return;
 
-      if (!window.twyrUserId) {
+      if (!window.twyrTenantId) {
         this.transitionTo('index');
         return;
       }
@@ -10204,33 +10209,16 @@
   _exports.default = void 0;
 
   var _default = _baseRoute.default.extend({
-    parentController: null,
-
     init() {
       this._super(...arguments);
 
-      this.set('parentController', this.controllerFor('tenant-administration'));
-      this.get('parentController').addObserver('model', this, 'onParentModelChange');
       this.get('currentUser').on('userDataUpdated', this, 'onUserDataUpdated');
     },
 
     destroy() {
       this.get('currentUser').off('userDataUpdated', this, 'onUserDataUpdated');
-      this.get('parentController').removeObserver('model', this, 'onParentModelChange');
 
       this._super(...arguments);
-    },
-
-    setupController(controller) {
-      const parentModel = this.get('parentController.model');
-      controller.set('model', parentModel);
-    },
-
-    onParentModelChange() {
-      const parentModel = this.get('parentController.model');
-      const thisController = this.get('controller');
-      if (!thisController) return;
-      thisController.set('model', parentModel);
     },
 
     onUserDataUpdated() {
@@ -10241,7 +10229,7 @@
       const isActive = this.get('router').get('currentRouteName').includes(this.get('fullRouteName'));
       if (!isActive) return;
 
-      if (!window.twyrUserId) {
+      if (!window.twyrTenantId) {
         this.transitionTo('index');
         return;
       }
