@@ -4656,11 +4656,11 @@
     init() {
       this._super(...arguments);
 
-      this.set('permissions', ['feature-administration-read']);
+      this.set('permissions', ['feature-manager-read']);
     },
 
     onHasPermissionChange: Ember.observer('hasPermission', function () {
-      const updatePerm = this.get('currentUser').hasPermission('feature-administration-update');
+      const updatePerm = this.get('currentUser').hasPermission('feature-manager-update');
       this.set('editable', updatePerm);
     }),
 
@@ -4681,25 +4681,55 @@
         } catch (err) {
           tenantFeature.rollback();
           this.get('model.tenantFeatures').addObject(tenantFeature);
+          throw err;
         }
 
-        return;
-      }
+        yield this.get('removeSubFeatures').perform(this.get('model'));
+      } else {
+        const tenant = this.get('store').peekRecord('tenant-administration/tenant', window.twyrTenantId);
+        tenantFeature = this.get('store').createRecord('tenant-administration/feature-manager/tenant-feature', {
+          'tenant': tenant,
+          'feature': this.get('model')
+        });
 
+        try {
+          this.get('model.tenantFeatures').addObject(tenantFeature);
+          yield tenantFeature.save();
+        } catch (err) {
+          this.get('model.tenantFeatures').removeObject(tenantFeature);
+          tenantFeature.deleteRecord();
+          throw err;
+        }
+
+        yield this.get('addSubFeatures').perform(this.get('model'));
+      }
+    }).drop().retryable(backoffPolicy),
+    addSubFeatures: (0, _emberConcurrency.task)(function* (serverFeature) {
       const tenant = this.get('store').peekRecord('tenant-administration/tenant', window.twyrTenantId);
-      tenantFeature = this.get('store').createRecord('tenant-administration/feature-manager/tenant-feature', {
-        'tenant': tenant,
-        'feature': this.get('model')
-      });
+      const subFeatures = yield serverFeature.get('features');
 
-      try {
-        this.get('model.tenantFeatures').addObject(tenantFeature);
-        yield tenantFeature.save();
-      } catch (err) {
-        this.get('model.tenantFeatures').removeObject(tenantFeature);
-        tenantFeature.deleteRecord();
+      for (let idx = 0; idx < subFeatures.get('length'); idx++) {
+        const subFeature = subFeatures.objectAt(idx);
+        if (subFeature.get('deploy') === 'custom') continue;
+        const tenantFeature = this.get('store').createRecord('tenant-administration/feature-manager/tenant-feature', {
+          'tenant': tenant,
+          'feature': subFeature
+        });
+        const subTenantFeatures = yield subFeature.get('tenantFeatures');
+        subTenantFeatures.addObject(tenantFeature);
+        yield this.get('addSubFeatures').perform(subFeature);
       }
-    }).drop().retryable(backoffPolicy)
+    }),
+    removeSubFeatures: (0, _emberConcurrency.task)(function* (serverFeature) {
+      const subFeatures = yield serverFeature.get('features');
+
+      for (let idx = 0; idx < subFeatures.get('length'); idx++) {
+        const subFeature = subFeatures.objectAt(idx);
+        const subTenantFeatures = yield subFeature.get('tenantFeatures');
+        subTenantFeatures.clear();
+        yield this.get('removeSubFeatures').perform(subFeature);
+      }
+    })
   });
 
   _exports.default = _default;
@@ -4716,7 +4746,7 @@
     init() {
       this._super(...arguments);
 
-      this.set('permissions', ['feature-administration-read']);
+      this.set('permissions', ['feature-manager-read']);
     },
 
     didInsertElement() {
@@ -5295,6 +5325,36 @@
         }
       });
     }).restartable()
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/components/tenant-administration/user-manager/main-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _emberConcurrency) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+  const backoffPolicy = new _exponentialBackoff.default({
+    'multiplier': 1.5,
+    'minDelay': 30,
+    'maxDelay': 400
+  });
+
+  var _default = _baseComponent.default.extend({
+    'editable': false,
+
+    init() {
+      this._super(...arguments);
+
+      this.set('permissions', ['user-manager-read']);
+    },
+
+    onHasPermissionChange: Ember.observer('hasPermission', function () {
+      const updatePerm = this.get('currentUser').hasPermission('user-manager-update');
+      this.set('editable', updatePerm);
+    })
   });
 
   _exports.default = _default;
@@ -11469,6 +11529,24 @@
 
   _exports.default = _default;
 });
+;define("twyr-webapp-server/templates/components/tenant-administration/user-manager/main-component", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = Ember.HTMLBars.template({
+    "id": "CNYt65ZV",
+    "block": "{\"symbols\":[\"card\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[0,\"\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"User Manager\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "meta": {
+      "moduleName": "twyr-webapp-server/templates/components/tenant-administration/user-manager/main-component.hbs"
+    }
+  });
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/templates/components/tenant/notification-area", ["exports"], function (_exports) {
   "use strict";
 
@@ -11712,8 +11790,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "DC4l1KC+",
-    "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[0,\"\\t\"],[1,[27,\"page-title\",[\"User Manager\"],null],false],[0,\"\\n\"],[0,\"\\tTODO User Management...\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "FkGESm+P",
+    "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[0,\"\\t\"],[1,[27,\"page-title\",[\"User Manager\"],null],false],[0,\"\\n\\t\"],[1,[27,\"component\",[\"tenant-administration/user-manager/main-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/tenant-administration/user-manager.hbs"
     }
