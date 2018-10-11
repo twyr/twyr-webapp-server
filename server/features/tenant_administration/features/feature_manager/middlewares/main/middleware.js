@@ -292,7 +292,10 @@ class Main extends TwyrBaseMiddleware {
 		try {
 			await new this.$TenantFeatureModel({
 				'tenant_feature_id': ctxt.params['tenant_feature_id']
-			}).destroy();
+			})
+			.destroy({
+				'require': false
+			});
 
 			return null;
 		}

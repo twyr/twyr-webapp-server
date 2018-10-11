@@ -531,6 +531,35 @@ $$;`
 	);
 
 	await knex.schema.withSchema('public').raw(
+`CREATE OR REPLACE FUNCTION public.fn_add_descendant_feature_to_tenant ()
+	RETURNS trigger
+	LANGUAGE plpgsql
+	VOLATILE
+	CALLED ON NULL INPUT
+	SECURITY INVOKER
+	COST 1
+	AS $$
+BEGIN
+	INSERT INTO tenants_features (
+		tenant_id,
+		module_id
+	)
+	SELECT
+		NEW.tenant_id,
+		module_id
+	FROM
+		modules
+	WHERE
+		module_id IN (SELECT module_id FROM fn_get_module_descendants(NEW.module_id) WHERE level = 2) AND
+		type = 'feature' AND
+		deploy = 'default';
+
+	RETURN NEW;
+END;
+$$;`
+	);
+
+	await knex.schema.withSchema('public').raw(
 `CREATE OR REPLACE FUNCTION public.fn_remove_descendant_feature_from_tenant ()
 	RETURNS trigger
 	LANGUAGE plpgsql
@@ -671,6 +700,7 @@ $$;`
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_assign_tenant_to_feature AFTER INSERT ON public.tenants FOR EACH ROW EXECUTE PROCEDURE public.fn_assign_features_to_new_tenants();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_assign_new_feature_permissions_to_tenant AFTER INSERT ON public.feature_permissions FOR EACH ROW EXECUTE PROCEDURE public.fn_assign_new_feature_permissions_to_tenant();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_assign_feature_permissions_to_new_tenant AFTER INSERT ON public.tenants_features FOR EACH ROW EXECUTE PROCEDURE public.fn_assign_feature_permissions_to_new_tenant();');
+	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_add_descendant_feature_to_tenant AFTER INSERT ON public.tenants_features FOR EACH ROW EXECUTE PROCEDURE public.fn_add_descendant_feature_to_tenant();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_remove_descendant_feature_from_tenant AFTER DELETE ON public.tenants_features FOR EACH ROW EXECUTE PROCEDURE public.fn_remove_descendant_feature_from_tenant();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_remove_group_permission_from_descendants AFTER DELETE ON public.tenant_group_permissions FOR EACH ROW EXECUTE PROCEDURE public.fn_remove_group_permission_from_descendants();');
 	await knex.schema.withSchema('public').raw('CREATE TRIGGER trigger_check_group_permission_upsert_is_valid BEFORE INSERT OR UPDATE ON public.tenant_group_permissions FOR EACH ROW EXECUTE PROCEDURE public.fn_check_group_permission_upsert_is_valid();');
@@ -684,6 +714,7 @@ exports.down = async function(knex) {
 	await knex.raw('DROP TRIGGER IF EXISTS trigger_assign_new_feature_permissions_to_tenant ON public.feature_permissions CASCADE;');
 	await knex.raw('DROP TRIGGER IF EXISTS trigger_assign_feature_permissions_to_new_tenant ON public.tenants_features CASCADE;');
 	await knex.raw('DROP TRIGGER IF EXISTS trigger_remove_descendant_feature_from_tenant ON public.tenants_features CASCADE;');
+	await knex.raw('DROP TRIGGER IF EXISTS trigger_add_descendant_feature_to_tenant ON public.tenants_features CASCADE;');
 	await knex.raw('DROP TRIGGER IF EXISTS trigger_check_tenant_feature_upsert_is_valid ON public.tenants_features CASCADE;');
 	await knex.raw('DROP TRIGGER IF EXISTS trigger_assign_new_feature_permissions_to_tenant ON public.feature_permissions CASCADE;');
 	await knex.raw('DROP TRIGGER IF EXISTS trigger_assign_tenant_to_feature ON public.tenants CASCADE;');
@@ -693,6 +724,7 @@ exports.down = async function(knex) {
 	await knex.raw('DROP FUNCTION IF EXISTS public.fn_check_group_permission_upsert_is_valid () CASCADE;');
 	await knex.raw('DROP FUNCTION IF EXISTS public.fn_remove_group_permission_from_descendants () CASCADE;');
 	await knex.raw('DROP FUNCTION IF EXISTS public.fn_remove_descendant_feature_from_tenant () CASCADE;');
+	await knex.raw('DROP FUNCTION IF EXISTS public.fn_add_descendant_feature_to_tenant () CASCADE;');
 	await knex.raw('DROP FUNCTION IF EXISTS public.fn_assign_feature_permissions_to_new_tenant () CASCADE;');
 	await knex.raw('DROP FUNCTION IF EXISTS public.fn_assign_new_feature_permissions_to_tenant () CASCADE;');
 	await knex.raw('DROP FUNCTION IF EXISTS public.fn_check_tenant_feature_upsert_is_valid () CASCADE;');
