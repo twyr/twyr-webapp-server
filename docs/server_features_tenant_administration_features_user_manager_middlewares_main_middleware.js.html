@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>server/features/tenant_administration/features/feature_manager/middlewares/main/middleware.js - Twyr Web Application Server</title>
+    <title>server/features/tenant_administration/features/user_manager/middlewares/main/middleware.js - Twyr Web Application Server</title>
     
     <meta name="description" content="Twyr Web Application Server" />
     
@@ -44,7 +44,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">server/features/tenant_administration/features/feature_manager/middlewares/main/middleware.js</h1>
+    <h1 class="page-title">server/features/tenant_administration/features/user_manager/middlewares/main/middleware.js</h1>
     
 
     
@@ -113,39 +113,62 @@ class Main extends TwyrBaseMiddleware {
 					'idAttribute': 'tenant_id',
 					'hasTimestamps': true,
 
-					'features': function() {
-						return this.hasMany(self.$TenantFeatureModel, 'tenant_id');
+					'users': function() {
+						return this.hasMany(self.$TenantUserModel, 'tenant_id');
 					}
 				})
 			});
 
-			Object.defineProperty(this, '$TenantFeatureModel', {
+			Object.defineProperty(this, '$TenantUserModel', {
 				'__proto__': null,
 				'configurable': true,
 
 				'value': dbSrvc.Model.extend({
-					'tableName': 'tenants_features',
-					'idAttribute': 'tenant_feature_id',
+					'tableName': 'tenants_users',
+					'idAttribute': 'tenant_user_id',
 					'hasTimestamps': true,
 
 					'tenant': function() {
 						return this.belongsTo(self.$TenantModel, 'tenant_id');
 					},
 
-					'feature': function() {
-						return this.belongsTo(self.$FeatureModel, 'module_id');
+					'user': function() {
+						return this.belongsTo(self.$UserModel, 'user_id');
 					}
 				})
 			});
 
-			Object.defineProperty(this, '$FeatureModel', {
+			Object.defineProperty(this, '$UserModel', {
 				'__proto__': null,
 				'configurable': true,
 
 				'value': dbSrvc.Model.extend({
-					'tableName': 'modules',
-					'idAttribute': 'module_id',
-					'hasTimestamps': true
+					'tableName': 'users',
+					'idAttribute': 'user_id',
+					'hasTimestamps': true,
+
+					'tenantUsers': function() {
+						return this.hasMany(self.$TenantUserModel, 'user_id');
+					},
+
+					'contacts': function() {
+						return this.hasMany(self.$UserContactModel, 'user_id');
+					}
+				})
+			});
+
+			Object.defineProperty(this, '$UserContactModel', {
+				'__proto__': null,
+				'configurable': true,
+
+				'value': dbSrvc.Model.extend({
+					'tableName': 'user_contacts',
+					'idAttribute': 'user_contact_id',
+					'hasTimestamps': true,
+
+					'user': function() {
+						return this.belongsTo(self.$UserModel, 'user_id');
+					}
 				})
 			});
 
@@ -170,8 +193,6 @@ class Main extends TwyrBaseMiddleware {
 	 */
 	async _teardown() {
 		try {
-			delete this.$FeatureModel;
-			delete this.$TenantFeatureModel;
 			delete this.$TenantModel;
 
 			await super._teardown();
@@ -188,14 +209,9 @@ class Main extends TwyrBaseMiddleware {
 		try {
 			const ApiService = this.$dependencies.ApiService;
 
-			await ApiService.add(`${this.name}::getTenantFeatureTree`, this._getTenantFeatureTree.bind(this));
-			await ApiService.add(`${this.name}::getAllTenantFeatures`, this._getAllTenantFeatures.bind(this));
-
-			await ApiService.add(`${this.name}::getTenantFeature`, this._getTenantFeature.bind(this));
-			await ApiService.add(`${this.name}::addTenantFeature`, this._addTenantFeature.bind(this));
-			await ApiService.add(`${this.name}::deleteTenantFeature`, this._deleteTenantFeature.bind(this));
-
+			await ApiService.add(`${this.name}::getAllTenantUsers`, this._getAllTenantUsers.bind(this));
 			await super._registerApis();
+
 			return null;
 		}
 		catch(err) {
@@ -207,14 +223,9 @@ class Main extends TwyrBaseMiddleware {
 		try {
 			const ApiService = this.$dependencies.ApiService;
 
-			await ApiService.remove(`${this.name}::deleteTenantFeature`, this._deleteTenantFeature.bind(this));
-			await ApiService.remove(`${this.name}::addTenantFeature`, this._addTenantFeature.bind(this));
-			await ApiService.remove(`${this.name}::getTenantFeature`, this._getTenantFeature.bind(this));
-
-			await ApiService.remove(`${this.name}::getAllTenantFeatures`, this._getAllTenantFeatures.bind(this));
-			await ApiService.remove(`${this.name}::getTenantFeatureTree`, this._getTenantFeatureTree.bind(this));
-
+			await ApiService.remove(`${this.name}::getAllTenantUsers`, this._getAllTenantUsers.bind(this));
 			await super._deregisterApis();
+
 			return null;
 		}
 		catch(err) {
@@ -224,139 +235,30 @@ class Main extends TwyrBaseMiddleware {
 	// #endregion
 
 	// #region API
-	async _getTenantFeatureTree(ctxt) {
+	async _getAllTenantUsers(ctxt) {
 		try {
-			let serverModule = this.$parent;
-			while(serverModule.$parent) serverModule = serverModule.$parent;
-
-			const configSrvc = this.$dependencies.ConfigurationService;
-			const serverModuleId = await configSrvc.getModuleID(serverModule);
-
-			const dbSrvc = this.$dependencies.DatabaseService;
-			const tenantFeatures = await dbSrvc.knex.raw(`SELECT module_id AS id, COALESCE(CAST(parent_module_id AS text), '#') AS parent, display_name AS text FROM modules WHERE module_id IN (SELECT module_id FROM fn_get_module_descendants(?) WHERE (type = 'server' OR type = 'feature') AND module_id IN (SELECT module_id FROM tenants_features WHERE tenant_id = ?))`, [serverModuleId, ctxt.state.tenant.tenant_id]);
-
-			return tenantFeatures.rows;
-		}
-		catch(err) {
-			throw new TwyrMiddlewareError(`${this.name}::_getTenantFeatureTree`, err);
-		}
-	}
-
-	async _getAllTenantFeatures(ctxt) {
-		try {
-			let tenantFeatureData = await this.$TenantFeatureModel
+			let tenantUserData = await this.$TenantUserModel
 			.query(function(qb) {
 				qb.where({ 'tenant_id': ctxt.state.tenant.tenant_id });
 			})
 			.fetchAll({
-				'withRelated': ['tenant', 'feature']
+				'withRelated': ctxt.query.include.split(',').map((related) => { return related.trim(); })
 			});
 
-			tenantFeatureData = this.$jsonApiMapper.map(tenantFeatureData, 'tenant-administration/feature-manager/tenant-feature', {
+			tenantUserData = this.$jsonApiMapper.map(tenantUserData, 'tenant-administration/user-manager/tenant-user', {
 				'typeForModel': {
 					'tenant': 'tenant-administration/tenant',
-					'feature': 'server-administration/feature'
+					'user': 'tenant-administration/user-manager/user',
+					'contacts': 'tenant-administration/user-manager/user-contact'
 				},
 
 				'enableLinks': false
 			});
 
-			delete tenantFeatureData.included;
-			return tenantFeatureData;
+			return tenantUserData;
 		}
 		catch(err) {
-			throw new TwyrMiddlewareError(`${this.name}::_getAllTenantFeatures`, err);
-		}
-	}
-
-	async _getTenantFeature(ctxt) {
-		try {
-			const TenantFeatureRecord = new this.$TenantFeatureModel({
-				'tenant_id': ctxt.state.tenant['tenant_id'],
-				'tenant_feature_id': ctxt.params['tenant_feature_id']
-			});
-
-			let tenantFeatureData = await TenantFeatureRecord.fetch({
-				'withRelated': ['tenant', 'feature']
-			});
-
-			tenantFeatureData = this.$jsonApiMapper.map(tenantFeatureData, 'tenant-administration/feature-manager/tenant-feature', {
-				'typeForModel': {
-					'tenant': 'tenant-administration/tenant',
-					'feature': 'server-administration/feature'
-				},
-
-				'enableLinks': false
-			});
-
-			delete tenantFeatureData.included;
-			return tenantFeatureData;
-		}
-		catch(err) {
-			throw new TwyrMiddlewareError(`${this.name}::_getTenantFeature`, err);
-		}
-	}
-
-	async _addTenantFeature(ctxt) {
-		try {
-			const tenantFeature = ctxt.request.body;
-
-			const jsonDeserializedData = await this.$jsonApiDeserializer.deserializeAsync(tenantFeature);
-			jsonDeserializedData['tenant_feature_id'] = jsonDeserializedData.id;
-
-			Object.keys(tenantFeature.data.relationships || {}).forEach((relationshipName) => {
-				if(!tenantFeature.data.relationships[relationshipName].data) {
-					delete jsonDeserializedData[relationshipName];
-					return;
-				}
-
-				if(!tenantFeature.data.relationships[relationshipName].data.id) {
-					delete jsonDeserializedData[relationshipName];
-					return;
-				}
-
-				jsonDeserializedData[`${relationshipName}_id`] = tenantFeature.data.relationships[relationshipName].data.id;
-			});
-
-			jsonDeserializedData['module_id'] = jsonDeserializedData['feature_id'];
-
-			delete jsonDeserializedData.id;
-			delete jsonDeserializedData.feature_id;
-			delete jsonDeserializedData.created_at;
-			delete jsonDeserializedData.updated_at;
-
-			const savedRecord = await this.$TenantFeatureModel
-				.forge()
-				.save(jsonDeserializedData, {
-					'method': 'insert',
-					'patch': false
-				});
-
-			return {
-				'data': {
-					'type': tenantFeature.data.type,
-					'id': savedRecord.get('tenant_feature_id')
-				}
-			};
-		}
-		catch(err) {
-			throw new TwyrMiddlewareError(`${this.name}::_addTenantFeature`, err);
-		}
-	}
-
-	async _deleteTenantFeature(ctxt) {
-		try {
-			await new this.$TenantFeatureModel({
-				'tenant_feature_id': ctxt.params['tenant_feature_id']
-			})
-			.destroy({
-				'require': false
-			});
-
-			return null;
-		}
-		catch(err) {
-			throw new TwyrMiddlewareError(`${this.name}::_deleteTenantFeature`, err);
+			throw new TwyrMiddlewareError(`${this.name}::_getAllTenantUsers`, err);
 		}
 	}
 	// #endregion
