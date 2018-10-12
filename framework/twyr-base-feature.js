@@ -244,7 +244,7 @@ class TwyrBaseFeature extends TwyrBaseModule {
 				}
 
 				const doesUserHavePermission = ctxt.state.user.permissions.filter((userPerm) => {
-					return ((userPerm.name === 'super-administrator') || (userPerm.name === permission));
+					return (userPerm.name === permission);
 				}).length;
 
 				if(doesUserHavePermission) {

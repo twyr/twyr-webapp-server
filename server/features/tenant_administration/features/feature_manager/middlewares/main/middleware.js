@@ -209,7 +209,7 @@ class Main extends TwyrBaseMiddleware {
 			return tenantFeatureData;
 		}
 		catch(err) {
-			throw new TwyrMiddlewareError(`${this.name}::_getTenantFeatureTree`, err);
+			throw new TwyrMiddlewareError(`${this.name}::_getAllTenantFeatures`, err);
 		}
 	}
 
