@@ -39660,3 +39660,6 @@ md-input-container .md-input {
 div.md-dialog-container {
   top: 60px;
   height: calc(100% - 75px); }
+
+.mdi-icon {
+  color: var(--foreground-2); }

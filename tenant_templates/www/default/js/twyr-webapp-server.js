@@ -5302,18 +5302,13 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/components/tenant-administration/user-manager/main-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _emberConcurrency) {
+;define("twyr-webapp-server/components/tenant-administration/user-manager/main-component", ["exports", "twyr-webapp-server/framework/base-component"], function (_exports, _baseComponent) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
     value: true
   });
   _exports.default = void 0;
-  const backoffPolicy = new _exponentialBackoff.default({
-    'multiplier': 1.5,
-    'minDelay': 30,
-    'maxDelay': 400
-  });
 
   var _default = _baseComponent.default.extend({
     'editable': false,
@@ -5597,11 +5592,16 @@
   var _default = _baseComponent.default.extend(_emberInvokeAction.InvokeActionMixin, {
     themeInstance: null,
     _messages: null,
+    _customIcons: null,
 
     init() {
       this.set('_messages', {
         searchLabel: 'Filter: ',
         tableSummary: 'Showing %@ - %@ of %@'
+      });
+      this.set('_customIcons', {
+        'sort-asc': 'fas fa-sort-up',
+        'sort-desc': 'fas fa-sort-down'
       });
 
       this._super(...arguments);
@@ -5610,8 +5610,8 @@
     onWillInsertElement: (0, _emberConcurrency.task)(function* () {
       const mergedMessages = Object.assign({}, this.get('_messages'), this.get('messages') || {});
       this.set('themeInstance', _bootstrap.default.create({
-        'table': 'm-0 p-0 table table-hover table-condensed',
-        'globalFilterWrapper': 'float-right pr-2 mb-2',
+        'table': 'table table-hover table-condensed',
+        'globalFilterWrapper': 'float-right',
         'messages': mergedMessages
       }));
       if (!this.get('editEnabled') && !this.get('inlineEditEnabled')) return;
@@ -11652,8 +11652,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "fu+8r0L/",
-    "block": "{\"symbols\":[\"card\",\"table\",\"body\",\"tenantUser\",\"row\",\"head\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[0,\"\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"User Manager\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"user.email\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,2,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"user.email\"]],{\"statements\":[[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"user.firstName\"]],{\"statements\":[[0,\"First Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"user.lastName\"]],{\"statements\":[[0,\"Last Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"accessStatus\"]],{\"statements\":[[0,\"Access\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null],[4,\"component\",[[22,2,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,2,[\"sortDesc\"]],[23,[\"model\"]]],null]],null,{\"statements\":[[4,\"component\",[[22,3,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"user\",\"email\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"user\",\"firstName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"user\",\"lastName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[27,\"titleize\",[[22,4,[\"accessStatus\"]]],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "jHTHJMDJ",
+    "block": "{\"symbols\":[\"card\",\"table\",\"body\",\"tenantUser\",\"row\",\"head\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[0,\"\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"User Manager\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"user.email\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,2,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"user.email\"]],{\"statements\":[[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"user.firstName\"]],{\"statements\":[[0,\"First Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"user.lastName\"]],{\"statements\":[[0,\"Last Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"accessStatus\"]],{\"statements\":[[0,\"Access Status\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Actions\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[6]},null],[4,\"component\",[[22,2,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,2,[\"sortDesc\"]],[23,[\"model\"]]],null]],null,{\"statements\":[[4,\"component\",[[22,3,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"user\",\"email\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"user\",\"firstName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"user\",\"lastName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[27,\"titleize\",[[22,4,[\"accessStatus\"]]],null],false]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[7,\"span\"],[11,\"class\",\"mr-3\"],[11,\"style\",\"cursor:pointer;\"],[11,\"title\",\"Reset Password\"],[9],[1,[27,\"mdi-icon\",[\"lock-reset\"],null],false],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"span\"],[11,\"class\",\"mr-3\"],[11,\"style\",\"cursor:pointer;\"],[11,\"title\",\"Edit Account\"],[9],[1,[27,\"mdi-icon\",[\"account-edit\"],null],false],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"span\"],[11,\"class\",\"mr-3\"],[11,\"style\",\"cursor:pointer;\"],[11,\"title\",\"Clone Account\"],[9],[1,[27,\"mdi-icon\",[\"account-switch\"],null],false],[10],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[7,\"span\"],[11,\"style\",\"cursor:pointer;\"],[11,\"title\",\"Delete Account\"],[9],[1,[27,\"mdi-icon\",[\"account-remove\"],null],false],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[5]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/user-manager/main-component.hbs"
     }
@@ -11760,8 +11760,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "kYhYca3E",
-    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"models-table\",null,[[\"data\",\"columns\",\"columnComponents\",\"themeInstance\",\"expandedItems\",\"expandedRowComponent\",\"multipleExpand\",\"selectedItems\",\"multipleSelect\",\"filteringIgnoreCase\",\"multipleColumnsSorting\",\"showComponentFooter\",\"showGlobalFilter\",\"showPageSize\",\"useFilteringByColumns\",\"useNumericPagination\",\"showColumnsDropdown\",\"displayDataChangedAction\"],[[23,[\"data\"]],[23,[\"columns\"]],[27,\"assign\",[[23,[\"columnComponents\"]],[27,\"hash\",null,[[\"twyrModelTableActions\"],[[27,\"component\",[\"twyr-model-table-actions\"],[[\"callbacks\",\"expandedRowComponent\",\"inlineEditEnabled\"],[[23,[\"callbacks\"]],[23,[\"expandedRowComponent\"]],[23,[\"inlineEditEnabled\"]]]]]]]]],null],[23,[\"themeInstance\"]],[23,[\"expandedItems\"]],[23,[\"expandedRowComponent\"]],[23,[\"multipleExpand\"]],[23,[\"selectedItems\"]],[23,[\"multipleSelect\"]],true,true,true,true,true,false,true,false,[27,\"action\",[[22,0,[]],\"controller-action\",\"displayDataChanged\"],null]]]],false],[0,\"\\n\"]],\"hasEval\":false}",
+    "id": "6ZzYfTae",
+    "block": "{\"symbols\":[],\"statements\":[[1,[27,\"models-table\",null,[[\"data\",\"columns\",\"columnComponents\",\"themeInstance\",\"customIcons\",\"expandedItems\",\"expandedRowComponent\",\"multipleExpand\",\"selectedItems\",\"multipleSelect\",\"doFilteringByHiddenColumns\",\"filteringIgnoreCase\",\"multipleColumnsSorting\",\"showComponentFooter\",\"showGlobalFilter\",\"showPageSize\",\"useFilteringByColumns\",\"useNumericPagination\",\"showColumnsDropdown\",\"displayDataChangedAction\"],[[23,[\"data\"]],[23,[\"columns\"]],[27,\"assign\",[[23,[\"columnComponents\"]],[27,\"hash\",null,[[\"twyrModelTableActions\"],[[27,\"component\",[\"twyr-model-table-actions\"],[[\"callbacks\",\"expandedRowComponent\",\"inlineEditEnabled\"],[[23,[\"callbacks\"]],[23,[\"expandedRowComponent\"]],[23,[\"inlineEditEnabled\"]]]]]]]]],null],[23,[\"themeInstance\"]],[23,[\"_customIcons\"]],[23,[\"expandedItems\"]],[23,[\"expandedRowComponent\"]],[23,[\"multipleExpand\"]],[23,[\"selectedItems\"]],[23,[\"multipleSelect\"]],false,true,true,true,true,true,false,true,false,[27,\"action\",[[22,0,[]],\"controller-action\",\"displayDataChanged\"],null]]]],false],[0,\"\\n\"]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/twyr-model-table.hbs"
     }
