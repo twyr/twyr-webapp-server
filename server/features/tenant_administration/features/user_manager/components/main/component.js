@@ -41,7 +41,10 @@ class Main extends TwyrBaseComponent {
 	 */
 	async _addRoutes() {
 		try {
+			this.$router.post('/resetPassword', this.$parent._rbac('user-manager-read'), this._resetUserPassword.bind(this));
+
 			this.$router.get('/tenant-users', this.$parent._rbac('user-manager-read'), this._getTenantUsers.bind(this));
+			this.$router.patch('/tenant-users/:tenantUserId', this.$parent._rbac('user-manager-update'), this._updateTenantUser.bind(this));
 
 			await super._addRoutes();
 			return null;
@@ -53,6 +56,21 @@ class Main extends TwyrBaseComponent {
 	// #endregion
 
 	// #region Route Handlers
+	async _resetUserPassword(ctxt) {
+		try {
+			const apiSrvc = this.$dependencies.ApiService;
+			const resetPasswordStatus = await apiSrvc.execute('Main::resetUserPassword', ctxt);
+
+			ctxt.status = 200;
+			ctxt.body = resetPasswordStatus.shift();
+
+			return null;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error resetting user password`, err);
+		}
+	}
+
 	async _getTenantUsers(ctxt) {
 		try {
 			const apiSrvc = this.$dependencies.ApiService;
@@ -65,6 +83,21 @@ class Main extends TwyrBaseComponent {
 		}
 		catch(err) {
 			throw new TwyrComponentError(`Error retrieving tenant users`, err);
+		}
+	}
+
+	async _updateTenantUser(ctxt) {
+		try {
+			const apiSrvc = this.$dependencies.ApiService;
+			const status = await apiSrvc.execute('Main::updateTenantUser', ctxt);
+
+			ctxt.status = 200;
+			ctxt.body = status.shift();
+
+			return null;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error updating tenant user`, err);
 		}
 	}
 	// #endregion

@@ -153,9 +153,11 @@ class Main extends TwyrBaseMiddleware {
 		try {
 			const ApiService = this.$dependencies.ApiService;
 
+			await ApiService.add(`${this.name}::resetUserPassword`, this._resetUserPassword.bind(this));
 			await ApiService.add(`${this.name}::getAllTenantUsers`, this._getAllTenantUsers.bind(this));
-			await super._registerApis();
+			await ApiService.add(`${this.name}::updateTenantUser`, this._updateTenantUser.bind(this));
 
+			await super._registerApis();
 			return null;
 		}
 		catch(err) {
@@ -167,9 +169,11 @@ class Main extends TwyrBaseMiddleware {
 		try {
 			const ApiService = this.$dependencies.ApiService;
 
+			await ApiService.remove(`${this.name}::updateTenantUser`, this._updateTenantUser.bind(this));
 			await ApiService.remove(`${this.name}::getAllTenantUsers`, this._getAllTenantUsers.bind(this));
-			await super._deregisterApis();
+			await ApiService.remove(`${this.name}::resetUserPassword`, this._resetUserPassword.bind(this));
 
+			await super._deregisterApis();
 			return null;
 		}
 		catch(err) {
@@ -179,6 +183,43 @@ class Main extends TwyrBaseMiddleware {
 	// #endregion
 
 	// #region API
+	async _resetUserPassword(ctxt) {
+		const dbSrvc = this.$dependencies.DatabaseService;
+
+		const userEmail = await dbSrvc.knex.raw(`SELECT email FROM users WHERE user_id = ?`, [ctxt.request.body.user]);
+		if(!userEmail.rows.length) throw new TwyrMiddlewareError(`Invalid User: ${ctxt.request.body.user}`);
+
+		const uuid = require('uuid/v4');
+		const upash = require('upash');
+
+		if(ctxt.request.body.generate === 'true') { // eslint-disable-line curly
+			try {
+				const RandomOrg = require('random-org');
+				const random = new RandomOrg(this.$config.randomServer);
+
+				const randomPasswordResponse = await random.generateStrings(this.$config.passwordFormat);
+				ctxt.request.body.password = randomPasswordResponse.random.data.pop();
+			}
+			catch(err) {
+				console.error(err.message);
+				ctxt.request.body.password = uuid().toString().replace(/-/g, '');
+			}
+		}
+
+		const hashedPassword = await upash.hash(ctxt.request.body.password);
+		await dbSrvc.knex.raw(`UPDATE users SET password = ? WHERE user_id = ?`, [hashedPassword, ctxt.request.body.user]);
+
+		const messageOptions = JSON.parse(JSON.stringify(this.$config.resetPasswordMail));
+		messageOptions['to'] = userEmail.rows[0]['email'];
+		messageOptions['text'] = `Your new password on Twyr is ${ctxt.request.body.password}`;
+
+		const mailerSrvc = this.$dependencies.MailerService;
+		const sendMailResult = await mailerSrvc.sendMail(messageOptions);
+
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`Message Options: ${JSON.stringify(messageOptions, null, '\t')}\nSend Mail Result: ${JSON.stringify(sendMailResult, null, '\t')}`);
+		return { 'status': true };
+	}
+
 	async _getAllTenantUsers(ctxt) {
 		try {
 			let tenantUserData = await this.$TenantUserModel
@@ -205,9 +246,53 @@ class Main extends TwyrBaseMiddleware {
 			throw new TwyrMiddlewareError(`${this.name}::_getAllTenantUsers`, err);
 		}
 	}
+
+	async _updateTenantUser(ctxt) {
+		try {
+			const TenantUserRecord = new this.$TenantUserModel({
+				'tenant_user_id': ctxt.params.tenantUserId
+			});
+
+			const tenantUserData = await TenantUserRecord
+			.query(function(qb) {
+				qb.where({ 'tenant_id': ctxt.state.tenant.tenant_id });
+			})
+			.fetch();
+
+			if(!tenantUserData) throw new Error(`Invalid record id`);
+
+			const jsonDeserializedData = await this.$jsonApiDeserializer.deserializeAsync(ctxt.request.body);
+
+			jsonDeserializedData['tenant_user_id'] = jsonDeserializedData['id'];
+			delete jsonDeserializedData['id'];
+
+			const savedRecord = await tenantUserData
+			.save(jsonDeserializedData, {
+				'method': 'update',
+				'patch': true
+			});
+
+			return {
+				'data': {
+					'type': ctxt.request.body.data.type,
+					'id': savedRecord.get('tenant_user_id')
+				}
+			};
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_updateTenantUser`, err);
+		}
+	}
 	// #endregion
 
 	// #region Properties
+	/**
+	 * @override
+	 */
+	get dependencies() {
+		return ['MailerService'].concat(super.dependencies);
+	}
+
 	/**
 	 * @override
 	 */
