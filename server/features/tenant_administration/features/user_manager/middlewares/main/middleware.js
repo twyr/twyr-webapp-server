@@ -157,6 +157,9 @@ class Main extends TwyrBaseMiddleware {
 			await ApiService.add(`${this.name}::getAllTenantUsers`, this._getAllTenantUsers.bind(this));
 			await ApiService.add(`${this.name}::updateTenantUser`, this._updateTenantUser.bind(this));
 
+			await ApiService.add(`${this.name}::getUser`, this._getUser.bind(this));
+			await ApiService.add(`${this.name}::updateUser`, this._updateUser.bind(this));
+
 			await super._registerApis();
 			return null;
 		}
@@ -168,6 +171,9 @@ class Main extends TwyrBaseMiddleware {
 	async _deregisterApis() {
 		try {
 			const ApiService = this.$dependencies.ApiService;
+
+			await ApiService.remove(`${this.name}::getUser`, this._getUser.bind(this));
+			await ApiService.remove(`${this.name}::updateUser`, this._updateUser.bind(this));
 
 			await ApiService.remove(`${this.name}::updateTenantUser`, this._updateTenantUser.bind(this));
 			await ApiService.remove(`${this.name}::getAllTenantUsers`, this._getAllTenantUsers.bind(this));
@@ -224,7 +230,9 @@ class Main extends TwyrBaseMiddleware {
 		try {
 			let tenantUserData = await this.$TenantUserModel
 			.query(function(qb) {
-				qb.where({ 'tenant_id': ctxt.state.tenant.tenant_id });
+				qb
+				.where({ 'tenant_id': ctxt.state.tenant.tenant_id })
+				.andWhere('user_id', '<>', 'ffffffff-ffff-4fff-ffff-ffffffffffff');
 			})
 			.fetchAll({
 				'withRelated': ctxt.query.include.split(',').map((related) => { return related.trim(); })
@@ -281,6 +289,74 @@ class Main extends TwyrBaseMiddleware {
 		}
 		catch(err) {
 			throw new TwyrMiddlewareError(`${this.name}::_updateTenantUser`, err);
+		}
+	}
+
+	async _getUser(ctxt) {
+		try {
+			const TenantUserRecord = new this.$TenantUserModel({
+				'tenant_user_id': ctxt.params.tenantUserId
+			});
+
+			const tenantUserData = await TenantUserRecord
+			.query(function(qb) {
+				qb.where({ 'tenant_id': ctxt.state.tenant.tenant_id });
+			})
+			.fetch();
+
+			const UserRecord = new this.$UserModel({
+				'user_id': tenantUserData.get('user_id')
+			});
+
+			let userData = await UserRecord.fetch();
+			userData = this.$jsonApiMapper.map(userData, 'tenant-administration/user-manager/users', {
+				'enableLinks': false
+			});
+
+			delete userData.data.attributes.password;
+			userData.data.attributes['middle_names'] = userData.data.attributes['middle_names'] || '';
+
+			return userData;
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_getUser`, err);
+		}
+	}
+
+	async _updateUser(ctxt) {
+		try {
+			const user = ctxt.request.body;
+
+			delete user.data.relationships;
+			delete user.included;
+
+			const jsonDeserializedData = await this.$jsonApiDeserializer.deserializeAsync(user);
+			jsonDeserializedData['user_id'] = jsonDeserializedData.id;
+
+			delete jsonDeserializedData.id;
+			delete jsonDeserializedData.email;
+			delete jsonDeserializedData.created_at;
+			delete jsonDeserializedData.updated_at;
+
+			const savedRecord = await this.$UserModel
+				.forge()
+				.save(jsonDeserializedData, {
+					'method': 'update',
+					'patch': true
+				});
+
+			const cacheSrvc = this.$dependencies['CacheService'];
+			await cacheSrvc.delAsync(`twyr!webapp!user!${jsonDeserializedData['user_id']}!basics`);
+
+			return {
+				'data': {
+					'type': user.data.type,
+					'id': savedRecord.get('user_id')
+				}
+			};
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_updateUser`, err);
 		}
 	}
 	// #endregion

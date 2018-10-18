@@ -46,6 +46,10 @@ class Main extends TwyrBaseComponent {
 			this.$router.get('/tenant-users', this.$parent._rbac('user-manager-read'), this._getTenantUsers.bind(this));
 			this.$router.patch('/tenant-users/:tenantUserId', this.$parent._rbac('user-manager-update'), this._updateTenantUser.bind(this));
 
+			this.$router.get('/get-image/:tenantUserId', this.$parent._rbac('user-manager-read'), this._getTenantUserImage.bind(this));
+			this.$router.post('/upload-image/:tenantUserId', this.$parent._rbac('user-manager-update'), this._updateTenantUserImage.bind(this));
+			this.$router.patch('/users/:userId', this.$parent._rbac('user-manager-update'), this._updateUser.bind(this));
+
 			await super._addRoutes();
 			return null;
 		}
@@ -98,6 +102,104 @@ class Main extends TwyrBaseComponent {
 		}
 		catch(err) {
 			throw new TwyrComponentError(`Error updating tenant user`, err);
+		}
+	}
+
+	async _getTenantUserImage(ctxt) {
+		try {
+			const path = require('path');
+			const send = require('koa-send');
+
+			const apiSrvc = this.$dependencies.ApiService;
+
+			let userData = await apiSrvc.execute('Main::getUser', ctxt);
+			userData = userData.shift();
+
+			const profileImageFolder = this.$parent.$config.profileImagePath;
+			const profileImagePath = path.join(profileImageFolder, `${userData.data.attributes.profile_image}.png`);
+			const profileImageExists = await this._exists(profileImagePath);
+
+			if(profileImageExists)
+				await send(ctxt, profileImagePath);
+			else
+				await send(ctxt, path.join(profileImageFolder, 'anonymous.jpg'));
+
+			return null;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error retrieving user image`, err);
+		}
+	}
+
+	async _updateTenantUserImage(ctxt) {
+		try {
+			const fs = require('fs');
+			const path = require('path');
+			const promises = require('bluebird');
+			const uuid = require('uuid/v4');
+
+			const filesystem = promises.promisifyAll(fs);
+
+			const apiSrvc = this.$dependencies.ApiService;
+
+			let userData = await apiSrvc.execute('Main::getUser', ctxt);
+			userData = userData.shift();
+
+			const currentImageId = userData.data.attributes.profile_image,
+				image = ctxt.request.body.image.replace(/' '/g, '+').replace('data:image/png;base64,', ''),
+				imageId = uuid().toString();
+
+			let profileImageFolder = this.$parent.$config.profileImagePath;
+			if(!path.isAbsolute(profileImageFolder)) profileImageFolder = path.join(path.dirname(path.dirname(require.main.filename)), profileImageFolder);
+
+			const profileImagePath = path.join(profileImageFolder, `${imageId}.png`);
+			await filesystem.writeFileAsync(profileImagePath, Buffer.from(image, 'base64'));
+
+			ctxt.request.body = {
+				'data': {
+					'id': ctxt.params.tenantUserId,
+					'type': 'tenant-administration/user-manager/user',
+					'attributes': {
+						'profile_image': imageId,
+						'profile_image_metadata': ctxt.request.body.metadata
+					}
+				}
+			};
+
+			userData = await apiSrvc.execute('Main::updateUser', ctxt);
+			userData = userData.shift();
+
+			ctxt.status = 200;
+			ctxt.body = {
+				'status': true,
+				'responseText': 'Profile Image Updated succesfully'
+			};
+
+			if(!currentImageId) return null;
+			if(currentImageId === 'f8a9da32-26c5-495a-be9a-42f2eb8e4ed1') return null;
+
+			const currentImageExists = await this._exists(path.join(profileImageFolder, `${currentImageId}.png`));
+			if(currentImageExists) await filesystem.unlinkAsync(path.join(profileImageFolder, `${currentImageId}.png`));
+
+			return null;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error updating user image`, err);
+		}
+	}
+
+	async _updateUser(ctxt) {
+		try {
+			const apiSrvc = this.$dependencies.ApiService;
+
+			let updateStatus = await apiSrvc.execute('Main::updateUser', ctxt);
+			updateStatus = updateStatus.shift();
+
+			ctxt.status = 200;
+			ctxt.body = updateStatus;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error updating user`, err);
 		}
 	}
 	// #endregion
