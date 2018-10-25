@@ -209,9 +209,14 @@ class Main extends TwyrBaseMiddleware {
 		try {
 			const ApiService = this.$dependencies.ApiService;
 
+			await ApiService.add(`${this.name}::resetUserPassword`, this._resetUserPassword.bind(this));
 			await ApiService.add(`${this.name}::getAllTenantUsers`, this._getAllTenantUsers.bind(this));
-			await super._registerApis();
+			await ApiService.add(`${this.name}::updateTenantUser`, this._updateTenantUser.bind(this));
 
+			await ApiService.add(`${this.name}::getUser`, this._getUser.bind(this));
+			await ApiService.add(`${this.name}::updateUser`, this._updateUser.bind(this));
+
+			await super._registerApis();
 			return null;
 		}
 		catch(err) {
@@ -223,9 +228,14 @@ class Main extends TwyrBaseMiddleware {
 		try {
 			const ApiService = this.$dependencies.ApiService;
 
-			await ApiService.remove(`${this.name}::getAllTenantUsers`, this._getAllTenantUsers.bind(this));
-			await super._deregisterApis();
+			await ApiService.remove(`${this.name}::getUser`, this._getUser.bind(this));
+			await ApiService.remove(`${this.name}::updateUser`, this._updateUser.bind(this));
 
+			await ApiService.remove(`${this.name}::updateTenantUser`, this._updateTenantUser.bind(this));
+			await ApiService.remove(`${this.name}::getAllTenantUsers`, this._getAllTenantUsers.bind(this));
+			await ApiService.remove(`${this.name}::resetUserPassword`, this._resetUserPassword.bind(this));
+
+			await super._deregisterApis();
 			return null;
 		}
 		catch(err) {
@@ -235,11 +245,50 @@ class Main extends TwyrBaseMiddleware {
 	// #endregion
 
 	// #region API
+	async _resetUserPassword(ctxt) {
+		const dbSrvc = this.$dependencies.DatabaseService;
+
+		const userEmail = await dbSrvc.knex.raw(`SELECT email FROM users WHERE user_id = ?`, [ctxt.request.body.user]);
+		if(!userEmail.rows.length) throw new TwyrMiddlewareError(`Invalid User: ${ctxt.request.body.user}`);
+
+		const uuid = require('uuid/v4');
+		const upash = require('upash');
+
+		if(ctxt.request.body.generate === 'true') { // eslint-disable-line curly
+			try {
+				const RandomOrg = require('random-org');
+				const random = new RandomOrg(this.$config.randomServer);
+
+				const randomPasswordResponse = await random.generateStrings(this.$config.passwordFormat);
+				ctxt.request.body.password = randomPasswordResponse.random.data.pop();
+			}
+			catch(err) {
+				console.error(err.message);
+				ctxt.request.body.password = uuid().toString().replace(/-/g, '');
+			}
+		}
+
+		const hashedPassword = await upash.hash(ctxt.request.body.password);
+		await dbSrvc.knex.raw(`UPDATE users SET password = ? WHERE user_id = ?`, [hashedPassword, ctxt.request.body.user]);
+
+		const messageOptions = JSON.parse(JSON.stringify(this.$config.resetPasswordMail));
+		messageOptions['to'] = userEmail.rows[0]['email'];
+		messageOptions['text'] = `Your new password on Twyr is ${ctxt.request.body.password}`;
+
+		const mailerSrvc = this.$dependencies.MailerService;
+		const sendMailResult = await mailerSrvc.sendMail(messageOptions);
+
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`Message Options: ${JSON.stringify(messageOptions, null, '\t')}\nSend Mail Result: ${JSON.stringify(sendMailResult, null, '\t')}`);
+		return { 'status': true };
+	}
+
 	async _getAllTenantUsers(ctxt) {
 		try {
 			let tenantUserData = await this.$TenantUserModel
 			.query(function(qb) {
-				qb.where({ 'tenant_id': ctxt.state.tenant.tenant_id });
+				qb
+				.where({ 'tenant_id': ctxt.state.tenant.tenant_id })
+				.andWhere('user_id', '&lt;>', 'ffffffff-ffff-4fff-ffff-ffffffffffff');
 			})
 			.fetchAll({
 				'withRelated': ctxt.query.include.split(',').map((related) => { return related.trim(); })
@@ -261,9 +310,121 @@ class Main extends TwyrBaseMiddleware {
 			throw new TwyrMiddlewareError(`${this.name}::_getAllTenantUsers`, err);
 		}
 	}
+
+	async _updateTenantUser(ctxt) {
+		try {
+			const TenantUserRecord = new this.$TenantUserModel({
+				'tenant_user_id': ctxt.params.tenantUserId
+			});
+
+			const tenantUserData = await TenantUserRecord
+			.query(function(qb) {
+				qb.where({ 'tenant_id': ctxt.state.tenant.tenant_id });
+			})
+			.fetch();
+
+			if(!tenantUserData) throw new Error(`Invalid record id`);
+
+			const jsonDeserializedData = await this.$jsonApiDeserializer.deserializeAsync(ctxt.request.body);
+
+			jsonDeserializedData['tenant_user_id'] = jsonDeserializedData['id'];
+			delete jsonDeserializedData['id'];
+
+			const savedRecord = await tenantUserData
+			.save(jsonDeserializedData, {
+				'method': 'update',
+				'patch': true
+			});
+
+			return {
+				'data': {
+					'type': ctxt.request.body.data.type,
+					'id': savedRecord.get('tenant_user_id')
+				}
+			};
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_updateTenantUser`, err);
+		}
+	}
+
+	async _getUser(ctxt) {
+		try {
+			const TenantUserRecord = new this.$TenantUserModel({
+				'tenant_user_id': ctxt.params.tenantUserId
+			});
+
+			const tenantUserData = await TenantUserRecord
+			.query(function(qb) {
+				qb.where({ 'tenant_id': ctxt.state.tenant.tenant_id });
+			})
+			.fetch();
+
+			const UserRecord = new this.$UserModel({
+				'user_id': tenantUserData.get('user_id')
+			});
+
+			let userData = await UserRecord.fetch();
+			userData = this.$jsonApiMapper.map(userData, 'tenant-administration/user-manager/users', {
+				'enableLinks': false
+			});
+
+			delete userData.data.attributes.password;
+			userData.data.attributes['middle_names'] = userData.data.attributes['middle_names'] || '';
+
+			return userData;
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_getUser`, err);
+		}
+	}
+
+	async _updateUser(ctxt) {
+		try {
+			const user = ctxt.request.body;
+
+			delete user.data.relationships;
+			delete user.included;
+
+			const jsonDeserializedData = await this.$jsonApiDeserializer.deserializeAsync(user);
+			jsonDeserializedData['user_id'] = jsonDeserializedData.id;
+
+			delete jsonDeserializedData.id;
+			delete jsonDeserializedData.email;
+			delete jsonDeserializedData.created_at;
+			delete jsonDeserializedData.updated_at;
+
+			const savedRecord = await this.$UserModel
+				.forge()
+				.save(jsonDeserializedData, {
+					'method': 'update',
+					'patch': true
+				});
+
+			const cacheSrvc = this.$dependencies['CacheService'];
+			await cacheSrvc.delAsync(`twyr!webapp!user!${jsonDeserializedData['user_id']}!basics`);
+
+			return {
+				'data': {
+					'type': user.data.type,
+					'id': savedRecord.get('user_id')
+				}
+			};
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_updateUser`, err);
+		}
+	}
 	// #endregion
 
 	// #region Properties
+	/**
+	 * @override
+	 */
+	get dependencies() {
+		return ['MailerService'].concat(super.dependencies);
+	}
+
 	/**
 	 * @override
 	 */

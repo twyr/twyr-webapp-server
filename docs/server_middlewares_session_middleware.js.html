@@ -148,13 +148,7 @@ class Session extends TwyrBaseMiddleware {
 		const mailerSrvc = this.$dependencies.MailerService;
 		const sendMailResult = await mailerSrvc.sendMail(messageOptions);
 
-		// const auditSrvc = this.$dependencies.AuditService;
-		// await auditSrvc.publish({
-		// 	'id': ctxt.state.id,
-		// 	'messageId': sendMailResult.messageId
-		// });
-
-		console.log(`Send Mail Result: ${JSON.stringify(sendMailResult, null, '\t')}`);
+		if(twyrEnv === 'development' || twyrEnv === 'test') console.log(`Message Options: ${JSON.stringify(messageOptions, null, '\t')}\nSend Mail Result: ${JSON.stringify(sendMailResult, null, '\t')}`);
 		return true;
 	}
 	// #endregion
