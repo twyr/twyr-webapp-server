@@ -155,8 +155,10 @@ class Main extends TwyrBaseMiddleware {
 
 			await ApiService.add(`${this.name}::resetUserPassword`, this._resetUserPassword.bind(this));
 			await ApiService.add(`${this.name}::getAllTenantUsers`, this._getAllTenantUsers.bind(this));
+			await ApiService.add(`${this.name}::getTenantUser`, this._getTenantUser.bind(this));
 			await ApiService.add(`${this.name}::updateTenantUser`, this._updateTenantUser.bind(this));
 
+			await ApiService.add(`${this.name}::getUserFromTenantUser`, this._getUserFromTenantUser.bind(this));
 			await ApiService.add(`${this.name}::getUser`, this._getUser.bind(this));
 			await ApiService.add(`${this.name}::updateUser`, this._updateUser.bind(this));
 
@@ -172,10 +174,12 @@ class Main extends TwyrBaseMiddleware {
 		try {
 			const ApiService = this.$dependencies.ApiService;
 
-			await ApiService.remove(`${this.name}::getUser`, this._getUser.bind(this));
 			await ApiService.remove(`${this.name}::updateUser`, this._updateUser.bind(this));
+			await ApiService.remove(`${this.name}::getUser`, this._getUser.bind(this));
+			await ApiService.remove(`${this.name}::getUserFromTenantUser`, this._getUser.bind(this));
 
 			await ApiService.remove(`${this.name}::updateTenantUser`, this._updateTenantUser.bind(this));
+			await ApiService.remove(`${this.name}::getTenantUser`, this._getTenantUser.bind(this));
 			await ApiService.remove(`${this.name}::getAllTenantUsers`, this._getAllTenantUsers.bind(this));
 			await ApiService.remove(`${this.name}::resetUserPassword`, this._resetUserPassword.bind(this));
 
@@ -255,6 +259,33 @@ class Main extends TwyrBaseMiddleware {
 		}
 	}
 
+	async _getTenantUser(ctxt) {
+		try {
+			let tenantUserData = await this.$TenantUserModel
+			.query(function(qb) {
+				qb
+				.where('tenant_user_id', '=', ctxt.params.tenantUserId)
+				.andWhere({ 'tenant_id': ctxt.state.tenant.tenant_id });
+			})
+			.fetch();
+
+			tenantUserData = this.$jsonApiMapper.map(tenantUserData, 'tenant-administration/user-manager/tenant-user', {
+				'typeForModel': {
+					'tenant': 'tenant-administration/tenant',
+					'user': 'tenant-administration/user-manager/user',
+					'contacts': 'tenant-administration/user-manager/user-contact'
+				},
+
+				'enableLinks': false
+			});
+
+			return tenantUserData;
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_getTenantUser`, err);
+		}
+	}
+
 	async _updateTenantUser(ctxt) {
 		try {
 			const TenantUserRecord = new this.$TenantUserModel({
@@ -292,7 +323,7 @@ class Main extends TwyrBaseMiddleware {
 		}
 	}
 
-	async _getUser(ctxt) {
+	async _getUserFromTenantUser(ctxt) {
 		try {
 			const TenantUserRecord = new this.$TenantUserModel({
 				'tenant_user_id': ctxt.params.tenantUserId
@@ -310,6 +341,34 @@ class Main extends TwyrBaseMiddleware {
 
 			let userData = await UserRecord.fetch();
 			userData = this.$jsonApiMapper.map(userData, 'tenant-administration/user-manager/users', {
+				'enableLinks': false
+			});
+
+			delete userData.data.attributes.password;
+			userData.data.attributes['middle_names'] = userData.data.attributes['middle_names'] || '';
+
+			return userData;
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_getUserFromTenantUser`, err);
+		}
+	}
+
+	async _getUser(ctxt) {
+		try {
+			const UserRecord = new this.$UserModel({
+				'user_id': ctxt.params.userId
+			});
+
+			let userData = await UserRecord.fetch({
+				'withRelated': ctxt.query.include ? ctxt.query.include.split(',').map((related) => { return related.trim(); }) : []
+			});
+
+			userData = this.$jsonApiMapper.map(userData, 'tenant-administration/user-manager/users', {
+				'typeForModel': {
+					'contacts': 'tenant-administration/user-manager/user-contact'
+				},
+
 				'enableLinks': false
 			});
 
