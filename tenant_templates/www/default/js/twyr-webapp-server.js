@@ -5302,15 +5302,130 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/components/tenant-administration/user-manager/edit-account", ["exports", "twyr-webapp-server/framework/base-component"], function (_exports, _baseComponent) {
+;define("twyr-webapp-server/components/tenant-administration/user-manager/edit-account", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
     value: true
   });
   _exports.default = void 0;
+  const backoffPolicy = new _exponentialBackoff.default({
+    'multiplier': 1.5,
+    'minDelay': 30,
+    'maxDelay': 400
+  });
 
-  var _default = _baseComponent.default.extend({});
+  var _default = _baseComponent.default.extend({
+    init() {
+      this._super(...arguments);
+
+      this.set('permissions', ['registered']);
+    },
+
+    onDidInsertElement: (0, _emberConcurrency.task)(function* () {
+      try {
+        this.set('_profileImageElem', this.$('div#tenant-administration-user-manager-edit-account-image'));
+        const profileImageElem = this.get('_profileImageElem'),
+              croppieDimensions = profileImageElem.width() < profileImageElem.height() ? profileImageElem.width() : profileImageElem.height();
+        profileImageElem.croppie({
+          'boundary': {
+            'width': croppieDimensions,
+            'height': croppieDimensions
+          },
+          'viewport': {
+            'width': croppieDimensions,
+            'height': croppieDimensions,
+            'type': 'circle'
+          },
+          'showZoomer': true,
+          'useCanvas': true,
+          'update': this.get('_processCroppieUpdate').bind(this)
+        });
+        yield (0, _emberConcurrency.timeout)(500);
+        yield profileImageElem.croppie('bind', {
+          'url': `/tenant-administration/user-manager/get-image/${this.get('state.tenantUser.id')}?_random=${window.moment().valueOf()}`,
+          'orientation': 1
+        }); // Add an event handler for catching dropped images
+
+        document.getElementById('tenant-administration-user-manager-edit-account-image').addEventListener('drop', this._processDroppedImage.bind(this));
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      } finally {
+        this.set('_enableCroppieUpdates', true);
+      }
+    }).drop().on('didInsertElement'),
+    onWillDestroyElement: (0, _emberConcurrency.task)(function* () {
+      document.getElementById('tenant-administration-user-manager-edit-account-image').removeEventListener('drop', this._processDroppedImage.bind(this));
+      yield this.get('_profileImageElem').croppie('destroy');
+    }).drop().on('willDestroyElement'),
+
+    _processDroppedImage(event) {
+      event.stopPropagation();
+      event.preventDefault();
+      const imageFile = event.dataTransfer.files[0];
+      if (!imageFile.type.match('image.*')) return;
+      const imageReader = new FileReader();
+      const profileImageElem = this.get('_profileImageElem');
+
+      imageReader.onload = imageData => {
+        profileImageElem.croppie('bind', {
+          'url': imageData.target.result,
+          'orientation': 1
+        });
+      };
+
+      imageReader.readAsDataURL(imageFile);
+    },
+
+    _processCroppieUpdate() {
+      if (!this.get('_enableCroppieUpdates')) return;
+
+      if (this.get('_profileImageUploadTimeout')) {
+        this.cancelTask(this.get('_profileImageUploadTimeout'));
+        this.set('_profileImageUploadTimeout', null);
+      }
+
+      this.set('_profileImageUploadTimeout', this.runTask(() => {
+        this.get('_uploadProfileImage').perform();
+      }, 10000));
+    },
+
+    _uploadProfileImage: (0, _emberConcurrency.task)(function* () {
+      try {
+        this.set('_enableCroppieUpdates', false);
+        const profileImageElem = this.get('_profileImageElem');
+        const metadata = profileImageElem.croppie('get');
+        const imageData = yield profileImageElem.croppie('result', {
+          'type': 'base64',
+          'circle': true
+        });
+        yield this.get('ajax').post(`/tenant-administration/user-manager/upload-image/${this.get('state.tenantUser.id')}`, {
+          'dataType': 'json',
+          'data': {
+            'image': imageData,
+            'metadata': metadata
+          }
+        });
+        window.TwyrApp.trigger('userChanged');
+        yield this.get('state.model').reload();
+        yield profileImageElem.croppie('bind', {
+          'url': `/tenant-administration/user-manager/get-image/${this.get('state.tenantUser.id')}?_random=${window.moment().valueOf()}`,
+          'orientation': 1
+        });
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      } finally {
+        this.set('_enableCroppieUpdates', true);
+        this.set('_profileImageUploadTimeout', null);
+      }
+    }).keepLatest().retryable(backoffPolicy)
+  });
 
   _exports.default = _default;
 });
@@ -5407,6 +5522,7 @@
           'dialogClass': 'flex-100  flex-gt-md-75 flex-gt-lg-50',
           'componentName': 'tenant-administration/user-manager/edit-account',
           'componentState': {
+            'tenantUser': tenantUser,
             'model': user
           },
           'confirmButton': {
@@ -10077,6 +10193,11 @@
     'user': _emberData.default.belongsTo('tenant-administration/user-manager/user', {
       'async': true,
       'inverse': 'tenantUsers'
+    }),
+    'profileImgUrl': Ember.computed('user.profileImage', {
+      'get': function () {
+        return `/tenant-administration/user-manager/get-image/${this.get('id')}/?random=${window.moment().valueOf()}`;
+      }
     })
   });
 
@@ -10549,7 +10670,15 @@
       }
 
       const tenantUserData = this.get('store').peekAll('tenant-administration/user-manager/tenant-user');
-      if (tenantUserData.get('length')) return tenantUserData;
+
+      if (tenantUserData.get('length')) {
+        const thisTenantUser = tenantUserData.filterBy('user.id', window.twyrUserId).shift();
+        thisTenantUser.get('user').reload({
+          'include': 'contacts'
+        });
+        return tenantUserData;
+      }
+
       return this.get('store').findAll('tenant-administration/user-manager/tenant-user', {
         'include': 'tenant, user, user.contacts'
       });
@@ -11827,8 +11956,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "Ew0XRpmU",
-    "block": "{\"symbols\":[\"card\",\"form\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex m-0\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"mt-4 pb-0\"]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between layout-wrap\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex-100 flex-gt-md-45\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"id\",\"profile-basic-information-image\"],[11,\"class\",\"flex\"],[11,\"contenteditable\",\"true\"],[9],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex-100 flex-gt-md-45 flex-gt-lg-50\"],[9],[0,\"\\n\"],[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"w-100\",[27,\"perform\",[[23,[\"save\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"disabled\"],[\"text\",\"flex-100\",\"Username / Login\",[23,[\"state\",\"model\",\"email\"]],null,true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"First Name\",[23,[\"state\",\"model\",\"firstName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"firstName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\"],[\"text\",\"flex-100\",\"Middle Name(s)\",[23,[\"state\",\"model\",\"middleNames\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"middleNames\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"Last Name\",[23,[\"state\",\"model\",\"lastName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"lastName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[2]},null],[0,\"\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
+    "id": "qfDzC+iq",
+    "block": "{\"symbols\":[\"card\",\"form\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex m-0\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"mt-4 pb-0\"]],{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between layout-wrap\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex-100 flex-gt-md-45\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[7,\"div\"],[11,\"id\",\"tenant-administration-user-manager-edit-account-image\"],[11,\"class\",\"flex\"],[11,\"contenteditable\",\"true\"],[9],[10],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-column layout-align-start-stretch flex-100 flex-gt-md-45 flex-gt-lg-50\"],[9],[0,\"\\n\"],[4,\"paper-form\",null,[[\"class\",\"onSubmit\"],[\"w-100\",[27,\"perform\",[[23,[\"save\"]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"disabled\"],[\"text\",\"flex-100\",\"Username / Login\",[23,[\"state\",\"model\",\"email\"]],null,true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"First Name\",[23,[\"state\",\"model\",\"firstName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"firstName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\"],[\"text\",\"flex-100\",\"Middle Name(s)\",[23,[\"state\",\"model\",\"middleNames\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"middleNames\"]]],null]],null]]]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row\"],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[27,\"component\",[[22,2,[\"input\"]]],[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"required\"],[\"text\",\"flex-100\",\"Last Name\",[23,[\"state\",\"model\",\"lastName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"state\",\"model\",\"lastName\"]]],null]],null],true]]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[2]},null],[0,\"\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/user-manager/edit-account.hbs"
     }
@@ -11845,8 +11974,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "AwX4AIDt",
-    "block": "{\"symbols\":[\"accordion\",\"accItem\",\"table\",\"body\",\"tenantUser\",\"row\",\"head\",\"accItem\",\"table\",\"body\",\"tenantUser\",\"row\",\"head\",\"accItem\",\"table\",\"body\",\"tenantUser\",\"row\",\"head\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"bs-accordion\",null,[[\"class\",\"selected\",\"onChange\"],[\"w-100\",[23,[\"selectedAccordionItem\"]],[27,\"perform\",[[23,[\"onChangeAccordionItem\"]]],null]]],{\"statements\":[[4,\"component\",[[22,1,[\"item\"]]],[[\"value\",\"title\"],[\"1\",\"Current Users\"]],{\"statements\":[[4,\"component\",[[22,14,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Current Users\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,14,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"user.email\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,15,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,19,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,19,[\"column\"]]],[[\"sortProp\"],[\"user.email\"]],{\"statements\":[[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,19,[\"column\"]]],[[\"sortProp\"],[\"user.firstName\"]],{\"statements\":[[0,\"First Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,19,[\"column\"]]],[[\"sortProp\"],[\"user.middleNames\"]],{\"statements\":[[0,\"Middle Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,19,[\"column\"]]],[[\"sortProp\"],[\"user.lastName\"]],{\"statements\":[[0,\"Last Name\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,19,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[19]},null],[4,\"component\",[[22,15,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,15,[\"sortDesc\"]],[27,\"filter-by\",[\"accessStatus\",\"authorized\",[23,[\"model\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,16,[\"row\"]]],null,{\"statements\":[[4,\"component\",[[22,18,[\"cell\"]]],[[\"class\"],[\"text-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"img\"],[12,\"src\",[28,[\"/tenant-administration/user-manager/get-image/\",[22,17,[\"id\"]]]]],[11,\"style\",\"max-width:4rem; max-height:2rem;\"],[9],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,18,[\"cell\"]]],null,{\"statements\":[[1,[22,17,[\"user\",\"email\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,18,[\"cell\"]]],null,{\"statements\":[[1,[22,17,[\"user\",\"firstName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,18,[\"cell\"]]],null,{\"statements\":[[1,[22,17,[\"user\",\"middleNames\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,18,[\"cell\"]]],null,{\"statements\":[[1,[22,17,[\"user\",\"lastName\"]],false]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"component\",[[22,18,[\"cell\"]]],[[\"class\"],[\"text-right\"]],{\"statements\":[[4,\"liquid-if\",[[22,17,[\"operationIsRunning\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"onClick\"],[null]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\"],[true,\"Reset Password\",[27,\"perform\",[[23,[\"resetPassword\"]],[22,17,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"lock-reset\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\"],[true,\"Edit Account\",[27,\"perform\",[[23,[\"editAccount\"]],[22,17,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-edit\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-button\",null,[[\"iconButton\",\"title\"],[true,\"Clone Account\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-switch\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\"],[true,\"De-authorize Account\",[27,\"perform\",[[23,[\"changeAccountStatus\"]],[22,17,[]],\"disabled\"],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-remove\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[18]},null]],\"parameters\":[17]},null]],\"parameters\":[16]},null]],\"parameters\":[15]},null]],\"parameters\":[]},null]],\"parameters\":[14]},null],[0,\"\\n\"],[4,\"if\",[[27,\"get\",[[27,\"filter-by\",[\"accessStatus\",\"waiting\",[23,[\"model\"]]],null],\"length\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"2\",\"Awaiting Authorization\"]],{\"statements\":[[4,\"component\",[[22,8,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Awaiting Authorization\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,8,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"user.email\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,9,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,13,[\"column\"]]],[[\"sortProp\"],[\"user.email\"]],{\"statements\":[[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,13,[\"column\"]]],[[\"sortProp\"],[\"user.firstName\"]],{\"statements\":[[0,\"First Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,13,[\"column\"]]],[[\"sortProp\"],[\"user.middleNames\"]],{\"statements\":[[0,\"Middle Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,13,[\"column\"]]],[[\"sortProp\"],[\"user.lastName\"]],{\"statements\":[[0,\"Last Name\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,13,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[13]},null],[4,\"component\",[[22,9,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,9,[\"sortDesc\"]],[27,\"filter-by\",[\"accessStatus\",\"waiting\",[23,[\"model\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,10,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,12,[\"cell\"]]],null,{\"statements\":[[1,[22,11,[\"user\",\"email\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,12,[\"cell\"]]],null,{\"statements\":[[1,[22,11,[\"user\",\"firstName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,12,[\"cell\"]]],null,{\"statements\":[[1,[22,11,[\"user\",\"middleNames\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,12,[\"cell\"]]],null,{\"statements\":[[1,[22,11,[\"user\",\"lastName\"]],false]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"component\",[[22,12,[\"cell\"]]],[[\"class\"],[\"text-right\"]],{\"statements\":[[4,\"liquid-if\",[[22,11,[\"operationIsRunning\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"onClick\"],[null]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\"],[true,\"Authorize Account\",[27,\"perform\",[[23,[\"changeAccountStatus\"]],[22,11,[]],\"authorized\"],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-check\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\"],[true,\"De-authorize Account\",[27,\"perform\",[[23,[\"changeAccountStatus\"]],[22,11,[]],\"disabled\"],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-remove\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[12]},null]],\"parameters\":[11]},null]],\"parameters\":[10]},null]],\"parameters\":[9]},null]],\"parameters\":[]},null]],\"parameters\":[8]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"get\",[[27,\"filter-by\",[\"accessStatus\",\"disabled\",[23,[\"model\"]]],null],\"length\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"3\",\"De-authorized Users\"]],{\"statements\":[[4,\"component\",[[22,2,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"De-authorized Users\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,2,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"user.email\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,3,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,7,[\"column\"]]],[[\"sortProp\"],[\"user.email\"]],{\"statements\":[[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,7,[\"column\"]]],[[\"sortProp\"],[\"user.firstName\"]],{\"statements\":[[0,\"First Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,7,[\"column\"]]],[[\"sortProp\"],[\"user.middleNames\"]],{\"statements\":[[0,\"Middle Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,7,[\"column\"]]],[[\"sortProp\"],[\"user.lastName\"]],{\"statements\":[[0,\"Last Name\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,7,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[7]},null],[4,\"component\",[[22,3,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,3,[\"sortDesc\"]],[27,\"filter-by\",[\"accessStatus\",\"disabled\",[23,[\"model\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,4,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"cell\"]]],null,{\"statements\":[[1,[22,5,[\"user\",\"email\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"cell\"]]],null,{\"statements\":[[1,[22,5,[\"user\",\"firstName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"cell\"]]],null,{\"statements\":[[1,[22,5,[\"user\",\"middleNames\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"cell\"]]],null,{\"statements\":[[1,[22,5,[\"user\",\"lastName\"]],false]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"component\",[[22,6,[\"cell\"]]],[[\"class\"],[\"text-right\"]],{\"statements\":[[4,\"liquid-if\",[[22,5,[\"operationIsRunning\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"onClick\"],[null]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\"],[true,\"Re-authorize Account\",[27,\"perform\",[[23,[\"changeAccountStatus\"]],[22,5,[]],\"authorized\"],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-check\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[6]},null]],\"parameters\":[5]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "iRb9BQdB",
+    "block": "{\"symbols\":[\"accordion\",\"accItem\",\"table\",\"body\",\"tenantUser\",\"row\",\"head\",\"accItem\",\"table\",\"body\",\"tenantUser\",\"row\",\"head\",\"accItem\",\"table\",\"body\",\"tenantUser\",\"row\",\"head\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"bs-accordion\",null,[[\"class\",\"selected\",\"onChange\"],[\"w-100\",[23,[\"selectedAccordionItem\"]],[27,\"perform\",[[23,[\"onChangeAccordionItem\"]]],null]]],{\"statements\":[[4,\"component\",[[22,1,[\"item\"]]],[[\"value\",\"title\"],[\"1\",\"Current Users\"]],{\"statements\":[[4,\"component\",[[22,14,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Current Users\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,14,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"user.email\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,15,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,19,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,19,[\"column\"]]],[[\"sortProp\"],[\"user.email\"]],{\"statements\":[[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,19,[\"column\"]]],[[\"sortProp\"],[\"user.firstName\"]],{\"statements\":[[0,\"First Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,19,[\"column\"]]],[[\"sortProp\"],[\"user.middleNames\"]],{\"statements\":[[0,\"Middle Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,19,[\"column\"]]],[[\"sortProp\"],[\"user.lastName\"]],{\"statements\":[[0,\"Last Name\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,19,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[19]},null],[4,\"component\",[[22,15,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,15,[\"sortDesc\"]],[27,\"filter-by\",[\"accessStatus\",\"authorized\",[23,[\"model\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,16,[\"row\"]]],null,{\"statements\":[[4,\"component\",[[22,18,[\"cell\"]]],[[\"class\"],[\"text-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[7,\"img\"],[12,\"src\",[28,[[22,17,[\"profileImgUrl\"]]]]],[11,\"style\",\"max-width:4rem; max-height:2rem;\"],[9],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,18,[\"cell\"]]],null,{\"statements\":[[1,[22,17,[\"user\",\"email\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,18,[\"cell\"]]],null,{\"statements\":[[1,[22,17,[\"user\",\"firstName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,18,[\"cell\"]]],null,{\"statements\":[[1,[22,17,[\"user\",\"middleNames\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,18,[\"cell\"]]],null,{\"statements\":[[1,[22,17,[\"user\",\"lastName\"]],false]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"component\",[[22,18,[\"cell\"]]],[[\"class\"],[\"text-right\"]],{\"statements\":[[4,\"liquid-if\",[[22,17,[\"operationIsRunning\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"onClick\"],[null]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\"],[true,\"Reset Password\",[27,\"perform\",[[23,[\"resetPassword\"]],[22,17,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"lock-reset\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\"],[true,\"Edit Account\",[27,\"perform\",[[23,[\"editAccount\"]],[22,17,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-edit\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-button\",null,[[\"iconButton\",\"title\"],[true,\"Clone Account\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-switch\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\"],[true,\"De-authorize Account\",[27,\"perform\",[[23,[\"changeAccountStatus\"]],[22,17,[]],\"disabled\"],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-remove\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[18]},null]],\"parameters\":[17]},null]],\"parameters\":[16]},null]],\"parameters\":[15]},null]],\"parameters\":[]},null]],\"parameters\":[14]},null],[0,\"\\n\"],[4,\"if\",[[27,\"get\",[[27,\"filter-by\",[\"accessStatus\",\"waiting\",[23,[\"model\"]]],null],\"length\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"2\",\"Awaiting Authorization\"]],{\"statements\":[[4,\"component\",[[22,8,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Awaiting Authorization\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,8,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"user.email\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,9,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,13,[\"column\"]]],[[\"sortProp\"],[\"user.email\"]],{\"statements\":[[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,13,[\"column\"]]],[[\"sortProp\"],[\"user.firstName\"]],{\"statements\":[[0,\"First Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,13,[\"column\"]]],[[\"sortProp\"],[\"user.middleNames\"]],{\"statements\":[[0,\"Middle Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,13,[\"column\"]]],[[\"sortProp\"],[\"user.lastName\"]],{\"statements\":[[0,\"Last Name\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,13,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[13]},null],[4,\"component\",[[22,9,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,9,[\"sortDesc\"]],[27,\"filter-by\",[\"accessStatus\",\"waiting\",[23,[\"model\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,10,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,12,[\"cell\"]]],null,{\"statements\":[[1,[22,11,[\"user\",\"email\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,12,[\"cell\"]]],null,{\"statements\":[[1,[22,11,[\"user\",\"firstName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,12,[\"cell\"]]],null,{\"statements\":[[1,[22,11,[\"user\",\"middleNames\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,12,[\"cell\"]]],null,{\"statements\":[[1,[22,11,[\"user\",\"lastName\"]],false]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"component\",[[22,12,[\"cell\"]]],[[\"class\"],[\"text-right\"]],{\"statements\":[[4,\"liquid-if\",[[22,11,[\"operationIsRunning\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"onClick\"],[null]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\"],[true,\"Authorize Account\",[27,\"perform\",[[23,[\"changeAccountStatus\"]],[22,11,[]],\"authorized\"],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-check\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\"],[true,\"De-authorize Account\",[27,\"perform\",[[23,[\"changeAccountStatus\"]],[22,11,[]],\"disabled\"],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-remove\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[12]},null]],\"parameters\":[11]},null]],\"parameters\":[10]},null]],\"parameters\":[9]},null]],\"parameters\":[]},null]],\"parameters\":[8]},null]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"get\",[[27,\"filter-by\",[\"accessStatus\",\"disabled\",[23,[\"model\"]]],null],\"length\"],null]],null,{\"statements\":[[4,\"component\",[[22,1,[\"item\"]]],[[\"class\",\"value\",\"title\"],[\"mt-2\",\"3\",\"De-authorized Users\"]],{\"statements\":[[4,\"component\",[[22,2,[\"title\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[0,\"\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"De-authorized Users\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[4,\"component\",[[22,2,[\"body\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"user.email\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,3,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,7,[\"column\"]]],[[\"sortProp\"],[\"user.email\"]],{\"statements\":[[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,7,[\"column\"]]],[[\"sortProp\"],[\"user.firstName\"]],{\"statements\":[[0,\"First Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,7,[\"column\"]]],[[\"sortProp\"],[\"user.middleNames\"]],{\"statements\":[[0,\"Middle Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,7,[\"column\"]]],[[\"sortProp\"],[\"user.lastName\"]],{\"statements\":[[0,\"Last Name\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,7,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[7]},null],[4,\"component\",[[22,3,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,3,[\"sortDesc\"]],[27,\"filter-by\",[\"accessStatus\",\"disabled\",[23,[\"model\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,4,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"cell\"]]],null,{\"statements\":[[1,[22,5,[\"user\",\"email\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"cell\"]]],null,{\"statements\":[[1,[22,5,[\"user\",\"firstName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"cell\"]]],null,{\"statements\":[[1,[22,5,[\"user\",\"middleNames\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"cell\"]]],null,{\"statements\":[[1,[22,5,[\"user\",\"lastName\"]],false]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"component\",[[22,6,[\"cell\"]]],[[\"class\"],[\"text-right\"]],{\"statements\":[[4,\"liquid-if\",[[22,5,[\"operationIsRunning\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"onClick\"],[null]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\"],[true,\"Re-authorize Account\",[27,\"perform\",[[23,[\"changeAccountStatus\"]],[22,5,[]],\"authorized\"],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"mdi-icon\",[\"account-check\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[6]},null]],\"parameters\":[5]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/user-manager/main-component.hbs"
     }
