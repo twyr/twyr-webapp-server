@@ -8,7 +8,7 @@ jobs:
     branches:
       only:
         - master
-		- greenkeeper/
+        - greenkeeper/
 
     docker:
       # specify the version you desire here
