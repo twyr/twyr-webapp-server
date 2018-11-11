@@ -45,6 +45,7 @@ class Main extends TwyrBaseComponent {
 
 			this.$router.get('/tenant-groups/:tenant_group_id', this.$parent._rbac('group-manager-read'), this._getTenantGroup.bind(this));
 			this.$router.patch('/tenant-groups/:tenant_group_id', this.$parent._rbac('group-manager-update'), this._updateTenantGroup.bind(this));
+			this.$router.delete('/tenant-groups/:tenant_group_id', this.$parent._rbac('group-manager-update'), this._deleteTenantGroup.bind(this));
 
 			await super._addRoutes();
 			return null;
@@ -98,6 +99,19 @@ class Main extends TwyrBaseComponent {
 		}
 		catch(err) {
 			throw new TwyrComponentError(`Error updating tenant group`, err);
+		}
+	}
+
+	async _deleteTenantGroup(ctxt) {
+		try {
+			const apiSrvc = this.$dependencies.ApiService;
+			await apiSrvc.execute('Main::deleteTenantGroup', ctxt);
+
+			ctxt.status = 204;
+			return null;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error deleting tenant group`, err);
 		}
 	}
 	// #endregion

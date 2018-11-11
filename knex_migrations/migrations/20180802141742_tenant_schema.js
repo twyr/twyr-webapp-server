@@ -262,6 +262,18 @@ BEGIN
 		RETURN NULL;
 	END IF;
 
+	IF OLD.default_for_new_user = false AND NEW.default_for_new_user = true
+	THEN
+		UPDATE
+			tenant_groups
+		SET
+			default_for_new_user = false
+		WHERE
+			tenant_id = NEW.tenant_id AND
+			group_id <> NEW.group_id AND
+			default_for_new_user = true;
+	END IF;
+
 	RETURN NEW;
 END;
 $$;`

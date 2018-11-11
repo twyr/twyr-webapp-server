@@ -123,9 +123,11 @@ class Main extends TwyrBaseMiddleware {
 	async _registerApis() {
 		try {
 			const ApiService = this.$dependencies.ApiService;
+
 			await ApiService.add(`${this.name}::getTenantGroupTree`, this._getTenantGroupTree.bind(this));
 			await ApiService.add(`${this.name}::getTenantGroup`, this._getTenantGroup.bind(this));
 			await ApiService.add(`${this.name}::updateTenantGroup`, this._updateTenantGroup.bind(this));
+			await ApiService.add(`${this.name}::deleteTenantGroup`, this._deleteTenantGroup.bind(this));
 
 			await super._registerApis();
 			return null;
@@ -138,6 +140,8 @@ class Main extends TwyrBaseMiddleware {
 	async _deregisterApis() {
 		try {
 			const ApiService = this.$dependencies.ApiService;
+
+			await ApiService.remove(`${this.name}::deleteTenantGroup`, this._deleteTenantGroup.bind(this));
 			await ApiService.remove(`${this.name}::updateTenantGroup`, this._updateTenantGroup.bind(this));
 			await ApiService.remove(`${this.name}::getTenantGroup`, this._getTenantGroup.bind(this));
 			await ApiService.remove(`${this.name}::getTenantGroupTree`, this._getTenantGroupTree.bind(this));
@@ -239,6 +243,21 @@ class Main extends TwyrBaseMiddleware {
 		}
 		catch(err) {
 			throw new TwyrMiddlewareError(`${this.name}::_updateTenantGroup`, err);
+		}
+	}
+
+	async _deleteTenantGroup(ctxt) {
+		try {
+			const tenantGroup = await new this.$TenantGroupModel({
+				'group_id': ctxt.params['tenant_group_id']
+			})
+			.fetch();
+
+			await tenantGroup.destroy();
+			return null;
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_deleteTenantGroup`, err);
 		}
 	}
 	// #endregion
