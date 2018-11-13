@@ -5182,7 +5182,7 @@
       this.get('_updateGroupTree').perform();
     }),
     '_updateGroupTree': (0, _emberConcurrency.task)(function* () {
-      const tenantGroups = yield this.get('model.groups');
+      const tenantGroups = yield this.get('selectedGroup.groups');
       tenantGroups.forEach(subGroup => {
         let treeNode = this.$('div#tenant-administration-group-manager-tree-container').jstree('get_node', subGroup.get('id'));
 
@@ -5192,11 +5192,15 @@
             'text': subGroup.get('displayName')
           });
         }
-
-        if (subGroup.get('isDeleted') && treeNode) {
-          this.$('div#tenant-administration-group-manager-tree-container').jstree('delete_node', subGroup.get('id'));
-        }
       });
+      const selectedTreeNodeId = this.$('div#tenant-administration-group-manager-tree-container').jstree('get_selected')[0];
+      const selectedTreeNodeChildren = this.$('div#tenant-administration-group-manager-tree-container').jstree('get_children_dom', selectedTreeNodeId);
+
+      for (let idx = 0; idx < selectedTreeNodeChildren.length; idx++) {
+        const tenantGroup = this.get('store').peekRecord('tenant-administration/group-manager/tenant-group', window.$(selectedTreeNodeChildren[idx]).attr('id'));
+        if (tenantGroup && !tenantGroup.get('isDeleted')) continue;
+        this.$('div#tenant-administration-group-manager-tree-container').jstree('delete_node', window.$(selectedTreeNodeChildren[idx]).attr('id'));
+      }
     }).enqueue()
   });
 
@@ -13184,7 +13188,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-google-maps":{"key":"AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA","language":"en","region":"IN","protocol":"https","version":"3.34","src":"https://maps.googleapis.com/maps/api/js?v=3.34&region=IN&language=en&key=AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+d8029168"},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-google-maps":{"key":"AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA","language":"en","region":"IN","protocol":"https","version":"3.34","src":"https://maps.googleapis.com/maps/api/js?v=3.34&region=IN&language=en&key=AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+b589422e"},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;
