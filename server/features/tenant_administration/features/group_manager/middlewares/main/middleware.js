@@ -126,6 +126,7 @@ class Main extends TwyrBaseMiddleware {
 
 			await ApiService.add(`${this.name}::getTenantGroupTree`, this._getTenantGroupTree.bind(this));
 			await ApiService.add(`${this.name}::getTenantGroup`, this._getTenantGroup.bind(this));
+			await ApiService.add(`${this.name}::addTenantGroup`, this._addTenantGroup.bind(this));
 			await ApiService.add(`${this.name}::updateTenantGroup`, this._updateTenantGroup.bind(this));
 			await ApiService.add(`${this.name}::deleteTenantGroup`, this._deleteTenantGroup.bind(this));
 
@@ -143,6 +144,7 @@ class Main extends TwyrBaseMiddleware {
 
 			await ApiService.remove(`${this.name}::deleteTenantGroup`, this._deleteTenantGroup.bind(this));
 			await ApiService.remove(`${this.name}::updateTenantGroup`, this._updateTenantGroup.bind(this));
+			await ApiService.remove(`${this.name}::addTenantGroup`, this._addTenantGroup.bind(this));
 			await ApiService.remove(`${this.name}::getTenantGroup`, this._getTenantGroup.bind(this));
 			await ApiService.remove(`${this.name}::getTenantGroupTree`, this._getTenantGroupTree.bind(this));
 
@@ -164,7 +166,7 @@ class Main extends TwyrBaseMiddleware {
 			if(ctxt.query.id === '#')
 				tenantGroups = await dbSrvc.knex.raw(`SELECT group_id AS id, COALESCE(CAST(parent_group_id AS text), '#') AS parent, display_name AS text FROM tenant_groups WHERE tenant_id = ?`, [ctxt.state.tenant.tenant_id]);
 			else
-				tenantGroups = await dbSrvc.knex.raw(`SELECT group_id AS id, COALESCE(CAST(parent_group_id AS text), '#') AS parent, display_name AS text FROM tenant_groups WHERE tenant_id = ? AND group_id IN (SELECT group_id FROM fn_get_group_descendants(?) WHERE level = 2)`, [ctxt.state.tenant.tenant_id, ctxt.query.id]);
+				tenantGroups = await dbSrvc.knex.raw(`SELECT group_id AS id, COALESCE(CAST(parent_group_id AS text), '#') AS parent, display_name AS text FROM tenant_groups WHERE tenant_id = ? AND group_id IN (SELECT group_id FROM fn_get_group_descendants(?) WHERE level >= 2)`, [ctxt.state.tenant.tenant_id, ctxt.query.id]);
 
 			return tenantGroups.rows;
 		}
@@ -181,7 +183,7 @@ class Main extends TwyrBaseMiddleware {
 			});
 
 			let tenantGroupData = await TenantGroupRecord.fetch({
-				'withRelated': (ctxt.query.include && ctxt.query.include.length) ? ctxt.query.include.split(',').map((incl) => { return incl.trim(); }) : ['parent', 'groups']
+				'withRelated': (ctxt.query.include && ctxt.query.include.length) ? ctxt.query.include.split(',').map((incl) => { return incl.trim(); }) : ['tenant', 'parent', 'groups']
 			});
 
 			tenantGroupData = this.$jsonApiMapper.map(tenantGroupData, 'tenant-administration/group-manager/tenant-group', {
@@ -199,6 +201,53 @@ class Main extends TwyrBaseMiddleware {
 		}
 		catch(err) {
 			throw new TwyrMiddlewareError(`${this.name}::_getTenantGroup`, err);
+		}
+	}
+
+	async _addTenantGroup(ctxt) {
+		try {
+			const tenantGroup = ctxt.request.body;
+
+			const jsonDeserializedData = await this.$jsonApiDeserializer.deserializeAsync(tenantGroup);
+			jsonDeserializedData['group_id'] = jsonDeserializedData.id;
+
+			delete jsonDeserializedData.id;
+			delete jsonDeserializedData.created_at;
+			delete jsonDeserializedData.updated_at;
+
+			Object.keys(tenantGroup.data.relationships || {}).forEach((relationshipName) => {
+				if(!tenantGroup.data.relationships[relationshipName].data) {
+					delete jsonDeserializedData[relationshipName];
+					return;
+				}
+
+				if(!tenantGroup.data.relationships[relationshipName].data.id) {
+					delete jsonDeserializedData[relationshipName];
+					return;
+				}
+
+				jsonDeserializedData[`${relationshipName}_id`] = tenantGroup.data.relationships[relationshipName].data.id;
+			});
+
+			jsonDeserializedData['parent_group_id'] = jsonDeserializedData['parent_id'];
+			delete jsonDeserializedData['parent_id'];
+
+			const savedRecord = await this.$TenantGroupModel
+				.forge()
+				.save(jsonDeserializedData, {
+					'method': 'insert',
+					'patch': false
+				});
+
+			return {
+				'data': {
+					'type': tenantGroup.data.type,
+					'id': savedRecord.get('group_id')
+				}
+			};
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_addTenantGroup`, err);
 		}
 	}
 
@@ -249,9 +298,13 @@ class Main extends TwyrBaseMiddleware {
 	async _deleteTenantGroup(ctxt) {
 		try {
 			const tenantGroup = await new this.$TenantGroupModel({
+				'tenant_id': ctxt.state.tenant['tenant_id'],
 				'group_id': ctxt.params['tenant_group_id']
 			})
 			.fetch();
+
+			if(!tenantGroup) throw new Error('Unknown Tenant Group');
+			if(tenantGroup.get('default_for_new_user')) throw new Error('Cannot delete default group');
 
 			await tenantGroup.destroy();
 			return null;
