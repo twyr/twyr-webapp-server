@@ -2,7 +2,7 @@
 
 
 
-;define("twyr-webapp-server/adapters/application", ["exports", "ember-data", "ember-ajax/mixins/ajax-support"], function (_exports, _emberData, _ajaxSupport) {
+;define("twyr-webapp-server/adapters/application", ["exports", "ember-data", "ember-cli-uuid/mixins/adapters/uuid", "ember-ajax/mixins/ajax-support"], function (_exports, _emberData, _uuid, _ajaxSupport) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -10,7 +10,7 @@
   });
   _exports.default = void 0;
 
-  var _default = _emberData.default.JSONAPIAdapter.extend(_ajaxSupport.default, {});
+  var _default = _emberData.default.JSONAPIAdapter.extend(_uuid.default, _ajaxSupport.default, {});
 
   _exports.default = _default;
 });
@@ -3965,7 +3965,7 @@
       this.set('permissions', ['registered']);
     },
 
-    onInit: (0, _emberConcurrency.task)(function* () {
+    'onInit': (0, _emberConcurrency.task)(function* () {
       try {
         const contactTypes = yield this.get('ajax').request('/masterdata/contactTypes', {
           'method': 'GET'
@@ -3978,7 +3978,7 @@
         });
       }
     }).on('init').drop().retryable(backoffPolicy),
-    addContact: (0, _emberConcurrency.task)(function* () {
+    'addContact': (0, _emberConcurrency.task)(function* () {
       try {
         const store = this.get('store');
         const newContact = store.createRecord('profile/user-contact', {
@@ -3993,7 +3993,7 @@
         });
       }
     }).drop(),
-    saveContact: (0, _emberConcurrency.task)(function* (contact) {
+    'saveContact': (0, _emberConcurrency.task)(function* (contact) {
       try {
         yield contact.save();
         this.get('notification').display({
@@ -4007,7 +4007,7 @@
         });
       }
     }).enqueue().retryable(backoffPolicy),
-    deleteContact: (0, _emberConcurrency.task)(function* (contact) {
+    'deleteContact': (0, _emberConcurrency.task)(function* (contact) {
       if (contact.get('isNew')) {
         const contacts = yield this.get('model.contacts');
         contacts.removeObject(contact);
@@ -4065,7 +4065,7 @@
     // 	};
     // 	yield this.invokeAction('controller-action', 'displayModal', modalData);
     // }).enqueue().retryable(backoffPolicy),
-    _confirmedDeleteContact: (0, _emberConcurrency.task)(function* (contact) {
+    '_confirmedDeleteContact': (0, _emberConcurrency.task)(function* (contact) {
       const contacts = yield this.get('model.contacts');
 
       try {
@@ -4116,7 +4116,7 @@
       this.set('permissions', ['registered']);
     },
 
-    onDidInsertElement: (0, _emberConcurrency.task)(function* () {
+    'onDidInsertElement': (0, _emberConcurrency.task)(function* () {
       try {
         this.set('_profileImageElem', this.$('div#profile-basic-information-image'));
         const profileImageElem = this.get('_profileImageElem'),
@@ -4150,7 +4150,7 @@
         this.set('_enableCroppieUpdates', true);
       }
     }).drop().on('didInsertElement'),
-    onWillDestroyElement: (0, _emberConcurrency.task)(function* () {
+    'onWillDestroyElement': (0, _emberConcurrency.task)(function* () {
       document.getElementById('profile-basic-information-image').removeEventListener('drop', this._processDroppedImage.bind(this));
       yield this.get('_profileImageElem').croppie('destroy');
     }).drop().on('willDestroyElement'),
@@ -4186,7 +4186,7 @@
       }, 10000));
     },
 
-    _uploadProfileImage: (0, _emberConcurrency.task)(function* () {
+    '_uploadProfileImage': (0, _emberConcurrency.task)(function* () {
       try {
         this.set('_enableCroppieUpdates', false);
         const profileImageElem = this.get('_profileImageElem');
@@ -4217,7 +4217,7 @@
         this.set('_profileImageUploadTimeout', null);
       }
     }).keepLatest().retryable(backoffPolicy),
-    save: (0, _emberConcurrency.task)(function* () {
+    'save': (0, _emberConcurrency.task)(function* () {
       try {
         yield this.get('model').save();
         this.get('notification').display({
@@ -4232,10 +4232,10 @@
         });
       }
     }).drop().retryable(backoffPolicy),
-    cancel: (0, _emberConcurrency.task)(function* () {
+    'cancel': (0, _emberConcurrency.task)(function* () {
       yield this.get('model').rollback();
     }).drop(),
-    changePassword: (0, _emberConcurrency.task)(function* () {
+    'changePassword': (0, _emberConcurrency.task)(function* () {
       try {
         const changePasswordResult = yield this.get('ajax').post('/profile/changePassword', {
           'dataType': 'json',
@@ -4259,12 +4259,12 @@
         this.get('cancelChangePassword').perform();
       }
     }).drop().retryable(backoffPolicy),
-    cancelChangePassword: (0, _emberConcurrency.task)(function* () {
+    'cancelChangePassword': (0, _emberConcurrency.task)(function* () {
       yield this.set('currentPassword', '');
       this.set('newPassword1', '');
       this.set('newPassword2', '');
     }).drop(),
-    deleteAccount: (0, _emberConcurrency.task)(function* () {
+    'deleteAccount': (0, _emberConcurrency.task)(function* () {
       yield this.invokeAction('controller-action', 'displayModal', {
         'title': 'Delete Account',
         'content': `<strong>${this.get('model.fullName')}</strong>, are you sure you want to delete your account?`,
@@ -4286,12 +4286,12 @@
         }
       });
     }).drop(),
-    onChangeAccordionItem: (0, _emberConcurrency.task)(function* (newSelectedItem) {
+    'onChangeAccordionItem': (0, _emberConcurrency.task)(function* (newSelectedItem) {
       this.set('selectedAccordionItem', newSelectedItem);
       yield (0, _emberConcurrency.timeout)(10);
       if (!newSelectedItem) this.set('selectedAccordionItem', '1');
     }).keepLatest(),
-    _confirmedDeleteAccount: (0, _emberConcurrency.task)(function* () {
+    '_confirmedDeleteAccount': (0, _emberConcurrency.task)(function* () {
       try {
         yield this.get('model').destroyRecord();
         this.get('notification').display({
@@ -4335,7 +4335,7 @@
       this._super(...arguments);
     },
 
-    onHasPermissionChange: Ember.observer('hasPermission', function () {
+    'onHasPermissionChange': Ember.observer('hasPermission', function () {
       if (!this.get('hasPermission')) {
         this.set('displayName', '');
         this.set('displayImage', '');
@@ -4389,7 +4389,7 @@
     firstName: '',
     lastName: '',
     mobileNumber: '',
-    display: Ember.computed('hasPermission', function () {
+    'display': Ember.computed('hasPermission', function () {
       return {
         'display': this.get('hasPermission') ? 'none' : 'block',
         'min-width': this.get('hasPermission') ? '0rem' : '20rem'
@@ -4402,7 +4402,7 @@
       this.set('permissions', ['registered']);
     },
 
-    doLogin: (0, _emberConcurrency.task)(function* () {
+    'doLogin': (0, _emberConcurrency.task)(function* () {
       const notification = this.get('notification');
       notification.display({
         'type': 'info',
@@ -4453,7 +4453,7 @@
         });
       }
     }).drop(),
-    resetPassword: (0, _emberConcurrency.task)(function* () {
+    'resetPassword': (0, _emberConcurrency.task)(function* () {
       const notification = this.get('notification');
       notification.display({
         'type': 'info',
@@ -4479,7 +4479,7 @@
         });
       }
     }).drop(),
-    registerAccount: (0, _emberConcurrency.task)(function* () {
+    'registerAccount': (0, _emberConcurrency.task)(function* () {
       const notification = this.get('notification');
 
       if (this.get('password') !== this.get('confirmPassword')) {
@@ -4544,7 +4544,7 @@
       this.set('permissions', ['registered']);
     },
 
-    doLogout: (0, _emberConcurrency.task)(function* () {
+    'doLogout': (0, _emberConcurrency.task)(function* () {
       const notification = this.get('notification');
       notification.display({
         'type': 'info',
@@ -4664,41 +4664,36 @@
       this.set('permissions', ['feature-manager-read']);
     },
 
-    onHasPermissionChange: Ember.observer('hasPermission', function () {
+    'onHasPermissionChange': Ember.observer('hasPermission', function () {
       const updatePerm = this.get('currentUser').hasPermission('feature-manager-update');
       this.set('editable', updatePerm);
     }),
-
-    changeSelectedFeature(feature) {
-      this.invokeAction('controller-action', 'setSelectedFeature', feature);
-    },
-
-    modifyTenantFeatureStatus: (0, _emberConcurrency.task)(function* () {
-      if (!this.get('model')) return;
-      const tenantFeatures = yield this.get('model.tenantFeatures');
+    'modifyTenantFeatureStatus': (0, _emberConcurrency.task)(function* () {
+      if (!this.get('selectedFeature')) return;
+      const tenantFeatures = yield this.get('selectedFeature.tenantFeatures');
       let tenantFeature = tenantFeatures.get('firstObject');
 
       if (tenantFeature) {
         try {
-          this.get('model.tenantFeatures').removeObject(tenantFeature);
+          this.get('selectedFeature.tenantFeatures').removeObject(tenantFeature);
           yield tenantFeature.destroyRecord();
         } catch (err) {
           tenantFeature.rollback();
-          this.get('model.tenantFeatures').addObject(tenantFeature);
+          this.get('selectedFeature.tenantFeatures').addObject(tenantFeature);
           throw err;
         }
       } else {
         const tenant = this.get('store').peekRecord('tenant-administration/tenant', window.twyrTenantId);
         tenantFeature = this.get('store').createRecord('tenant-administration/feature-manager/tenant-feature', {
           'tenant': tenant,
-          'feature': this.get('model')
+          'feature': this.get('selectedFeature')
         });
 
         try {
-          this.get('model.tenantFeatures').addObject(tenantFeature);
+          this.get('selectedFeature.tenantFeatures').addObject(tenantFeature);
           yield tenantFeature.save();
         } catch (err) {
-          this.get('model.tenantFeatures').removeObject(tenantFeature);
+          this.get('selectedFeature.tenantFeatures').removeObject(tenantFeature);
           tenantFeature.deleteRecord();
           throw err;
         }
@@ -4770,9 +4765,9 @@
       this._super(...arguments);
     },
 
-    onActivateNode: (0, _emberConcurrency.task)(function* (treeNode) {
+    'onActivateNode': (0, _emberConcurrency.task)(function* (treeNode) {
       try {
-        let serverFeature = yield this.get('model');
+        let serverFeature = yield this.get('selectedFeature');
         if (serverFeature && serverFeature.get('id') === treeNode.id) return;
         const store = this.get('store');
         serverFeature = store.peekRecord('server-administration/feature', treeNode.id);
@@ -4792,11 +4787,11 @@
         });
       }
     }).keepLatest(),
-    onSelectedFeatureChanged: Ember.observer('model', function () {
-      if (!this.get('model')) return;
-      if (this.$('div#tenant-administration-feature-manager-tree-container').jstree('get_selected')[0] === this.get('model.id')) return;
-      this.$('div#tenant-administration-feature-manager-tree-container').jstree('activate_node', this.get('model.id'), false, false);
-      this.$('div#tenant-administration-feature-manager-tree-container').jstree('open_node', this.get('model.id'));
+    'onSelectedFeatureChanged': Ember.observer('selectedFeature', function () {
+      if (!this.get('selectedFeature')) return;
+      if (this.$('div#tenant-administration-feature-manager-tree-container').jstree('get_selected')[0] === this.get('selectedFeature.id')) return;
+      this.$('div#tenant-administration-feature-manager-tree-container').jstree('activate_node', this.get('selectedFeature.id'), false, false);
+      this.$('div#tenant-administration-feature-manager-tree-container').jstree('open_node', this.get('selectedFeature.id'));
     })
   });
 
@@ -4824,51 +4819,48 @@
       this.set('permissions', ['group-manager-read']);
     },
 
-    onHasPermissionChange: Ember.observer('hasPermission', function () {
+    'onHasPermissionChange': Ember.observer('hasPermission', function () {
       const updatePerm = this.get('currentUser').hasPermission('group-manager-update');
       this.set('editable', updatePerm);
     }),
-
-    changeSelectedGroup(tenantGroup) {
-      this.invokeAction('controller-action', 'setSelectedGroup', tenantGroup);
-    },
-
     'saveGroup': (0, _emberConcurrency.task)(function* () {
-      const didDefaultForNewUserChange = this.get('model').didChange('defaultForNewUser');
-      yield this.get('model').save();
+      const didDefaultForNewUserChange = this.get('selectedGroup').didChange('defaultForNewUser');
+      yield this.get('selectedGroup').save();
       if (!didDefaultForNewUserChange) return;
       const loadedGroups = this.get('store').peekAll('tenant-administration/group-manager/tenant-group');
       let oldDefaultGroup = null;
       loadedGroups.forEach(tenantGroup => {
-        if (tenantGroup.get('id') === this.get('model.id')) return;
+        if (tenantGroup.get('id') === this.get('selectedGroup.id')) return;
         if (!tenantGroup.get('defaultForNewUser')) return;
-        tenantGroup.set('defaultForNewUser', false);
         oldDefaultGroup = tenantGroup;
       });
       if (oldDefaultGroup) yield oldDefaultGroup.reload({
-        'include': 'parent, groups'
+        'include': 'tenant, parent, groups'
       });
     }).drop().evented().retryable(backoffPolicy),
     'saveGroupSucceeded': Ember.on('saveGroup:succeeded', function () {
       this.get('notification').display({
         'type': 'success',
-        'message': `Changes to ${this.get('model.displayName')} saved successfully`
+        'message': `Changes to ${this.get('selectedGroup.displayName')} saved successfully`
       });
     }),
     'saveGroupErrored': Ember.on('saveGroup:errored', function (taskInstance, err) {
-      this.get('model').rollback();
+      this.get('selectedGroup').rollback();
+      this.get('selectedGroup').reload({
+        'include': 'tenant, parent, groups'
+      });
       this.get('notification').display({
         'type': 'error',
         'error': err
       });
     }),
     'cancelGroup': (0, _emberConcurrency.task)(function* () {
-      yield this.get('model').rollback();
+      yield this.get('selectedGroup').rollback();
     }).drop(),
     'deleteGroup': (0, _emberConcurrency.task)(function* () {
       const modalData = {
         'title': 'Delete Group',
-        'content': `Are you sure you want to delete the <strong>${this.get('model.displayName')}</strong> group?`,
+        'content': `Are you sure you want to delete the <strong>${this.get('selectedGroup.displayName')}</strong> group?`,
         'confirmButton': {
           'text': 'Delete',
           'icon': 'delete',
@@ -4888,24 +4880,27 @@
       yield this.invokeAction('controller-action', 'displayModal', modalData);
     }).drop(),
     '_confirmedDeleteGroup': (0, _emberConcurrency.task)(function* () {
-      const parentGroup = yield this.get('model.parent');
+      const parentGroup = yield this.get('selectedGroup.parent');
       const groupSiblings = yield parentGroup.get('groups');
-      yield this.get('model').destroyRecord();
-      groupSiblings.removeObject(this.get('model'));
+      if (this.get('selectedGroup.isNew')) this.get('selectedGroup').deleteRecord();else yield this.get('selectedGroup').destroyRecord();
+      groupSiblings.removeObject(this.get('selectedGroup'));
       this.invokeAction('controller-action', 'setSelectedGroup', parentGroup);
     }).drop().evented().retryable(backoffPolicy),
     '_confirmedDeleteGroupSucceeded': Ember.on('_confirmedDeleteGroup:succeeded', function () {
       this.get('notification').display({
         'type': 'success',
-        'message': `Changes to ${this.get('model.displayName')} deleted successfully`
+        'message': `Changes to ${this.get('selectedGroup.displayName')} deleted successfully`
       });
     }),
     '_confirmedDeleteGroupErrored': Ember.on('_confirmedDeleteGroup:errored', function (taskInstance, err) {
-      this.get('model').rollback();
-      const parentGroup = this.get('model.parent');
+      this.get('selectedGroup').rollback();
+      this.get('selectedGroup').reload({
+        'include': 'tenant, parent, groups'
+      });
+      const parentGroup = this.get('selectedGroup.parent');
       const groupSiblings = parentGroup.get('groups');
-      groupSiblings.addObject(this.get('model'));
-      this.invokeAction('controller-action', 'setSelectedGroup', this.get('model'));
+      groupSiblings.addObject(this.get('selectedGroup'));
+      this.invokeAction('controller-action', 'setSelectedGroup', this.get('selectedGroup'));
       this.get('notification').display({
         'type': 'error',
         'error': err
@@ -4937,7 +4932,7 @@
       this.set('permissions', ['group-manager-read']);
     },
 
-    onHasPermissionChange: Ember.observer('hasPermission', function () {
+    'onHasPermissionChange': Ember.observer('hasPermission', function () {
       const updatePerm = this.get('currentUser').hasPermission('group-manager-update');
       this.set('editable', updatePerm);
     }),
@@ -4947,13 +4942,12 @@
       loadedGroups.forEach(tenantGroup => {
         if (tenantGroup.get('id') === subGroup.get('id')) return;
         if (!tenantGroup.get('defaultForNewUser')) return;
-        tenantGroup.set('defaultForNewUser', false);
         oldDefaultGroup = tenantGroup;
       });
       subGroup.set('defaultForNewUser', true);
       yield subGroup.save();
       if (oldDefaultGroup) yield oldDefaultGroup.reload({
-        'include': 'parent, groups'
+        'include': 'tenant, parent, groups'
       });
     }).keepLatest().evented().retryable(backoffPolicy),
     'changeDefaultForNewUserSucceeded': Ember.on('changeDefaultForNewUser:succeeded', function (taskInstance) {
@@ -4964,6 +4958,91 @@
     }),
     'changeDefaultForNewUserErrored': Ember.on('changeDefaultForNewUser:errored', function (taskInstance, err) {
       taskInstance.args[0].rollback();
+      taskInstance.args[0].reload({
+        'include': 'tenant, parent, groups'
+      });
+      this.get('notification').display({
+        'type': 'error',
+        'error': err
+      });
+    }),
+    'addGroup': (0, _emberConcurrency.task)(function* () {
+      const newGroup = this.get('store').createRecord('tenant-administration/group-manager/tenant-group', {
+        'tenant': this.get('model'),
+        'parent': this.get('selectedGroup')
+      });
+      const displayName = `New Group ${window.moment().valueOf()}`;
+      newGroup.set('displayName', displayName);
+      const siblingGroups = yield this.get('selectedGroup.groups');
+      siblingGroups.addObject(newGroup);
+      const tenantGroups = yield this.get('model.groups');
+      tenantGroups.addObject(newGroup);
+    }).drop(),
+    'saveGroup': (0, _emberConcurrency.task)(function* (subGroup) {
+      yield subGroup.save();
+    }).drop().evented().retryable(backoffPolicy),
+    'saveGroupSucceeded': Ember.on('saveGroup:succeeded', function (taskInstance) {
+      this.get('notification').display({
+        'type': 'success',
+        'message': `Changes to ${taskInstance.args[0].get('displayName')} saved successfully`
+      });
+    }),
+    'saveGroupErrored': Ember.on('saveGroup:errored', function (taskInstance, err) {
+      const subGroup = taskInstance.args[0];
+      subGroup.rollback();
+      if (!subGroup.get('isNew')) subGroup.reload({
+        'include': 'tenant, parent, groups'
+      });
+      this.get('notification').display({
+        'type': 'error',
+        'error': err
+      });
+    }),
+    'deleteGroup': (0, _emberConcurrency.task)(function* (subGroup) {
+      const modalData = {
+        'title': 'Delete Group',
+        'content': `Are you sure you want to delete the <strong>${subGroup.get('displayName')}</strong> group?`,
+        'confirmButton': {
+          'text': 'Delete',
+          'icon': 'delete',
+          'warn': true,
+          'raised': true,
+          'callback': () => {
+            this.get('_confirmedDeleteGroup').perform(subGroup);
+          }
+        },
+        'cancelButton': {
+          'text': 'Cancel',
+          'icon': 'close',
+          'primary': true,
+          'raised': true
+        }
+      };
+      yield this.invokeAction('controller-action', 'displayModal', modalData);
+    }).drop(),
+    '_confirmedDeleteGroup': (0, _emberConcurrency.task)(function* (subGroup) {
+      const parentGroup = yield subGroup.get('parent');
+      const groupSiblings = yield parentGroup.get('groups');
+      groupSiblings.removeObject(subGroup);
+      const tenantGroups = yield this.get('model.groups');
+      tenantGroups.removeObject(subGroup);
+      if (subGroup.get('isNew')) subGroup.deleteRecord();else yield subGroup.destroyRecord();
+    }).drop().evented().retryable(backoffPolicy),
+    '_confirmedDeleteGroupSucceeded': Ember.on('_confirmedDeleteGroup:succeeded', function (taskInstance) {
+      this.get('notification').display({
+        'type': 'success',
+        'message': `${taskInstance.args[0].get('displayName')} deleted successfully`
+      });
+    }),
+    '_confirmedDeleteGroupErrored': Ember.on('_confirmedDeleteGroup:errored', function (taskInstance, err) {
+      const subGroup = taskInstance.args[0];
+      subGroup.rollback();
+      subGroup.reload({
+        'include': 'tenant, parent, groups'
+      });
+      const parentGroup = subGroup.get('parent');
+      const groupSiblings = parentGroup.get('groups');
+      groupSiblings.addObject(subGroup);
       this.get('notification').display({
         'type': 'error',
         'error': err
@@ -5032,16 +5111,16 @@
       this._super(...arguments);
     },
 
-    onActivateNode: (0, _emberConcurrency.task)(function* (treeNode) {
+    'onActivateNode': (0, _emberConcurrency.task)(function* (treeNode) {
       try {
-        let tenantGroup = yield this.get('model');
+        let tenantGroup = yield this.get('selectedGroup');
         if (tenantGroup && tenantGroup.get('id') === treeNode.id) return;
         const store = this.get('store');
         tenantGroup = store.peekRecord('tenant-administration/group-manager/tenant-group', treeNode.id);
 
         if (!tenantGroup) {
           tenantGroup = yield store.findRecord('tenant-administration/group-manager/tenant-group', treeNode.id, {
-            'include': 'parent, groups'
+            'include': 'tenant, parent, groups'
           });
         }
 
@@ -5054,21 +5133,71 @@
         });
       }
     }).keepLatest(),
-    onSelectedGroupChanged: Ember.observer('model', function () {
-      if (!this.get('model')) return;
-      if (this.$('div#tenant-administration-group-manager-tree-container').jstree('get_selected')[0] === this.get('model.id')) return;
-      this.$('div#tenant-administration-group-manager-tree-container').jstree('activate_node', this.get('model.id'), false, false);
-      this.$('div#tenant-administration-group-manager-tree-container').jstree('open_node', this.get('model.id'));
+    'onSelectedGroupChanged': Ember.observer('selectedGroup', function () {
+      if (!this.get('selectedGroup')) return;
+      if (this.$('div#tenant-administration-group-manager-tree-container').jstree('get_selected')[0] === this.get('selectedGroup.id')) return;
+      const treeNode = this.$('div#tenant-administration-group-manager-tree-container').jstree('get_node', this.get('selectedGroup.id'));
+
+      if (treeNode) {
+        this.$('div#tenant-administration-group-manager-tree-container').jstree('activate_node', this.get('selectedGroup.id'), false, false);
+        this.$('div#tenant-administration-group-manager-tree-container').jstree('open_node', this.get('selectedGroup.id'));
+        return;
+      }
+
+      const parentNode = this.$('div#tenant-administration-group-manager-tree-container').jstree('get_node', this.get('selectedGroup.parent.id'));
+      this.$('div#tenant-administration-group-manager-tree-container').one('refresh_node.jstree', () => {
+        this.$('div#tenant-administration-group-manager-tree-container').jstree('activate_node', this.get('selectedGroup.id'), false, false);
+        this.$('div#tenant-administration-group-manager-tree-container').jstree('open_node', this.get('selectedGroup.id'));
+      });
+      this.$('div#tenant-administration-group-manager-tree-container').jstree('refresh_node', parentNode);
     }),
-    onSelectedGroupNameChanged: Ember.observer('model.displayName', function () {
-      const treeNode = this.$('div#tenant-administration-group-manager-tree-container').jstree('get_node', this.get('model.id'));
-      this.$('div#tenant-administration-group-manager-tree-container').jstree('rename_node', treeNode, this.get('model.displayName'));
+    'onSelectedGroupNameChanged': Ember.observer('selectedGroup.displayName', function () {
+      const treeNode = this.$('div#tenant-administration-group-manager-tree-container').jstree('get_node', this.get('selectedGroup.id'));
+      this.$('div#tenant-administration-group-manager-tree-container').jstree('rename_node', treeNode, this.get('selectedGroup.displayName'));
     }),
-    onSelectedGroupDestroyed: Ember.observer('model.isDeleted', 'model.hasDirtyAttributes', function () {
-      if (!this.get('model.isDeleted')) return;
-      const treeNode = this.$('div#tenant-administration-group-manager-tree-container').jstree('get_node', this.get('model.id'));
-      this.$('div#tenant-administration-group-manager-tree-container').jstree('delete_node', treeNode);
-    })
+    'onSelectedGroupDestroyed': Ember.observer('selectedGroup.isDeleted', 'selectedGroup.hasDirtyAttributes', function () {
+      if (this.get('selectedGroup.isDeleted')) {
+        if (this.get('selectedGroup.hasDirtyAttributes')) return;
+        const treeNode = this.$('div#tenant-administration-group-manager-tree-container').jstree('get_node', this.get('selectedGroup.id'));
+        this.$('div#tenant-administration-group-manager-tree-container').jstree('delete_node', treeNode);
+      } else {
+        const treeNode = this.$('div#tenant-administration-group-manager-tree-container').jstree('get_node', this.get('selectedGroup.id'));
+        if (treeNode) return;
+        const parentNode = this.$('div#tenant-administration-group-manager-tree-container').jstree('get_node', this.get('selectedGroup.parent.id'));
+        this.$('div#tenant-administration-group-manager-tree-container').jstree('refresh_node', parentNode);
+      }
+    }),
+    'onTenantGroupNameChanged': Ember.observer('model.groups.@each.displayName', function () {
+      this.get('_updateChildGroupText').perform();
+    }),
+    '_updateChildGroupText': (0, _emberConcurrency.task)(function* () {
+      const tenantGroups = yield this.get('model.groups');
+      tenantGroups.forEach(subGroup => {
+        const treeNode = this.$('div#tenant-administration-group-manager-tree-container').jstree('get_node', subGroup.get('id'));
+        if (!treeNode) return;
+        this.$('div#tenant-administration-group-manager-tree-container').jstree('rename_node', treeNode, subGroup.get('displayName'));
+      });
+    }).enqueue(),
+    'onTenantGroupsChanged': Ember.observer('model.groups.@each.isNew', 'model.groups.@each.isDeleted', function () {
+      this.get('_updateGroupTree').perform();
+    }),
+    '_updateGroupTree': (0, _emberConcurrency.task)(function* () {
+      const tenantGroups = yield this.get('model.groups');
+      tenantGroups.forEach(subGroup => {
+        let treeNode = this.$('div#tenant-administration-group-manager-tree-container').jstree('get_node', subGroup.get('id'));
+
+        if (subGroup.get('isNew') && !treeNode) {
+          treeNode = this.$('div#tenant-administration-group-manager-tree-container').jstree('create_node', subGroup.get('parent.id'), {
+            'id': subGroup.get('id'),
+            'text': subGroup.get('displayName')
+          });
+        }
+
+        if (subGroup.get('isDeleted') && treeNode) {
+          this.$('div#tenant-administration-group-manager-tree-container').jstree('delete_node', subGroup.get('id'));
+        }
+      });
+    }).enqueue()
   });
 
   _exports.default = _default;
@@ -5606,7 +5735,7 @@
       this.set('permissions', ['registered']);
     },
 
-    onDidInsertElement: (0, _emberConcurrency.task)(function* () {
+    'onDidInsertElement': (0, _emberConcurrency.task)(function* () {
       try {
         this.set('_profileImageElem', this.$('div#tenant-administration-user-manager-edit-account-image'));
         const profileImageElem = this.get('_profileImageElem'),
@@ -5641,7 +5770,7 @@
         this.set('_enableCroppieUpdates', true);
       }
     }).drop().on('didInsertElement'),
-    onWillDestroyElement: (0, _emberConcurrency.task)(function* () {
+    'onWillDestroyElement': (0, _emberConcurrency.task)(function* () {
       document.getElementById('tenant-administration-user-manager-edit-account-image').removeEventListener('drop', this._processDroppedImage.bind(this));
       yield this.get('_profileImageElem').croppie('destroy');
     }).drop().on('willDestroyElement'),
@@ -5677,7 +5806,7 @@
       }, 10000));
     },
 
-    _uploadProfileImage: (0, _emberConcurrency.task)(function* () {
+    '_uploadProfileImage': (0, _emberConcurrency.task)(function* () {
       try {
         this.set('_enableCroppieUpdates', false);
         const profileImageElem = this.get('_profileImageElem');
@@ -5738,11 +5867,11 @@
       this.set('permissions', ['user-manager-read']);
     },
 
-    onHasPermissionChange: Ember.observer('hasPermission', function () {
+    'onHasPermissionChange': Ember.observer('hasPermission', function () {
       const updatePerm = this.get('currentUser').hasPermission('user-manager-update');
       this.set('editable', updatePerm);
     }),
-    resetPassword: (0, _emberConcurrency.task)(function* (tenantUser) {
+    'resetPassword': (0, _emberConcurrency.task)(function* (tenantUser) {
       try {
         const self = this;
         const user = yield tenantUser.get('user');
@@ -5780,7 +5909,7 @@
         });
       }
     }).drop(),
-    doResetPassword: (0, _emberConcurrency.task)(function* (componentState) {
+    'doResetPassword': (0, _emberConcurrency.task)(function* (componentState) {
       try {
         componentState.tenantUser.set('operationIsRunning', true);
         yield this.get('ajax').post('/tenant-administration/user-manager/resetPassword', {
@@ -5797,7 +5926,7 @@
         componentState.tenantUser.set('operationIsRunning', false);
       }
     }).enqueue().retryable(backoffPolicy),
-    editAccount: (0, _emberConcurrency.task)(function* (tenantUser) {
+    'editAccount': (0, _emberConcurrency.task)(function* (tenantUser) {
       try {
         const self = this;
         const user = yield tenantUser.get('user');
@@ -5836,16 +5965,16 @@
         });
       }
     }).drop(),
-    doUpdateAccount: (0, _emberConcurrency.task)(function* (user) {
+    'doUpdateAccount': (0, _emberConcurrency.task)(function* (user) {
       yield user.save();
     }).enqueue().evented().retryable(backoffPolicy),
-    doUpdateAccountSucceeded: Ember.on('doUpdateAccount:succeeded', function (taskInstance) {
+    'doUpdateAccountSucceeded': Ember.on('doUpdateAccount:succeeded', function (taskInstance) {
       const user = taskInstance.args[0];
       const loggedInUser = this.get('currentUser').getUser();
       if (loggedInUser['user_id'] !== user.get('id')) return;
       window.TwyrApp.trigger('userChanged');
     }),
-    doUpdateAccountErrored: Ember.on('doUpdateAccount:errored', function (taskInstance, err) {
+    'doUpdateAccountErrored': Ember.on('doUpdateAccount:errored', function (taskInstance, err) {
       const user = taskInstance.args[0];
       user.rollback();
       this.get('notification').display({
@@ -5853,7 +5982,7 @@
         'error': err
       });
     }),
-    changeAccountStatus: (0, _emberConcurrency.task)(function* (tenantUser, newStatus) {
+    'changeAccountStatus': (0, _emberConcurrency.task)(function* (tenantUser, newStatus) {
       const oldStatus = tenantUser.get('accessStatus');
       tenantUser.set('operationIsRunning', true);
       tenantUser.set('accessStatus', newStatus);
@@ -5862,7 +5991,7 @@
       if (remainingUsersWithOldStatus) return;
       yield this.get('onChangeAccordionItem').perform(undefined);
     }).enqueue().evented().retryable(backoffPolicy),
-    changeAccountStatusErrored: Ember.on('changeAccountStatus:errored', function (taskInstance, err) {
+    'changeAccountStatusErrored': Ember.on('changeAccountStatus:errored', function (taskInstance, err) {
       const tenantUser = taskInstance.args[0];
       tenantUser.rollback();
       tenantUser.set('operationIsRunning', false);
@@ -5871,7 +6000,7 @@
         'error': err
       });
     }),
-    onChangeAccordionItem: (0, _emberConcurrency.task)(function* (newSelectedItem) {
+    'onChangeAccordionItem': (0, _emberConcurrency.task)(function* (newSelectedItem) {
       this.set('selectedAccordionItem', newSelectedItem);
       yield (0, _emberConcurrency.timeout)(10);
       if (!newSelectedItem) this.set('selectedAccordionItem', '1');
@@ -5895,7 +6024,7 @@
       this.set('permissions', ['user-manager-update']);
     },
 
-    onGeneratePasswordChange: Ember.observer('state.generateRandomPassword', function () {
+    'onGeneratePasswordChange': Ember.observer('state.generateRandomPassword', function () {
       this.set('state.newPassword', '');
     })
   });
@@ -5917,7 +6046,7 @@
     style: (0, _emberComputedStyle.default)('display'),
     currentTenant: null,
     allowedTenants: null,
-    display: Ember.computed('allowedTenants', 'hasPermission', function () {
+    'display': Ember.computed('allowedTenants', 'hasPermission', function () {
       return {
         'background-color': 'transparent',
         'display': this.get('hasPermission') && this.get('allowedTenants') && this.get('allowedTenants.length') > 1 ? 'block' : 'none'
@@ -5946,7 +6075,7 @@
       this.$('span.md-select-icon').css('color', 'white');
     },
 
-    onHasPermissionChange: Ember.observer('hasPermission', function () {
+    'onHasPermissionChange': Ember.observer('hasPermission', function () {
       this.onAllowedTenantsUpdated();
     }),
 
@@ -5968,7 +6097,7 @@
       this.set('allowedTenants', userDetails['otherTenants'] || null);
     },
 
-    onAllowedTenantsChange: Ember.observer('allowedTenants', function () {
+    'onAllowedTenantsChange': Ember.observer('allowedTenants', function () {
       if (!this.get('allowedTenants')) {
         this.set('currentTenant', null);
         return;
@@ -6182,7 +6311,7 @@
       this._super(...arguments);
     },
 
-    onWillInsertElement: (0, _emberConcurrency.task)(function* () {
+    'onWillInsertElement': (0, _emberConcurrency.task)(function* () {
       const mergedMessages = Object.assign({}, this.get('_messages'), this.get('messages') || {});
       this.set('themeInstance', _bootstrap.default.create({
         'table': 'table table-hover table-condensed',
@@ -6201,7 +6330,7 @@
         'editable': false
       });
     }).drop().on('willInsertElement'),
-    onDidInsertElement: (0, _emberConcurrency.task)(function* () {
+    'onDidInsertElement': (0, _emberConcurrency.task)(function* () {
       if (!this.get('createEnabled')) return;
       if (!(this.get('callbacks.addAction') || this.get('callbacks.addTask'))) return;
       const createButton = window.$('<button type="button" class="md-default-theme md-button md-primary md-raised"></button>');
@@ -6224,7 +6353,7 @@
       lastHeaderColumn.addClass('text-right');
       lastHeaderColumn.html(createButton);
     }).drop().on('didInsertElement'),
-    onWillDestroyElement: (0, _emberConcurrency.task)(function* () {
+    'onWillDestroyElement': (0, _emberConcurrency.task)(function* () {
       const createButton = window.$(this.$('table thead tr:first-child th:last-child button.md-button.md-primary')[0]);
       createButton.off('click');
     }).drop().on('willDestroyElement'),
@@ -6267,14 +6396,14 @@
   _exports.default = void 0;
 
   var _default = _baseController.default.extend({
-    notification: Ember.inject.service('integrated-notification'),
-    realtimeData: Ember.inject.service('realtime-data'),
-    modalData: null,
-    showDialog: false,
-    mainTitle: '',
-    displayCurrentYear: false,
-    startYear: _environment.default.twyr.startYear,
-    currentYear: _environment.default.twyr.startYear,
+    'notification': Ember.inject.service('integrated-notification'),
+    'realtimeData': Ember.inject.service('realtime-data'),
+    'modalData': null,
+    'showDialog': false,
+    'mainTitle': '',
+    'displayCurrentYear': false,
+    'startYear': _environment.default.twyr.startYear,
+    'currentYear': _environment.default.twyr.startYear,
 
     init() {
       this._super(...arguments);
@@ -6311,7 +6440,7 @@
       notification.display('Realtime Data Connectivity lost!');
     },
 
-    displayModal: function (data) {
+    displayModal(data) {
       if (this.get('showDialog')) {
         this.get('notification').display({
           'type': 'error',
@@ -6344,7 +6473,8 @@
       this.set('modalData', modalData);
       this.set('showDialog', true);
     },
-    closeDialog: function (proceed) {
+
+    closeDialog(proceed) {
       if (proceed && this.get('modalData.confirmButton.callback')) {
         this.get('modalData.confirmButton.callback')();
       }
@@ -6356,6 +6486,7 @@
       this.set('showDialog', false);
       this.set('modalData', null);
     },
+
     actions: {
       'controller-action': function (action, data) {
         if (this.get('showDialog') && this.get('modalData') && this.get('modalData.actions')) {
@@ -6510,7 +6641,7 @@
       this._super(...arguments);
     },
 
-    onPermissionChanges: Ember.on('init', Ember.observer('permissions', 'permissions.[]', 'permissions.@each', function () {
+    'onPermissionChanges': Ember.on('init', Ember.observer('permissions', 'permissions.[]', 'permissions.@each', function () {
       this.onUserDataUpdated();
     })),
 
@@ -6535,6 +6666,7 @@
 
   var _default = _baseController.default.extend({
     'breadcrumbStack': null,
+    'selectedFeature': null,
 
     init() {
       this._super(...arguments);
@@ -6544,13 +6676,13 @@
 
     setSelectedFeature(featureModel) {
       if (!featureModel) {
-        this.set('model', null);
+        this.set('selectedFeature', null);
         this.set('breadcrumbStack', null);
         return;
       }
 
       featureModel.reload().then(reloadedModel => {
-        this.set('model', reloadedModel);
+        this.set('selectedFeature', reloadedModel);
         let currentFeature = reloadedModel;
         const breadcrumbHierarchy = [];
 
@@ -6582,6 +6714,7 @@
 
   var _default = _baseController.default.extend({
     'breadcrumbStack': null,
+    'selectedGroup': null,
 
     init() {
       this._super(...arguments);
@@ -6591,16 +6724,18 @@
 
     setSelectedGroup(groupModel) {
       if (!groupModel) {
-        this.set('model', null);
+        this.set('selectedGroup', null);
         this.set('breadcrumbStack', null);
         return;
       }
 
-      if (groupModel.get('id') === this.get('model.id')) return;
+      if (groupModel.get('id') === this.get('selectedGroup.id')) return; // this.set('selectedGroup', groupModel);
+      // this.get('setBreadcrumbHierarchy').perform();
+
       groupModel.reload({
-        'include': 'parent, groups'
+        'include': 'tenant, parent, groups'
       }).then(reloadedModel => {
-        this.set('model', reloadedModel);
+        this.set('selectedGroup', reloadedModel);
         this.get('setBreadcrumbHierarchy').perform();
       }).catch(err => {
         this.get('notification').display({
@@ -6611,7 +6746,7 @@
     },
 
     'setBreadcrumbHierarchy': (0, _emberConcurrency.task)(function* () {
-      let currentGroup = this.get('model');
+      let currentGroup = this.get('selectedGroup');
       const breadcrumbHierarchy = [];
 
       while (currentGroup) {
@@ -6675,7 +6810,7 @@
     },
 
     // eslint-disable-next-line ember/no-on-calls-in-components
-    onPermissionChanges: Ember.on('init', Ember.observer('permissions', 'permissions.[]', 'permissions.@each', function () {
+    'onPermissionChanges': Ember.on('init', Ember.observer('permissions', 'permissions.[]', 'permissions.@each', function () {
       this.updatePermissions();
     })),
 
@@ -6741,7 +6876,7 @@
       this._super(...arguments);
     },
 
-    onPermissionChanges: Ember.on('init', Ember.observer('permissions', 'permissions.[]', 'permissions.@each', function () {
+    'onPermissionChanges': Ember.on('init', Ember.observer('permissions', 'permissions.[]', 'permissions.@each', function () {
       this.updatePermissions();
     })),
 
@@ -6788,21 +6923,21 @@
   _exports.default = void 0;
 
   var _default = _emberData.default.Model.extend({
-    moment: Ember.inject.service('moment'),
-    createdAt: _emberData.default.attr('date', {
+    'moment': Ember.inject.service('moment'),
+    'createdAt': _emberData.default.attr('date', {
       defaultValue() {
         return new Date();
       }
 
     }),
-    updatedAt: _emberData.default.attr('date', {
+    'updatedAt': _emberData.default.attr('date', {
       defaultValue() {
         return new Date();
       }
 
     }),
-    formattedCreatedAt: (0, _format.default)((0, _locale.default)((0, _moment2.default)('createdAt'), 'moment.locale'), 'DD/MMM/YYYY hh:mm A'),
-    formattedUpdatedAt: (0, _format.default)((0, _locale.default)((0, _moment2.default)('updatedAt'), 'moment.locale'), 'DD/MMM/YYYY hh:mm A')
+    'formattedCreatedAt': (0, _format.default)((0, _locale.default)((0, _moment2.default)('createdAt'), 'moment.locale'), 'DD/MMM/YYYY hh:mm A'),
+    'formattedUpdatedAt': (0, _format.default)((0, _locale.default)((0, _moment2.default)('updatedAt'), 'moment.locale'), 'DD/MMM/YYYY hh:mm A')
   });
 
   _exports.default = _default;
@@ -6816,8 +6951,8 @@
   _exports.default = void 0;
 
   var _default = Ember.Route.extend({
-    currentUser: Ember.inject.service('current-user'),
-    router: Ember.inject.service('router'),
+    'currentUser': Ember.inject.service('current-user'),
+    'router': Ember.inject.service('router'),
     actions: {
       'controller-action': function (action, data) {
         const controller = this.get('controller');
@@ -10399,7 +10534,9 @@
     'name': _emberData.default.attr('string'),
     'displayName': _emberData.default.attr('string'),
     'description': _emberData.default.attr('string'),
-    'defaultForNewUser': _emberData.default.attr('boolean'),
+    'defaultForNewUser': _emberData.default.attr('boolean', {
+      'defaultValue': false
+    }),
     'tenant': _emberData.default.belongsTo('tenant-administration/tenant', {
       'async': true,
       'inverse': 'groups'
@@ -10424,7 +10561,10 @@
       const parentGroupPath = yield parentGroup.get('path');
       if (!parentGroupPath) return this.get('displayName');
       return `${parentGroupPath} > ${this.get('displayName')}`;
-    }).keepLatest()
+    }).keepLatest(),
+    'onDisplayNameChanged': Ember.observer('displayName', function () {
+      this.set('name', this.get('displayName').dasherize());
+    })
   });
 
   _exports.default = _default;
@@ -10694,7 +10834,7 @@
       this.get('refreshDashboardFeatures').perform();
     },
 
-    refreshDashboardFeatures: (0, _emberConcurrency.task)(function* () {
+    'refreshDashboardFeatures': (0, _emberConcurrency.task)(function* () {
       let featureData = this.get('store').peekAll('dashboard/feature');
       if (!featureData.get('length')) featureData = yield this.get('store').findAll('dashboard/feature');
       this.get('controller').set('model', featureData);
@@ -10796,7 +10936,7 @@
       this.get('refreshProfileModel').perform();
     },
 
-    refreshProfileModel: (0, _emberConcurrency.task)(function* () {
+    'refreshProfileModel': (0, _emberConcurrency.task)(function* () {
       let profileData = this.get('store').peekRecord('profile/user', window.twyrUserId);
 
       if (!profileData) {
@@ -10868,7 +11008,7 @@
       this.get('refreshTenantModel').perform();
     },
 
-    refreshTenantModel: (0, _emberConcurrency.task)(function* () {
+    'refreshTenantModel': (0, _emberConcurrency.task)(function* () {
       let tenantData = this.get('store').peekRecord('tenant-administration/tenant', window.twyrTenantId);
 
       if (!tenantData) {
@@ -10926,6 +11066,18 @@
       this._super(...arguments);
     },
 
+    model() {
+      if (!window.twyrTenantId) {
+        this.get('store').unloadAll('tenant-administration/feature-manager/tenant-feature');
+        this.get('store').unloadAll('server-administration/feature');
+        this.get('store').unloadAll('server-administration/feature-permission');
+        return;
+      }
+
+      const tenantModel = this.modelFor('tenant-administration');
+      return tenantModel;
+    },
+
     onUserDataUpdated() {
       if (!window.twyrTenantId) {
         this.get('store').unloadAll('tenant-administration/feature-manager/tenant-feature');
@@ -10946,7 +11098,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/routes/tenant-administration/group-manager", ["exports", "twyr-webapp-server/framework/base-route"], function (_exports, _baseRoute) {
+;define("twyr-webapp-server/routes/tenant-administration/group-manager", ["exports", "twyr-webapp-server/framework/base-route", "ember-concurrency"], function (_exports, _baseRoute, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -10967,6 +11119,17 @@
       this._super(...arguments);
     },
 
+    model() {
+      if (!window.twyrTenantId) {
+        this.get('store').unloadAll('tenant-administration/group-manager/tenant-group');
+        return;
+      }
+
+      const tenantModel = this.modelFor('tenant-administration');
+      console.log(`Tenant Model (Route): `, tenantModel);
+      return tenantModel;
+    },
+
     onUserDataUpdated() {
       if (!window.twyrTenantId) {
         this.get('store').unloadAll('tenant-administration/group-manager/tenant-group');
@@ -10979,8 +11142,22 @@
         this.transitionTo('index');
         return;
       }
-    }
 
+      this.get('refreshTenantGroupModel').perform();
+    },
+
+    'refreshTenantGroupModel': (0, _emberConcurrency.task)(function* () {
+      let tenantModel = this.get('store').peekRecord('tenant-administration/tenant', window.twyrTenantId);
+
+      if (!tenantModel) {
+        tenantModel = yield this.get('store').findRecord('tenant-administration/tenant', window.twyrTenantId, {
+          'include': 'location'
+        });
+      }
+
+      console.log(`Tenant Model (Controller): `, tenantModel);
+      this.get('controller').set('model', tenantModel);
+    }).keepLatest()
   });
 
   _exports.default = _default;
@@ -11015,15 +11192,7 @@
       }
 
       const tenantUserData = this.get('store').peekAll('tenant-administration/user-manager/tenant-user');
-
-      if (tenantUserData.get('length')) {
-        const thisTenantUser = tenantUserData.filterBy('user.id', window.twyrUserId).shift();
-        thisTenantUser.get('user').reload({
-          'include': 'contacts'
-        });
-        return tenantUserData;
-      }
-
+      if (tenantUserData.get('length')) return tenantUserData;
       return this.get('store').findAll('tenant-administration/user-manager/tenant-user', {
         'include': 'tenant, user, user.contacts'
       });
@@ -11047,7 +11216,7 @@
       this.get('refreshTenantUserModel').perform();
     },
 
-    refreshTenantUserModel: (0, _emberConcurrency.task)(function* () {
+    'refreshTenantUserModel': (0, _emberConcurrency.task)(function* () {
       let tenantUserData = this.get('store').peekAll('tenant-administration/user-manager/tenant-user');
 
       if (!tenantUserData.get('length')) {
@@ -11183,10 +11352,10 @@
   _exports.default = void 0;
 
   var _default = Ember.Service.extend(Ember.Evented, {
-    ajax: Ember.inject.service('ajax'),
-    notification: Ember.inject.service('integrated-notification'),
-    userData: null,
-    onInit: (0, _emberConcurrency.task)(function* () {
+    'ajax': Ember.inject.service('ajax'),
+    'notification': Ember.inject.service('integrated-notification'),
+    'userData': null,
+    'onInit': (0, _emberConcurrency.task)(function* () {
       const fetchUserData = this.get('fetchUserData');
       yield fetchUserData.perform();
       window.TwyrApp.on('userChanged', this, this.onUserChanged);
@@ -11203,7 +11372,7 @@
       fetchUserData.perform();
     },
 
-    fetchUserData: (0, _emberConcurrency.task)(function* () {
+    'fetchUserData': (0, _emberConcurrency.task)(function* () {
       this.trigger('userDataUpdating');
 
       try {
@@ -11348,6 +11517,8 @@
         toast[data.type ? data.type : 'info'](data.message || data, data.title || (data.type ? data.type.capitalize() : ''), options);
         return;
       }
+
+      if (window.developmentMode) console.error(data.error);
 
       if (typeof data.error === 'string') {
         toast.error(data.error.replace(/\\n/g, '\n').split('\n').splice(0, 2).join('\n'), 'Error', options);
@@ -12229,8 +12400,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "obOOo41m",
-    "block": "{\"symbols\":[\"card\",\"table\",\"body\",\"feature\",\"row\",\"head\",\"table\",\"body\",\"permission\",\"row\",\"head\",\"parentCrumb\",\"idx\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[11,\"style\",\"font-size:0.95rem;\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex layout-row layout-align-start-center layout-wrap\"],[9],[0,\"\\n\"],[4,\"each\",[[23,[\"breadcrumbStack\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"if\",[[22,13,[]]],null,{\"statements\":[[0,\"  >  \"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,13,[]],[27,\"sub\",[[23,[\"breadcrumbStack\",\"length\"]],1],null]],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"span\"],[11,\"style\",\"line-height:2rem;\"],[9],[1,[22,12,[\"displayName\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[11,\"style\",\"line-height:2rem;\"],[3,\"action\",[[22,0,[]],\"controller-action\",\"changeSelectedFeature\",[22,12,[]]]],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[22,12,[\"displayName\"]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[12,13]},null],[0,\"\\t\\t\\t\"],[10],[0,\"\\n\"],[4,\"paper-switch\",null,[[\"class\",\"value\",\"onChange\",\"disabled\"],[\"m-0\",[27,\"await\",[[23,[\"model\",\"isTenantSubscribed\"]]],null],[27,\"perform\",[[23,[\"modifyTenantFeatureStatus\"]]],null],[27,\"not\",[[27,\"and\",[[27,\"await\",[[23,[\"model\",\"parent\",\"isTenantSubscribed\"]]],null],[27,\"eq\",[[23,[\"model\",\"deploy\"]],\"custom\"],null]],null]],null]]],{\"statements\":[[4,\"if\",[[27,\"await\",[[23,[\"model\",\"isTenantSubscribed\"]]],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\tSubscribed\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\tUnsubscribed\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"mx-3 pt-2 pb-4 layout-row layout-align-start-center\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[23,[\"model\",\"description\"]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"],[4,\"if\",[[27,\"get\",[[27,\"await\",[[23,[\"model\",\"permissions\"]]],null],\"length\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Permissions\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,7,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[11]},null],[4,\"component\",[[22,7,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,7,[\"sortDesc\"]],[27,\"await\",[[23,[\"model\",\"permissions\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,8,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,10,[\"cell\"]]],null,{\"statements\":[[1,[22,9,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,10,[\"cell\"]]],null,{\"statements\":[[1,[22,9,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[10]},null]],\"parameters\":[9]},null]],\"parameters\":[8]},null]],\"parameters\":[7]},null]],\"parameters\":[]},null],[4,\"if\",[[27,\"get\",[[27,\"await\",[[23,[\"model\",\"features\"]]],null],\"length\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Sub Features\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,2,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Access Level\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null],[4,\"component\",[[22,2,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,2,[\"sortDesc\"]],[27,\"await\",[[23,[\"model\",\"features\"]]],null]],null]],null,{\"statements\":[[4,\"if\",[[27,\"eq\",[[22,4,[\"type\"]],\"feature\"],null]],null,{\"statements\":[[4,\"component\",[[22,3,[\"row\"]]],[[\"onClick\"],[[27,\"action\",[[22,0,[]],\"controller-action\",\"changeSelectedFeature\",[22,4,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[27,\"titleize\",[[22,4,[\"deploy\"]]],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "lCXdHEw/",
+    "block": "{\"symbols\":[\"card\",\"table\",\"body\",\"feature\",\"row\",\"head\",\"table\",\"body\",\"permission\",\"row\",\"head\",\"parentCrumb\",\"idx\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[11,\"style\",\"font-size:0.95rem;\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex layout-row layout-align-start-center layout-wrap\"],[9],[0,\"\\n\"],[4,\"each\",[[23,[\"breadcrumbStack\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"if\",[[22,13,[]]],null,{\"statements\":[[0,\"  >  \"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,13,[]],[27,\"sub\",[[23,[\"breadcrumbStack\",\"length\"]],1],null]],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"span\"],[11,\"style\",\"line-height:2rem;\"],[9],[1,[22,12,[\"displayName\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[11,\"style\",\"line-height:2rem;\"],[3,\"action\",[[22,0,[]],\"controller-action\",\"setSelectedFeature\",[22,12,[]]]],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[22,12,[\"displayName\"]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[12,13]},null],[0,\"\\t\\t\\t\"],[10],[0,\"\\n\"],[4,\"paper-switch\",null,[[\"class\",\"value\",\"onChange\",\"disabled\"],[\"m-0\",[27,\"await\",[[23,[\"selectedFeature\",\"isTenantSubscribed\"]]],null],[27,\"perform\",[[23,[\"modifyTenantFeatureStatus\"]]],null],[27,\"not\",[[27,\"and\",[[27,\"await\",[[23,[\"selectedFeature\",\"parent\",\"isTenantSubscribed\"]]],null],[27,\"eq\",[[23,[\"selectedFeature\",\"deploy\"]],\"custom\"],null]],null]],null]]],{\"statements\":[[4,\"if\",[[27,\"await\",[[23,[\"selectedFeature\",\"isTenantSubscribed\"]]],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\tSubscribed\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\tUnsubscribed\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"mx-3 pt-2 pb-4 layout-row layout-align-start-center\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[23,[\"selectedFeature\",\"description\"]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\"],[4,\"if\",[[27,\"get\",[[27,\"await\",[[23,[\"selectedFeature\",\"permissions\"]]],null],\"length\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Permissions\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,7,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,11,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[11]},null],[4,\"component\",[[22,7,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,7,[\"sortDesc\"]],[27,\"await\",[[23,[\"selectedFeature\",\"permissions\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,8,[\"row\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,10,[\"cell\"]]],null,{\"statements\":[[1,[22,9,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,10,[\"cell\"]]],null,{\"statements\":[[1,[22,9,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[10]},null]],\"parameters\":[9]},null]],\"parameters\":[8]},null]],\"parameters\":[7]},null]],\"parameters\":[]},null],[4,\"if\",[[27,\"get\",[[27,\"await\",[[23,[\"selectedFeature\",\"features\"]]],null],\"length\"],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-divider\",null,[[\"class\"],[\"mt-4\"]]],false],[0,\"\\n\\t\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Sub Features\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,2,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Access Level\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null],[4,\"component\",[[22,2,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,2,[\"sortDesc\"]],[27,\"await\",[[23,[\"selectedFeature\",\"features\"]]],null]],null]],null,{\"statements\":[[4,\"if\",[[27,\"eq\",[[22,4,[\"type\"]],\"feature\"],null]],null,{\"statements\":[[4,\"component\",[[22,3,[\"row\"]]],[[\"onClick\"],[[27,\"action\",[[22,0,[]],\"controller-action\",\"setSelectedFeature\",[22,4,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[27,\"titleize\",[[22,4,[\"deploy\"]]],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/feature-manager/main-component.hbs"
     }
@@ -12265,8 +12436,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "wCMsoB6r",
-    "block": "{\"symbols\":[\"card\",\"tab\",\"parentCrumb\",\"idx\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[11,\"style\",\"font-size:0.95rem;\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex layout-row layout-align-start-center layout-wrap\"],[9],[0,\"\\n\"],[4,\"each\",[[23,[\"breadcrumbStack\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"if\",[[22,4,[]]],null,{\"statements\":[[0,\"  >  \"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,4,[]],[27,\"sub\",[[23,[\"breadcrumbStack\",\"length\"]],1],null]],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"span\"],[11,\"style\",\"line-height:2rem;\"],[9],[1,[22,3,[\"displayName\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[11,\"style\",\"line-height:2rem;\"],[3,\"action\",[[22,0,[]],\"controller-action\",\"changeSelectedGroup\",[22,3,[]]]],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[22,3,[\"displayName\"]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[3,4]},null],[0,\"\\t\\t\\t\"],[10],[0,\"\\n\"],[4,\"if\",[[27,\"and\",[[23,[\"editable\"]],[27,\"await\",[[23,[\"model\",\"parent\"]]],null]],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-end-center\"],[9],[0,\"\\n\"],[4,\"liquid-if\",[[27,\"or\",[[23,[\"saveGroup\",\"isRunning\"]],[23,[\"cancelGroup\",\"isRunning\"]],[23,[\"deleteGroup\",\"isRunning\"]]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"disabled\",\"onClick\"],[true,null]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"raised\",\"onClick\",\"disabled\",\"bubbles\"],[true,true,[27,\"perform\",[[23,[\"saveGroup\"]]],null],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],null],false],[0,\" Save\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-button\",null,[[\"accent\",\"raised\",\"onClick\",\"disabled\",\"bubbles\"],[true,true,[27,\"perform\",[[23,[\"cancelGroup\"]]],null],[27,\"not\",[[23,[\"model\",\"hasDirtyAttributes\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"cancel\"],null],false],[0,\" Cancel\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-button\",null,[[\"warn\",\"raised\",\"onClick\",\"bubbles\"],[true,true,[27,\"perform\",[[23,[\"deleteGroup\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\" Delete\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}],[0,\"\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"mx-3 pt-4 pb-2 layout-row layout-align-start-space-between\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"disabled\",\"minLength\"],[\"text\",\"flex\",\"Name\",[23,[\"model\",\"displayName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"displayName\"]]],null]],null],[27,\"not\",[[27,\"and\",[[23,[\"editable\"]],[27,\"await\",[[23,[\"model\",\"parent\"]]],null]],null]],null],\"3\"]]],false],[0,\"\\n\\n\"],[4,\"paper-switch\",null,[[\"value\",\"onChange\",\"disabled\"],[[23,[\"model\",\"defaultForNewUser\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"defaultForNewUser\"]]],null]],null],[27,\"or\",[[23,[\"model\",\"defaultForNewUser\"]],[27,\"not\",[[27,\"and\",[[23,[\"editable\"]],[27,\"await\",[[23,[\"model\",\"parent\"]]],null]],null]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"model\",\"defaultForNewUser\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\tDefault Group\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\tNon-default Group\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\\n\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"class\",\"mx-3 pt-2 pb-4 layout-row layout-align-start-center\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"textarea\",\"block\",\"class\",\"value\",\"onChange\",\"passThru\",\"disabled\"],[true,true,\"flex\",[23,[\"model\",\"description\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"model\",\"description\"]]],null]],null],[27,\"hash\",null,[[\"rows\",\"maxRows\"],[3,3]]],[27,\"not\",[[27,\"and\",[[23,[\"editable\"]],[27,\"await\",[[23,[\"model\",\"parent\"]]],null]],null]],null]]]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\n\"],[4,\"bs-tab\",null,null,{\"statements\":[[4,\"component\",[[22,2,[\"pane\"]]],[[\"title\"],[\"Sub-Groups\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/group-manager/sub-group-editor-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,2,[\"pane\"]]],[[\"title\"],[\"Permissions\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[7,\"p\"],[9],[0,\"TODO: Group permission editor\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,2,[\"pane\"]]],[[\"title\"],[\"Users\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[7,\"p\"],[9],[0,\"TODO: Group users editor\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "vD0hg3/x",
+    "block": "{\"symbols\":[\"card\",\"tab\",\"parentCrumb\",\"idx\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0 layout-column layout-align-start-stretch\"]],{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[11,\"style\",\"font-size:0.95rem;\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex layout-row layout-align-start-center layout-wrap\"],[9],[0,\"\\n\"],[4,\"each\",[[23,[\"breadcrumbStack\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"if\",[[22,4,[]]],null,{\"statements\":[[0,\"  >  \"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[27,\"eq\",[[22,4,[]],[27,\"sub\",[[23,[\"breadcrumbStack\",\"length\"]],1],null]],null]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"span\"],[11,\"style\",\"line-height:2rem;\"],[9],[1,[22,3,[\"displayName\"]],false],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"a\"],[11,\"href\",\"#\"],[11,\"style\",\"line-height:2rem;\"],[3,\"action\",[[22,0,[]],\"controller-action\",\"setSelectedGroup\",[22,3,[]]]],[9],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[1,[22,3,[\"displayName\"]],false],[0,\"\\n\\t\\t\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[3,4]},null],[0,\"\\t\\t\\t\"],[10],[0,\"\\n\"],[4,\"if\",[[27,\"and\",[[23,[\"editable\"]],[27,\"await\",[[23,[\"selectedGroup\",\"parent\"]]],null]],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-end-center\"],[9],[0,\"\\n\"],[4,\"liquid-if\",[[27,\"or\",[[23,[\"saveGroup\",\"isRunning\"]],[23,[\"cancelGroup\",\"isRunning\"]],[23,[\"_confirmedDeleteGroup\",\"isRunning\"]]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"disabled\",\"onClick\"],[true,null]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"rotate-left\"],[[\"reverseSpin\"],[true]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"raised\",\"onClick\",\"disabled\",\"bubbles\"],[true,true,[27,\"perform\",[[23,[\"saveGroup\"]]],null],[27,\"not\",[[23,[\"selectedGroup\",\"hasDirtyAttributes\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],null],false],[0,\" Save\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-button\",null,[[\"accent\",\"raised\",\"onClick\",\"disabled\",\"bubbles\"],[true,true,[27,\"perform\",[[23,[\"cancelGroup\"]]],null],[27,\"not\",[[23,[\"selectedGroup\",\"hasDirtyAttributes\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"cancel\"],null],false],[0,\" Cancel\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"unless\",[[23,[\"selectedGroup\",\"defaultForNewUser\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"warn\",\"raised\",\"onClick\",\"bubbles\"],[true,true,[27,\"perform\",[[23,[\"deleteGroup\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\" Delete\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]}],[0,\"\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[7,\"div\"],[11,\"class\",\"mx-3 pt-4 pb-2 layout-row layout-align-start-space-between\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"label\",\"value\",\"onChange\",\"disabled\",\"minLength\"],[\"text\",\"flex\",\"Name\",[23,[\"selectedGroup\",\"displayName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"selectedGroup\",\"displayName\"]]],null]],null],[27,\"not\",[[27,\"and\",[[23,[\"editable\"]],[27,\"await\",[[23,[\"selectedGroup\",\"parent\"]]],null]],null]],null],\"3\"]]],false],[0,\"\\n\\n\"],[4,\"paper-switch\",null,[[\"value\",\"onChange\",\"disabled\"],[[23,[\"selectedGroup\",\"defaultForNewUser\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"selectedGroup\",\"defaultForNewUser\"]]],null]],null],[27,\"or\",[[23,[\"selectedGroup\",\"defaultForNewUser\"]],[27,\"not\",[[27,\"and\",[[23,[\"editable\"]],[27,\"await\",[[23,[\"selectedGroup\",\"parent\"]]],null]],null]],null]],null]]],{\"statements\":[[4,\"liquid-if\",[[23,[\"selectedGroup\",\"defaultForNewUser\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\tDefault Group\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\tNon-default Group\\n\"]],\"parameters\":[]}]],\"parameters\":[]},null],[0,\"\\t\\t\"],[10],[0,\"\\n\\n\\t\\t\"],[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[7,\"div\"],[11,\"class\",\"mx-3 pt-2 pb-4 layout-row layout-align-start-center\"],[9],[0,\"\\n\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"textarea\",\"block\",\"class\",\"value\",\"onChange\",\"passThru\",\"disabled\"],[true,true,\"flex\",[23,[\"selectedGroup\",\"description\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"selectedGroup\",\"description\"]]],null]],null],[27,\"hash\",null,[[\"rows\",\"maxRows\"],[3,3]]],[27,\"not\",[[27,\"and\",[[23,[\"editable\"]],[27,\"await\",[[23,[\"selectedGroup\",\"parent\"]]],null]],null]],null]]]],false],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\n\"],[4,\"bs-tab\",null,null,{\"statements\":[[4,\"component\",[[22,2,[\"pane\"]]],[[\"title\"],[\"Sub-Groups\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/group-manager/sub-group-editor-component\"],[[\"model\",\"selectedGroup\",\"controller-action\"],[[23,[\"model\"]],[23,[\"selectedGroup\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,2,[\"pane\"]]],[[\"title\"],[\"Permissions\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[7,\"p\"],[9],[0,\"TODO: Group permission editor\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,2,[\"pane\"]]],[[\"title\"],[\"Users\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[7,\"p\"],[9],[0,\"TODO: Group users editor\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/group-manager/main-component.hbs"
     }
@@ -12283,8 +12454,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "GzFNHOpj",
-    "block": "{\"symbols\":[\"table\",\"body\",\"subGroup\",\"row\",\"head\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"Child Groups\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,1,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\"],[4,\"component\",[[22,5,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,5,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,5,[\"column\"]]],null,{\"statements\":[[0,\"Default Y/N\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,5,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[5]},null],[4,\"component\",[[22,1,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,1,[\"sortDesc\"]],[27,\"await\",[[23,[\"model\",\"groups\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],[[\"onClick\"],[[27,\"action\",[[22,0,[]],\"controller-action\",\"changeSelectedGroup\",[22,3,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[1,[22,3,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[1,[22,3,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\\n\"],[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"text-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"paper-checkbox\",null,[[\"class\",\"value\",\"onChange\",\"disabled\"],[\"flex m-0\",[22,3,[\"defaultForNewUser\"]],[27,\"perform\",[[23,[\"changeDefaultForNewUser\"]],[22,3,[]]],null],[27,\"or\",[[22,3,[\"defaultForNewUser\"]],[27,\"not\",[[27,\"and\",[[23,[\"editable\"]],[27,\"await\",[[22,3,[\"parent\"]]],null]],null]],null]],null]]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"text-right\"]],{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\"],[true,\"Delete sub-group\",[27,\"perform\",[[23,[\"deleteGroup\"]],[22,3,[]]],null]]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "3Bt8ZCZ8",
+    "block": "{\"symbols\":[\"table\",\"body\",\"subGroup\",\"row\",\"row\",\"head\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\"],[7,\"span\"],[11,\"class\",\"flex\"],[11,\"style\",\"font-size:0.95rem;\"],[9],[0,\"Child Groups\"],[10],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"raised\",\"onClick\",\"bubbles\"],[true,true,[27,\"perform\",[[23,[\"addGroup\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"add\"],null],false],[0,\" Add Sub-group\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,1,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Default Y/N\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[6]},null],[4,\"component\",[[22,1,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,1,[\"sortDesc\"]],[27,\"await\",[[23,[\"selectedGroup\",\"groups\"]]],null]],null]],null,{\"statements\":[[4,\"if\",[[22,3,[\"isNew\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],null,{\"statements\":[[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"value\",\"onChange\",\"minLength\"],[\"text\",\"mb-0\",[22,3,[\"displayName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[22,3,[\"displayName\"]]],null]],null],\"3\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[22,3,[\"description\"]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"text-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t \\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"text-right\"]],{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\",\"bubbles\"],[true,\"Save sub-group\",[27,\"perform\",[[23,[\"saveGroup\"]],[22,3,[]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\",\"bubbles\"],[true,\"Delete sub-group\",[27,\"perform\",[[23,[\"deleteGroup\"]],[22,3,[]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[5]},null]],\"parameters\":[]},{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],[[\"onClick\"],[[27,\"action\",[[22,0,[]],\"controller-action\",\"setSelectedGroup\",[22,3,[]]],null]]],{\"statements\":[[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[22,3,[\"displayName\"]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[22,3,[\"description\"]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"text-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-checkbox\",null,[[\"class\",\"value\",\"onChange\",\"disabled\",\"bubbles\"],[\"flex m-0\",[22,3,[\"defaultForNewUser\"]],[27,\"perform\",[[23,[\"changeDefaultForNewUser\"]],[22,3,[]]],null],[27,\"or\",[[22,3,[\"defaultForNewUser\"]],[27,\"not\",[[27,\"and\",[[23,[\"editable\"]],[27,\"await\",[[22,3,[\"parent\"]]],null]],null]],null]],null],false]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"text-right\"]],{\"statements\":[[4,\"unless\",[[22,3,[\"defaultForNewUser\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\",\"bubbles\"],[true,\"Delete sub-group\",[27,\"perform\",[[23,[\"deleteGroup\"]],[22,3,[]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null]],\"parameters\":[]}]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/group-manager/sub-group-editor-component.hbs"
     }
@@ -12607,8 +12778,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "bCvHSHoW",
-    "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[0,\"\\t\"],[1,[27,\"page-title\",[\"Feature Manager\"],null],false],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"p-0 card-header\"],[11,\"role\",\"tab\"],[9],[0,\"\\n\\t\\t\"],[7,\"button\"],[11,\"class\",\"btn btn-link\"],[11,\"type\",\"button\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Feature Manager\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-start-stretch layout-wrap\"],[9],[0,\"\\n\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/tree-component\"],[[\"class\",\"model\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-40 flex-gt-lg-30 layout-row layout-align-start-stretch\",[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/main-component\"],[[\"class\",\"model\",\"breadcrumbStack\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-60 flex-gt-lg-70 layout-row layout-align-start-stretch\",[23,[\"model\"]],[23,[\"breadcrumbStack\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "XZh51QpN",
+    "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[0,\"\\t\"],[1,[27,\"page-title\",[\"Feature Manager\"],null],false],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"p-0 card-header\"],[11,\"role\",\"tab\"],[9],[0,\"\\n\\t\\t\"],[7,\"button\"],[11,\"class\",\"btn btn-link\"],[11,\"type\",\"button\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Feature Manager\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-start-stretch layout-wrap\"],[9],[0,\"\\n\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/tree-component\"],[[\"class\",\"model\",\"selectedFeature\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-40 flex-gt-lg-30 layout-row layout-align-start-stretch\",[23,[\"model\"]],[23,[\"selectedFeature\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/feature-manager/main-component\"],[[\"class\",\"model\",\"selectedFeature\",\"breadcrumbStack\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-60 flex-gt-lg-70 layout-row layout-align-start-stretch\",[23,[\"model\"]],[23,[\"selectedFeature\"]],[23,[\"breadcrumbStack\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/tenant-administration/feature-manager.hbs"
     }
@@ -12625,8 +12796,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "pNOTi8Hv",
-    "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[0,\"\\t\"],[1,[27,\"page-title\",[\"Group Manager\"],null],false],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"p-0 card-header\"],[11,\"role\",\"tab\"],[9],[0,\"\\n\\t\\t\"],[7,\"button\"],[11,\"class\",\"btn btn-link\"],[11,\"type\",\"button\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Group Manager\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-start-stretch layout-wrap\"],[9],[0,\"\\n\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/group-manager/tree-component\"],[[\"class\",\"model\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-40 flex-gt-lg-30 layout-row layout-align-start-stretch\",[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/group-manager/main-component\"],[[\"class\",\"model\",\"breadcrumbStack\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-60 flex-gt-lg-70 layout-row layout-align-start-stretch\",[23,[\"model\"]],[23,[\"breadcrumbStack\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "QC5JDh88",
+    "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[0,\"\\t\"],[1,[27,\"page-title\",[\"Group Manager\"],null],false],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"p-0 card-header\"],[11,\"role\",\"tab\"],[9],[0,\"\\n\\t\\t\"],[7,\"button\"],[11,\"class\",\"btn btn-link\"],[11,\"type\",\"button\"],[9],[0,\"\\n\\t\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"Group Manager\"],[10],[0,\"\\n\\t\\t\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-start-stretch layout-wrap\"],[9],[0,\"\\n\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/group-manager/tree-component\"],[[\"class\",\"model\",\"selectedGroup\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-40 flex-gt-lg-30 layout-row layout-align-start-stretch\",[23,[\"model\"]],[23,[\"selectedGroup\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\\t\"],[1,[27,\"component\",[\"tenant-administration/group-manager/main-component\"],[[\"class\",\"model\",\"selectedGroup\",\"breadcrumbStack\",\"controller-action\"],[\"flex-100 flex-gt-sm-50 flex-gt-md-60 flex-gt-lg-70 layout-row layout-align-start-stretch\",[23,[\"model\"]],[23,[\"selectedGroup\"]],[23,[\"breadcrumbStack\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/tenant-administration/group-manager.hbs"
     }
@@ -13013,7 +13184,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-google-maps":{"key":"AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA","language":"en","region":"IN","protocol":"https","version":"3.34","src":"https://maps.googleapis.com/maps/api/js?v=3.34&region=IN&language=en&key=AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+82f2cb9e"},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-google-maps":{"key":"AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA","language":"en","region":"IN","protocol":"https","version":"3.34","src":"https://maps.googleapis.com/maps/api/js?v=3.34&region=IN&language=en&key=AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+d8029168"},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;
