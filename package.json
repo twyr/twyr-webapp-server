@@ -95,7 +95,7 @@
 		"koa2-formidable": "*",
 		"memory-cache": "*",
 		"moment": "^2.22.2",
-		"node-mocks-http": "1.7.0",
+		"node-mocks-http": "1.7.3",
 		"nodejs-projecthoneypot": "*",
 		"nodemailer": "^4.6.8",
 		"nodemailer-smtp-transport": "*",
@@ -128,12 +128,12 @@
 		"chai": "^4.2.0",
 		"chai-http": "^4.2.0",
 		"chai-json": "^1.0.0",
-		"clinic": "^1.4.0",
+		"clinic": "^2.0.0",
 		"docdash2": "*",
 		"eslint": "^5.9.0",
 		"eslint-junit": "*",
 		"eslint-plugin-jsdoc": "^3.9.1",
-		"eslint-plugin-node": "^7.0.1",
+		"eslint-plugin-node": "^8.0.0",
 		"eslint-plugin-security": "^1.4.0",
 		"grunt": "^1.0.3",
 		"grunt-contrib-clean": "^2.0.0",
@@ -151,7 +151,7 @@
 		"mocha": "^5.2.0",
 		"mocha-junit-reporter": "^1.18.0",
 		"mocha-prepare": "^0.1.0",
-		"redis-mock": "^0.33.0"
+		"redis-mock": "^0.39.0"
 	},
 	"scripts": {
 		"build": "./node_modules/.bin/grunt",
