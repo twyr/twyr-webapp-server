@@ -4973,6 +4973,7 @@
       });
       const displayName = `New Group ${window.moment().valueOf()}`;
       newGroup.set('displayName', displayName);
+      newGroup.set('description', displayName);
       const siblingGroups = yield this.get('selectedGroup.groups');
       siblingGroups.addObject(newGroup);
       const tenantGroups = yield this.get('model.groups');
@@ -5156,6 +5157,9 @@
       this.$('div#tenant-administration-group-manager-tree-container').jstree('rename_node', treeNode, this.get('selectedGroup.displayName'));
     }),
     'onSelectedGroupDestroyed': Ember.observer('selectedGroup.isDeleted', 'selectedGroup.hasDirtyAttributes', function () {
+      Ember.run.once(this, 'processGroupDeletion');
+    }),
+    'processGroupDeletion': function () {
       if (this.get('selectedGroup.isDeleted')) {
         if (this.get('selectedGroup.hasDirtyAttributes')) return;
         const treeNode = this.$('div#tenant-administration-group-manager-tree-container').jstree('get_node', this.get('selectedGroup.id'));
@@ -5166,12 +5170,13 @@
         const parentNode = this.$('div#tenant-administration-group-manager-tree-container').jstree('get_node', this.get('selectedGroup.parent.id'));
         this.$('div#tenant-administration-group-manager-tree-container').jstree('refresh_node', parentNode);
       }
-    }),
+    },
     'onTenantGroupNameChanged': Ember.observer('model.groups.@each.displayName', function () {
       this.get('_updateChildGroupText').perform();
     }),
     '_updateChildGroupText': (0, _emberConcurrency.task)(function* () {
-      const tenantGroups = yield this.get('model.groups');
+      const tenantGroups = yield this.get('selectedGroup.groups');
+      if (!tenantGroups) return;
       tenantGroups.forEach(subGroup => {
         const treeNode = this.$('div#tenant-administration-group-manager-tree-container').jstree('get_node', subGroup.get('id'));
         if (!treeNode) return;
@@ -5179,11 +5184,14 @@
       });
     }).enqueue(),
     'onTenantGroupsChanged': Ember.observer('model.groups.@each.isNew', 'model.groups.@each.isDeleted', function () {
-      this.get('_updateGroupTree').perform();
+      Ember.run.once(this, () => {
+        // console.log(`Firing observer for 'model.groups.@each.isNew' OR 'model.groups.@each.isDeleted'`);
+        this.get('_updateGroupTree').perform();
+      });
     }),
     '_updateGroupTree': (0, _emberConcurrency.task)(function* () {
       const tenantGroups = yield this.get('selectedGroup.groups');
-      tenantGroups.forEach(subGroup => {
+      if (tenantGroups) tenantGroups.forEach(subGroup => {
         let treeNode = this.$('div#tenant-administration-group-manager-tree-container').jstree('get_node', subGroup.get('id'));
 
         if (subGroup.get('isNew') && !treeNode) {
@@ -6733,9 +6741,7 @@
         return;
       }
 
-      if (groupModel.get('id') === this.get('selectedGroup.id')) return; // this.set('selectedGroup', groupModel);
-      // this.get('setBreadcrumbHierarchy').perform();
-
+      if (groupModel.get('id') === this.get('selectedGroup.id')) return;
       groupModel.reload({
         'include': 'tenant, parent, groups'
       }).then(reloadedModel => {
@@ -11130,8 +11136,9 @@
       }
 
       const tenantModel = this.modelFor('tenant-administration');
-      console.log(`Tenant Model (Route): `, tenantModel);
-      return tenantModel;
+      return tenantModel || this.get('store').findRecord('tenant-administration/tenant', window.twyrTenantId, {
+        'include': 'location'
+      });
     },
 
     onUserDataUpdated() {
@@ -11159,7 +11166,6 @@
         });
       }
 
-      console.log(`Tenant Model (Controller): `, tenantModel);
       this.get('controller').set('model', tenantModel);
     }).keepLatest()
   });
@@ -12458,8 +12464,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "3Bt8ZCZ8",
-    "block": "{\"symbols\":[\"table\",\"body\",\"subGroup\",\"row\",\"row\",\"head\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\"],[7,\"span\"],[11,\"class\",\"flex\"],[11,\"style\",\"font-size:0.95rem;\"],[9],[0,\"Child Groups\"],[10],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"raised\",\"onClick\",\"bubbles\"],[true,true,[27,\"perform\",[[23,[\"addGroup\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"add\"],null],false],[0,\" Add Sub-group\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,1,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Default Y/N\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[6]},null],[4,\"component\",[[22,1,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,1,[\"sortDesc\"]],[27,\"await\",[[23,[\"selectedGroup\",\"groups\"]]],null]],null]],null,{\"statements\":[[4,\"if\",[[22,3,[\"isNew\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],null,{\"statements\":[[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"value\",\"onChange\",\"minLength\"],[\"text\",\"mb-0\",[22,3,[\"displayName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[22,3,[\"displayName\"]]],null]],null],\"3\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[22,3,[\"description\"]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"text-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t \\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"text-right\"]],{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\",\"bubbles\"],[true,\"Save sub-group\",[27,\"perform\",[[23,[\"saveGroup\"]],[22,3,[]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\",\"bubbles\"],[true,\"Delete sub-group\",[27,\"perform\",[[23,[\"deleteGroup\"]],[22,3,[]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[5]},null]],\"parameters\":[]},{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],[[\"onClick\"],[[27,\"action\",[[22,0,[]],\"controller-action\",\"setSelectedGroup\",[22,3,[]]],null]]],{\"statements\":[[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[22,3,[\"displayName\"]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[22,3,[\"description\"]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"text-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-checkbox\",null,[[\"class\",\"value\",\"onChange\",\"disabled\",\"bubbles\"],[\"flex m-0\",[22,3,[\"defaultForNewUser\"]],[27,\"perform\",[[23,[\"changeDefaultForNewUser\"]],[22,3,[]]],null],[27,\"or\",[[22,3,[\"defaultForNewUser\"]],[27,\"not\",[[27,\"and\",[[23,[\"editable\"]],[27,\"await\",[[22,3,[\"parent\"]]],null]],null]],null]],null],false]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"text-right\"]],{\"statements\":[[4,\"unless\",[[22,3,[\"defaultForNewUser\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\",\"bubbles\"],[true,\"Delete sub-group\",[27,\"perform\",[[23,[\"deleteGroup\"]],[22,3,[]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null]],\"parameters\":[]}]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "QWHKEdC4",
+    "block": "{\"symbols\":[\"table\",\"body\",\"subGroup\",\"row\",\"row\",\"head\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\"],[7,\"span\"],[11,\"class\",\"flex\"],[11,\"style\",\"font-size:1.25rem;\"],[9],[0,\"Child Groups\"],[10],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"raised\",\"onClick\",\"bubbles\"],[true,true,[27,\"perform\",[[23,[\"addGroup\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"add\"],null],false],[0,\" Add Sub-group\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"displayName\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,1,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\"Default Y/N\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[6]},null],[4,\"component\",[[22,1,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,1,[\"sortDesc\"]],[27,\"await\",[[23,[\"selectedGroup\",\"groups\"]]],null]],null]],null,{\"statements\":[[4,\"if\",[[22,3,[\"isNew\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],null,{\"statements\":[[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"value\",\"onChange\",\"minLength\"],[\"text\",\"mb-0\",[22,3,[\"displayName\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[22,3,[\"displayName\"]]],null]],null],\"3\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-input\",null,[[\"type\",\"class\",\"value\",\"onChange\",\"minLength\"],[\"text\",\"mb-0\",[22,3,[\"description\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[22,3,[\"description\"]]],null]],null],\"3\"]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"text-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t \\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"text-right\"]],{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\",\"bubbles\"],[true,\"Save sub-group\",[27,\"perform\",[[23,[\"saveGroup\"]],[22,3,[]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"save\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\",\"bubbles\"],[true,\"Delete sub-group\",[27,\"perform\",[[23,[\"deleteGroup\"]],[22,3,[]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[5]},null]],\"parameters\":[]},{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],[[\"onClick\"],[[27,\"action\",[[22,0,[]],\"controller-action\",\"setSelectedGroup\",[22,3,[]]],null]]],{\"statements\":[[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[22,3,[\"displayName\"]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[22,3,[\"description\"]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"text-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-checkbox\",null,[[\"class\",\"value\",\"onChange\",\"disabled\",\"bubbles\"],[\"flex m-0\",[22,3,[\"defaultForNewUser\"]],[27,\"perform\",[[23,[\"changeDefaultForNewUser\"]],[22,3,[]]],null],[27,\"or\",[[22,3,[\"defaultForNewUser\"]],[27,\"not\",[[27,\"and\",[[23,[\"editable\"]],[27,\"await\",[[22,3,[\"parent\"]]],null]],null]],null]],null],false]]],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"text-right\"]],{\"statements\":[[4,\"unless\",[[22,3,[\"defaultForNewUser\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\",\"bubbles\"],[true,\"Delete sub-group\",[27,\"perform\",[[23,[\"deleteGroup\"]],[22,3,[]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null]],\"parameters\":[]}]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/group-manager/sub-group-editor-component.hbs"
     }
@@ -13188,7 +13194,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-google-maps":{"key":"AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA","language":"en","region":"IN","protocol":"https","version":"3.34","src":"https://maps.googleapis.com/maps/api/js?v=3.34&region=IN&language=en&key=AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+b589422e"},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-google-maps":{"key":"AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA","language":"en","region":"IN","protocol":"https","version":"3.34","src":"https://maps.googleapis.com/maps/api/js?v=3.34&region=IN&language=en&key=AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+7b568960"},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;
