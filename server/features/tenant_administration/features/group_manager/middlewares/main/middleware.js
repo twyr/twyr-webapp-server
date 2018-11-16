@@ -57,8 +57,12 @@ class Main extends TwyrBaseMiddleware {
 					'idAttribute': 'tenant_id',
 					'hasTimestamps': true,
 
-					'features': function() {
-						return this.hasMany(self.$TenantFeatureModel, 'tenant_id');
+					'tenantUsers': function() {
+						return this.hasMany(self.$TenantUserModel, 'tenant_id');
+					},
+
+					'groups': function() {
+						return this.hasMany(self.$TenantGroupModel, 'tenant_id');
 					}
 				})
 			});
@@ -82,6 +86,71 @@ class Main extends TwyrBaseMiddleware {
 
 					'groups': function() {
 						return this.hasMany(self.$TenantGroupModel, 'parent_group_id');
+					},
+
+					'tenantUserGroups': function() {
+						return this.hasMany(self.$TenantUserGroupModel, 'group_id');
+					}
+				})
+			});
+
+			Object.defineProperty(this, '$TenantUserGroupModel', {
+				'__proto__': null,
+				'configurable': true,
+
+				'value': dbSrvc.Model.extend({
+					'tableName': 'tenants_users_groups',
+					'idAttribute': 'tenants_users_groups_id',
+					'hasTimestamps': true,
+
+					'tenant': function() {
+						return this.belongsTo(self.$TenantModel, 'tenant_id');
+					},
+
+					'tenantUser': function() {
+						return this.belongsTo(self.$TenantUserModel, 'user_id', 'user_id');
+					},
+
+					'tenantGroup': function() {
+						return this.belongsTo(self.$TenantGroupModel, 'group_id');
+					}
+				})
+			});
+
+			Object.defineProperty(this, '$TenantUserModel', {
+				'__proto__': null,
+				'configurable': true,
+
+				'value': dbSrvc.Model.extend({
+					'tableName': 'tenants_users',
+					'idAttribute': 'tenant_user_id',
+					'hasTimestamps': true,
+
+					'tenant': function() {
+						return this.belongsTo(self.$TenantModel, 'tenant_id');
+					},
+
+					'user': function() {
+						return this.belongsTo(self.$UserModel, 'user_id');
+					},
+
+					'tenantUserGroups': function() {
+						this.hasMany(self.$TenantUserModel, 'user_id');
+					}
+				})
+			});
+
+			Object.defineProperty(this, '$UserModel', {
+				'__proto__': null,
+				'configurable': true,
+
+				'value': dbSrvc.Model.extend({
+					'tableName': 'users',
+					'idAttribute': 'user_id',
+					'hasTimestamps': true,
+
+					'tenantUsers': function() {
+						return this.hasMany(self.$TenantUserModel, 'user_id');
 					}
 				})
 			});
@@ -125,10 +194,13 @@ class Main extends TwyrBaseMiddleware {
 			const ApiService = this.$dependencies.ApiService;
 
 			await ApiService.add(`${this.name}::getTenantGroupTree`, this._getTenantGroupTree.bind(this));
+
 			await ApiService.add(`${this.name}::getTenantGroup`, this._getTenantGroup.bind(this));
 			await ApiService.add(`${this.name}::addTenantGroup`, this._addTenantGroup.bind(this));
 			await ApiService.add(`${this.name}::updateTenantGroup`, this._updateTenantGroup.bind(this));
 			await ApiService.add(`${this.name}::deleteTenantGroup`, this._deleteTenantGroup.bind(this));
+
+			await ApiService.add(`${this.name}::getTenantUserGroup`, this._getTenantUserGroup.bind(this));
 
 			await super._registerApis();
 			return null;
@@ -141,6 +213,8 @@ class Main extends TwyrBaseMiddleware {
 	async _deregisterApis() {
 		try {
 			const ApiService = this.$dependencies.ApiService;
+
+			await ApiService.remove(`${this.name}::getTenantUserGroup`, this._getTenantUserGroup.bind(this));
 
 			await ApiService.remove(`${this.name}::deleteTenantGroup`, this._deleteTenantGroup.bind(this));
 			await ApiService.remove(`${this.name}::updateTenantGroup`, this._updateTenantGroup.bind(this));
@@ -183,14 +257,15 @@ class Main extends TwyrBaseMiddleware {
 			});
 
 			let tenantGroupData = await TenantGroupRecord.fetch({
-				'withRelated': (ctxt.query.include && ctxt.query.include.length) ? ctxt.query.include.split(',').map((incl) => { return incl.trim(); }) : ['tenant', 'parent', 'groups']
+				'withRelated': (ctxt.query.include && ctxt.query.include.length) ? ctxt.query.include.split(',').map((incl) => { return incl.trim(); }) : ['tenant', 'parent', 'groups', 'tenantUserGroups']
 			});
 
 			tenantGroupData = this.$jsonApiMapper.map(tenantGroupData, 'tenant-administration/group-manager/tenant-group', {
 				'typeForModel': {
 					'tenant': 'tenant-administration/tenant',
 					'parent': 'tenant-administration/group-manager/tenant-group',
-					'groups': 'tenant-administration/group-manager/tenant-group'
+					'groups': 'tenant-administration/group-manager/tenant-group',
+					'tenantUserGroups': 'tenant-administration/group-manager/tenant-user-group'
 				},
 
 				'enableLinks': false
@@ -311,6 +386,46 @@ class Main extends TwyrBaseMiddleware {
 		}
 		catch(err) {
 			throw new TwyrMiddlewareError(`${this.name}::_deleteTenantGroup`, err);
+		}
+	}
+
+	async _getTenantUserGroup(ctxt) {
+		try {
+			const TenantUserGroupRecord = new this.$TenantUserGroupModel({
+				'tenant_id': ctxt.state.tenant['tenant_id'],
+				'tenants_users_groups_id': ctxt.params['tenant_user_group_id']
+			});
+
+			// const self = this; // eslint-disable-line consistent-this
+			let tenantUserGroupData = await TenantUserGroupRecord.fetch({
+				'withRelated': [
+					'tenant',
+					{
+						'tenantUser': function(qb) {
+							qb.where('tenant_id', '=', ctxt.state.tenant.tenant_id);
+						},
+						'tenantGroup': function(qb) {
+							qb.where('tenant_id', '=', ctxt.state.tenant.tenant_id);
+						}
+					}
+				]
+			});
+
+			tenantUserGroupData = this.$jsonApiMapper.map(tenantUserGroupData, 'tenant-administration/group-manager/tenant-user-group', {
+				'typeForModel': {
+					'tenant': 'tenant-administration/tenant',
+					'tenantUser': 'tenant-administration/user-manager/tenant-user',
+					'tenantGroup': 'tenant-administration/group-manager/tenant-group'
+				},
+
+				'enableLinks': false
+			});
+
+			delete tenantUserGroupData.included;
+			return tenantUserGroupData;
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_getTenantUserGroup`, err);
 		}
 	}
 	// #endregion

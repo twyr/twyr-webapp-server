@@ -239,7 +239,7 @@ class Main extends TwyrBaseMiddleware {
 				.andWhere('user_id', '<>', 'ffffffff-ffff-4fff-ffff-ffffffffffff');
 			})
 			.fetchAll({
-				'withRelated': ctxt.query.include.split(',').map((related) => { return related.trim(); })
+				'withRelated': (ctxt.query.include && ctxt.query.include.length) ? ctxt.query.include.split(',').map((related) => { return related.trim(); }) : ['tenant', 'user', 'user.contacts']
 			});
 
 			tenantUserData = this.$jsonApiMapper.map(tenantUserData, 'tenant-administration/user-manager/tenant-user', {
@@ -267,7 +267,9 @@ class Main extends TwyrBaseMiddleware {
 				.where('tenant_user_id', '=', ctxt.params.tenantUserId)
 				.andWhere({ 'tenant_id': ctxt.state.tenant.tenant_id });
 			})
-			.fetch();
+			.fetch({
+				'withRelated': (ctxt.query.include && ctxt.query.include.length) ? ctxt.query.include.split(',').map((related) => { return related.trim(); }) : ['tenant', 'user', 'user.contacts']
+			});
 
 			tenantUserData = this.$jsonApiMapper.map(tenantUserData, 'tenant-administration/user-manager/tenant-user', {
 				'typeForModel': {
@@ -361,11 +363,13 @@ class Main extends TwyrBaseMiddleware {
 			});
 
 			let userData = await UserRecord.fetch({
-				'withRelated': ctxt.query.include ? ctxt.query.include.split(',').map((related) => { return related.trim(); }) : []
+				'withRelated': (ctxt.query.include && ctxt.query.include.length) ? ctxt.query.include.split(',').map((related) => { return related.trim(); }) : ['tenant', 'user', 'user.contacts']
 			});
 
 			userData = this.$jsonApiMapper.map(userData, 'tenant-administration/user-manager/users', {
 				'typeForModel': {
+					'tenant': 'tenant-administration/tenant',
+					'user': 'tenant-administration/user-manager/user',
 					'contacts': 'tenant-administration/user-manager/user-contact'
 				},
 
