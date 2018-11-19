@@ -155,11 +155,14 @@ class Main extends TwyrBaseMiddleware {
 
 			await ApiService.add(`${this.name}::resetUserPassword`, this._resetUserPassword.bind(this));
 			await ApiService.add(`${this.name}::getAllTenantUsers`, this._getAllTenantUsers.bind(this));
+
 			await ApiService.add(`${this.name}::getTenantUser`, this._getTenantUser.bind(this));
+			await ApiService.add(`${this.name}::createTenantUser`, this._createTenantUser.bind(this));
 			await ApiService.add(`${this.name}::updateTenantUser`, this._updateTenantUser.bind(this));
 
 			await ApiService.add(`${this.name}::getUserFromTenantUser`, this._getUserFromTenantUser.bind(this));
 			await ApiService.add(`${this.name}::getUser`, this._getUser.bind(this));
+			await ApiService.add(`${this.name}::createUser`, this._createUser.bind(this));
 			await ApiService.add(`${this.name}::updateUser`, this._updateUser.bind(this));
 
 			await super._registerApis();
@@ -175,11 +178,14 @@ class Main extends TwyrBaseMiddleware {
 			const ApiService = this.$dependencies.ApiService;
 
 			await ApiService.remove(`${this.name}::updateUser`, this._updateUser.bind(this));
+			await ApiService.remove(`${this.name}::createUser`, this._createUser.bind(this));
 			await ApiService.remove(`${this.name}::getUser`, this._getUser.bind(this));
 			await ApiService.remove(`${this.name}::getUserFromTenantUser`, this._getUser.bind(this));
 
 			await ApiService.remove(`${this.name}::updateTenantUser`, this._updateTenantUser.bind(this));
+			await ApiService.remove(`${this.name}::createTenantUser`, this._createTenantUser.bind(this));
 			await ApiService.remove(`${this.name}::getTenantUser`, this._getTenantUser.bind(this));
+
 			await ApiService.remove(`${this.name}::getAllTenantUsers`, this._getAllTenantUsers.bind(this));
 			await ApiService.remove(`${this.name}::resetUserPassword`, this._resetUserPassword.bind(this));
 
@@ -288,6 +294,49 @@ class Main extends TwyrBaseMiddleware {
 		}
 	}
 
+	async _createTenantUser(ctxt) {
+		try {
+			const tenantUser = ctxt.request.body;
+			const jsonDeserializedData = await this.$jsonApiDeserializer.deserializeAsync(tenantUser);
+
+			jsonDeserializedData['tenant_user_id'] = jsonDeserializedData['id'];
+			delete jsonDeserializedData.id;
+			delete jsonDeserializedData.created_at;
+			delete jsonDeserializedData.updated_at;
+
+			Object.keys(tenantUser.data.relationships || {}).forEach((relationshipName) => {
+				if(!tenantUser.data.relationships[relationshipName].data) {
+					delete jsonDeserializedData[relationshipName];
+					return;
+				}
+
+				if(!tenantUser.data.relationships[relationshipName].data.id) {
+					delete jsonDeserializedData[relationshipName];
+					return;
+				}
+
+				jsonDeserializedData[`${relationshipName}_id`] = tenantUser.data.relationships[relationshipName].data.id;
+			});
+
+			const savedRecord = await this.$TenantUserModel
+			.forge()
+			.save(jsonDeserializedData, {
+				'method': 'insert',
+				'patch': false
+			});
+
+			return {
+				'data': {
+					'type': tenantUser.data.type,
+					'id': savedRecord.get('tenant_user_id')
+				}
+			};
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_createTenantUser`, err);
+		}
+	}
+
 	async _updateTenantUser(ctxt) {
 		try {
 			const TenantUserRecord = new this.$TenantUserModel({
@@ -383,6 +432,37 @@ class Main extends TwyrBaseMiddleware {
 		}
 		catch(err) {
 			throw new TwyrMiddlewareError(`${this.name}::_getUser`, err);
+		}
+	}
+
+	async _createUser(ctxt) {
+		try {
+			const user = ctxt.request.body;
+			const jsonDeserializedData = await this.$jsonApiDeserializer.deserializeAsync(user);
+
+			const upash = require('upash');
+			const hashedPassword = await upash.hash(jsonDeserializedData['password']);
+
+			jsonDeserializedData['user_id'] = jsonDeserializedData.id;
+			jsonDeserializedData['password'] = hashedPassword;
+			delete jsonDeserializedData['id'];
+
+			const savedRecord = await this.$UserModel
+				.forge()
+				.save(jsonDeserializedData, {
+					'method': 'insert',
+					'patch': false
+				});
+
+			return {
+				'data': {
+					'type': user.data.type,
+					'id': savedRecord.get('user_id')
+				}
+			};
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_createUser`, err);
 		}
 	}
 

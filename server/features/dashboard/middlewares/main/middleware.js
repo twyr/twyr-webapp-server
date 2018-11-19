@@ -91,7 +91,7 @@ class Main extends TwyrBaseMiddleware {
 					'attributes': {
 						'name': 'home',
 						'type': 'feature',
-						'route': ctxt.state.user.tenantAttributes['default_route'],
+						'route': (ctxt.state.user.tenantAttributes['default_route'] && ctxt.state.user.tenantAttributes['default_route'].trim() !== '') ? ctxt.state.user.tenantAttributes['default_route'] : 'application',
 						'description': 'Home',
 
 						'icon_type': 'fa', // eslint-disable-line Other choices are md, mdi, img, custom

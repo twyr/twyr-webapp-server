@@ -46,12 +46,14 @@ class Main extends TwyrBaseComponent {
 			this.$router.get('/tenant-users', this.$parent._rbac('user-manager-read'), this._getTenantUsers.bind(this));
 
 			this.$router.get('/tenant-users/:tenantUserId', this.$parent._rbac('user-manager-read'), this._getTenantUser.bind(this));
+			this.$router.post('/tenant-users', this.$parent._rbac('user-manager-update'), this._createTenantUser.bind(this));
 			this.$router.patch('/tenant-users/:tenantUserId', this.$parent._rbac('user-manager-update'), this._updateTenantUser.bind(this));
 
 			this.$router.get('/get-image/:tenantUserId', this.$parent._rbac('user-manager-read'), this._getTenantUserImage.bind(this));
 			this.$router.post('/upload-image/:tenantUserId', this.$parent._rbac('user-manager-update'), this._updateTenantUserImage.bind(this));
 
 			this.$router.get('/users/:userId', this.$parent._rbac('user-manager-read'), this._getUser.bind(this));
+			this.$router.post('/users', this.$parent._rbac('user-manager-update'), this._createUser.bind(this));
 			this.$router.patch('/users/:userId', this.$parent._rbac('user-manager-update'), this._updateUser.bind(this));
 
 			await super._addRoutes();
@@ -106,6 +108,21 @@ class Main extends TwyrBaseComponent {
 		}
 		catch(err) {
 			throw new TwyrComponentError(`Error getting tenant user`, err);
+		}
+	}
+
+	async _createTenantUser(ctxt) {
+		try {
+			const apiSrvc = this.$dependencies.ApiService;
+			const status = await apiSrvc.execute('Main::createTenantUser', ctxt);
+
+			ctxt.status = 200;
+			ctxt.body = status.shift();
+
+			return null;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error updating tenant user`, err);
 		}
 	}
 
@@ -219,6 +236,21 @@ class Main extends TwyrBaseComponent {
 		}
 		catch(err) {
 			throw new TwyrComponentError(`Error getting user`, err);
+		}
+	}
+
+	async _createUser(ctxt) {
+		try {
+			const apiSrvc = this.$dependencies.ApiService;
+
+			let user = await apiSrvc.execute('Main::createUser', ctxt);
+			user = user.shift();
+
+			ctxt.status = 200;
+			ctxt.body = user;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error creating user`, err);
 		}
 	}
 
