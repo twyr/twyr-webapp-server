@@ -52,7 +52,7 @@
 		"amqplib": "*",
 		"app-module-path": "*",
 		"ascoltatori": "^4.3.0",
-		"aws-sdk": "^2.357.0",
+		"aws-sdk": "^2.358.0",
 		"axios": "^0.18.0",
 		"bluebird": "^3.5.3",
 		"bookshelf": "*",
@@ -109,7 +109,7 @@
 		"pg-error": "*",
 		"pg-query-native": "*",
 		"pg-structure": "^4.1.3",
-		"primus": "^7.2.3",
+		"primus": "^7.3.0",
 		"primus-rooms": "*",
 		"random-org": ">=1.0.0",
 		"redis": "*",
@@ -121,7 +121,7 @@
 		"upash": "*",
 		"uuid": "^3.3.2",
 		"winston": "^3.1.0",
-		"ws": "^6.1.0"
+		"ws": "^6.1.2"
 	},
 	"devDependencies": {
 		"autocannon": "^3.1.0",
