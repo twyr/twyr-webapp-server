@@ -319,11 +319,11 @@ class Main extends TwyrBaseMiddleware {
 			});
 
 			const savedRecord = await this.$TenantUserModel
-			.forge()
-			.save(jsonDeserializedData, {
-				'method': 'insert',
-				'patch': false
-			});
+				.forge()
+				.save(jsonDeserializedData, {
+					'method': 'insert',
+					'patch': false
+				});
 
 			return {
 				'data': {
