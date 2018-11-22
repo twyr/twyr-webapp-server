@@ -5804,6 +5804,18 @@
 
   _exports.default = _default;
 });
+;define("twyr-webapp-server/components/tenant-administration/user-manager/add-existing-accounts", ["exports", "twyr-webapp-server/framework/base-component"], function (_exports, _baseComponent) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseComponent.default.extend({});
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/components/tenant-administration/user-manager/create-new-account", ["exports", "twyr-webapp-server/framework/base-component"], function (_exports, _baseComponent) {
   "use strict";
 
@@ -6964,8 +6976,72 @@
     'doCreateAccountErrored': Ember.on('doCreateAccount:errored', function (taskInstance, err) {
       const user = taskInstance.args[0];
       const tenantUser = taskInstance.args[1];
-      tenantUser.deleteRecord();
-      user.deleteRecord();
+      tenantUser.destroyRecord();
+      user.destroyRecord();
+      this.get('notification').display({
+        'type': 'error',
+        'error': err
+      });
+    }),
+    'addUser': (0, _emberConcurrency.task)(function* () {
+      try {
+        const self = this;
+        const usersToBeAdded = Ember.ArrayProxy.create({
+          'content': Ember.A([])
+        });
+        const modalData = {
+          'title': 'Add Users',
+          'componentName': 'tenant-administration/user-manager/add-existing-accounts',
+          'componentState': {
+            'model': usersToBeAdded
+          },
+          'confirmButton': {
+            'text': 'Add Users',
+            'icon': 'check',
+            'primary': true,
+            'raised': true,
+            'callback': () => {
+              self.get('doAddAccounts').perform(usersToBeAdded);
+            }
+          },
+          'cancelButton': {
+            'text': 'Cancel',
+            'icon': 'cancel',
+            'warn': true,
+            'raised': true,
+            'callback': null
+          }
+        };
+        yield this.send('controller-action', 'displayModal', modalData);
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      }
+    }).drop(),
+    'doAddAccounts': (0, _emberConcurrency.task)(function* (userList) {
+      const tenant = this.get('store').peekRecord('tenant-administration/tenant', window.twyrTenantId);
+
+      for (let idx = 0; idx < userList.get('length'); idx++) {
+        const user = userList.objectAt(idx);
+        const isAlreadyAdded = this.get('store').peekAll('tenant-administration/user-manager/tenant-user').filterBy('user.id', user.get('id'));
+        if (isAlreadyAdded.get('length')) continue;
+        const tenantUser = this.get('store').createRecord('tenant-administration/user-manager/tenant-user', {
+          'tenant': tenant,
+          'user': user
+        });
+        yield tenantUser.save();
+      }
+    }).drop().evented().retryable(backoffPolicy),
+    'doAddAccountsSucceeded': Ember.on('doAddAccounts:succeeded', function (taskInstance) {
+      const userList = taskInstance.args[0];
+      this.get('notification').display({
+        'type': 'success',
+        'message': `${userList.get('length')} Users succesfully added`
+      });
+    }),
+    'doAddAccountsErrored': Ember.on('doAddAccounts:errored', function (taskInstance, err) {
       this.get('notification').display({
         'type': 'error',
         'error': err
@@ -12781,6 +12857,24 @@
 
   _exports.default = _default;
 });
+;define("twyr-webapp-server/templates/components/tenant-administration/user-manager/add-existing-accounts", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = Ember.HTMLBars.template({
+    "id": "zXoeOY09",
+    "block": "{\"symbols\":[\"card\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex m-0\"]],{\"statements\":[],\"parameters\":[1]},null]],\"hasEval\":false}",
+    "meta": {
+      "moduleName": "twyr-webapp-server/templates/components/tenant-administration/user-manager/add-existing-accounts.hbs"
+    }
+  });
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/templates/components/tenant-administration/user-manager/create-new-account", ["exports"], function (_exports) {
   "use strict";
 
@@ -13096,8 +13190,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "l8kK3gq9",
-    "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[1,[27,\"page-title\",[\"User Manager\"],null],false],[0,\"\\n\"],[7,\"div\"],[11,\"class\",\"p-0 card-header layout-row layout-align-space-between-center\"],[11,\"style\",\"background-color:#fcf8e3;\"],[11,\"role\",\"tab\"],[9],[0,\"\\n\\t\"],[7,\"button\"],[11,\"class\",\"btn btn-link\"],[11,\"type\",\"button\"],[9],[0,\"\\n\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"User Manager\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[0,\"\\t\"],[7,\"div\"],[11,\"class\",\"ml-auto text-right\"],[9],[0,\"\\n\"],[4,\"paper-button\",null,[[\"primary\",\"raised\",\"onClick\",\"bubbles\"],[true,true,[27,\"perform\",[[23,[\"createUser\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"add\"],null],false],[0,\" Create New User\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-button\",null,[[\"accent\",\"raised\",\"onClick\",\"bubbles\"],[true,true,[27,\"perform\",[[23,[\"addUser\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"add\"],null],false],[0,\" Add Existing User\\n\"]],\"parameters\":[]},null],[0,\"\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[10],[0,\"\\n\"],[1,[27,\"component\",[\"tenant-administration/user-manager/main-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "e0qkjhhx",
+    "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[1,[27,\"page-title\",[\"User Manager\"],null],false],[0,\"\\n\"],[7,\"div\"],[11,\"class\",\"p-0 card-header layout-row layout-align-space-between-center\"],[11,\"style\",\"background-color:#fcf8e3;\"],[11,\"role\",\"tab\"],[9],[0,\"\\n\\t\"],[7,\"button\"],[11,\"class\",\"btn btn-link\"],[11,\"type\",\"button\"],[9],[0,\"\\n\\t\\t\"],[7,\"h5\"],[11,\"class\",\"mb-0\"],[9],[0,\"User Manager\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[0,\"\\t\"],[7,\"div\"],[11,\"class\",\"ml-auto text-right\"],[9],[0,\"\\n\"],[4,\"paper-button\",null,[[\"primary\",\"raised\",\"onClick\",\"bubbles\"],[true,true,[27,\"perform\",[[23,[\"createUser\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"add\"],null],false],[0,\" Create New User\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-button\",null,[[\"accent\",\"raised\",\"onClick\",\"bubbles\"],[true,true,[27,\"perform\",[[23,[\"addUser\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"add\"],null],false],[0,\" Add Existing Users\\n\"]],\"parameters\":[]},null],[0,\"\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[10],[0,\"\\n\"],[1,[27,\"component\",[\"tenant-administration/user-manager/main-component\"],[[\"model\",\"controller-action\"],[[23,[\"model\"]],[27,\"action\",[[22,0,[]],\"controller-action\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/tenant-administration/user-manager.hbs"
     }
@@ -13466,7 +13560,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-google-maps":{"key":"AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA","language":"en","region":"IN","protocol":"https","version":"3.34","src":"https://maps.googleapis.com/maps/api/js?v=3.34&region=IN&language=en&key=AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+e13569ce"},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-google-maps":{"key":"AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA","language":"en","region":"IN","protocol":"https","version":"3.34","src":"https://maps.googleapis.com/maps/api/js?v=3.34&region=IN&language=en&key=AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+576a6a9f"},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;
