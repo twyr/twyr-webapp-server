@@ -153,6 +153,7 @@ class Main extends TwyrBaseMiddleware {
 		try {
 			const ApiService = this.$dependencies.ApiService;
 
+			await ApiService.add(`${this.name}::searchUsers`, this._searchUsers.bind(this));
 			await ApiService.add(`${this.name}::resetUserPassword`, this._resetUserPassword.bind(this));
 			await ApiService.add(`${this.name}::getAllTenantUsers`, this._getAllTenantUsers.bind(this));
 
@@ -188,6 +189,7 @@ class Main extends TwyrBaseMiddleware {
 
 			await ApiService.remove(`${this.name}::getAllTenantUsers`, this._getAllTenantUsers.bind(this));
 			await ApiService.remove(`${this.name}::resetUserPassword`, this._resetUserPassword.bind(this));
+			await ApiService.remove(`${this.name}::searchUsers`, this._searchUsers.bind(this));
 
 			await super._deregisterApis();
 			return null;
@@ -199,6 +201,18 @@ class Main extends TwyrBaseMiddleware {
 	// #endregion
 
 	// #region API
+	async _searchUsers(ctxt) {
+		try {
+			const dbSrvc = this.$dependencies.DatabaseService;
+			const userList = await dbSrvc.knex.raw(`SELECT user_id AS id, email, first_name, last_name FROM users WHERE user_id NOT IN (SELECT user_id FROM tenants_users WHERE tenant_id = ?) AND email ILIKE ?`, [ctxt.state.tenant.tenant_id, `%${ctxt.query.email}%`]);
+
+			return userList.rows;
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_searchUsers`, err);
+		}
+	}
+
 	async _resetUserPassword(ctxt) {
 		const dbSrvc = this.$dependencies.DatabaseService;
 
@@ -412,13 +426,11 @@ class Main extends TwyrBaseMiddleware {
 			});
 
 			let userData = await UserRecord.fetch({
-				'withRelated': (ctxt.query.include && ctxt.query.include.length) ? ctxt.query.include.split(',').map((related) => { return related.trim(); }) : ['tenant', 'user', 'user.contacts']
+				'withRelated': (ctxt.query.include && ctxt.query.include.length) ? ctxt.query.include.split(',').map((related) => { return related.trim(); }) : ['contacts']
 			});
 
 			userData = this.$jsonApiMapper.map(userData, 'tenant-administration/user-manager/users', {
 				'typeForModel': {
-					'tenant': 'tenant-administration/tenant',
-					'user': 'tenant-administration/user-manager/user',
 					'contacts': 'tenant-administration/user-manager/user-contact'
 				},
 

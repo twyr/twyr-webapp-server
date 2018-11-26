@@ -41,6 +41,7 @@ class Main extends TwyrBaseComponent {
 	 */
 	async _addRoutes() {
 		try {
+			this.$router.get('/searchUsers', this.$parent._rbac('user-manager-read'), this._searchUsers.bind(this));
 			this.$router.post('/resetPassword', this.$parent._rbac('user-manager-read'), this._resetUserPassword.bind(this));
 
 			this.$router.get('/tenant-users', this.$parent._rbac('user-manager-read'), this._getTenantUsers.bind(this));
@@ -66,6 +67,21 @@ class Main extends TwyrBaseComponent {
 	// #endregion
 
 	// #region Route Handlers
+	async _searchUsers(ctxt) {
+		try {
+			const apiSrvc = this.$dependencies.ApiService;
+			const userList = await apiSrvc.execute('Main::searchUsers', ctxt);
+
+			ctxt.status = 200;
+			ctxt.body = userList.shift();
+
+			return null;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error searching for users`, err);
+		}
+	}
+
 	async _resetUserPassword(ctxt) {
 		try {
 			const apiSrvc = this.$dependencies.ApiService;
