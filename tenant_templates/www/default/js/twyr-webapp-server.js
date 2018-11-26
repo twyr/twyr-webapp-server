@@ -5804,7 +5804,7 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/components/tenant-administration/user-manager/add-existing-accounts", ["exports", "twyr-webapp-server/framework/base-component"], function (_exports, _baseComponent) {
+;define("twyr-webapp-server/components/tenant-administration/user-manager/add-existing-accounts", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency"], function (_exports, _baseComponent, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -5812,7 +5812,29 @@
   });
   _exports.default = void 0;
 
-  var _default = _baseComponent.default.extend({});
+  var _default = _baseComponent.default.extend({
+    'selectedUser': null,
+    'searchUserByEmail': (0, _emberConcurrency.task)(function* (term) {
+      yield (0, _emberConcurrency.timeout)(750);
+      return this.get('ajax').request(`/tenant-administration/user-manager/searchUsers?email=${term}`);
+    }),
+    'onSelectedUserChanged': Ember.observer('selectedUser', function () {
+      this.get('_addSelectedUser').perform();
+    }),
+    '_addSelectedUser': (0, _emberConcurrency.task)(function* () {
+      if (!this.get('selectedUser')) return;
+      const isDuplicate = this.get('state.model').filterBy('user_id', this.get('selectedUser.id')).get('length');
+
+      if (isDuplicate) {
+        this.set('selectedUser', null);
+        return;
+      }
+
+      let userModel = this.get('store').peekRecord('tenant-administration/user-manager/user', this.get('selectedUser.id'));
+      if (!userModel) userModel = yield this.get('store').findRecord('tenant-administration/user-manager/user', this.get('selectedUser.id'));
+      this.get('state.model').addObject(userModel);
+    }).enqueue()
+  });
 
   _exports.default = _default;
 });
@@ -7060,12 +7082,12 @@
   _exports.default = void 0;
 
   var _default = Ember.Component.extend(_emberLifeline.ContextBoundTasksMixin, _emberLifeline.ContextBoundEventListenersMixin, _emberLifeline.DisposableMixin, Ember.Evented, _emberInvokeAction.InvokeActionMixin, {
-    ajax: Ember.inject.service('ajax'),
-    store: Ember.inject.service('store'),
-    currentUser: Ember.inject.service('current-user'),
-    notification: Ember.inject.service('integrated-notification'),
-    permissions: null,
-    hasPermission: false,
+    'ajax': Ember.inject.service('ajax'),
+    'store': Ember.inject.service('store'),
+    'currentUser': Ember.inject.service('current-user'),
+    'notification': Ember.inject.service('integrated-notification'),
+    'permissions': null,
+    'hasPermission': false,
 
     init() {
       this._super(...arguments);
@@ -12866,8 +12888,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "zXoeOY09",
-    "block": "{\"symbols\":[\"card\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex m-0\"]],{\"statements\":[],\"parameters\":[1]},null]],\"hasEval\":false}",
+    "id": "e37k/PlZ",
+    "block": "{\"symbols\":[\"card\",\"table\",\"body\",\"user\",\"row\",\"head\",\"user\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex m-0\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"power-select\",null,[[\"search\",\"selected\",\"onchange\"],[[27,\"perform\",[[23,[\"searchUserByEmail\"]]],null],[23,[\"selectedUser\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"selectedUser\"]]],null]],null]]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[22,7,[\"first_name\"]],false],[0,\" \"],[1,[22,7,[\"last_name\"]],false],[0,\" <\"],[1,[22,7,[\"email\"]],false],[0,\">\\n\"]],\"parameters\":[7]},null]],\"parameters\":[]},null],[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"mt-2 p-0\"]],{\"statements\":[[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"state.model.email\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,2,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"state.model.email\"]],{\"statements\":[[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"state.model.firstName\"]],{\"statements\":[[0,\"First Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"state.model.middleNames\"]],{\"statements\":[[0,\"Middle Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"state.model.lastName\"]],{\"statements\":[[0,\"Last Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null],[4,\"component\",[[22,2,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,2,[\"sortDesc\"]],[23,[\"state\",\"model\"]]],null]],null,{\"statements\":[[4,\"component\",[[22,3,[\"row\"]]],null,{\"statements\":[[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"text-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[7,\"img\"],[12,\"src\",[28,[[22,4,[\"profileImage\"]]]]],[11,\"style\",\"max-width:4rem; max-height:2rem;\"],[9],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"email\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"firstName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"middleNames\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"lastName\"]],false]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"text-right\"]],{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\",\"bubbles\"],[true,\"Delete sub-group\",null,false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[5]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/user-manager/add-existing-accounts.hbs"
     }
