@@ -75,7 +75,7 @@
 		"jsonapi-mapper": "^1.0.0-beta.16",
 		"jsonapi-query-parser": "*",
 		"jsonapi-serializer": "^3.6.4",
-		"knex": "^0.16.0",
+		"knex": "^0.15.2",
 		"koa": "^2.6.2",
 		"koa-accept-override": "*",
 		"koa-better-http-proxy": "*",
