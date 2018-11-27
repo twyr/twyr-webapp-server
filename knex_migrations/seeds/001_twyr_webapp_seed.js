@@ -458,14 +458,12 @@ exports.seed = async function(knex) {
 
 	let userContactId = await knex.raw('SELECT user_contact_id FROM user_contacts WHERE user_id = ? AND type = ? AND contact = ?', [userId, 'mobile', '01234567890']);
 	if(!userContactId.rows.length) {
-		userContactId = await knex('user_contacts').insert({
+		await knex('user_contacts').insert({
 			'user_id': userId,
 			'contact': '01234567890',
 			'type': 'mobile',
 			'verified': true
 		});
-
-		userContactId = userContactId[0];
 	}
 
 	// Step 6: Insert the data for the tenant's pre-defined groups - Super Admin, Admin, Registered, and Public

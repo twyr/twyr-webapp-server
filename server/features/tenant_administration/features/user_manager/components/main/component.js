@@ -218,8 +218,7 @@ class Main extends TwyrBaseComponent {
 				}
 			};
 
-			userData = await apiSrvc.execute('Main::updateUser', ctxt);
-			userData = userData.shift();
+			await apiSrvc.execute('Main::updateUser', ctxt);
 
 			ctxt.status = 200;
 			ctxt.body = {

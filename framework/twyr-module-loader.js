@@ -1630,10 +1630,7 @@ class TwyrModuleLoader extends TwyrBaseClass {
 
 				while(!!currentModule && !currentDependency) {
 					currentDependency = currentModule.$services ? currentModule.$services[thisDependency] : null;
-					if(!currentDependency)
-						currentModule = currentModule.$parent;
-					else
-						break;
+					if(!currentDependency) currentModule = currentModule.$parent;
 				}
 
 				if(!currentDependency) throw new Error(`${moduleInstance.name}::dependency::${thisDependency} not found!`);
