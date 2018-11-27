@@ -37664,7 +37664,7 @@ a.md-button.paper-link:not(.md-raised).active {
 a.md-button.paper-link.md-raised.active[disabled] {
   color: rgba(0, 0, 0, 0.87) !important; }
 
-/* Bug-fix :-( */
+/* Bug-fixes :-( */
 md-input-container {
   margin-bottom: 0.5rem !important; }
 
@@ -37677,3 +37677,7 @@ div.md-dialog-container {
 
 .mdi-icon {
   color: var(--foreground-2); }
+
+b,
+strong {
+  font-weight: 600; }

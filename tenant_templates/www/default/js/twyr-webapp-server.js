@@ -5266,13 +5266,47 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/components/tenant-administration/group-manager/user-group-editor-component", ["exports", "twyr-webapp-server/framework/base-component"], function (_exports, _baseComponent) {
+;define("twyr-webapp-server/components/tenant-administration/group-manager/user-group-add-accounts", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency"], function (_exports, _baseComponent, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
     value: true
   });
   _exports.default = void 0;
+
+  var _default = _baseComponent.default.extend({
+    'possibleTenantUsers': null,
+    'onWillInsertElement': (0, _emberConcurrency.task)(function* () {
+      const selectedGroupId = this.get('state.group.id');
+      const possibleTenantUsers = yield this.get('ajax').request(`/tenant-administration/group-manager/possibleTenantUsersList?group=${selectedGroupId}`);
+      this.set('possibleTenantUsers', Ember.ArrayProxy.create({
+        'content': Ember.A(possibleTenantUsers.map(possibleTenantUser => {
+          return Ember.ObjectProxy.create({
+            'content': Ember.Object.create(possibleTenantUser)
+          });
+        }))
+      }));
+    }).on('willInsertElement'),
+    'toggleTenantUser': (0, _emberConcurrency.task)(function* (tenantUser) {
+      const alreadyInModel = yield this.get('state.model').filterBy('id', tenantUser.get('id')).objectAt(0);
+      if (alreadyInModel) this.get('state.model').removeObject(tenantUser);else this.get('state.model').addObject(tenantUser);
+    }).enqueue()
+  });
+
+  _exports.default = _default;
+});
+;define("twyr-webapp-server/components/tenant-administration/group-manager/user-group-editor-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _emberConcurrency) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+  const backoffPolicy = new _exponentialBackoff.default({
+    'multiplier': 1.5,
+    'minDelay': 30,
+    'maxDelay': 400
+  });
 
   var _default = _baseComponent.default.extend({
     'editable': false,
@@ -5286,6 +5320,113 @@
     'onHasPermissionChange': Ember.observer('hasPermission', function () {
       const updatePerm = this.get('currentUser').hasPermission('group-manager-update');
       this.set('editable', updatePerm);
+    }),
+    'addUser': (0, _emberConcurrency.task)(function* () {
+      try {
+        const self = this;
+        const tenantUsersToBeAdded = Ember.ArrayProxy.create({
+          'content': Ember.A([])
+        });
+        const modalData = {
+          'title': 'Add Users',
+          'componentName': 'tenant-administration/group-manager/user-group-add-accounts',
+          'componentState': {
+            'group': this.get('selectedGroup'),
+            'model': tenantUsersToBeAdded
+          },
+          'confirmButton': {
+            'text': 'Add Users',
+            'icon': 'check',
+            'primary': true,
+            'raised': true,
+            'callback': () => {
+              self.get('_doAddAccounts').perform(tenantUsersToBeAdded);
+            }
+          },
+          'cancelButton': {
+            'text': 'Cancel',
+            'icon': 'cancel',
+            'warn': true,
+            'raised': true,
+            'callback': null
+          }
+        };
+        yield this.send('controller-action', 'displayModal', modalData);
+      } catch (err) {
+        this.get('notification').display({
+          'type': 'error',
+          'error': err
+        });
+      }
+    }).drop(),
+    '_doAddAccounts': (0, _emberConcurrency.task)(function* (tenantUserList) {
+      for (let idx = 0; idx < tenantUserList.get('length'); idx++) {
+        const tenantUser = tenantUserList.objectAt(idx);
+        let groupUser = this.get('store').peekAll('tenant-administration/group-manager/tenant-user-group').filterBy('tenantUser.id', tenantUser.get('id')).objectAt(0);
+        if (groupUser && groupUser.get('tenantGroup.id') === this.get('selectedGroup.id') && !groupUser.get('isNew')) continue;
+        let storedTenantUser = this.get('store').peekRecord('tenant-administration/user-manager/tenant-user', tenantUser.get('id'));
+        if (!storedTenantUser) storedTenantUser = yield this.get('store').findRecord('tenant-administration/user-manager/tenant-user', tenantUser.get('id'));
+        if (!groupUser) groupUser = this.get('store').createRecord('tenant-administration/group-manager/tenant-user-group', {
+          'tenantUser': storedTenantUser,
+          'tenantGroup': this.get('selectedGroup')
+        });
+        yield groupUser.save();
+      }
+    }).drop().evented().retryable(backoffPolicy),
+    '_doAddAccountsSucceeded': Ember.on('_doAddAccounts:succeeded', function (taskInstance) {
+      const tenantUserList = taskInstance.args[0];
+      this.get('notification').display({
+        'type': 'success',
+        'message': `${tenantUserList.get('length')} Users succesfully added`
+      });
+    }),
+    '_doAddAccountsErrored': Ember.on('_doAddAccounts:errored', function (taskInstance, err) {
+      this.get('notification').display({
+        'type': 'error',
+        'error': err
+      });
+    }),
+    'removeUser': (0, _emberConcurrency.task)(function* (groupUser) {
+      const user = yield groupUser.get('tenantUser.user');
+      const modalData = {
+        'title': 'Delete Group',
+        'content': `Are you sure you want to delete the <strong>${user.get('firstName')} ${user.get('lastName')}</strong> from the <strong>${this.get('selectedGroup.displayName')}</strong> group?`,
+        'confirmButton': {
+          'text': 'Delete',
+          'icon': 'delete',
+          'warn': true,
+          'raised': true,
+          'callback': () => {
+            this.get('_confirmedRemoveUser').perform(groupUser, user);
+          }
+        },
+        'cancelButton': {
+          'text': 'Cancel',
+          'icon': 'close',
+          'primary': true,
+          'raised': true
+        }
+      };
+      this.invokeAction('controller-action', 'displayModal', modalData);
+    }).drop(),
+    '_confirmedRemoveUser': (0, _emberConcurrency.task)(function* (groupUser, user) {
+      // eslint-disable-line no-unused-vars
+      yield groupUser.destroyRecord();
+    }).drop().evented().retryable(backoffPolicy),
+    '_confirmedRemoveUserSucceeded': Ember.on('_confirmedRemoveUser:succeeded', function (taskInstance) {
+      const user = taskInstance.args[1];
+      this.get('notification').display({
+        'type': 'success',
+        'message': `<strong>${user.get('firstName')} ${user.get('lastName')}</strong> was removed succesfully from the <strong>${this.get('selectedGroup.displayName')}</strong> group`
+      });
+    }),
+    '_confirmedRemoveUserErrored': Ember.on('_confirmedRemoveUser:errored', function (taskInstance, err) {
+      const groupUser = taskInstance.args[0];
+      groupUser.rollback();
+      this.get('notification').display({
+        'type': 'error',
+        'error': err
+      });
     })
   });
 
@@ -5834,6 +5975,10 @@
       if (!userModel) userModel = yield this.get('store').findRecord('tenant-administration/user-manager/user', this.get('selectedUser.id'));
       this.get('state.model').addObject(userModel);
       this.set('selectedUser', null);
+    }).enqueue(),
+    'deleteUser': (0, _emberConcurrency.task)(function* (user) {
+      const model = yield this.get('state.model');
+      model.removeObject(user);
     }).enqueue()
   });
 
@@ -12831,6 +12976,24 @@
 
   _exports.default = _default;
 });
+;define("twyr-webapp-server/templates/components/tenant-administration/group-manager/user-group-add-accounts", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = Ember.HTMLBars.template({
+    "id": "GWgp0UoK",
+    "block": "{\"symbols\":[\"card\",\"table\",\"body\",\"tenantUser\",\"row\",\"head\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex m-0\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"p-0\"]],{\"statements\":[[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\",\"selectable\"],[\"email\",\"asc\",true]],{\"statements\":[[4,\"component\",[[22,2,[\"head\"]]],null,{\"statements\":[[4,\"component\",[[22,6,[\"column\"]]],[[\"checkbox\"],[true]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"paper-checkbox\",null,[[\"disabled\",\"onChange\"],[true,null]],{\"statements\":[],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"email\"]],{\"statements\":[[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"firstName\"]],{\"statements\":[[0,\"First Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"middleNames\"]],{\"statements\":[[0,\"Middle Names\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"lastName\"]],{\"statements\":[[0,\"Last Name\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null],[4,\"component\",[[22,2,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,2,[\"sortDesc\"]],[23,[\"possibleTenantUsers\"]]],null]],null,{\"statements\":[[4,\"component\",[[22,3,[\"row\"]]],null,{\"statements\":[[4,\"component\",[[22,5,[\"cell\"]]],[[\"checkbox\"],[true]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[4,\"paper-checkbox\",null,[[\"value\",\"onChange\"],[[27,\"get\",[[27,\"filter-by\",[\"id\",[22,4,[\"id\"]],[23,[\"state\",\"model\"]]],null],\"length\"],null],[27,\"perform\",[[23,[\"toggleTenantUser\"]],[22,4,[]]],null]]],{\"statements\":[],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"email\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"firstName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"middleNames\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"lastName\"]],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
+    "meta": {
+      "moduleName": "twyr-webapp-server/templates/components/tenant-administration/group-manager/user-group-add-accounts.hbs"
+    }
+  });
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/templates/components/tenant-administration/group-manager/user-group-editor-component", ["exports"], function (_exports) {
   "use strict";
 
@@ -12840,8 +13003,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "gAFN69bG",
-    "block": "{\"symbols\":[\"table\",\"body\",\"groupUser\",\"row\",\"head\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\"],[7,\"span\"],[11,\"class\",\"flex\"],[11,\"style\",\"font-size:1.25rem;\"],[9],[0,\"Users\"],[10],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"raised\",\"onClick\",\"bubbles\"],[true,true,[27,\"perform\",[[23,[\"addUser\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"add\"],null],false],[0,\" Add User\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"groupUser.tenantUser.user.email\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,1,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\"],[4,\"component\",[[22,5,[\"column\"]]],[[\"sortProp\"],[\"groupUser.tenantUser.user.email\"]],{\"statements\":[[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,5,[\"column\"]]],[[\"sortProp\"],[\"groupUser.tenantUser.user.firstName\"]],{\"statements\":[[0,\"First Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,5,[\"column\"]]],[[\"sortProp\"],[\"groupUser.tenantUser.user.lastName\"]],{\"statements\":[[0,\"Last Name\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,5,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[5]},null],[4,\"component\",[[22,1,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,1,[\"sortDesc\"]],[27,\"await\",[[23,[\"selectedGroup\",\"tenantUserGroups\"]]],null]],null]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"log\",[\"Group User\",[27,\"await\",[[22,3,[\"tenantUser\",\"user\"]]],null]],null],false],[0,\"\\n\"],[4,\"component\",[[22,2,[\"row\"]]],null,{\"statements\":[[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"await\",[[22,3,[\"tenantUser\",\"user\",\"email\"]]],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"await\",[[22,3,[\"tenantUser\",\"user\",\"firstName\"]]],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"await\",[[22,3,[\"tenantUser\",\"user\",\"lastName\"]]],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"text-right\"]],{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\",\"bubbles\"],[true,\"Remove User\",[27,\"perform\",[[23,[\"removeUser\"]],[22,3,[]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "wtNx3jQR",
+    "block": "{\"symbols\":[\"table\",\"body\",\"groupUser\",\"row\",\"head\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\"],[7,\"span\"],[11,\"class\",\"flex\"],[11,\"style\",\"font-size:1.25rem;\"],[9],[0,\"Users\"],[10],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"raised\",\"onClick\",\"bubbles\"],[true,true,[27,\"perform\",[[23,[\"addUser\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"add\"],null],false],[0,\" Add User\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null],[0,\"\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"groupUser.tenantUser.user.email\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,1,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\"],[4,\"component\",[[22,5,[\"column\"]]],[[\"sortProp\"],[\"groupUser.tenantUser.user.email\"]],{\"statements\":[[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,5,[\"column\"]]],[[\"sortProp\"],[\"groupUser.tenantUser.user.firstName\"]],{\"statements\":[[0,\"First Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,5,[\"column\"]]],[[\"sortProp\"],[\"groupUser.tenantUser.user.lastName\"]],{\"statements\":[[0,\"Last Name\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,5,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[5]},null],[4,\"component\",[[22,1,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,1,[\"sortDesc\"]],[27,\"await\",[[23,[\"selectedGroup\",\"tenantUserGroups\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],null,{\"statements\":[[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"await\",[[22,3,[\"tenantUser\",\"user\",\"email\"]]],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"await\",[[22,3,[\"tenantUser\",\"user\",\"firstName\"]]],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[1,[27,\"await\",[[22,3,[\"tenantUser\",\"user\",\"lastName\"]]],null],false],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"component\",[[22,4,[\"cell\"]]],[[\"class\"],[\"text-right\"]],{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\",\"bubbles\"],[true,\"Remove User\",[27,\"perform\",[[23,[\"removeUser\"]],[22,3,[]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/group-manager/user-group-editor-component.hbs"
     }
@@ -12894,8 +13057,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "2eOd6V4Q",
-    "block": "{\"symbols\":[\"card\",\"table\",\"body\",\"user\",\"row\",\"head\",\"user\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex m-0\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"power-select\",null,[[\"search\",\"selected\",\"onchange\"],[[27,\"perform\",[[23,[\"searchUserByEmail\"]]],null],[23,[\"selectedUser\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"selectedUser\"]]],null]],null]]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[22,7,[\"first_name\"]],false],[0,\" \"],[1,[22,7,[\"last_name\"]],false],[0,\" <\"],[1,[22,7,[\"email\"]],false],[0,\">\\n\"]],\"parameters\":[7]},null]],\"parameters\":[]},null],[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"mt-2 p-0\"]],{\"statements\":[[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"state.model.email\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,2,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"state.model.email\"]],{\"statements\":[[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"state.model.firstName\"]],{\"statements\":[[0,\"First Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"state.model.middleNames\"]],{\"statements\":[[0,\"Middle Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"state.model.lastName\"]],{\"statements\":[[0,\"Last Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null],[4,\"component\",[[22,2,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,2,[\"sortDesc\"]],[23,[\"state\",\"model\"]]],null]],null,{\"statements\":[[4,\"component\",[[22,3,[\"row\"]]],null,{\"statements\":[[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"text-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[7,\"img\"],[12,\"src\",[28,[[22,4,[\"profileImage\"]]]]],[11,\"style\",\"max-width:4rem; max-height:2rem;\"],[9],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"email\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"firstName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"middleNames\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"lastName\"]],false]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"text-right\"]],{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\",\"bubbles\"],[true,\"Delete sub-group\",null,false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[5]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
+    "id": "9F73Z2o6",
+    "block": "{\"symbols\":[\"card\",\"table\",\"body\",\"user\",\"row\",\"head\",\"user\"],\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"flex m-0\"]],{\"statements\":[[4,\"component\",[[22,1,[\"content\"]]],null,{\"statements\":[[4,\"power-select\",null,[[\"search\",\"selected\",\"onchange\"],[[27,\"perform\",[[23,[\"searchUserByEmail\"]]],null],[23,[\"selectedUser\"]],[27,\"action\",[[22,0,[]],[27,\"mut\",[[23,[\"selectedUser\"]]],null]],null]]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[22,7,[\"first_name\"]],false],[0,\" \"],[1,[22,7,[\"last_name\"]],false],[0,\" <\"],[1,[22,7,[\"email\"]],false],[0,\">\\n\"]],\"parameters\":[7]},null]],\"parameters\":[]},null],[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"mt-2 p-0\"]],{\"statements\":[[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\"],[\"state.model.email\",\"asc\"]],{\"statements\":[[4,\"component\",[[22,2,[\"head\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"state.model.email\"]],{\"statements\":[[0,\"Login\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"state.model.firstName\"]],{\"statements\":[[0,\"First Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"state.model.middleNames\"]],{\"statements\":[[0,\"Middle Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],[[\"sortProp\"],[\"state.model.lastName\"]],{\"statements\":[[0,\"Last Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"column\"]]],null,{\"statements\":[[0,\" \"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null],[4,\"component\",[[22,2,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,2,[\"sortDesc\"]],[23,[\"state\",\"model\"]]],null]],null,{\"statements\":[[4,\"component\",[[22,3,[\"row\"]]],null,{\"statements\":[[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"text-center\"]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\"],[7,\"img\"],[12,\"src\",[28,[[22,4,[\"profileImage\"]]]]],[11,\"style\",\"max-width:4rem; max-height:2rem;\"],[9],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"email\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"firstName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"middleNames\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,5,[\"cell\"]]],null,{\"statements\":[[1,[22,4,[\"lastName\"]],false]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"component\",[[22,5,[\"cell\"]]],[[\"class\"],[\"text-right\"]],{\"statements\":[[4,\"paper-button\",null,[[\"iconButton\",\"title\",\"onClick\",\"bubbles\"],[true,\"Delete sub-group\",[27,\"perform\",[[23,[\"deleteUser\"]],[22,4,[]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"delete\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[5]},null]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/user-manager/add-existing-accounts.hbs"
     }
