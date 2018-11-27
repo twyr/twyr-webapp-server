@@ -194,6 +194,7 @@ class Main extends TwyrBaseMiddleware {
 			const ApiService = this.$dependencies.ApiService;
 
 			await ApiService.add(`${this.name}::getTenantGroupTree`, this._getTenantGroupTree.bind(this));
+			await ApiService.add(`${this.name}::possibleTenantUsersList`, this._getPossibleTenantUsersList.bind(this));
 
 			await ApiService.add(`${this.name}::getTenantGroup`, this._getTenantGroup.bind(this));
 			await ApiService.add(`${this.name}::addTenantGroup`, this._addTenantGroup.bind(this));
@@ -220,6 +221,8 @@ class Main extends TwyrBaseMiddleware {
 			await ApiService.remove(`${this.name}::updateTenantGroup`, this._updateTenantGroup.bind(this));
 			await ApiService.remove(`${this.name}::addTenantGroup`, this._addTenantGroup.bind(this));
 			await ApiService.remove(`${this.name}::getTenantGroup`, this._getTenantGroup.bind(this));
+
+			await ApiService.remove(`${this.name}::possibleTenantUsersList`, this._getPossibleTenantUsersList.bind(this));
 			await ApiService.remove(`${this.name}::getTenantGroupTree`, this._getTenantGroupTree.bind(this));
 
 			await super._deregisterApis();
@@ -246,6 +249,18 @@ class Main extends TwyrBaseMiddleware {
 		}
 		catch(err) {
 			throw new TwyrMiddlewareError(`${this.name}::_getTenantGroupTree`, err);
+		}
+	}
+
+	async _getPossibleTenantUsersList(ctxt) {
+		try {
+			const dbSrvc = this.$dependencies.DatabaseService;
+
+			const possibleTenantUsers = await dbSrvc.knex.raw(`SELECT A.tenant_user_id AS id, B.first_name AS "firstName", B.middle_names AS "middleNames", B.last_name AS "lastName", B.email FROM tenants_users A INNER JOIN users B ON (A.user_id = B.user_id) WHERE A.tenant_id = ? AND A.access_status = 'authorized' AND A.user_id NOT IN (SELECT user_id FROM tenants_users_groups WHERE group_id IN (SELECT group_id FROM fn_get_group_ancestors(?)))`, [ctxt.state.tenant.tenant_id, ctxt.query.group]);
+			return possibleTenantUsers.rows;
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_getPossibleTenantUsersList`, err);
 		}
 	}
 
