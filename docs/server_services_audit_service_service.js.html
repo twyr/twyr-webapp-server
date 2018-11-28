@@ -106,7 +106,6 @@ class AuditService extends TwyrBaseService {
 		if(!auditPayload) return;
 		try {
 			this._cleanBeforePublish(auditPayload);
-			if(!auditPayload) return;
 			if(!Object.keys(auditPayload).length) return;
 
 			if(auditPayload.error) {
