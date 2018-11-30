@@ -50,6 +50,8 @@ class Main extends TwyrBaseComponent {
 			this.$router.delete('/tenant-groups/:tenant_group_id', this.$parent._rbac('group-manager-update'), this._deleteTenantGroup.bind(this));
 
 			this.$router.get('/tenant-user-groups/:tenant_user_group_id', this.$parent._rbac('group-manager-read'), this._getTenantUserGroup.bind(this));
+			this.$router.post('/tenant-user-groups', this.$parent._rbac('group-manager-update'), this._addTenantUserGroup.bind(this));
+			this.$router.delete('/tenant-user-groups/:tenant_user_group_id', this.$parent._rbac('group-manager-update'), this._deleteTenantUserGroup.bind(this));
 
 			await super._addRoutes();
 			return null;
@@ -161,6 +163,36 @@ class Main extends TwyrBaseComponent {
 		}
 		catch(err) {
 			throw new TwyrComponentError(`Error retrieving tenant user group`, err);
+		}
+	}
+
+	async _addTenantUserGroup(ctxt) {
+		try {
+			const apiSrvc = this.$dependencies.ApiService;
+			const tenantUserGroup = await apiSrvc.execute('Main::addTenantUserGroup', ctxt);
+
+			ctxt.status = 200;
+			ctxt.body = tenantUserGroup.shift();
+
+			return null;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error adding tenant user to group`, err);
+		}
+	}
+
+	async _deleteTenantUserGroup(ctxt) {
+		try {
+			const apiSrvc = this.$dependencies.ApiService;
+			const tenantUserGroup = await apiSrvc.execute('Main::deleteTenantUserGroup', ctxt);
+
+			ctxt.status = 200;
+			ctxt.body = tenantUserGroup.shift();
+
+			return null;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error deleting tenant user from group`, err);
 		}
 	}
 	// #endregion
