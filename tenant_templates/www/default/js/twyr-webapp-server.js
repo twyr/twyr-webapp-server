@@ -4835,7 +4835,7 @@
         oldDefaultGroup = tenantGroup;
       });
       if (oldDefaultGroup) yield oldDefaultGroup.reload({
-        'include': 'tenant, parent, groups, tenantUserGroups'
+        'include': 'tenant, parent, groups, tenantUserGroups, featurePermissions'
       });
     }).drop().evented().retryable(backoffPolicy),
     'saveGroupSucceeded': Ember.on('saveGroup:succeeded', function () {
@@ -4847,7 +4847,7 @@
     'saveGroupErrored': Ember.on('saveGroup:errored', function (taskInstance, err) {
       this.get('selectedGroup').rollback();
       this.get('selectedGroup').reload({
-        'include': 'tenant, parent, groups, tenantUserGroups'
+        'include': 'tenant, parent, groups, tenantUserGroups, featurePermissions'
       });
       this.get('notification').display({
         'type': 'error',
@@ -4895,7 +4895,7 @@
     '_confirmedDeleteGroupErrored': Ember.on('_confirmedDeleteGroup:errored', function (taskInstance, err) {
       this.get('selectedGroup').rollback();
       this.get('selectedGroup').reload({
-        'include': 'tenant, parent, groups, tenantUserGroups'
+        'include': 'tenant, parent, groups, tenantUserGroups, featurePermissions'
       });
       const parentGroup = this.get('selectedGroup.parent');
       const groupSiblings = parentGroup.get('groups');
@@ -4989,7 +4989,7 @@
       subGroup.set('defaultForNewUser', true);
       yield subGroup.save();
       if (oldDefaultGroup) yield oldDefaultGroup.reload({
-        'include': 'tenant, parent, groups, tenantUserGroups'
+        'include': 'tenant, parent, groups, tenantUserGroups, featurePermissions'
       });
     }).keepLatest().evented().retryable(backoffPolicy),
     'changeDefaultForNewUserSucceeded': Ember.on('changeDefaultForNewUser:succeeded', function (taskInstance) {
@@ -5001,7 +5001,7 @@
     'changeDefaultForNewUserErrored': Ember.on('changeDefaultForNewUser:errored', function (taskInstance, err) {
       taskInstance.args[0].rollback();
       taskInstance.args[0].reload({
-        'include': 'tenant, parent, groups, tenantUserGroups'
+        'include': 'tenant, parent, groups, tenantUserGroups, featurePermissions'
       });
       this.get('notification').display({
         'type': 'error',
@@ -5039,7 +5039,7 @@
       const subGroup = taskInstance.args[0];
       subGroup.rollback();
       if (!subGroup.get('isNew')) subGroup.reload({
-        'include': 'tenant, parent, groups, tenantUserGroups'
+        'include': 'tenant, parent, groups, tenantUserGroups, featurePermissions'
       });
       this.get('notification').display({
         'type': 'error',
@@ -5091,7 +5091,7 @@
       const subGroup = taskInstance.args[0];
       subGroup.rollback();
       subGroup.reload({
-        'include': 'tenant, parent, groups, tenantUserGroups'
+        'include': 'tenant, parent, groups, tenantUserGroups, featurePermissions'
       });
       const parentGroup = subGroup.get('parent');
       const groupSiblings = parentGroup.get('groups');
@@ -5173,7 +5173,7 @@
 
         if (!tenantGroup) {
           tenantGroup = yield store.findRecord('tenant-administration/group-manager/tenant-group', treeNode.id, {
-            'include': 'tenant, parent, groups, tenantUserGroups'
+            'include': 'tenant, parent, groups, tenantUserGroups, featurePermissions'
           });
         }
 
@@ -5362,8 +5362,9 @@
     '_doAddAccounts': (0, _emberConcurrency.task)(function* (tenantUserList) {
       for (let idx = 0; idx < tenantUserList.get('length'); idx++) {
         const tenantUser = tenantUserList.objectAt(idx);
-        let groupUser = this.get('store').peekAll('tenant-administration/group-manager/tenant-user-group').filterBy('tenantUser.id', tenantUser.get('id')).objectAt(0);
-        if (groupUser && groupUser.get('tenantGroup.id') === this.get('selectedGroup.id') && !groupUser.get('isNew')) continue;
+        let groupUser = this.get('store').peekAll('tenant-administration/group-manager/tenant-user-group').filterBy('tenantUser.id', tenantUser.get('id'));
+        groupUser = groupUser.filterBy('tenantGroup.id', this.get('selectedGroup.id')).objectAt(0);
+        if (groupUser && !groupUser.get('isNew')) continue;
         let storedTenantUser = this.get('store').peekRecord('tenant-administration/user-manager/tenant-user', tenantUser.get('id'));
         if (!storedTenantUser) storedTenantUser = yield this.get('store').findRecord('tenant-administration/user-manager/tenant-user', tenantUser.get('id'));
         if (!groupUser) groupUser = this.get('store').createRecord('tenant-administration/group-manager/tenant-user-group', {
@@ -5381,6 +5382,16 @@
       });
     }),
     '_doAddAccountsErrored': Ember.on('_doAddAccounts:errored', function (taskInstance, err) {
+      const tenantUserList = taskInstance.args[0];
+
+      for (let idx = 0; idx < tenantUserList.get('length'); idx++) {
+        const tenantUser = tenantUserList.objectAt(idx);
+        let groupUser = this.get('store').peekAll('tenant-administration/group-manager/tenant-user-group').filterBy('tenantUser.id', tenantUser.get('id'));
+        groupUser = groupUser.filterBy('tenantGroup.id', this.get('selectedGroup.id')).objectAt(0);
+        if (groupUser && !groupUser.get('isNew')) continue;
+        groupUser.deleteRecord();
+      }
+
       this.get('notification').display({
         'type': 'error',
         'error': err
@@ -7016,7 +7027,7 @@
 
       if (groupModel.get('id') === this.get('selectedGroup.id')) return;
       groupModel.reload({
-        'include': 'tenant, parent, groups, tenantUserGroups'
+        'include': 'tenant, parent, groups, tenantUserGroups, featurePermissions'
       }).then(reloadedModel => {
         this.set('selectedGroup', reloadedModel);
         this.get('setBreadcrumbHierarchy').perform();
@@ -10598,7 +10609,7 @@
   };
   _exports.default = _default;
 });
-;define("twyr-webapp-server/initializers/tenant-administration/group-manager/add-groups-rel-tenant-model", ["exports", "ember-data", "twyr-webapp-server/models/tenant-administration/tenant", "twyr-webapp-server/models/tenant-administration/user-manager/tenant-user"], function (_exports, _emberData, _tenant, _tenantUser) {
+;define("twyr-webapp-server/initializers/tenant-administration/group-manager/add-groups-rel-tenant-model", ["exports", "ember-data", "twyr-webapp-server/models/server-administration/feature-permission", "twyr-webapp-server/models/tenant-administration/tenant", "twyr-webapp-server/models/tenant-administration/user-manager/tenant-user"], function (_exports, _emberData, _featurePermission, _tenant, _tenantUser) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -10622,6 +10633,13 @@
       'tenantUserGroups': _emberData.default.hasMany('tenant-administration/group-manager/tenant-user-group', {
         'async': true,
         'inverse': 'tenantUser'
+      })
+    });
+
+    _featurePermission.default.reopen({
+      'tenantGroups': _emberData.default.hasMany('tenant-administration/group-manager/tenant-group', {
+        'async': true,
+        'inverse': 'featurePermissions'
       })
     });
   }
@@ -11022,6 +11040,10 @@
     'tenantUserGroups': _emberData.default.hasMany('tenant-administration/group-manager/tenant-user-group', {
       'async': true,
       'inverse': 'tenantGroup'
+    }),
+    'featurePermissions': _emberData.default.hasMany('server-administration/feature-permission', {
+      'async': true,
+      'inverse': 'tenantGroups'
     }),
     'path': Ember.computed('parent', 'parent.path', {
       get() {
@@ -12950,8 +12972,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "VtXFU8El",
-    "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\"],[7,\"span\"],[11,\"class\",\"flex\"],[11,\"style\",\"font-size:1.25rem;\"],[9],[0,\"Group Permissions\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "Wk5N+4Cx",
+    "block": "{\"symbols\":[\"table\",\"body\",\"featurePermission\",\"row\",\"head\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\"],[7,\"span\"],[11,\"class\",\"flex\"],[11,\"style\",\"font-size:1.25rem;\"],[9],[0,\"Group Permissions\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\",\"selectable\"],[\"email\",\"asc\",true]],{\"statements\":[[4,\"component\",[[22,1,[\"head\"]]],null,{\"statements\":[[4,\"component\",[[22,5,[\"column\"]]],[[\"checkbox\"],[true]],{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"paper-checkbox\",null,[[\"disabled\",\"onChange\"],[true,null]],{\"statements\":[],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[4,\"component\",[[22,5,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,5,[\"column\"]]],[[\"sortProp\"],[\"description\"]],{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null],[4,\"component\",[[22,1,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,1,[\"sortDesc\"]],[27,\"await\",[[23,[\"selectedGroup\",\"parent\",\"featurePermissions\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],null,{\"statements\":[[4,\"component\",[[22,4,[\"cell\"]]],[[\"checkbox\"],[true]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"paper-checkbox\",null,[[\"value\",\"onChange\"],[[27,\"get\",[[27,\"filter-by\",[\"id\",[22,3,[\"id\"]],[23,[\"selectedGroup\",\"featurePermissions\"]]],null],\"length\"],null],[27,\"perform\",[[23,[\"toggleFeaturePermission\"]],[22,3,[]]],null]]],{\"statements\":[],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[1,[22,3,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[1,[22,3,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/group-manager/permission-group-editor-component.hbs"
     }
@@ -13770,7 +13792,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-google-maps":{"key":"AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA","language":"en","region":"IN","protocol":"https","version":"3.34","src":"https://maps.googleapis.com/maps/api/js?v=3.34&region=IN&language=en&key=AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+bceaf3d9"},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-google-maps":{"key":"AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA","language":"en","region":"IN","protocol":"https","version":"3.34","src":"https://maps.googleapis.com/maps/api/js?v=3.34&region=IN&language=en&key=AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+aa9bd0bb"},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;
