@@ -4835,7 +4835,7 @@
         oldDefaultGroup = tenantGroup;
       });
       if (oldDefaultGroup) yield oldDefaultGroup.reload({
-        'include': 'tenant, parent, groups, tenantUserGroups, featurePermissions'
+        'include': 'tenant, parent, groups, tenantUserGroups, permissions, permissions.tenant, permissions.group, permissions.featurePermission'
       });
     }).drop().evented().retryable(backoffPolicy),
     'saveGroupSucceeded': Ember.on('saveGroup:succeeded', function () {
@@ -4847,7 +4847,7 @@
     'saveGroupErrored': Ember.on('saveGroup:errored', function (taskInstance, err) {
       this.get('selectedGroup').rollback();
       this.get('selectedGroup').reload({
-        'include': 'tenant, parent, groups, tenantUserGroups, featurePermissions'
+        'include': 'tenant, parent, groups, tenantUserGroups, permissions, permissions.tenant, permissions.group, permissions.featurePermission'
       });
       this.get('notification').display({
         'type': 'error',
@@ -4895,7 +4895,7 @@
     '_confirmedDeleteGroupErrored': Ember.on('_confirmedDeleteGroup:errored', function (taskInstance, err) {
       this.get('selectedGroup').rollback();
       this.get('selectedGroup').reload({
-        'include': 'tenant, parent, groups, tenantUserGroups, featurePermissions'
+        'include': 'tenant, parent, groups, tenantUserGroups, permissions, permissions.tenant, permissions.group, permissions.featurePermission'
       });
       const parentGroup = this.get('selectedGroup.parent');
       const groupSiblings = parentGroup.get('groups');
@@ -4910,13 +4910,18 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/components/tenant-administration/group-manager/permission-group-editor-component", ["exports", "twyr-webapp-server/framework/base-component"], function (_exports, _baseComponent) {
+;define("twyr-webapp-server/components/tenant-administration/group-manager/permission-group-editor-component", ["exports", "twyr-webapp-server/framework/base-component", "ember-concurrency-retryable/policies/exponential-backoff", "ember-concurrency"], function (_exports, _baseComponent, _exponentialBackoff, _emberConcurrency) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
     value: true
   });
   _exports.default = void 0;
+  const backoffPolicy = new _exponentialBackoff.default({
+    'multiplier': 1.5,
+    'minDelay': 30,
+    'maxDelay': 400
+  });
 
   var _default = _baseComponent.default.extend({
     'editable': false,
@@ -4930,6 +4935,48 @@
     'onHasPermissionChange': Ember.observer('hasPermission', function () {
       const updatePerm = this.get('currentUser').hasPermission('group-manager-update');
       this.set('editable', updatePerm);
+    }),
+    'groupPermissionIdList': Ember.computed('selectedGroup', 'selectedGroup.permissions.[]', function () {
+      return this.get('_groupPermissionIdList').perform();
+    }),
+    '_groupPermissionIdList': (0, _emberConcurrency.task)(function* () {
+      const permissionList = yield this.get('selectedGroup.permissions');
+      return permissionList.mapBy('featurePermission.id');
+    }).keepLatest(),
+    'toggleGroupPermission': (0, _emberConcurrency.task)(function* (parentGroupPermission) {
+      const groupPermissions = yield this.get('selectedGroup.permissions');
+      const alreadyAdded = groupPermissions.filterBy('featurePermission.id', parentGroupPermission.get('featurePermission.id')).objectAt(0);
+
+      if (alreadyAdded) {
+        yield alreadyAdded.destroyRecord();
+        return;
+      }
+
+      const newGroupPermission = this.get('store').createRecord('tenant-administration/group-manager/tenant-group-permission', {
+        'group': this.get('selectedGroup'),
+        'featurePermission': parentGroupPermission.get('featurePermission')
+      });
+      yield newGroupPermission.save();
+    }).enqueue().evented().retryable(backoffPolicy),
+    'toggleGroupPermissionSucceeded': Ember.on('toggleGroupPermission:succeeded', function (taskInstance) {
+      this.get('notification').display({
+        'type': 'success',
+        'message': `${taskInstance.args[0].get('featurePermission.displayName')} permission successfully modified in ${this.get('selectedGroup.displayName')}`
+      });
+    }),
+    'toggleGroupPermissionErrored': Ember.on('toggleGroupPermission:errored', function (taskInstance, err) {
+      const groupPermissions = this.get('selectedGroup.permissions');
+      let alreadyAdded = groupPermissions.filterBy('featurePermission.id', taskInstance.args[0].get('featurePermission.id')).objectAt(0);
+
+      if (!alreadyAdded) {
+        alreadyAdded = this.get('store').peekAll('tenant-administration/group-manager/tenant-group-permission').filterBy('group.id', this.get('selectedGroup.id')).filterBy('featurePermission.id', taskInstance.args[0].get('featurePermission.id')).objectAt(0);
+      }
+
+      if (alreadyAdded) alreadyAdded.rollback();
+      this.get('notification').display({
+        'type': 'error',
+        'error': err
+      });
     })
   });
 
@@ -4989,7 +5036,7 @@
       subGroup.set('defaultForNewUser', true);
       yield subGroup.save();
       if (oldDefaultGroup) yield oldDefaultGroup.reload({
-        'include': 'tenant, parent, groups, tenantUserGroups, featurePermissions'
+        'include': 'tenant, parent, groups, tenantUserGroups, permissions, permissions.tenant, permissions.group, permissions.featurePermission'
       });
     }).keepLatest().evented().retryable(backoffPolicy),
     'changeDefaultForNewUserSucceeded': Ember.on('changeDefaultForNewUser:succeeded', function (taskInstance) {
@@ -5001,7 +5048,7 @@
     'changeDefaultForNewUserErrored': Ember.on('changeDefaultForNewUser:errored', function (taskInstance, err) {
       taskInstance.args[0].rollback();
       taskInstance.args[0].reload({
-        'include': 'tenant, parent, groups, tenantUserGroups, featurePermissions'
+        'include': 'tenant, parent, groups, tenantUserGroups, permissions, permissions.tenant, permissions.group, permissions.featurePermission'
       });
       this.get('notification').display({
         'type': 'error',
@@ -5039,7 +5086,7 @@
       const subGroup = taskInstance.args[0];
       subGroup.rollback();
       if (!subGroup.get('isNew')) subGroup.reload({
-        'include': 'tenant, parent, groups, tenantUserGroups, featurePermissions'
+        'include': 'tenant, parent, groups, tenantUserGroups, permissions, permissions.tenant, permissions.group, permissions.featurePermission'
       });
       this.get('notification').display({
         'type': 'error',
@@ -5091,7 +5138,7 @@
       const subGroup = taskInstance.args[0];
       subGroup.rollback();
       subGroup.reload({
-        'include': 'tenant, parent, groups, tenantUserGroups, featurePermissions'
+        'include': 'tenant, parent, groups, tenantUserGroups, permissions, permissions.tenant, permissions.group, permissions.featurePermission'
       });
       const parentGroup = subGroup.get('parent');
       const groupSiblings = parentGroup.get('groups');
@@ -5173,7 +5220,7 @@
 
         if (!tenantGroup) {
           tenantGroup = yield store.findRecord('tenant-administration/group-manager/tenant-group', treeNode.id, {
-            'include': 'tenant, parent, groups, tenantUserGroups, featurePermissions'
+            'include': 'tenant, parent, groups, tenantUserGroups, permissions, permissions.tenant, permissions.group, permissions.featurePermission'
           });
         }
 
@@ -5727,7 +5774,7 @@
       this._clearMapMarkers();
 
       if (!this.get('_map')) return;
-      if (!this.get('approxLocation') || this.get('approxLocation').trim() === '') this.set('approxLocation', 'Nagpur, India');
+      if (!this.get('approxLocation') || this.get('approxLocation').trim() === '') this.set('approxLocation', 'Charminar, Hyderabad, India');
       const addressData = yield this.get('ajax').request(`https://maps.googleapis.com/maps/api/geocode/json?address=${this.get('approxLocation').replace(/ /g, '+')}&key=${_environment.default['ember-google-maps']['key']}`, {
         'method': 'GET',
         'xhrFields': {
@@ -7027,7 +7074,7 @@
 
       if (groupModel.get('id') === this.get('selectedGroup.id')) return;
       groupModel.reload({
-        'include': 'tenant, parent, groups, tenantUserGroups, featurePermissions'
+        'include': 'tenant, parent, groups, tenantUserGroups, permissions, permissions.tenant, permissions.group, permissions.featurePermission'
       }).then(reloadedModel => {
         this.set('selectedGroup', reloadedModel);
         this.get('setBreadcrumbHierarchy').perform();
@@ -10637,9 +10684,9 @@
     });
 
     _featurePermission.default.reopen({
-      'tenantGroups': _emberData.default.hasMany('tenant-administration/group-manager/tenant-group', {
+      'tenantGroupPermissions': _emberData.default.hasMany('tenant-administration/group-manager/tenant-group-permission', {
         'async': true,
-        'inverse': 'featurePermissions'
+        'inverse': 'featurePermission'
       })
     });
   }
@@ -11010,6 +11057,27 @@
 
   _exports.default = _default;
 });
+;define("twyr-webapp-server/models/tenant-administration/group-manager/tenant-group-permission", ["exports", "twyr-webapp-server/framework/base-model", "ember-data"], function (_exports, _baseModel, _emberData) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+
+  var _default = _baseModel.default.extend({
+    'group': _emberData.default.belongsTo('tenant-administration/group-manager/tenant-group', {
+      'async': true,
+      'inverse': 'permissions'
+    }),
+    'featurePermission': _emberData.default.belongsTo('server-administration/feature-permission', {
+      'async': true,
+      'inverse': 'tenantGroupPermissions'
+    })
+  });
+
+  _exports.default = _default;
+});
 ;define("twyr-webapp-server/models/tenant-administration/group-manager/tenant-group", ["exports", "twyr-webapp-server/framework/base-model", "ember-data", "ember-concurrency"], function (_exports, _baseModel, _emberData, _emberConcurrency) {
   "use strict";
 
@@ -11041,9 +11109,9 @@
       'async': true,
       'inverse': 'tenantGroup'
     }),
-    'featurePermissions': _emberData.default.hasMany('server-administration/feature-permission', {
+    'permissions': _emberData.default.hasMany('tenant-administration/group-manager/tenant-group-permission', {
       'async': true,
-      'inverse': 'tenantGroups'
+      'inverse': 'group'
     }),
     'path': Ember.computed('parent', 'parent.path', {
       get() {
@@ -12821,8 +12889,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "Wk5N+4Cx",
-    "block": "{\"symbols\":[\"table\",\"body\",\"featurePermission\",\"row\",\"head\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\"],[7,\"span\"],[11,\"class\",\"flex\"],[11,\"style\",\"font-size:1.25rem;\"],[9],[0,\"Group Permissions\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\",\"selectable\"],[\"email\",\"asc\",true]],{\"statements\":[[4,\"component\",[[22,1,[\"head\"]]],null,{\"statements\":[[4,\"component\",[[22,5,[\"column\"]]],[[\"checkbox\"],[true]],{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"paper-checkbox\",null,[[\"disabled\",\"onChange\"],[true,null]],{\"statements\":[],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[4,\"component\",[[22,5,[\"column\"]]],[[\"sortProp\"],[\"displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,5,[\"column\"]]],[[\"sortProp\"],[\"description\"]],{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[5]},null],[4,\"component\",[[22,1,[\"body\"]]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,1,[\"sortDesc\"]],[27,\"await\",[[23,[\"selectedGroup\",\"parent\",\"featurePermissions\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],null,{\"statements\":[[4,\"component\",[[22,4,[\"cell\"]]],[[\"checkbox\"],[true]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[4,\"paper-checkbox\",null,[[\"value\",\"onChange\"],[[27,\"get\",[[27,\"filter-by\",[\"id\",[22,3,[\"id\"]],[23,[\"selectedGroup\",\"featurePermissions\"]]],null],\"length\"],null],[27,\"perform\",[[23,[\"toggleFeaturePermission\"]],[22,3,[]]],null]]],{\"statements\":[],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[1,[22,3,[\"displayName\"]],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[1,[22,3,[\"description\"]],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[2]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "3Bw7h2L2",
+    "block": "{\"symbols\":[\"table\",\"body\",\"groupPermission\",\"row\",\"groupPermission\",\"row\",\"head\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-subheader\",null,null,{\"statements\":[[0,\"\\t\"],[7,\"div\"],[11,\"class\",\"layout-row layout-align-space-between-center\"],[9],[0,\"\\n\\t\\t\"],[7,\"span\"],[11,\"class\",\"flex\"],[11,\"style\",\"font-size:1.25rem;\"],[9],[0,\"Group Permissions\"],[10],[0,\"\\n\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"paper-data-table\",null,[[\"sortProp\",\"sortDir\",\"selectable\"],[\"featurePermission.displayName\",\"asc\",true]],{\"statements\":[[4,\"component\",[[22,1,[\"head\"]]],null,{\"statements\":[[4,\"component\",[[22,7,[\"column\"]]],[[\"checkbox\"],[true]],{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"paper-checkbox\",null,[[\"disabled\",\"onChange\"],[true,null]],{\"statements\":[],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\"],[4,\"component\",[[22,7,[\"column\"]]],[[\"sortProp\"],[\"featurePermission.displayName\"]],{\"statements\":[[0,\"Name\"]],\"parameters\":[]},null],[0,\"\\n\\t\\t\"],[4,\"component\",[[22,7,[\"column\"]]],[[\"sortProp\"],[\"featurePermission.description\"]],{\"statements\":[[0,\"Description\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[7]},null],[4,\"component\",[[22,1,[\"body\"]]],null,{\"statements\":[[4,\"if\",[[27,\"await\",[[23,[\"selectedGroup\",\"parent\"]]],null]],null,{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,1,[\"sortDesc\"]],[27,\"await\",[[23,[\"selectedGroup\",\"parent\",\"permissions\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],null,{\"statements\":[[4,\"component\",[[22,6,[\"cell\"]]],[[\"checkbox\"],[true]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[4,\"paper-checkbox\",null,[[\"disabled\",\"value\",\"onChange\"],[[27,\"not\",[[23,[\"editable\"]]],null],[27,\"get\",[[27,\"intersect\",[[27,\"await\",[[23,[\"groupPermissionIdList\"]]],null],[27,\"array\",[[27,\"await\",[[22,5,[\"featurePermission\",\"id\"]]],null]],null]],null],\"length\"],null],[27,\"perform\",[[23,[\"toggleGroupPermission\"]],[22,5,[]]],null]]],{\"statements\":[],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"cell\"]]],null,{\"statements\":[[1,[27,\"await\",[[22,5,[\"featurePermission\",\"displayName\"]]],null],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,6,[\"cell\"]]],null,{\"statements\":[[1,[27,\"await\",[[22,5,[\"featurePermission\",\"description\"]]],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[6]},null]],\"parameters\":[5]},null]],\"parameters\":[]},{\"statements\":[[4,\"each\",[[27,\"sort-by\",[[22,1,[\"sortDesc\"]],[27,\"await\",[[23,[\"selectedGroup\",\"permissions\"]]],null]],null]],null,{\"statements\":[[4,\"component\",[[22,2,[\"row\"]]],null,{\"statements\":[[4,\"component\",[[22,4,[\"cell\"]]],[[\"checkbox\"],[true]],{\"statements\":[[0,\"\\t\\t\\t\\t\\t\\t\"],[4,\"paper-checkbox\",null,[[\"disabled\",\"value\",\"onChange\"],[true,true,null]],{\"statements\":[],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[1,[27,\"await\",[[22,3,[\"featurePermission\",\"displayName\"]]],null],false]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\\t\"],[4,\"component\",[[22,4,[\"cell\"]]],null,{\"statements\":[[1,[27,\"await\",[[22,3,[\"featurePermission\",\"description\"]]],null],false]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[4]},null]],\"parameters\":[3]},null]],\"parameters\":[]}]],\"parameters\":[2]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/group-manager/permission-group-editor-component.hbs"
     }
@@ -12911,8 +12979,8 @@
   _exports.default = void 0;
 
   var _default = Ember.HTMLBars.template({
-    "id": "+Bs1QLts",
-    "block": "{\"symbols\":[\"card\",\"header\",\"text\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,3,[\"title\"]]],null,{\"statements\":[[0,\"Main Office Location\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[3]},null],[4,\"if\",[[27,\"and\",[[23,[\"model\",\"location\"]],[23,[\"editable\"]],[27,\"not\",[[23,[\"model\",\"location\",\"isNew\"]]],null]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"raised\",\"mini\",\"onClick\",\"bubbles\"],[true,true,true,[27,\"perform\",[[23,[\"editPrimaryLocation\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"edit\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null],[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"flex pt-0 layout-row layout-align-center-stretch layout-wrap\"]],{\"statements\":[[4,\"if\",[[23,[\"model\",\"location\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[7,\"div\"],[11,\"id\",\"tenant-administrator-main-component-static-location-display\"],[11,\"class\",\"p-0 text-center flex-100 flex-gt-md-70\"],[11,\"style\",\"min-height:5rem;\"],[9],[0,\"\\n\"],[4,\"if\",[[23,[\"staticUrl\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"img\"],[11,\"border\",\"0\"],[12,\"src\",[28,[[21,\"staticUrl\"]]]],[12,\"alt\",[28,[[23,[\"model\",\"location\",\"name\"]]]]],[9],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\tFetching map...\\n\"]],\"parameters\":[]}],[0,\"\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex-100 flex-gt-md-30 pl-4\"],[11,\"style\",\"font-style:italic;\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"line1\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"line2\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"line2\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"line3\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"line3\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"area\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"area\"]],false],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"city\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"state\"]],false],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"country\"]],false],[0,\" \"],[1,[23,[\"model\",\"location\",\"postalCode\"]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"onClick\",\"bubbles\"],[\"flex\",[27,\"perform\",[[23,[\"addPrimaryLocation\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"map-marked\"],[[\"class\"],[\"mr-1\"]]],false],[0,\" Add Main Office Location\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
+    "id": "QlF6UwnD",
+    "block": "{\"symbols\":[\"card\",\"header\",\"text\"],\"statements\":[[4,\"if\",[[23,[\"hasPermission\"]]],null,{\"statements\":[[4,\"paper-card\",null,[[\"class\"],[\"m-0 flex\"]],{\"statements\":[[4,\"component\",[[22,1,[\"header\"]]],null,{\"statements\":[[4,\"component\",[[22,2,[\"text\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[4,\"component\",[[22,3,[\"title\"]]],null,{\"statements\":[[0,\"Main Office Location\"]],\"parameters\":[]},null],[0,\"\\n\"]],\"parameters\":[3]},null],[4,\"if\",[[27,\"and\",[[23,[\"model\",\"location\"]],[23,[\"editable\"]],[27,\"not\",[[23,[\"model\",\"location\",\"isNew\"]]],null]],null]],null,{\"statements\":[[4,\"paper-button\",null,[[\"primary\",\"raised\",\"mini\",\"onClick\",\"bubbles\"],[true,true,true,[27,\"perform\",[[23,[\"editPrimaryLocation\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\"],[1,[27,\"paper-icon\",[\"edit\"],null],false],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[2]},null],[4,\"component\",[[22,1,[\"content\"]]],[[\"class\"],[\"flex pt-0 layout-row layout-align-center-stretch layout-wrap\"]],{\"statements\":[[4,\"if\",[[23,[\"model\",\"location\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\"],[7,\"div\"],[11,\"id\",\"tenant-administrator-main-component-static-location-display\"],[11,\"class\",\"p-0 text-center flex-100 flex-gt-md-70\"],[11,\"style\",\"min-height:5rem;\"],[9],[0,\"\\n\"],[4,\"if\",[[23,[\"staticUrl\"]]],null,{\"statements\":[[0,\"\\t\\t\\t\\t\\t\"],[7,\"img\"],[11,\"border\",\"0\"],[12,\"src\",[28,[[21,\"staticUrl\"]]]],[12,\"alt\",[28,[[23,[\"model\",\"location\",\"name\"]]]]],[9],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\t\\t\\t\\t\\tFetching map...\\n\"]],\"parameters\":[]}],[0,\"\\t\\t\\t\"],[10],[0,\"\\n\\t\\t\\t\"],[7,\"div\"],[11,\"class\",\"flex-100 flex-gt-md-30 pl-4\"],[11,\"style\",\"font-style:italic;\"],[9],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"line1\"]],false],[0,\",\"],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"line2\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"line2\"]],false],[0,\",\"],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"line3\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"line3\"]],false],[0,\",\"],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[4,\"if\",[[27,\"not-eq\",[[23,[\"model\",\"location\",\"area\"]],\"\"],null]],null,{\"statements\":[[1,[23,[\"model\",\"location\",\"area\"]],false],[0,\",\"],[7,\"br\"],[9],[10]],\"parameters\":[]},null],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"city\"]],false],[0,\",\"],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"state\"]],false],[0,\",\"],[7,\"br\"],[9],[10],[0,\"\\n\\t\\t\\t\\t\"],[1,[23,[\"model\",\"location\",\"country\"]],false],[0,\" \"],[1,[23,[\"model\",\"location\",\"postalCode\"]],false],[0,\"\\n\\t\\t\\t\"],[10],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[4,\"if\",[[23,[\"editable\"]]],null,{\"statements\":[[4,\"paper-button\",null,[[\"class\",\"onClick\",\"bubbles\"],[\"flex\",[27,\"perform\",[[23,[\"addPrimaryLocation\"]]],null],false]],{\"statements\":[[0,\"\\t\\t\\t\\t\"],[1,[27,\"fa-icon\",[\"map-marked\"],[[\"class\"],[\"mr-1\"]]],false],[0,\" Add Main Office Location\\n\"]],\"parameters\":[]},null]],\"parameters\":[]},null]],\"parameters\":[]}]],\"parameters\":[]},null]],\"parameters\":[1]},null]],\"parameters\":[]},null]],\"hasEval\":false}",
     "meta": {
       "moduleName": "twyr-webapp-server/templates/components/tenant-administration/location-component.hbs"
     }
