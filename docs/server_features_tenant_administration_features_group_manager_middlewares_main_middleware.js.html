@@ -258,6 +258,8 @@ class Main extends TwyrBaseMiddleware {
 			await ApiService.add(`${this.name}::deleteTenantGroup`, this._deleteTenantGroup.bind(this));
 
 			await ApiService.add(`${this.name}::getTenantUserGroup`, this._getTenantUserGroup.bind(this));
+			await ApiService.add(`${this.name}::addTenantUserGroup`, this._addTenantUserGroup.bind(this));
+			await ApiService.add(`${this.name}::deleteTenantUserGroup`, this._deleteTenantUserGroup.bind(this));
 
 			await super._registerApis();
 			return null;
@@ -271,6 +273,8 @@ class Main extends TwyrBaseMiddleware {
 		try {
 			const ApiService = this.$dependencies.ApiService;
 
+			await ApiService.remove(`${this.name}::deleteTenantUserGroup`, this._deleteTenantUserGroup.bind(this));
+			await ApiService.remove(`${this.name}::addTenantUserGroup`, this._addTenantUserGroup.bind(this));
 			await ApiService.remove(`${this.name}::getTenantUserGroup`, this._getTenantUserGroup.bind(this));
 
 			await ApiService.remove(`${this.name}::deleteTenantGroup`, this._deleteTenantGroup.bind(this));
@@ -497,6 +501,81 @@ class Main extends TwyrBaseMiddleware {
 		}
 		catch(err) {
 			throw new TwyrMiddlewareError(`${this.name}::_getTenantUserGroup`, err);
+		}
+	}
+
+	async _addTenantUserGroup(ctxt) {
+		try {
+			const tenantUserGroup = ctxt.request.body;
+
+			const jsonDeserializedData = await this.$jsonApiDeserializer.deserializeAsync(tenantUserGroup);
+			jsonDeserializedData['tenants_users_groups_id'] = jsonDeserializedData.id;
+
+			delete jsonDeserializedData.id;
+			delete jsonDeserializedData.created_at;
+			delete jsonDeserializedData.updated_at;
+
+			Object.keys(tenantUserGroup.data.relationships || {}).forEach((relationshipName) => {
+				if(!tenantUserGroup.data.relationships[relationshipName].data) {
+					delete jsonDeserializedData[relationshipName];
+					return;
+				}
+
+				if(!tenantUserGroup.data.relationships[relationshipName].data.id) {
+					delete jsonDeserializedData[relationshipName];
+					return;
+				}
+
+				jsonDeserializedData[`${relationshipName}_id`] = tenantUserGroup.data.relationships[relationshipName].data.id;
+			});
+
+			const tenantUser = await new this.$TenantUserModel({
+				'tenant_user_id': jsonDeserializedData['tenant_user_id']
+			}).fetch();
+
+			if(!tenantUser) throw new Error(`Invalid Tenant User`);
+
+			jsonDeserializedData['tenant_id'] = ctxt.state.tenant.tenant_id;
+			jsonDeserializedData['group_id'] = jsonDeserializedData['tenant_group_id'];
+			jsonDeserializedData['user_id'] = tenantUser.get('user_id');
+
+			delete jsonDeserializedData['tenant_group_id'];
+			delete jsonDeserializedData['tenant_user_id'];
+
+			const savedRecord = await this.$TenantUserGroupModel
+				.forge()
+				.save(jsonDeserializedData, {
+					'method': 'insert',
+					'patch': false
+				});
+
+			return {
+				'data': {
+					'type': tenantUserGroup.data.type,
+					'id': savedRecord.get('tenants_users_groups_id')
+				}
+			};
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_addTenantUserGroup`, err);
+		}
+	}
+
+	async _deleteTenantUserGroup(ctxt) {
+		try {
+			const tenantUserGroup = await new this.$TenantUserGroupModel({
+				'tenant_id': ctxt.state.tenant['tenant_id'],
+				'tenants_users_groups_id': ctxt.params['tenant_user_group_id']
+			})
+			.fetch();
+
+			if(!tenantUserGroup) throw new Error('Unknown Tenant User to Group mapping');
+
+			await tenantUserGroup.destroy();
+			return null;
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_deleteTenantUserGroup`, err);
 		}
 	}
 	// #endregion
