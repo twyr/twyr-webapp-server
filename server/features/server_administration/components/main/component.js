@@ -43,6 +43,7 @@ class Main extends TwyrBaseComponent {
 		try {
 			this.$router.get('/features/tree', this.$parent._rbac('registered'), this._getFeatureTree.bind(this));
 			this.$router.get('/features/:feature_id', this.$parent._rbac('registered'), this._getFeature.bind(this));
+			this.$router.get('/feature-permissions/:feature_permission_id', this.$parent._rbac('registered'), this._getFeaturePermission.bind(this));
 
 			await super._addRoutes();
 			return null;
@@ -81,6 +82,21 @@ class Main extends TwyrBaseComponent {
 		}
 		catch(err) {
 			throw new TwyrComponentError(`Error retrieving feature data`, err);
+		}
+	}
+
+	async _getFeaturePermission(ctxt) {
+		try {
+			const apiSrvc = this.$dependencies.ApiService;
+			const featureData = await apiSrvc.execute('Main::getModulePermission', ctxt);
+
+			ctxt.status = 200;
+			ctxt.body = featureData.shift();
+
+			return null;
+		}
+		catch(err) {
+			throw new TwyrComponentError(`Error retrieving feature permission data`, err);
 		}
 	}
 	// #endregion
