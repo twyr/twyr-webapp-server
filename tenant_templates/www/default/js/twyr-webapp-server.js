@@ -12370,157 +12370,6 @@
     }
   });
 });
-;define("twyr-webapp-server/services/util", ["exports"], function (_exports) {
-  "use strict";
-
-  Object.defineProperty(_exports, "__esModule", {
-    value: true
-  });
-  _exports.default = void 0;
-  let Util = Ember.Service.extend({
-    // Disables scroll around the passed element.
-    disableScrollAround() {
-      let util = this;
-      let $document = Ember.$(window.document);
-      util.disableScrollAround._count = util.disableScrollAround._count || 0;
-      ++util.disableScrollAround._count;
-
-      if (util.disableScrollAround._enableScrolling) {
-        return util.disableScrollAround._enableScrolling;
-      }
-
-      let {
-        body
-      } = $document.get(0);
-      let restoreBody = disableBodyScroll();
-      let restoreElement = disableElementScroll();
-      return util.disableScrollAround._enableScrolling = function () {
-        if (! --util.disableScrollAround._count) {
-          restoreBody();
-          restoreElement();
-          delete util.disableScrollAround._enableScrolling;
-        }
-      }; // Creates a virtual scrolling mask to absorb touchmove, keyboard, scrollbar clicking, and wheel events
-
-      function disableElementScroll() {
-        let zIndex = 50;
-        let scrollMask = Ember.$(`<div class="md-scroll-mask" style="z-index: ${zIndex}">
-          <div class="md-scroll-mask-bar"></div>
-        </div>`);
-        body.appendChild(scrollMask[0]);
-        scrollMask.on('wheel', preventDefault);
-        scrollMask.on('touchmove', preventDefault);
-        $document.on('keydown', disableKeyNav);
-        return function restoreScroll() {
-          scrollMask.off('wheel');
-          scrollMask.off('touchmove');
-          scrollMask[0].parentNode.removeChild(scrollMask[0]);
-          $document.off('keydown', disableKeyNav);
-          delete util.disableScrollAround._enableScrolling;
-        }; // Prevent keypresses from elements inside the body
-        // used to stop the keypresses that could cause the page to scroll
-        // (arrow keys, spacebar, tab, etc).
-
-        function disableKeyNav() {
-          // -- temporarily removed this logic, will possibly re-add at a later date
-          return;
-          /* if (!element[0].contains(e.target)) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-          } */
-        }
-
-        function preventDefault(e) {
-          e.preventDefault();
-        }
-      } // Converts the body to a position fixed block and translate it to the proper scroll
-      // position
-
-
-      function disableBodyScroll() {
-        let htmlNode = body.parentNode;
-        let restoreHtmlStyle = htmlNode.getAttribute('style') || '';
-        let restoreBodyStyle = body.getAttribute('style') || '';
-        let scrollOffset = body.scrollTop + body.parentElement.scrollTop;
-        let {
-          clientWidth
-        } = body;
-
-        if (body.scrollHeight > body.clientHeight) {
-          applyStyles(body, {
-            position: 'fixed',
-            width: '100%',
-            top: `${-scrollOffset}px`
-          });
-          applyStyles(htmlNode, {
-            overflowY: 'scroll'
-          });
-        }
-
-        if (body.clientWidth < clientWidth) {
-          applyStyles(body, {
-            overflow: 'hidden'
-          });
-        }
-
-        return function restoreScroll() {
-          body.setAttribute('style', restoreBodyStyle);
-          htmlNode.setAttribute('style', restoreHtmlStyle);
-          body.scrollTop = scrollOffset;
-        };
-      }
-
-      function applyStyles(el, styles) {
-        for (let key in styles) {
-          el.style[key] = styles[key];
-        }
-      }
-    },
-
-    enableScrolling() {
-      let method = this.disableScrollAround._enableScrolling;
-      method && method();
-    },
-
-    /*
-     * supplant() method from Crockford's `Remedial Javascript`
-     * Equivalent to use of $interpolate; without dependency on
-     * interpolation symbols and scope. Note: the '{<token>}' can
-     * be property names, property chains, or array indices.
-     */
-    supplant(template, values, pattern) {
-      pattern = pattern || /\{([^{}]*)\}/g;
-      return template.replace(pattern, function (a, b) {
-        let p = b.split('.');
-        let r = values;
-
-        try {
-          for (let s in p) {
-            if (p.hasOwnProperty(s)) {
-              r = r[p[s]];
-            }
-          }
-        } catch (e) {
-          r = a;
-        }
-
-        return typeof r === 'string' || typeof r === 'number' ? r : a;
-      });
-    },
-
-    nextTick: function (window, prefixes, i, p, fnc) {
-      while (!fnc && i < prefixes.length) {
-        fnc = window[`${prefixes[i++]}equestAnimationFrame`];
-      }
-
-      return fnc && fnc.bind(window) || window.setImmediate || function (fnc) {
-        window.setTimeout(fnc, 0);
-      };
-    }(window, 'r webkitR mozR msR oR'.split(' '), 0)
-  });
-  var _default = Util;
-  _exports.default = _default;
-});
 ;define("twyr-webapp-server/templates/application", ["exports"], function (_exports) {
   "use strict";
 
@@ -13197,24 +13046,6 @@
 
   _exports.default = _default;
 });
-;define("twyr-webapp-server/templates/components/transition-group", ["exports"], function (_exports) {
-  "use strict";
-
-  Object.defineProperty(_exports, "__esModule", {
-    value: true
-  });
-  _exports.default = void 0;
-
-  var _default = Ember.HTMLBars.template({
-    "id": "Le2PWR69",
-    "block": "{\"symbols\":[\"&default\"],\"statements\":[[14,1],[0,\"\\n\"]],\"hasEval\":false}",
-    "meta": {
-      "moduleName": "twyr-webapp-server/templates/components/transition-group.hbs"
-    }
-  });
-
-  _exports.default = _default;
-});
 ;define("twyr-webapp-server/templates/components/twyr-model-table-actions", ["exports"], function (_exports) {
   "use strict";
 
@@ -13792,7 +13623,7 @@
 ;define('twyr-webapp-server/config/environment', [], function() {
   
           var exports = {
-            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-google-maps":{"key":"AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA","language":"en","region":"IN","protocol":"https","version":"3.34","src":"https://maps.googleapis.com/maps/api/js?v=3.34&region=IN&language=en&key=AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+aa9bd0bb"},"exportApplicationGlobal":true}
+            'default': {"modulePrefix":"twyr-webapp-server","environment":"development","rootURL":"/","locationType":"auto","changeTracker":{"trackHasMany":true,"auto":true,"enableIsDirty":true},"contentSecurityPolicy":{"font-src":"'self' fonts.gstatic.com","style-src":"'self' fonts.googleapis.com"},"ember-google-maps":{"key":"AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA","language":"en","region":"IN","protocol":"https","version":"3.34","src":"https://maps.googleapis.com/maps/api/js?v=3.34&region=IN&language=en&key=AIzaSyDof1Dp2E9O1x5oe78cOm0nDbYcnrWiPgA"},"ember-paper":{"insertFontLinks":false},"fontawesome":{"icons":{"free-solid-svg-icons":"all"}},"googleFonts":["Noto+Sans:400,400i,700,700i","Noto+Serif:400,400i,700,700i&subset=devanagari","Keania+One"],"moment":{"allowEmpty":true,"includeTimezone":"all","includeLocales":true,"localeOutputPath":"/moment-locales"},"pageTitle":{"replace":false,"separator":" > "},"resizeServiceDefaults":{"debounceTimeout":100,"heightSensitive":true,"widthSensitive":true,"injectionFactories":["component"]},"twyr":{"domain":".twyr.com","startYear":2016},"EmberENV":{"FEATURES":{},"EXTEND_PROTOTYPES":{}},"APP":{"name":"twyr-webapp-server","version":"3.0.1+a82395b6"},"exportApplicationGlobal":true}
           };
           Object.defineProperty(exports, '__esModule', {value: true});
           return exports;

@@ -346,8 +346,7 @@ svg:not(:root).svg-inline--fa {
 }
 
 :root .grid-stack-item > .ui-resizable-handle {
-  -webkit-filter: none;
-          filter: none;
+  filter: none;
 }
 
 .grid-stack {
@@ -414,8 +413,7 @@ svg:not(:root).svg-inline--fa {
 .grid-stack > .grid-stack-item.ui-draggable-dragging > .grid-stack-item-content,
 .grid-stack > .grid-stack-item.ui-draggable-dragging > .grid-stack-item-content, .grid-stack > .grid-stack-item.ui-resizable-resizing > .grid-stack-item-content,
 .grid-stack > .grid-stack-item.ui-resizable-resizing > .grid-stack-item-content {
-  -webkit-box-shadow: 1px 4px 6px rgba(0, 0, 0, 0.2);
-          box-shadow: 1px 4px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 1px 4px 6px rgba(0, 0, 0, 0.2);
   opacity: 0.8;
 }
 
@@ -425,11 +423,17 @@ svg:not(:root).svg-inline--fa {
   background-repeat: no-repeat;
   background-position: center;
   -webkit-transform: rotate(45deg);
+  -moz-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  -o-transform: rotate(45deg);
   transform: rotate(45deg);
 }
 
 .grid-stack > .grid-stack-item > .ui-resizable-se {
   -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
   transform: rotate(-45deg);
 }
 
@@ -696,6 +700,9 @@ svg:not(:root).svg-inline--fa {
 .grid-stack.grid-stack-animate,
 .grid-stack.grid-stack-animate .grid-stack-item {
   -webkit-transition: left 0.3s, top 0.3s, height 0.3s, width 0.3s;
+  -moz-transition: left 0.3s, top 0.3s, height 0.3s, width 0.3s;
+  -ms-transition: left 0.3s, top 0.3s, height 0.3s, width 0.3s;
+  -o-transition: left 0.3s, top 0.3s, height 0.3s, width 0.3s;
   transition: left 0.3s, top 0.3s, height 0.3s, width 0.3s;
 }
 
@@ -703,6 +710,9 @@ svg:not(:root).svg-inline--fa {
 .grid-stack.grid-stack-animate .grid-stack-item.ui-resizable-resizing,
 .grid-stack.grid-stack-animate .grid-stack-item.grid-stack-placeholder {
   -webkit-transition: left 0s, top 0s, height 0s, width 0s;
+  -moz-transition: left 0s, top 0s, height 0s, width 0s;
+  -ms-transition: left 0s, top 0s, height 0s, width 0s;
+  -o-transition: left 0s, top 0s, height 0s, width 0s;
   transition: left 0s, top 0s, height 0s, width 0s;
 }
 
@@ -837,6 +847,7 @@ button.toast-close-button {
   /*overrides*/
 }
 #toast-container * {
+  -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
 }
@@ -847,9 +858,12 @@ button.toast-close-button {
   margin: 0 0 6px;
   padding: 15px 15px 15px 50px;
   width: 300px;
+  -moz-border-radius: 3px 3px 3px 3px;
+  -webkit-border-radius: 3px 3px 3px 3px;
   border-radius: 3px 3px 3px 3px;
   background-position: 15px center;
   background-repeat: no-repeat;
+  -moz-box-shadow: 0 0 12px #999999;
   -webkit-box-shadow: 0 0 12px #999999;
   box-shadow: 0 0 12px #999999;
   color: #FFFFFF;
@@ -863,6 +877,7 @@ button.toast-close-button {
   background-position: right 15px center;
 }
 #toast-container > div:hover {
+  -moz-box-shadow: 0 0 12px #000000;
   -webkit-box-shadow: 0 0 12px #000000;
   box-shadow: 0 0 12px #000000;
   opacity: 1;
@@ -973,6 +988,7 @@ button.toast-close-button {
        context. Also, this prevents a tiny vertical jump when the
        content switches to accelerated.  */
     -webkit-transform: translateY(0);
+    -moz-transform: translateY(0);
     transform: translateY(0);
 }
 
@@ -1103,8 +1119,7 @@ button.toast-close-button {
   position: absolute;
   background: #f5f5f5;
   border: 1px solid #979797;
-  -webkit-box-shadow: 2px 2px 2px #999999;
-          box-shadow: 2px 2px 2px #999999;
+  box-shadow: 2px 2px 2px #999999;
 }
 .vakata-context ul {
   list-style: none;
@@ -1135,8 +1150,7 @@ button.toast-close-button {
 .vakata-context li > a:hover {
   position: relative;
   background-color: #e8eff7;
-  -webkit-box-shadow: 0 0 2px #0a6aa1;
-          box-shadow: 0 0 2px #0a6aa1;
+  box-shadow: 0 0 2px #0a6aa1;
 }
 .vakata-context li > a.vakata-context-parent {
   background-image: url("data:image/gif;base64,R0lGODlhCwAHAIAAACgoKP///yH5BAEAAAEALAAAAAALAAcAAAIORI4JlrqN1oMSnmmZDQUAOw==");
@@ -1149,8 +1163,7 @@ button.toast-close-button {
 .vakata-context .vakata-context-hover > a {
   position: relative;
   background-color: #e8eff7;
-  -webkit-box-shadow: 0 0 2px #0a6aa1;
-          box-shadow: 0 0 2px #0a6aa1;
+  box-shadow: 0 0 2px #0a6aa1;
 }
 .vakata-context .vakata-context-separator > a,
 .vakata-context .vakata-context-separator > a:hover {
@@ -1164,8 +1177,7 @@ button.toast-close-button {
   margin: 0 0 0 2.4em;
   border-left: 1px solid #e0e0e0;
   text-shadow: 0 0 0 transparent;
-  -webkit-box-shadow: 0 0 0 transparent;
-          box-shadow: 0 0 0 transparent;
+  box-shadow: 0 0 0 transparent;
   border-radius: 0;
 }
 .vakata-context .vakata-contextmenu-disabled a,
@@ -1173,8 +1185,7 @@ button.toast-close-button {
   color: silver;
   background-color: transparent;
   border: 0;
-  -webkit-box-shadow: 0 0 0;
-          box-shadow: 0 0 0;
+  box-shadow: 0 0 0;
 }
 .vakata-context li > a > i {
   text-decoration: none;
@@ -1281,28 +1292,22 @@ button.toast-close-button {
 .jstree-default .jstree-anchor,
 .jstree-default .jstree-animated,
 .jstree-default .jstree-wholerow {
-  -webkit-transition: background-color 0.15s, -webkit-box-shadow 0.15s;
-  transition: background-color 0.15s, -webkit-box-shadow 0.15s;
   transition: background-color 0.15s, box-shadow 0.15s;
-  transition: background-color 0.15s, box-shadow 0.15s, -webkit-box-shadow 0.15s;
 }
 .jstree-default .jstree-hovered {
   background: #e7f4f9;
   border-radius: 2px;
-  -webkit-box-shadow: inset 0 0 1px #cccccc;
-          box-shadow: inset 0 0 1px #cccccc;
+  box-shadow: inset 0 0 1px #cccccc;
 }
 .jstree-default .jstree-context {
   background: #e7f4f9;
   border-radius: 2px;
-  -webkit-box-shadow: inset 0 0 1px #cccccc;
-          box-shadow: inset 0 0 1px #cccccc;
+  box-shadow: inset 0 0 1px #cccccc;
 }
 .jstree-default .jstree-clicked {
   background: #beebff;
   border-radius: 2px;
-  -webkit-box-shadow: inset 0 0 1px #999999;
-          box-shadow: inset 0 0 1px #999999;
+  box-shadow: inset 0 0 1px #999999;
 }
 .jstree-default .jstree-no-icons .jstree-anchor > .jstree-themeicon {
   display: none;
@@ -1313,8 +1318,7 @@ button.toast-close-button {
 }
 .jstree-default .jstree-disabled.jstree-hovered {
   background: transparent;
-  -webkit-box-shadow: none;
-          box-shadow: none;
+  box-shadow: none;
 }
 .jstree-default .jstree-disabled.jstree-clicked {
   background: #efefef;
@@ -1338,8 +1342,7 @@ button.toast-close-button {
 }
 .jstree-default.jstree-checkbox-no-clicked .jstree-clicked {
   background: transparent;
-  -webkit-box-shadow: none;
-          box-shadow: none;
+  box-shadow: none;
 }
 .jstree-default.jstree-checkbox-no-clicked .jstree-clicked.jstree-hovered {
   background: #e7f4f9;
@@ -1358,11 +1361,11 @@ button.toast-close-button {
 .jstree-default > .jstree-wholerow-ul .jstree-hovered,
 .jstree-default > .jstree-wholerow-ul .jstree-clicked {
   background: transparent;
-  -webkit-box-shadow: none;
-          box-shadow: none;
+  box-shadow: none;
   border-radius: 0;
 }
 .jstree-default .jstree-wholerow {
+  -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
 }
@@ -1371,7 +1374,7 @@ button.toast-close-button {
 }
 .jstree-default .jstree-wholerow-clicked {
   background: #beebff;
-  background: -webkit-gradient(linear, left top, left bottom, from(#beebff), to(#a8e4ff));
+  background: -webkit-linear-gradient(top, #beebff 0%, #a8e4ff 100%);
   background: linear-gradient(to bottom, #beebff 0%, #a8e4ff 100%);
 }
 .jstree-default .jstree-node {
@@ -2053,17 +2056,14 @@ button.toast-close-button {
     background: #beebff;
   }
   .jstree-default-responsive .jstree-children .jstree-last > .jstree-wholerow {
-    -webkit-box-shadow: inset 0 -6px 3px -5px #666666;
-            box-shadow: inset 0 -6px 3px -5px #666666;
+    box-shadow: inset 0 -6px 3px -5px #666666;
   }
   .jstree-default-responsive .jstree-children .jstree-open > .jstree-wholerow {
-    -webkit-box-shadow: inset 0 6px 3px -5px #666666;
-            box-shadow: inset 0 6px 3px -5px #666666;
+    box-shadow: inset 0 6px 3px -5px #666666;
     border-top: 0;
   }
   .jstree-default-responsive .jstree-children .jstree-open + .jstree-open {
-    -webkit-box-shadow: none;
-            box-shadow: none;
+    box-shadow: none;
   }
   .jstree-default-responsive .jstree-node,
   .jstree-default-responsive .jstree-icon,
@@ -2106,37 +2106,23 @@ button.toast-close-button {
 }
 
 .FreestyleGuide {
-  display: -webkit-box;
-  display: -ms-flexbox;
   display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
+  flex-direction: column;
   height: 100%;
   min-height: 100vh;
   min-width: 320px; }
   .FreestyleGuide-header, .FreestyleGuide-footer {
-    display: -webkit-box;
-    display: -ms-flexbox;
     display: flex;
-    -webkit-box-flex: 0;
-        -ms-flex: none;
-            flex: none; }
+    flex: none; }
   .FreestyleGuide-header {
-    -webkit-box-align: center;
-        -ms-flex-align: center;
-            align-items: center;
-    -webkit-box-pack: justify;
-        -ms-flex-pack: justify;
-            justify-content: space-between;
+    align-items: center;
+    justify-content: space-between;
     border-bottom: solid 1px #b6b6b6;
     padding: .5rem 1rem; }
   .FreestyleGuide-cta {
     cursor: pointer;
     display: inline-block;
-    -ms-flex-preferred-size: 20px;
-        flex-basis: 20px;
+    flex-basis: 20px;
     font-size: 1.4rem;
     text-align: center; }
   .FreestyleGuide-ctaIcon:hover {
@@ -2154,59 +2140,38 @@ button.toast-close-button {
     margin: 0 auto; }
   .FreestyleGuide-body {
     background-color: #fff;
-    display: -webkit-box;
-    display: -ms-flexbox;
     display: flex;
-    -webkit-box-flex: 1;
-        -ms-flex: 1 0 auto;
-            flex: 1 0 auto;
-    -webkit-box-orient: vertical;
-    -webkit-box-direction: normal;
-        -ms-flex-direction: column;
-            flex-direction: column; }
+    flex: 1 0 auto;
+    flex-direction: column; }
     @media (min-width: 600px) {
       .FreestyleGuide-body {
-        -webkit-box-orient: horizontal;
-        -webkit-box-direction: normal;
-            -ms-flex-direction: row;
-                flex-direction: row; } }
+        flex-direction: row; } }
   .FreestyleGuide-content {
     margin-top: 1.5rem;
     overflow: auto; }
     @media (min-width: 600px) {
       .FreestyleGuide-content {
-        -webkit-box-flex: 1;
-            -ms-flex: 1;
-                flex: 1;
+        flex: 1;
         margin: 0; } }
   .FreestyleGuide-nav {
     background-color: #fff;
-    -webkit-box-ordinal-group: 0;
-        -ms-flex-order: -1;
-            order: -1;
+    order: -1;
     padding: 1rem; }
     @media (min-width: 600px) {
       .FreestyleGuide-nav {
         border-right: solid 1px #b6b6b6;
-        -webkit-box-flex: 0;
-            -ms-flex: 0 0 18rem;
-                flex: 0 0 18rem; } }
+        flex: 0 0 18rem; } }
   .FreestyleGuide-aside {
     background: #fff;
-    -webkit-box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
-            box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
     margin-right: .5rem;
-    -webkit-box-ordinal-group: -1;
-        -ms-flex-order: -2;
-            order: -2;
+    order: -2;
     position: fixed;
     right: .5rem; }
     @media (min-width: 600px) {
       .FreestyleGuide-aside {
         border-left: solid 1px #b6b6b6;
-        -webkit-box-ordinal-group: 2;
-            -ms-flex-order: 1;
-                order: 1; } }
+        order: 1; } }
 
 .FreestyleCollection {
   max-width: 1200px; }
@@ -2216,11 +2181,8 @@ button.toast-close-button {
     text-transform: uppercase; }
   .FreestyleCollection-variantList {
     background-color: #fff;
-    -webkit-box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
-            box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
     color: #212121;
-    display: -webkit-box;
-    display: -ms-flexbox;
     display: flex;
     height: 48px;
     list-style-type: none;
@@ -2233,9 +2195,7 @@ button.toast-close-button {
   .FreestyleCollection-variantListItem {
     cursor: pointer;
     display: block;
-    -webkit-box-flex: 1;
-        -ms-flex-positive: 1;
-            flex-grow: 1;
+    flex-grow: 1;
     float: left;
     font-size: 14px;
     height: 48px;
@@ -2280,11 +2240,7 @@ button.toast-close-button {
     margin-bottom: .3rem;
     text-transform: uppercase; }
   .FreestyleUsageControls-item {
-    -webkit-box-align: baseline;
-        -ms-flex-align: baseline;
-            align-items: baseline;
-    display: -webkit-box;
-    display: -ms-flexbox;
+    align-items: baseline;
     display: flex; }
     .FreestyleUsageControls-item--focus {
       padding-top: .6rem; }
@@ -2298,8 +2254,7 @@ button.toast-close-button {
   .FreestyleUsageControls-button {
     background-color: #00bcd4;
     border: 0;
-    -webkit-box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
-            box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
     color: #fff;
     cursor: pointer;
     font-size: .6rem;
@@ -2462,8 +2417,12 @@ END-FREESTYLE-USAGE */
 .FreestyleTypeface-previewSample {
   font-size: 15px;
   margin: 0; }
+
+/*# sourceMappingURL=ember-freestyle.css.map */
 .paper-password-strength {
   clear: both; }
   .paper-password-strength .paper-password-strength-label {
     white-space: nowrap;
     font-size: 13px; }
+
+/*# sourceMappingURL=ember-paper-password.css.map */
