@@ -144,8 +144,35 @@ class Main extends TwyrBaseMiddleware {
 						return this.hasMany(self.$TenantGroupModel, 'parent_group_id');
 					},
 
+					'permissions': function() {
+						return this.hasMany(self.$TenantGroupPermissionModel, 'group_id', 'group_id');
+					},
+
 					'tenantUserGroups': function() {
 						return this.hasMany(self.$TenantUserGroupModel, 'group_id');
+					}
+				})
+			});
+
+			Object.defineProperty(this, '$TenantGroupPermissionModel', {
+				'__proto__': null,
+				'configurable': true,
+
+				'value': dbSrvc.Model.extend({
+					'tableName': 'tenant_group_permissions',
+					'idAttribute': 'tenant_group_permission_id',
+					'hasTimestamps': true,
+
+					'tenant': function() {
+						return this.belongsTo(self.$TenantModel, 'tenant_id');
+					},
+
+					'group': function() {
+						return this.belongsTo(self.$TenantGroupModel, 'group_id', 'group_id');
+					},
+
+					'featurePermission': function() {
+						return this.belongsTo(self.$FeaturePermissionModel, 'feature_permission_id', 'feature_permission_id');
 					}
 				})
 			});
@@ -211,6 +238,21 @@ class Main extends TwyrBaseMiddleware {
 				})
 			});
 
+			Object.defineProperty(this, '$FeaturePermissionModel', {
+				'__proto__': null,
+				'configurable': true,
+
+				'value': dbSrvc.Model.extend({
+					'tableName': 'feature_permissions',
+					'idAttribute': 'feature_permission_id',
+					'hasTimestamps': true,
+
+					'groupPermissions': function() {
+						return this.hasMany(self.$TenantGroupPermissionModel, 'feature_permission_id', 'feature_permission_id');
+					}
+				})
+			});
+
 			return null;
 		}
 		catch(err) {
@@ -261,6 +303,10 @@ class Main extends TwyrBaseMiddleware {
 			await ApiService.add(`${this.name}::addTenantUserGroup`, this._addTenantUserGroup.bind(this));
 			await ApiService.add(`${this.name}::deleteTenantUserGroup`, this._deleteTenantUserGroup.bind(this));
 
+			await ApiService.add(`${this.name}::getTenantGroupPermission`, this._getTenantGroupPermission.bind(this));
+			await ApiService.add(`${this.name}::addTenantGroupPermission`, this._addTenantGroupPermission.bind(this));
+			await ApiService.add(`${this.name}::deleteTenantGroupPermission`, this._deleteTenantGroupPermission.bind(this));
+
 			await super._registerApis();
 			return null;
 		}
@@ -272,6 +318,10 @@ class Main extends TwyrBaseMiddleware {
 	async _deregisterApis() {
 		try {
 			const ApiService = this.$dependencies.ApiService;
+
+			await ApiService.remove(`${this.name}::deleteTenantGroupPermission`, this._deleteTenantGroupPermission.bind(this));
+			await ApiService.remove(`${this.name}::addTenantGroupPermission`, this._addTenantGroupPermission.bind(this));
+			await ApiService.remove(`${this.name}::getTenantGroupPermission`, this._getTenantGroupPermission.bind(this));
 
 			await ApiService.remove(`${this.name}::deleteTenantUserGroup`, this._deleteTenantUserGroup.bind(this));
 			await ApiService.remove(`${this.name}::addTenantUserGroup`, this._addTenantUserGroup.bind(this));
@@ -332,21 +382,26 @@ class Main extends TwyrBaseMiddleware {
 			});
 
 			let tenantGroupData = await TenantGroupRecord.fetch({
-				'withRelated': (ctxt.query.include &amp;&amp; ctxt.query.include.length) ? ctxt.query.include.split(',').map((incl) => { return incl.trim(); }) : ['tenant', 'parent', 'groups', 'tenantUserGroups']
+				'withRelated': (ctxt.query.include &amp;&amp; ctxt.query.include.length) ? ctxt.query.include.split(',').map((incl) => { return incl.trim(); }) : ['tenant', 'parent', 'groups', 'permissions', 'tenantUserGroups', 'permissions.tenant', 'permissions.group', 'permissions.featurePermission']
 			});
 
 			tenantGroupData = this.$jsonApiMapper.map(tenantGroupData, 'tenant-administration/group-manager/tenant-group', {
 				'typeForModel': {
 					'tenant': 'tenant-administration/tenant',
 					'parent': 'tenant-administration/group-manager/tenant-group',
+					'group': 'tenant-administration/group-manager/tenant-group',
 					'groups': 'tenant-administration/group-manager/tenant-group',
+					'permissions': 'tenant-administration/group-manager/tenant-group-permission',
+					'featurePermission': 'server-administration/feature-permission',
 					'tenantUserGroups': 'tenant-administration/group-manager/tenant-user-group'
 				},
 
 				'enableLinks': false
 			});
 
-			delete tenantGroupData.included;
+			tenantGroupData.included = tenantGroupData.included.filter((inclRsrc) => {
+				return inclRsrc.type === 'tenant-administration/group-manager/tenant-group-permission';
+			});
 			return tenantGroupData;
 		}
 		catch(err) {
@@ -576,6 +631,113 @@ class Main extends TwyrBaseMiddleware {
 		}
 		catch(err) {
 			throw new TwyrMiddlewareError(`${this.name}::_deleteTenantUserGroup`, err);
+		}
+	}
+
+	async _getTenantGroupPermission(ctxt) {
+		try {
+			const TenantGroupPermissionRecord = new this.$TenantGroupPermissionModel({
+				'tenant_id': ctxt.state.tenant['tenant_id'],
+				'tenant_group_permission_id': ctxt.params['tenant_group_permission_id']
+			});
+
+			// const self = this; // eslint-disable-line consistent-this
+			let tenantGroupPermissionData = await TenantGroupPermissionRecord.fetch({
+				'withRelated': [
+					'tenant', 'featurePermission',
+					{
+						'group': function(qb) {
+							qb.where('tenant_id', '=', ctxt.state.tenant.tenant_id);
+						}
+					}
+				]
+			});
+
+			tenantGroupPermissionData = this.$jsonApiMapper.map(tenantGroupPermissionData, 'tenant-administration/group-manager/tenant-group-permission', {
+				'typeForModel': {
+					'tenant': 'tenant-administration/tenant',
+					'group': 'tenant-administration/group-manager/tenant-group',
+					'featurePermission': 'server-administration/feature-permission'
+				},
+
+				'enableLinks': false
+			});
+
+			delete tenantGroupPermissionData.included;
+			return tenantGroupPermissionData;
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_getTenantGroupPermission`, err);
+		}
+	}
+
+	async _addTenantGroupPermission(ctxt) {
+		try {
+			const tenantGroupPermission = ctxt.request.body;
+
+			const jsonDeserializedData = await this.$jsonApiDeserializer.deserializeAsync(tenantGroupPermission);
+			jsonDeserializedData['tenant_group_permission_id'] = jsonDeserializedData.id;
+
+			delete jsonDeserializedData.id;
+			delete jsonDeserializedData.created_at;
+			delete jsonDeserializedData.updated_at;
+
+			Object.keys(tenantGroupPermission.data.relationships || {}).forEach((relationshipName) => {
+				if(!tenantGroupPermission.data.relationships[relationshipName].data) {
+					delete jsonDeserializedData[relationshipName];
+					return;
+				}
+
+				if(!tenantGroupPermission.data.relationships[relationshipName].data.id) {
+					delete jsonDeserializedData[relationshipName];
+					return;
+				}
+
+				jsonDeserializedData[`${relationshipName}_id`] = tenantGroupPermission.data.relationships[relationshipName].data.id;
+			});
+
+			let feature = await this.$dependencies.DatabaseService.knex.raw(`SELECT module_id FROM feature_permissions WHERE feature_permission_id = ?`, [jsonDeserializedData.feature_permission_id]);
+			feature = feature.rows.pop();
+
+			if(!feature) throw new Error(`Invalid Permission`);
+
+			jsonDeserializedData['tenant_id'] = ctxt.state.tenant.tenant_id;
+			jsonDeserializedData['module_id'] = feature['module_id'];
+
+			const savedRecord = await this.$TenantGroupPermissionModel
+				.forge()
+				.save(jsonDeserializedData, {
+					'method': 'insert',
+					'patch': false
+				});
+
+			return {
+				'data': {
+					'type': tenantGroupPermission.data.type,
+					'id': savedRecord.get('tenant_group_permission_id')
+				}
+			};
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_addTenantUserGroup`, err);
+		}
+	}
+
+	async _deleteTenantGroupPermission(ctxt) {
+		try {
+			const tenantGroupPermission = await new this.$TenantGroupPermissionModel({
+				'tenant_id': ctxt.state.tenant['tenant_id'],
+				'tenant_group_permission_id': ctxt.params['tenant_group_permission_id']
+			})
+			.fetch();
+
+			if(!tenantGroupPermission) throw new Error('Unknown Permission to Group mapping');
+
+			await tenantGroupPermission.destroy();
+			return null;
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_deleteTenantGroupPermission`, err);
 		}
 	}
 	// #endregion

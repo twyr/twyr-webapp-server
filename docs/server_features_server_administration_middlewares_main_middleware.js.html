@@ -220,6 +220,7 @@ class Main extends TwyrBaseMiddleware {
 
 			await ApiService.add(`${this.name}::getModuleTree`, this._getModuleTree.bind(this));
 			await ApiService.add(`${this.name}::getModule`, this._getModule.bind(this));
+			await ApiService.add(`${this.name}::getModulePermission`, this._getModulePermission.bind(this));
 
 			await super._registerApis();
 			return null;
@@ -233,6 +234,7 @@ class Main extends TwyrBaseMiddleware {
 		try {
 			const ApiService = this.$dependencies.ApiService;
 
+			await ApiService.remove(`${this.name}::getModulePermission`, this._getModulePermission.bind(this));
 			await ApiService.remove(`${this.name}::getModule`, this._getModule.bind(this));
 			await ApiService.remove(`${this.name}::getModuleTree`, this._getModuleTree.bind(this));
 
@@ -297,6 +299,32 @@ class Main extends TwyrBaseMiddleware {
 		}
 		catch(err) {
 			throw new TwyrMiddlewareError(`${this.name}::_getModule`, err);
+		}
+	}
+
+	async _getModulePermission(ctxt) {
+		try {
+			const ModulePermissionRecord = new this.$FeaturePermissionModel({
+				'feature_permission_id': ctxt.params.feature_permission_id
+			});
+
+			let modulePermissionData = await ModulePermissionRecord.fetch({
+				'withRelated': ['module']
+			});
+
+			modulePermissionData = this.$jsonApiMapper.map(modulePermissionData, 'server_administration/feature-permissions', {
+				'typeForModel': {
+					'module': 'server_administration/features'
+				},
+
+				'enableLinks': false
+			});
+
+			delete modulePermissionData.included;
+			return modulePermissionData;
+		}
+		catch(err) {
+			throw new TwyrMiddlewareError(`${this.name}::_getModulePermission`, err);
 		}
 	}
 	// #endregion
