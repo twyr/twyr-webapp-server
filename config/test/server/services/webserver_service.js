@@ -6,7 +6,7 @@ exports.config = {
 	"version": "3.0.1",
 	"poweredBy": "Twyr Portal",
 	"connectionTimeout": 120,
-	"logLevel": "silly",
+	"logLevel": "debug",
 	"honeyPot": {
 		"apiKey": "YOUR_API_KEY"
 	},
