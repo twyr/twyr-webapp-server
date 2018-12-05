@@ -63,7 +63,7 @@
 		"convert-hrtime": "*",
 		"death": "*",
 		"deep-equal": "*",
-		"deepmerge": "^2.2.1",
+		"deepmerge": "^3.0.0",
 		"dependency-graph": "^0.7.2",
 		"device": "*",
 		"dotenv": "^6.1.0",
