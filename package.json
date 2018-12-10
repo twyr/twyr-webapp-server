@@ -75,7 +75,7 @@
 		"jsonapi-mapper": "^1.0.0-beta.16",
 		"jsonapi-query-parser": "*",
 		"jsonapi-serializer": "^3.6.4",
-		"knex": "^0.15.2",
+		"knex": "^0.16.1",
 		"koa": "^2.6.2",
 		"koa-accept-override": "*",
 		"koa-better-http-proxy": "*",
@@ -151,7 +151,7 @@
 		"mocha": "^5.2.0",
 		"mocha-junit-reporter": "^1.18.0",
 		"mocha-prepare": "^0.1.0",
-		"redis-mock": "^0.40.0"
+		"redis-mock": "^0.41.0"
 	},
 	"scripts": {
 		"build": "./node_modules/.bin/grunt",
