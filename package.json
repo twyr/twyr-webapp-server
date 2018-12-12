@@ -64,7 +64,7 @@
 		"death": "*",
 		"deep-equal": "*",
 		"deepmerge": "^3.0.0",
-		"dependency-graph": "^0.7.2",
+		"dependency-graph": "^0.8.0",
 		"device": "*",
 		"dotenv": "^6.2.0",
 		"ejs": "*",
