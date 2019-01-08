@@ -54,7 +54,7 @@
 		}
 	});
 
-	Ember.ENV.RAISE_ON_DEPRECATION = <%= developmentMode %>;
+	Ember.ENV.RAISE_ON_DEPRECATION = false; <%= developmentMode %>;
 	Ember.ENV.LOG_STACKTRACE_ON_DEPRECATION = <%= developmentMode %>;
 	Ember.run.backburner.DEBUG = <%= developmentMode %>;
 	</script>
