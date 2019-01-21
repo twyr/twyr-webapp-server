@@ -26,7 +26,7 @@ describe('Profile Feature Test Cases', function() {
 			.type('form')
 			.send({
 				'username': 'root@twyr.com',
-				'password': 'twyr'
+				'password': 'twyr'		//make sure to enter correct password
 			})
 			.end((err, response) => {
 				expect(response).to.have.status(200);
@@ -41,6 +41,17 @@ describe('Profile Feature Test Cases', function() {
 				expect(response.status).to.eql(200);
 				done(err);
 			});
+	});
+
+	it('Should give proper user id', function(done) {
+		agent
+			.get('/profile/users/:user_id', function(request) {
+				expect(request).to.have.param('user_id', '06f0cb9d-cfcf-4d79-a6f1-137bb54a24b5');	//id from database
+			})
+			.end((err, response) => {
+				expect(response).to.have.status(200);
+				done(err);
+			})
 	});
 
 	it('Should give error if last name is null', function() {
@@ -75,7 +86,7 @@ describe('Profile Feature Test Cases', function() {
 
 	it('Should allow to update profile if all the input is available', function() {
 		agent
-			.patch('/profile/users/user_id')
+			.patch('/profile/users/:user_id')
 			.send({
 				'first_name': 'Root1',
 				'last_name': 'Twyr'
@@ -160,5 +171,18 @@ describe('Profile Feature Test Cases', function() {
 				expect(response).to.have.status(422);
 				done(err);
 			});
+	});
+
+	it('Should allow to delete a correct contact number', function() {
+		agent
+		.del('/profile/users-contact/:user_contact_id', function(request) {
+			expect(request).to.have.param('user_contact_id', '5709d6c8-c03b-4372-969c-6e3e666ae117');	//id from database
+		})
+		.then(function(response) {
+			expect(response).to.have.status(200);
+		})
+		.catch(function(err) {
+			throw err;
+		});
 	});
 });
