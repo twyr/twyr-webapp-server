@@ -149,8 +149,8 @@ describe('Profile Feature Test Cases', function() {
 			.type('form')
 			.send({
 				'currentPassword': 'twyr',
-				'newPassword1': '12345',
-				'newPassword2': '12345'
+				'newPassword1': '1234',
+				'newPassword2': '1234'
 			})
 			.end((err, response) => {
 				expect(response).to.have.status(200);
