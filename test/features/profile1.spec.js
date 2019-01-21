@@ -161,11 +161,4 @@ describe('Profile Feature Test Cases', function() {
 				done(err);
 			});
 	});
-
-/*
-	it('Should give error if contact id is wrong', function(done) {
-	});
-
-	it('Should allow to delete a correct contact number', function(done) {
-	});*/
 });
