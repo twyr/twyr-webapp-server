@@ -114,6 +114,19 @@ describe('Profile Feature Test Cases', function() {
 				done(err);
 			});
 	});
+	
+	it('Should allow to delete a correct contact number', function() {
+        agent
+        .del('/profile/users-contact/:user_contact_id', function(request) {
+            expect(request).to.have.param('user_contact_id', '5709d6c8-c03b-4372-969c-6e3e666ae117');    //id from database
+        })
+        .then(function(response) {
+            expect(response).to.have.status(200);
+        })
+        .catch(function(err) {
+            throw err;
+        });
+    })
 
 	 /*it('Should return proper contact id', function(done) {
        agent
