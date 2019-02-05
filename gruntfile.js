@@ -145,7 +145,7 @@ module.exports = function(grunt) {
 		},
 
 		'jsbeautifier': {
-			'src': ['buildresults/*.xml'],
+			'src': ['buildresults/*.xml', 'docs/*.html'],
 			'options': {
 				'config': '.jsbeautifyrc'
 			}
