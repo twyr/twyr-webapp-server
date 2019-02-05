@@ -576,46 +576,49 @@ class WebserverService extends TwyrBaseService {
 	 * @summary  Call Ringpop to decide whether to handle the request, or to forward it someplace else.
 	 */
 	async _handleOrProxytoCluster(ctxt, next) {
-		try {
-			const ringpop = this.$dependencies.RingpopService;
+		await next();
+		return;
 
-			const hostPort = [];
-			hostPort.push(ringpop.lookup(ctxt.state.tenant.tenant_id).split(':').shift());
-			hostPort.push(this.$config.internalPort || 9100);
-			// hostPort.push(this.$config.internalPort === 9100 ? 9101 : 9100);
+		// try {
+		// 	const ringpop = this.$dependencies.RingpopService;
 
-			const dest = `${this.$config.protocol}://${hostPort.join(':')}${ctxt.path}`;
+		// 	const hostPort = [];
+		// 	hostPort.push(ringpop.lookup(ctxt.state.tenant.tenant_id).split(':').shift());
+		// 	hostPort.push(this.$config.internalPort || 9100);
+		// 	// hostPort.push(this.$config.internalPort === 9100 ? 9101 : 9100);
 
-			if(ringpop.lookup(ctxt.state.tenant.tenant_id) === ringpop.whoami()) {
-				delete this.$proxies[dest];
+		// 	const dest = `${this.$config.protocol}://${hostPort.join(':')}${ctxt.path}`;
 
-				await next();
-				return;
-			}
+		// 	if(ringpop.lookup(ctxt.state.tenant.tenant_id) === ringpop.whoami()) {
+		// 		delete this.$proxies[dest];
 
-			delete this.$serveFavicons[ctxt.state.tenant.sub_domain];
-			delete this.$serveStatics[ctxt.state.tenant.sub_domain];
+		// 		await next();
+		// 		return;
+		// 	}
 
-			if(!this.$proxies[dest]) {
-				const proxy = require('koa-better-http-proxy');
-				this.$proxies[dest] = proxy(dest, {
-					'preserveReqSession': true,
-					'preserveHostHdr': true
-				});
-			}
+		// 	delete this.$serveFavicons[ctxt.state.tenant.sub_domain];
+		// 	delete this.$serveStatics[ctxt.state.tenant.sub_domain];
 
-			await this.$proxies[dest](ctxt, next);
-		}
-		catch(err) {
-			let error = err;
+		// 	if(!this.$proxies[dest]) {
+		// 		const proxy = require('koa-better-http-proxy');
+		// 		this.$proxies[dest] = proxy(dest, {
+		// 			'preserveReqSession': true,
+		// 			'preserveHostHdr': true
+		// 		});
+		// 	}
 
-			// eslint-disable-next-line curly
-			if(error && !(error instanceof TwyrSrvcError)) {
-				error = new TwyrSrvcError(`${this.name}::_handleOrProxytoCluster`, error);
-			}
+		// 	await this.$proxies[dest](ctxt, next);
+		// }
+		// catch(err) {
+		// 	let error = err;
 
-			throw error;
-		}
+		// 	// eslint-disable-next-line curly
+		// 	if(error && !(error instanceof TwyrSrvcError)) {
+		// 		error = new TwyrSrvcError(`${this.name}::_handleOrProxytoCluster`, error);
+		// 	}
+
+		// 	throw error;
+		// }
 	}
 
 	/**
