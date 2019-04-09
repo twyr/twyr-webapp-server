@@ -60,7 +60,7 @@
 		"cassandra-driver": "^4.0.0",
 		"chokidar": "^2.1.5",
 		"clean-stack": "^2.0.0",
-		"convert-hrtime": "*",
+		"convert-hrtime": ">=3.0.0",
 		"death": "*",
 		"deep-equal": "*",
 		"deepmerge": "^3.2.0",
