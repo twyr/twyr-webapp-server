@@ -106,7 +106,7 @@
 		"passport-local": "*",
 		"patrun": "^1.0.0",
 		"pg": "^7.9.0",
-		"pg-error": "*",
+		"pg-error": ">=1.0.0",
 		"pg-query-native": "*",
 		"pg-structure": "^4.2.2",
 		"primus": "^7.3.2",
