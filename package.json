@@ -126,7 +126,7 @@
 	"devDependencies": {
 		"autocannon": "^3.2.1",
 		"chai": "^4.2.0",
-		"chai-http": "^4.2.1",
+		"chai-http": "^4.3.0",
 		"chai-json": "^1.0.0",
 		"clinic": "^4.0.0",
 		"docdash2": "*",
