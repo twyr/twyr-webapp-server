@@ -146,7 +146,7 @@
 		"grunt-mocha-test": "*",
 		"grunt-xmlstoke": "^0.7.1",
 		"istanbul": "^1.1.0-alpha.1",
-		"jsdoc": "^3.5.5",
+		"jsdoc": "^3.6.0",
 		"load-grunt-tasks": "^4.0.0",
 		"mocha": "^6.0.2",
 		"mocha-junit-reporter": "^1.18.0",
