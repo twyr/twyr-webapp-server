@@ -82,7 +82,7 @@
 		"koa-bodyparser": "*",
 		"koa-compress": "*",
 		"koa-favicon": "*",
-		"koa-helmet": "*",
+		"koa-helmet": ">=4.2.0",
 		"koa-methodoverride": "*",
 		"koa-passport": "^4.1.1",
 		"koa-ratelimit": "^4.2.0",
