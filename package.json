@@ -139,7 +139,7 @@
 		"grunt-contrib-clean": "^2.0.0",
 		"grunt-coveralls": "*",
 		"grunt-env": "*",
-		"grunt-eslint": "^21.0.0",
+		"grunt-eslint": "^21.1.0",
 		"grunt-exec": "*",
 		"grunt-jsbeautifier": "*",
 		"grunt-mocha-istanbul": "*",
