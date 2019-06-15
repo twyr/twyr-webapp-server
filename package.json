@@ -107,7 +107,7 @@
 		"patrun": "^1.0.0",
 		"pg": "^7.9.0",
 		"pg-error": "*",
-		"pg-query-native": "*",
+		"pg-query-native": ">=1.2.0",
 		"pg-structure": "^4.2.2",
 		"primus": "^7.3.2",
 		"primus-rooms": "*",
