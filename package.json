@@ -132,7 +132,7 @@
 		"docdash2": "*",
 		"eslint": "^5.15.3",
 		"eslint-junit": "*",
-		"eslint-plugin-jsdoc": "^4.4.3",
+		"eslint-plugin-jsdoc": "^9.0.0",
 		"eslint-plugin-node": "^8.0.1",
 		"eslint-plugin-security": "^1.4.0",
 		"grunt": "^1.0.4",
