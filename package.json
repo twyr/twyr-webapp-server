@@ -138,7 +138,7 @@
 		"grunt": "^1.0.4",
 		"grunt-contrib-clean": "^2.0.0",
 		"grunt-coveralls": "*",
-		"grunt-env": "*",
+		"grunt-env": ">=1.0.0",
 		"grunt-eslint": "^21.0.0",
 		"grunt-exec": "*",
 		"grunt-jsbeautifier": "*",
