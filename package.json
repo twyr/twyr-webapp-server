@@ -49,7 +49,7 @@
 	"dependencies": {
 		"@koa/cors": "^3.0.0",
 		"@phc/pbkdf2": "*",
-		"amqplib": "^0.5.3",
+		"amqplib": "^0.5.5",
 		"app-module-path": "*",
 		"ascoltatori": "^4.3.0",
 		"aws-sdk": "^2.427.0",
