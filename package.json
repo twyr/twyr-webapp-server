@@ -109,7 +109,7 @@
 		"pg-error": "*",
 		"pg-query-native": "*",
 		"pg-structure": "^4.2.2",
-		"primus": "^7.3.2",
+		"primus": "^7.3.4",
 		"primus-rooms": "*",
 		"random-org": ">=1.1.0",
 		"redis": "*",
