@@ -108,7 +108,7 @@
 		"pg": "^7.9.0",
 		"pg-error": "*",
 		"pg-query-native": "*",
-		"pg-structure": "^4.2.2",
+		"pg-structure": "^5.8.0",
 		"primus": "^7.3.2",
 		"primus-rooms": "*",
 		"random-org": ">=1.1.0",
