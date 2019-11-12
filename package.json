@@ -62,7 +62,7 @@
 		"clean-stack": "^2.0.0",
 		"convert-hrtime": "*",
 		"death": "*",
-		"deep-equal": "*",
+		"deep-equal": ">=1.1.1",
 		"deepmerge": "^3.2.0",
 		"dependency-graph": "^0.8.0",
 		"device": "*",
