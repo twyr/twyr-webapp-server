@@ -111,7 +111,7 @@
 		"pg-structure": "^4.2.2",
 		"primus": "^7.3.2",
 		"primus-rooms": "*",
-		"random-org": ">=1.1.0",
+		"random-org": ">=2.0.1",
 		"redis": "*",
 		"ringpop": "*",
 		"server-destroy": "*",
