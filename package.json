@@ -104,7 +104,7 @@
 		"overload-protection": "*",
 		"passport": "*",
 		"passport-local": "*",
-		"patrun": "^1.0.0",
+		"patrun": "^2.1.0",
 		"pg": "^7.9.0",
 		"pg-error": "*",
 		"pg-query-native": "*",
