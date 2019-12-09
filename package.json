@@ -102,7 +102,7 @@
 		"on-finished": "*",
 		"os-locale": "^3.1.0",
 		"overload-protection": "*",
-		"passport": "*",
+		"passport": ">=0.4.1",
 		"passport-local": "*",
 		"patrun": "^1.0.0",
 		"pg": "^7.9.0",
