@@ -121,7 +121,7 @@
 		"upash": "*",
 		"uuid": "^3.3.2",
 		"winston": "^3.2.1",
-		"ws": "^6.2.0"
+		"ws": "^7.2.1"
 	},
 	"devDependencies": {
 		"autocannon": "^3.2.1",
