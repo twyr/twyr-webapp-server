@@ -101,7 +101,7 @@
 		"nodemailer-smtp-transport": "*",
 		"on-finished": "*",
 		"os-locale": "^3.1.0",
-		"overload-protection": "*",
+		"overload-protection": ">=1.2.0",
 		"passport": "*",
 		"passport-local": "*",
 		"patrun": "^1.0.0",
