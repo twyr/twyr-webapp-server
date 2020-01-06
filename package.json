@@ -116,7 +116,7 @@
 		"ringpop": "*",
 		"server-destroy": "*",
 		"spdy": "^4.0.0",
-		"tchannel": "*",
+		"tchannel": ">=3.10.0",
 		"umzug": "^2.2.0",
 		"upash": "*",
 		"uuid": "^3.3.2",
