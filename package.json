@@ -56,7 +56,7 @@
 		"axios": "^0.18.0",
 		"bluebird": "^3.5.3",
 		"bookshelf": "^0.14.2",
-		"bookshelf-jsonapi-params": "^1.1.3",
+		"bookshelf-jsonapi-params": "^1.4.0",
 		"cassandra-driver": "^4.0.0",
 		"chokidar": "^2.1.5",
 		"clean-stack": "^2.0.0",
