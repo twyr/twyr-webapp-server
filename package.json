@@ -124,7 +124,7 @@
 		"ws": "^6.2.0"
 	},
 	"devDependencies": {
-		"autocannon": "^3.2.1",
+		"autocannon": "^4.5.1",
 		"chai": "^4.2.0",
 		"chai-http": "^4.2.1",
 		"chai-json": "^1.0.0",
