@@ -81,7 +81,7 @@
 		"koa-better-http-proxy": "*",
 		"koa-bodyparser": "*",
 		"koa-compress": "*",
-		"koa-favicon": "*",
+		"koa-favicon": ">=2.1.0",
 		"koa-helmet": "*",
 		"koa-methodoverride": "*",
 		"koa-passport": "^4.1.1",
