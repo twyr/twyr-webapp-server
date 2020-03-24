@@ -79,7 +79,7 @@
 		"koa": "^2.7.0",
 		"koa-accept-override": "*",
 		"koa-better-http-proxy": "*",
-		"koa-bodyparser": "*",
+		"koa-bodyparser": ">=4.3.0",
 		"koa-compress": "*",
 		"koa-favicon": "*",
 		"koa-helmet": "*",
