@@ -128,7 +128,7 @@
 		"chai": "^4.2.0",
 		"chai-http": "^4.2.1",
 		"chai-json": "^1.0.0",
-		"clinic": "^4.0.0",
+		"clinic": "^5.0.1",
 		"docdash2": "*",
 		"eslint": "^5.15.3",
 		"eslint-junit": "*",
