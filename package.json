@@ -68,7 +68,7 @@
 		"device": "*",
 		"dotenv": "^7.0.0",
 		"ejs": "^2.6.1",
-		"ember-source": "^3.8.0",
+		"ember-source": "^3.18.0",
 		"fs-extra": "^7.0.1",
 		"i18n": "*",
 		"inflection": "*",
