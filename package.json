@@ -80,7 +80,7 @@
 		"koa-accept-override": "*",
 		"koa-better-http-proxy": "*",
 		"koa-bodyparser": "*",
-		"koa-compress": "*",
+		"koa-compress": ">=3.1.0",
 		"koa-favicon": "*",
 		"koa-helmet": "*",
 		"koa-methodoverride": "*",
