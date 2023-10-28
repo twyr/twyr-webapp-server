@@ -53,7 +53,7 @@
 		"app-module-path": "*",
 		"ascoltatori": "^4.3.0",
 		"aws-sdk": "^2.427.0",
-		"axios": "^0.18.0",
+		"axios": "^1.6.0",
 		"bluebird": "^3.5.3",
 		"bookshelf": "^0.14.2",
 		"bookshelf-jsonapi-params": "^1.1.3",
